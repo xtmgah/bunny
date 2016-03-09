@@ -1,0 +1,14 @@
+{
+  "id" : "https://api.sbgenomics.com/ntijanic/rabix-tests/grep-basic/2/raw/",
+  "app" : "{\"class\":\"CommandLineTool\",\"id\":\"https://api.sbgenomics.com/ntijanic/rabix-tests/grep-basic/2/raw/\",\"description\":\"Most basic of grep wrappers.\",\"label\":\"grep-basic\",\"inputs\":[{\"id\":\"#infile\",\"type\":[\"File\"],\"inputBinding\":{\"sbg:cmdInclude\":true,\"separate\":true,\"position\":2},\"description\":\"\",\"sbg:category\":\"\",\"label\":\"\"},{\"id\":\"#pattern\",\"type\":[\"string\"],\"inputBinding\":{\"sbg:cmdInclude\":true,\"separate\":true,\"position\":1},\"description\":\"Pattern to search for in input file\",\"sbg:category\":\"\",\"label\":\"\"}],\"outputs\":[{\"id\":\"#outfile\",\"type\":[\"File\"],\"outputBinding\":{\"glob\":\"output.txt\"}}],\"hints\":[{\"class\":\"DockerRequirement\",\"dockerPull\":\"ubuntu:latest\",\"dockerImageId\":\"\"},{\"class\":\"sbg:CPURequirement\",\"value\":1},{\"class\":\"sbg:MemRequirement\",\"value\":1000}],\"requirements\":[],\"stdin\":\"\",\"stdout\":\"output.txt\",\"baseCommand\":[\"grep\"],\"arguments\":[],\"successCodes\":[]}",
+  "protocolType" : "DRAFT2",
+  "inputs" : {
+    "pattern" : "janko",
+    "infile" : {
+      "path" : "id/input.txt",
+      "class" : "File"
+    }
+  },
+  "successCodes" : [ ],
+  "contextId" : "1234567"
+}
