@@ -28,6 +28,7 @@ public class BindingsImpl implements Bindings {
   private final CommandLineBuilder commandLineBuilder;
   private final ProtocolTranslator protocolTranslator;
   private final RequirementProvider requirementProvider;
+  private final DocumentReferenceResolver documentReferenceResolver;
   
   public BindingsImpl(ProtocolType protocolType) throws BindingException {
     try {
@@ -38,10 +39,16 @@ public class BindingsImpl implements Bindings {
       this.valueOperator = ProtocolValueOperatorFactory.create(protocolType);
       this.protocolTranslator = ProtocolTranslatorFactory.create(protocolType);
       this.requirementProvider = RequirementProviderFactory.create(protocolType);
+      this.documentReferenceResolver = DocumentReferenceResolverFactory.create(protocolType);
     } catch (BindingException e) {
       logger.error("Failed to create Bindings for type " + protocolType, e);
       throw new BindingException("Failed to create Bindings for type " + protocolType);
     }
+  }
+  
+  @Override
+  public String loadAppFromFile(File file) throws BindingException {
+    return documentReferenceResolver.resolve(file);
   }
   
   @Override

@@ -13,21 +13,12 @@ public class ResourceHelper {
 
   public static String readResource(Class<?> clazz, String resourceName) throws IOException {
     InputStream stream = getResourceAsStream(clazz, resourceName);
-    if (stream == null)
+    if (stream == null) {
       throw new IllegalArgumentException("Resource not found - \"" + resourceName + "\"");
-
+    }
     return toString(stream);
   }
 
-  /**
-   * Get the InputStream for this resource. Note: to convert an InputStream into an InputReader, use: new
-   * InputStreamReader(InputStream).
-   * 
-   * @param clazz The class to grab the Classloader from. This parameter is quite important from a visibility of
-   *          resources standpoint as the hierarchy of Classloaders plays a role.
-   * @param resource The resource to load.
-   * @return If the Resource was found, the InputStream, otherwise null.
-   */
   public static InputStream getResourceAsStream(Class<?> clazz, String resource) {
     return clazz == null ? ClassLoader.getSystemResourceAsStream(resource) : clazz.getResourceAsStream(resource);
   }
@@ -46,8 +37,7 @@ public class ResourceHelper {
     while (-1 != (n = input.read(buffer))) {
       output.append(buffer, 0, n);
     }
-
     return output.toString();
   }
-  
+
 }
