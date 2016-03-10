@@ -28,8 +28,6 @@ import org.rabix.engine.service.ContextService;
 import org.rabix.engine.service.JobService;
 import org.rabix.engine.service.LinkService;
 import org.rabix.engine.service.VariableService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import dnl.utils.text.table.TextTable;
 
@@ -37,8 +35,6 @@ import dnl.utils.text.table.TextTable;
  * Prints engine information (iterations) to the output directory
  */
 public class CommandLinePrinter implements IterationCallback {
-
-  private final static Logger logger = LoggerFactory.getLogger(CommandLinePrinter.class);
 
   private static final String JOBS_FILE = "jobs.txt";
   private static final String LINKS_FILE = "links.txt";
@@ -66,16 +62,9 @@ public class CommandLinePrinter implements IterationCallback {
 
   @Override
   public void call(EventProcessor eventProcessor, String contextId, int iteration) {
-    logger.error("################################################################################");
-    logger.error("#                                ITERATION {}                                  #", iteration);
-    logger.error("################################################################################");
-
     printJobs(eventProcessor, contextId, iteration);
-    logger.error("\n");
     printVariables(eventProcessor, contextId, iteration);
-    logger.error("\n");
     printLinks(eventProcessor, contextId, iteration);
-    logger.error("\n");
 
     File iterationDirectory = new File(outputDir, "iteration_" + iteration);
     if (!iterationDirectory.exists()) {
