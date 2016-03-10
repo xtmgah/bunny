@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,6 +32,12 @@ public class JSONHelper {
 
   public static final ObjectMapper mapper = new ObjectMapper();
 
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> readMapFromYAML(String yaml) {
+    Yaml reader = new Yaml();
+    return (Map<String, Object>) reader.load(yaml);
+  }
+  
   @SuppressWarnings("unchecked")
   public static Map<String, Object> readMap(String json) {
     return readObject(json, (Class<Map<String, Object>>) (Class<?>) Map.class);
