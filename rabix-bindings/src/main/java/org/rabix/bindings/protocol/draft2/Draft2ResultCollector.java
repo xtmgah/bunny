@@ -13,6 +13,7 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ResultCollector;
 import org.rabix.bindings.model.Executable;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
+import org.rabix.bindings.protocol.draft2.bean.Draft2ExpressionTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2OutputPort;
@@ -72,7 +73,18 @@ public class Draft2ResultCollector implements ResultCollector {
   public Executable populateOutputs(Executable executable, File workingDir) throws BindingException {
     Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
     try {
-      Map<String, Object> outputs = collectOutputs(draft2Job, workingDir, null);
+      Map<String, Object> outputs = null;
+
+      if (draft2Job.getApp().isExpressionTool()) {
+        Draft2ExpressionTool expressionTool = (Draft2ExpressionTool) draft2Job.getApp();
+        try {
+          outputs = Draft2ExpressionBeanHelper.evaluate(draft2Job, expressionTool.getScript());
+        } catch (Draft2ExpressionException e) {
+          throw new BindingException("Failed to populate outputs", e);
+        }
+      } else {
+        outputs = collectOutputs(draft2Job, workingDir, null);
+      }
       return Executable.cloneWithOutputs(executable, outputs);
     } catch (Draft2GlobException | Draft2ExpressionException | IOException e) {
       throw new BindingException(e);

@@ -50,6 +50,25 @@ public class Draft2CommandLineToolTest {
       Assert.fail(e.getMessage());
     }
   }
+  
+  @Test
+  public void testExpressionTool() throws IOException {
+    String inputJson = ResourceHelper.readResource(this.getClass(), "expression-job.json");
+
+    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+
+    List<?> resultList;
+    try {
+      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
+      Bindings bindings = BindingsFactory.create(executable);
+      resultList = bindings.buildCommandLineParts(executable);
+
+      Assert.assertNull(resultList);
+    } catch (BindingException e) {
+      Assert.fail(e.getMessage());
+    }
+  }
 
   @Test
   public void testPicardGather() throws IOException {

@@ -34,30 +34,35 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
   @Override
   public String buildCommandLine(Executable executable) throws BindingException {
-    Draft2Job job = Draft2ExecutableHelper.convertToJob(executable);
-    return buildCommandLine(job);
+    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    if (draft2Job.getApp().isExpressionTool()) {
+      return null;
+    }
+    return buildCommandLine(draft2Job);
   }
   
   @Override
   public List<Object> buildCommandLineParts(Executable executable) throws BindingException {
-    Draft2Job job = Draft2ExecutableHelper.convertToJob(executable);
-    return buildCommandLineParts(job);
+    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    if (draft2Job.getApp().isExpressionTool()) {
+      return null;
+    }
+    return buildCommandLineParts(draft2Job);
   }
   
   /**
    * Builds command line string with both STDIN and STDOUT
    */
   private String buildCommandLine(Draft2Job job) throws BindingException {
+    Draft2CommandLineTool commandLineTool = (Draft2CommandLineTool) job.getApp();
+    
     List<Object> commandLineParts = buildCommandLineParts(job);
-
     StringBuilder builder = new StringBuilder();
     for (Object commandLinePart : commandLineParts) {
       builder.append(commandLinePart).append(PART_SEPARATOR);
     }
 
-    Draft2CommandLineTool commandLineTool = (Draft2CommandLineTool) job.getApp();
-
-    String stdin;
+    String stdin = null;
     try {
       stdin = commandLineTool.getStdin(job);
     } catch (Draft2ExpressionException e) {
@@ -68,7 +73,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
       builder.append(PART_SEPARATOR).append("<").append(PART_SEPARATOR).append(stdin);
     }
 
-    String stdout;
+    String stdout = null;
     try {
       stdout = commandLineTool.getStdout(job);
     } catch (Draft2ExpressionException e) {

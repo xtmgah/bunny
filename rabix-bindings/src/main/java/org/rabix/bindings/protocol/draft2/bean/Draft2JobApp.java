@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class")
 @JsonSubTypes({ 
 	@Type(value = Draft2CommandLineTool.class, name = "CommandLineTool"),
+	@Type(value = Draft2ExpressionTool.class, name = "ExpressionTool"),
     @Type(value = Draft2Workflow.class, name = "Workflow") })
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -246,6 +247,11 @@ public abstract class Draft2JobApp {
   @JsonIgnore
   public boolean isCommandLineTool() {
     return Draft2JobAppType.COMMAND_LINE_TOOL.equals(getType());
+  }
+  
+  @JsonIgnore
+  public boolean isExpressionTool() {
+    return Draft2JobAppType.EXPRESSION_TOOL.equals(getType());
   }
 
   @Override
