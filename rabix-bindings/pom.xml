@@ -15,7 +15,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jackson-2-version>2.7.0</jackson-2-version>
+		<rhino.version>1.7R4</rhino.version>
 	</properties>
 	<build>
 		<plugins>
@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>org.mozilla</groupId>
 			<artifactId>rhino</artifactId>
-			<version>1.7R4</version>
+			<version>${rhino.version}</version>
 		</dependency>
 	</dependencies>
 </project>
