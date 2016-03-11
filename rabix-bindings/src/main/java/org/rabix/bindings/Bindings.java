@@ -15,6 +15,11 @@ public interface Bindings extends CommandLineBuilder, ProtocolValueOperator, Pro
    * Gets native application 
    */
   Object getApp(Executable executable) throws BindingException;
+  
+  /**
+   * Is container required or it can be executed by itself (expression tools, ...)
+   */
+  boolean isSelfExecutable(Executable executable) throws BindingException;
 
   /**
    * Returns {@link ProtocolType} 

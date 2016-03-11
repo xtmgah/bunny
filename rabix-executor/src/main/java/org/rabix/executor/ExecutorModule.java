@@ -4,7 +4,7 @@ import org.rabix.common.config.ConfigModule;
 import org.rabix.executor.execution.ExecutableHandlerCommandDispatcher;
 import org.rabix.executor.handler.ExecutableHandler;
 import org.rabix.executor.handler.ExecutableHandlerFactory;
-import org.rabix.executor.handler.commandline.CommandLineExecutableHandler;
+import org.rabix.executor.handler.impl.ExecutableHandlerImpl;
 import org.rabix.executor.service.DownloadFileService;
 import org.rabix.executor.service.ExecutableDataService;
 import org.rabix.executor.service.ExecutorService;
@@ -27,7 +27,7 @@ public class ExecutorModule extends AbstractModule {
   @Override
   protected void configure() {
     install(configModule);
-    install(new FactoryModuleBuilder().implement(ExecutableHandler.class, CommandLineExecutableHandler.class).build(ExecutableHandlerFactory.class));
+    install(new FactoryModuleBuilder().implement(ExecutableHandler.class, ExecutableHandlerImpl.class).build(ExecutableHandlerFactory.class));
 
     bind(DownloadFileService.class).to(DownloadServiceImpl.class).in(Scopes.SINGLETON);
 

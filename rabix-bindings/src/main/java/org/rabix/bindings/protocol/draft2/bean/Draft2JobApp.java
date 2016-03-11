@@ -56,11 +56,16 @@ public abstract class Draft2JobApp {
   protected List<Draft2Resource> hints;
   @JsonProperty("requirements")
   protected List<Draft2Resource> requirements;
-
-  public abstract Draft2JobAppType getType();
+  
+  @JsonProperty("successCodes")
+  protected List<Integer> successCodes;
 
   public String getId() {
     return id;
+  }
+  
+  public List<Integer> getSuccessCodes() {
+    return successCodes;
   }
 
   @JsonIgnore
@@ -253,6 +258,8 @@ public abstract class Draft2JobApp {
   public boolean isExpressionTool() {
     return Draft2JobAppType.EXPRESSION_TOOL.equals(getType());
   }
+  
+  public abstract Draft2JobAppType getType();
 
   @Override
   public int hashCode() {
