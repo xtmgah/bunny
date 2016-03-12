@@ -122,6 +122,6 @@ public class ExecutableData {
 
   @Override
   public String toString() {
-    return "ExecutableData [executable=" + executable + ", status=" + status + ", message=" + message + ", important="  + important + ", terminal=" + terminal + ", logsUploaded=" + logsUploaded + "]";
+    return "ExecutableData [executableID=" + executable.getId() + ", status=" + status + ", message=" + message + ", important="  + important + ", terminal=" + terminal + ", logsUploaded=" + logsUploaded + "]";
   }
 }
