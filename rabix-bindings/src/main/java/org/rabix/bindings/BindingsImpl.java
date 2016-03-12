@@ -74,16 +74,23 @@ public class BindingsImpl implements Bindings {
 
   @Override
   public Executable preprocess(Executable executable, File workingDir) throws BindingException {
-    return protocolProcessor.preprocess(executable, workingDir);
+    Executable processedExecutable = protocolProcessor.preprocess(executable, workingDir);
+    return Executable.cloneWithProcessed(processedExecutable, true);
   }
 
   @Override
   public String buildCommandLine(Executable executable) throws BindingException {
+    if (!executable.isProcessed()) {
+      throw new BindingException("Executable " + executable.getId() + " is not processed");
+    }
     return commandLineBuilder.buildCommandLine(executable);
   }
 
   @Override
   public List<Object> buildCommandLineParts(Executable executable) throws BindingException {
+    if (!executable.isProcessed()) {
+      throw new BindingException("Executable " + executable.getId() + " is not processed");
+    }
     return commandLineBuilder.buildCommandLineParts(executable);
   }
 

@@ -39,6 +39,9 @@ public class Executable {
   private final Object outputs;
   @JsonProperty("allocatedResources")
   private final Resources allocatedResources;
+  
+  @JsonProperty("processed")
+  private final boolean processed;
 
   public Executable(String id, String nodeId, DAGNode node, ExecutableStatus status, Object inputs, Resources allocatedResources, Context context) {
     this.id = id;
@@ -47,12 +50,14 @@ public class Executable {
     this.inputs = inputs;
     this.outputs = null;
     this.context = context;
+    this.processed = false;
     this.allocatedResources = allocatedResources;
     this.app = EncodingHelper.encodeBase64(node.getApp());
   }
 
   @JsonCreator
   public Executable(@JsonProperty("id") String id, 
+      @JsonProperty("processed") boolean processed,
       @JsonProperty("nodeId") String nodeId,
       @JsonProperty("app") String app, 
       @JsonProperty("status") ExecutableStatus status, 
@@ -67,27 +72,36 @@ public class Executable {
     this.inputs = inputs;
     this.outputs = otputs;
     this.context = context;
+    this.processed = processed;
     this.allocatedResources = allocatedResources;
   }
 
   public static Executable cloneWithResources(Executable executable, Resources resources) {
-    return new Executable(executable.id, executable.nodeId, executable.app, executable.status, resources, executable.inputs, executable.outputs, executable.context);
+    return new Executable(executable.id, executable.processed, executable.nodeId, executable.app, executable.status, resources, executable.inputs, executable.outputs, executable.context);
   }
 
   public static Executable cloneWithStatus(Executable executable, ExecutableStatus status) {
-    return new Executable(executable.id, executable.nodeId, executable.app, status, executable.allocatedResources, executable.inputs, executable.outputs, executable.context);
+    return new Executable(executable.id, executable.processed, executable.nodeId, executable.app, status, executable.allocatedResources, executable.inputs, executable.outputs, executable.context);
   }
   
   public static Executable cloneWithInputs(Executable executable, Object inputs) {
-    return new Executable(executable.id, executable.nodeId, executable.app, executable.status, executable.allocatedResources, inputs, executable.outputs, executable.context);
+    return new Executable(executable.id, executable.processed, executable.nodeId, executable.app, executable.status, executable.allocatedResources, inputs, executable.outputs, executable.context);
   }
   
   public static Executable cloneWithOutputs(Executable executable, Object outputs) {
-    return new Executable(executable.id, executable.nodeId, executable.app, executable.status, executable.allocatedResources, executable.inputs, outputs, executable.context);
+    return new Executable(executable.id, executable.processed, executable.nodeId, executable.app, executable.status, executable.allocatedResources, executable.inputs, outputs, executable.context);
+  }
+  
+  public static Executable cloneWithProcessed(Executable executable, boolean processed) {
+    return new Executable(executable.id, processed, executable.nodeId, executable.app, executable.status, executable.allocatedResources, executable.inputs, executable.outputs, executable.context);
   }
   
   public String getId() {
     return id;
+  }
+  
+  public boolean isProcessed() {
+    return processed;
   }
   
   public String getNodeId() {
@@ -207,7 +221,7 @@ public class Executable {
 
   @Override
   public String toString() {
-    return "Executable [id=" + id + ", nodeId=" +  nodeId + ", app=" + app + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + ", allocatedResources=" + allocatedResources + "]";
+    return "Executable [id=" + id + ", nodeId=" + nodeId + ", status=" + status + ", context=" + context + ", allocatedResources=" + allocatedResources + ", processed=" + processed + "]";
   }
 
 }
