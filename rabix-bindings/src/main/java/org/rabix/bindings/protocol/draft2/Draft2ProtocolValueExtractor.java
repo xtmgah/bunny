@@ -9,7 +9,7 @@ import org.rabix.bindings.ProtocolValueOperator;
 import org.rabix.bindings.model.Executable;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
 import org.rabix.common.helper.CloneHelper;
@@ -18,7 +18,7 @@ public class Draft2ProtocolValueExtractor implements ProtocolValueOperator {
 
   @SuppressWarnings("unchecked")
   public Set<FileValue> getInputFiles(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     try {
       return new Draft2PortProcessorHelper(draft2Job).flattenInputFiles(executable.getInputs(Map.class));
     } catch (Draft2PortProcessorException e) {
@@ -29,7 +29,7 @@ public class Draft2ProtocolValueExtractor implements ProtocolValueOperator {
   @Override
   @SuppressWarnings("unchecked")
   public Set<FileValue> getOutputFiles(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     try {
       return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(executable.getInputs(Map.class));
     } catch (Draft2PortProcessorException e) {

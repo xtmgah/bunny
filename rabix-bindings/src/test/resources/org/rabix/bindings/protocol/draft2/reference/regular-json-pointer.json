@@ -1,0 +1,10 @@
+{
+    "$job": {
+            "x" : "blah"
+    },
+    "tool": {
+        "softwareDescription": {
+        	"y" : { "$job": "#x" }
+        }
+    }
+}

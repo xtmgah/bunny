@@ -1,4 +1,4 @@
-package org.rabix.executor.handler.commandline;
+package org.rabix.executor.handler.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +27,7 @@ import org.rabix.executor.config.StorageConfig.BackendStore;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
+import org.rabix.executor.container.impl.CompletedContainerHandler;
 import org.rabix.executor.handler.ExecutableHandler;
 import org.rabix.executor.model.ExecutableData;
 import org.rabix.executor.service.DownloadFileService;
@@ -37,11 +38,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.assistedinject.Assisted;
 
-public class CommandLineExecutableHandler implements ExecutableHandler {
+public class ExecutableHandlerImpl implements ExecutableHandler {
 
   private static final String ERROR_LOG = "job.err.log";
   
-  private static final Logger logger = LoggerFactory.getLogger(CommandLineExecutableHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExecutableHandlerImpl.class);
 
   private final File workingDir;
   
@@ -55,7 +56,7 @@ public class CommandLineExecutableHandler implements ExecutableHandler {
   private ContainerHandler containerHandler;
 
   @Inject
-  public CommandLineExecutableHandler(@Assisted Executable executable, ExecutableDataService executableDataService, DownloadFileService downloadFileService, FileConfig fileConfig, Configuration configuration, SimpleFTPClient ftpClient) {
+  public ExecutableHandlerImpl(@Assisted Executable executable, ExecutableDataService executableDataService, DownloadFileService downloadFileService, FileConfig fileConfig, Configuration configuration, SimpleFTPClient ftpClient) {
     this.executable = executable;
     this.configuration = configuration;
     this.downloadFileService = downloadFileService;
@@ -72,32 +73,18 @@ public class CommandLineExecutableHandler implements ExecutableHandler {
       downloadFileService.download(executable, bindings.getInputFiles(executable));
       createFileRequirements(bindings);
       
-      executable = bindings.mapInputFilePaths(executable, new FileMapper() {
-        @Override
-        public String map(String filePath) throws FileMappingException {
-          BackendStore backendStore = StorageConfig.getBackendStore(configuration);
-          switch (backendStore) {
-            case FTP:
-              logger.info("Map FTP path {} to physical path.", filePath);
-              return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
-            case LOCAL:
-              if (!filePath.startsWith(File.separator)) {
-                return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
-              }
-              return filePath;
-            default:
-              throw new FileMappingException("BackendStore " + backendStore + " is not supported.");
-          }
-          
-        }
-      });
+      executable = bindings.mapInputFilePaths(executable, new InputFileMapper());
       executable = bindings.preprocess(executable, workingDir);
       
-      Requirement containerRequirement = bindings.getDockerRequirement(executable);
-      if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
-        containerRequirement = new LocalContainerRequirement();
+      if (bindings.isSelfExecutable(executable)) {
+        containerHandler = new CompletedContainerHandler();
+      } else {
+        Requirement containerRequirement = bindings.getDockerRequirement(executable);
+        if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
+          containerRequirement = new LocalContainerRequirement();
+        }
+        containerHandler = ContainerHandlerFactory.create(executable, containerRequirement, configuration);
       }
-      containerHandler = ContainerHandlerFactory.create(executable, containerRequirement, configuration);
       containerHandler.start();
     } catch (Exception e) {
       String message = String.format("Execution failed for %s. %s", executable.getId(), e.getMessage());
@@ -156,13 +143,7 @@ public class CommandLineExecutableHandler implements ExecutableHandler {
       
       Bindings bindings = BindingsFactory.create(executable);
       executable = bindings.populateOutputs(executable, workingDir);
-      executable = bindings.mapOutputFilePaths(executable, new FileMapper() {
-        @Override
-        public String map(String filePath) throws FileMappingException {
-          logger.info("Map absolute physical path {} to relative physical path.", filePath);
-          return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
-        }
-      });
+      executable = bindings.mapOutputFilePaths(executable, new OutputFileMapper());
       upload(workingDir);
       
       ExecutableData executableData = executableDataService.find(executable.getId(), executable.getContext().getId());
@@ -264,4 +245,35 @@ public class CommandLineExecutableHandler implements ExecutableHandler {
     }
   }
 
+  private class InputFileMapper implements FileMapper {
+    
+    @Override
+    public String map(String filePath) throws FileMappingException {
+      BackendStore backendStore = StorageConfig.getBackendStore(configuration);
+      switch (backendStore) {
+      case FTP:
+        logger.info("Map FTP path {} to physical path.", filePath);
+        return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
+      case LOCAL:
+        if (!filePath.startsWith(File.separator)) {
+          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
+        }
+        return filePath;
+      default:
+        throw new FileMappingException("BackendStore " + backendStore + " is not supported.");
+      }
+    }
+    
+  }
+  
+  private class OutputFileMapper implements FileMapper {
+    
+    @Override
+    public String map(String filePath) throws FileMappingException {
+      logger.info("Map absolute physical path {} to relative physical path.", filePath);
+      return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
+    }
+    
+  }
+  
 }

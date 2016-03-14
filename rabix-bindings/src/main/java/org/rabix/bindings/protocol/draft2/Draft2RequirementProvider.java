@@ -27,7 +27,7 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVarRequirement.EnvironmentDef;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 
@@ -35,7 +35,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public Executable populateResources(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     try {
       Resources resources = new Resources(draft2Job.getCPU(), draft2Job.getMemory(), null, null);   // TODO populate
       return Executable.cloneWithResources(executable, resources);
@@ -46,7 +46,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
   
   @Override
   public DockerContainerRequirement getDockerRequirement(Executable executable) throws BindingException {
-    Draft2JobApp draft2JobApp = Draft2ExecutableHelper.convertToJob(executable).getApp();
+    Draft2JobApp draft2JobApp = new Draft2ProtocolExecutableHelper().getJob(executable).getApp();
     Draft2DockerResource draft2DockerResource = draft2JobApp.getContainerResource();
     return getDockerRequirement(draft2DockerResource);
   }
@@ -60,7 +60,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public EnvironmentVariableRequirement getEnvironmentVariableRequirement(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
 
     Draft2EnvVarRequirement envVarRequirement = draft2Job.getApp().getEnvVarRequirement();
     return getEnvironmentVariableRequirement(draft2Job, envVarRequirement);
@@ -97,7 +97,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public FileRequirement getFileRequirement(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
 
     Draft2CreateFileRequirement createFileRequirement = draft2Job.getApp().getCreateFileRequirement();
     return getFileRequirement(draft2Job, createFileRequirement);
@@ -135,20 +135,20 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public List<Requirement> getRequirements(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
     return convertRequirements(executable, draft2JobApp.getRequirements());
   }
   
   @Override
   public List<Requirement> getHints(Executable executable) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
     return convertRequirements(executable, draft2JobApp.getHints());
   }
   
   private List<Requirement> convertRequirements(Executable executable, List<Draft2Resource> resources) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
 
     List<Requirement> result = new ArrayList<>();
     try {

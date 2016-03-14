@@ -23,8 +23,7 @@ public class Draft2CommandLineTool extends Draft2JobApp {
   private List<Object> baseCommands;
   @JsonProperty("arguments")
   private List<Object> arguments;
-  @JsonProperty("successCodes")
-  private List<Integer> successCodes;
+  
 
   public Draft2CommandLineTool() {
     super();
@@ -100,10 +99,6 @@ public class Draft2CommandLineTool extends Draft2JobApp {
     }
     int lastIndexOf = fileName.lastIndexOf(".");
     return lastIndexOf != -1 ? fileName.substring(0, lastIndexOf + 1) + extension : fileName + "." + extension;
-  }
-
-  public List<Integer> getSuccessCodes() {
-    return successCodes;
   }
 
   @Override
