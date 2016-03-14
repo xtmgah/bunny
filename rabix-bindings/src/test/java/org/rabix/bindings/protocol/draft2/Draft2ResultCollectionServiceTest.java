@@ -49,7 +49,7 @@ public class Draft2ResultCollectionServiceTest {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "output-collection-job.json");
 
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+    DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
     Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(executable);
@@ -66,7 +66,7 @@ public class Draft2ResultCollectionServiceTest {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "bean/expression-job.json");
 
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+    DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
     Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(executable);

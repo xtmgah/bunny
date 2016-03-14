@@ -38,7 +38,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -59,7 +59,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -87,7 +87,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -107,7 +107,7 @@ public class Draft2CommandLineToolTest {
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       String commandLine = bindings.buildCommandLine(executable);
@@ -152,7 +152,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -183,7 +183,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -213,7 +213,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -247,7 +247,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -274,7 +274,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -301,7 +301,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -328,7 +328,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
@@ -355,7 +355,7 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);

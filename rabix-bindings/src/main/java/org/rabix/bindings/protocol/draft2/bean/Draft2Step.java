@@ -32,17 +32,21 @@ public class Draft2Step {
   
   @JsonProperty("scatterMethod")
   private String scatterMethod;
+  
+  @JsonProperty("linkMerge")
+  private String linkMerge;
 
   @JsonIgnore
   private Draft2Job job;
 
   @JsonCreator
   public Draft2Step(@JsonProperty("id") String id, @JsonProperty("run") Draft2JobApp app,
-      @JsonProperty("scatter") Object scatter, @JsonProperty("scatterMethod") String scatterMethod,
+      @JsonProperty("scatter") Object scatter, @JsonProperty("scatterMethod") String scatterMethod, @JsonProperty("linkMerge") String linkMerge,
       @JsonProperty("inputs") List<Map<String, Object>> inputs, @JsonProperty("outputs") List<Map<String, Object>> outputs) {
     this.id = id;
     this.app = app;
     this.scatter = scatter;
+    this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
     this.inputs = inputs;
     this.outputs = outputs;
@@ -56,7 +60,7 @@ public class Draft2Step {
   private Draft2Job constructJob() {
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
-    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, id);
+    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, id);
   }
 
   /**

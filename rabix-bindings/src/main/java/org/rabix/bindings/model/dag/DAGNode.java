@@ -10,17 +10,24 @@ public class DAGNode {
     flat_crossproduct
   }
   
+  public static enum LinkMerge {
+    merge_nested,
+    merge_flattened
+  }
+  
   protected final String id;
   protected final Object app;
+  protected final LinkMerge linkMerge;
   protected final ScatterMethod scatterMethod;
   protected final List<DAGLinkPort> inputPorts;
   protected final List<DAGLinkPort> outputPorts;
 
-  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, Object app) {
+  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, LinkMerge linkMerge, Object app) {
     this.id = id;
     this.app = app;
     this.inputPorts = inputPorts;
     this.outputPorts = outputPorts;
+    this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
   }
 
@@ -42,6 +49,10 @@ public class DAGNode {
   
   public ScatterMethod getScatterMethod() {
     return scatterMethod;
+  }
+  
+  public LinkMerge getLinkMerge() {
+    return linkMerge;
   }
 
   @Override
@@ -89,8 +100,7 @@ public class DAGNode {
 
   @Override
   public String toString() {
-    return "DAGNode [id=" + id + ", app=" + app + ", scatterMethod=" + scatterMethod + ", inputPorts=" + inputPorts
-        + ", outputPorts=" + outputPorts + "]";
+    return "DAGNode [id=" + id + ", linkMerge=" + linkMerge + ", scatterMethod=" + scatterMethod + ", inputPorts=" + inputPorts + ", outputPorts=" + outputPorts + "]";
   }
 
 }

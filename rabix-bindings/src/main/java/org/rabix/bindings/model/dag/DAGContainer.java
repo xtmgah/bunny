@@ -7,8 +7,8 @@ public class DAGContainer extends DAGNode {
   private final List<DAGLink> links;
   private final List<DAGNode> children;
 
-  public DAGContainer(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, Object app, ScatterMethod scatterMethod, List<DAGLink> links, List<DAGNode> children) {
-    super(id, inputPorts, outputPorts, scatterMethod, app);
+  public DAGContainer(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, Object app, ScatterMethod scatterMethod, LinkMerge linkMerge, List<DAGLink> links, List<DAGNode> children) {
+    super(id, inputPorts, outputPorts, scatterMethod, linkMerge, app);
     this.links = links;
     this.children = children;
   }
@@ -39,8 +39,7 @@ public class DAGContainer extends DAGNode {
 
   @Override
   public String toString() {
-    return "DAGContainer [links=" + links + ", children=" + children + ", id=" + id + ", app=" + app
-        + ", scatterMethod=" + scatterMethod + ", inputPorts=" + inputPorts + ", outputPorts=" + outputPorts + "]";
+    return "DAGContainer [links=" + links + ", children=" + children + ", id=" + id + ", linkMerge=" + linkMerge + ", scatterMethod=" + scatterMethod + ", inputPorts=" + inputPorts + ", outputPorts=" + outputPorts + "]";
   }
 
 }

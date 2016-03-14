@@ -11,6 +11,7 @@ import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
 import org.rabix.bindings.model.dag.DAGNode.ScatterMethod;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
@@ -99,9 +100,10 @@ public class Draft2Translator implements ProtocolTranslator {
       outputPorts.add(linkPort);
     }
     
-    ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : null;
+    LinkMerge linkMerge = job.getLinkMerge() != null? LinkMerge.valueOf(job.getLinkMerge()) : LinkMerge.merge_nested;
+    ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : ScatterMethod.dotproduct;
     if (!job.getApp().isWorkflow()) {
-      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, job.getApp());
+      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp());
     }
 
     Draft2Workflow workflow = (Draft2Workflow) job.getApp();
@@ -140,7 +142,7 @@ public class Draft2Translator implements ProtocolTranslator {
       DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getScattered() != null ? dataLink.getScattered() : false);
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort));
     }
-    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, links, children);
+    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children);
   }
 
   @Override

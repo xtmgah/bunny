@@ -3,6 +3,7 @@ package org.rabix.engine.processor.handler.impl;
 import java.util.List;
 
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
@@ -42,7 +43,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
     VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
-    sourceVariable.addValue(event.getValue());
+    sourceVariable.addValue(event.getValue(), LinkMerge.merge_nested);
     
     JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {

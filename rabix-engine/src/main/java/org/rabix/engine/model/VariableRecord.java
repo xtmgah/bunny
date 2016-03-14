@@ -1,9 +1,12 @@
 package org.rabix.engine.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
 
 public class VariableRecord {
 
@@ -30,8 +33,26 @@ public class VariableRecord {
     return contextId;
   }
   
+  public void addValue(Object value, LinkMerge linkMerge) {
+    if (value == null) {
+      return;
+    }
+    if (linkMerge == null) {
+      linkMerge = LinkMerge.merge_nested;
+    }
+    switch (linkMerge) {
+    case merge_nested:
+      addMergeNested(value);
+      break;
+    case merge_flattened:
+      addMergeFlattened(value);
+    default:
+      break;
+    }
+  }
+
   @SuppressWarnings("unchecked")
-  public void addValue(Object value) {
+  private void addMergeNested(Object value) {
     if (this.value == null) {
       this.value = value;
       return;
@@ -39,14 +60,44 @@ public class VariableRecord {
     if (isWrapped) {
       ((List<Object>) this.value).add(value);
     } else {
-      List<Object> valueList = new ArrayList<>();
-      valueList.add(this.value);
-      valueList.add(value);
-      this.value = valueList;
+      this.value = Arrays.asList(this.value, value);
       this.isWrapped = true;
     }
   }
 
+  @SuppressWarnings("unchecked")
+  private void addMergeFlattened(Object value) {
+    List<Object> flattened = flatten(value);
+    
+    if (this.value == null) {
+      if (flattened.size() > 1) {
+        this.value = flattened;
+      } else {
+        this.value = flattened.get(0);
+      }
+      return;
+    }
+    if (this.value instanceof List<?>) {
+      ((List<Object>) this.value).addAll(flattened);
+    } else {
+      this.value = Arrays.asList(this.value);
+      ((List<Object>) this.value).addAll(flattened);
+    }
+  }
+  
+  private List<Object> flatten(Object value) {
+    List<Object> flattenedValues = new ArrayList<>();
+    
+    if (value instanceof List<?>) {
+      for (Object subvalue : ((List<?>) value)) {
+        flattenedValues.addAll((Collection<? extends Object>) flatten(subvalue));
+      }
+    } else {
+      flattenedValues.add(value);
+    }
+    return flattenedValues;
+  }
+  
   public String getJobId() {
     return jobId;
   }

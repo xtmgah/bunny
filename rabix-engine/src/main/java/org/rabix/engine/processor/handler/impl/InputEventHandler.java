@@ -9,6 +9,7 @@ import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
 import org.rabix.bindings.model.dag.DAGNode.ScatterMethod;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.JobHelper;
@@ -56,12 +57,13 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     JobRecord job = jobService.find(event.getJobId(), event.getContextId());
     VariableRecord variable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
 
+    DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
     if (!job.isInputPortReady(event.getPortId()) && !event.isEventFromScatter()) {
-      variable.addValue(event.getValue());
+      variable.addValue(event.getValue(), node.getLinkMerge());
       job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
     }
 
-    if (!job.isScattered()) {
+    if (!job.isScattered() && LinkMerge.merge_nested.equals(node.getLinkMerge())) {
       if (job.isScatterPort(event.getPortId())) {
         scatterPort(job, event);
         return;
@@ -74,7 +76,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
             job.resetInputPortCounters(event.getScatteredNodes());
           }
           if (event.isEventFromScatter()) {
-            variable.addValue(event.getValue());
+            variable.addValue(event.getValue(), null);
             job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
           }
         }
@@ -135,7 +137,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
 
         VariableRecord variable = variableService.find(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
-        variable.addValue(event.getValue());
+        variable.addValue(event.getValue(), node.getLinkMerge());
         variableService.update(variable);
       } else {
         job.setScatterWrapper(true);
