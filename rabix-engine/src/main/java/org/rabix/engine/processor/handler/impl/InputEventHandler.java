@@ -62,9 +62,10 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       variable.addValue(event.getValue(), node.getLinkMerge());
       job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
     }
-
-    if (!job.isScattered() && LinkMerge.merge_nested.equals(node.getLinkMerge())) {
-      if (job.isScatterPort(event.getPortId())) {
+    
+    // TODO REFACTOR
+    if (!job.isScattered()) {
+      if (job.isScatterPort(event.getPortId()) && (!LinkMerge.isBlocking(node.getLinkMerge()) || event.isScatteringInPlace())) {
         scatterPort(job, event);
         return;
       } else {
@@ -76,8 +77,13 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
             job.resetInputPortCounters(event.getScatteredNodes());
           }
           if (event.isEventFromScatter()) {
-            variable.addValue(event.getValue(), null);
+            variable.addValue(event.getValue(), node.getLinkMerge());
             job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
+
+            if (job.isInputPortReady(event.getPortId()) && job.isScatterPort(event.getPortId())) {
+              scatterPort(job, event);
+              return;
+            }
           }
         }
       }
@@ -132,23 +138,30 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     
     int numberOfScattered = getNumberOfScattered(job, event);
     if (!event.isScatteringInPlace()) {
-      if (event.isEventFromLookAhead()) {
+      VariableRecord variable = variableService.find(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
+      
+      if (event.isEventFromLookAhead() && !LinkMerge.isBlocking(node.getLinkMerge())) {
         job.resetInputPortCounters(numberOfScattered);
         job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
 
-        VariableRecord variable = variableService.find(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
         variable.addValue(event.getValue(), node.getLinkMerge());
         variableService.update(variable);
       } else {
         job.setScatterWrapper(true);
         jobService.update(job);
 
+        Object value = null;
         List<Object> values = null;
-        if (event.getValue() instanceof List<?>) {
-          values = (List<Object>) event.getValue();
+        if (job.isInputPortReady(event.getPortId())) {
+          value = variable.getValue();
+        } else {
+          value = event.getValue();
+        }
+        if (value instanceof List<?>) {
+          values = (List<Object>) value;
         } else {
           values = new ArrayList<>();
-          values.add(event.getValue());
+          values.add(value);
         }
         for (Object subvalue : values) {
           eventProcessor.send(new InputUpdateEvent(event.getContextId(), job.getId(), event.getPortId(), subvalue, true, true, values.size(), true));

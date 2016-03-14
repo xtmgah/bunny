@@ -1,7 +1,6 @@
 package org.rabix.engine.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,7 +59,7 @@ public class VariableRecord {
     if (isWrapped) {
       ((List<Object>) this.value).add(value);
     } else {
-      this.value = Arrays.asList(this.value, value);
+      this.value = wrap(this.value, value);
       this.isWrapped = true;
     }
   }
@@ -80,7 +79,7 @@ public class VariableRecord {
     if (this.value instanceof List<?>) {
       ((List<Object>) this.value).addAll(flattened);
     } else {
-      this.value = Arrays.asList(this.value);
+      this.value = wrap(this.value);
       ((List<Object>) this.value).addAll(flattened);
     }
   }
@@ -97,6 +96,15 @@ public class VariableRecord {
     }
     return flattenedValues;
   }
+  
+  @SuppressWarnings("unchecked")
+  public <T> Collection<T> wrap(final T... objects){
+    final Collection<T> collection = new ArrayList<T>();
+    for (T t : objects) {
+      collection.add(t);
+    }
+    return collection;
+}
   
   public String getJobId() {
     return jobId;

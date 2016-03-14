@@ -56,7 +56,7 @@ public class ScatterOneToOneMapping implements ScatterMapping {
     for (int i = 0; i < indexLists.get(0).size(); i++) {
       boolean exists = true;
       for (LinkedList<Integer> indexList : indexLists) {
-        if (indexList.get(i) == null) {
+        if (indexList.size() <= i || indexList.get(i) == null) {
           exists = false;
           break;
         }

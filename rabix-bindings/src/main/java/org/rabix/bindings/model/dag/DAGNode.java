@@ -12,7 +12,18 @@ public class DAGNode {
   
   public static enum LinkMerge {
     merge_nested,
-    merge_flattened
+    merge_flattened;
+    
+    public static boolean isBlocking(LinkMerge linkMerge) {
+      switch (linkMerge) {
+      case merge_nested:
+        return false;
+      case merge_flattened:
+        return true;
+      default:
+        return true;
+      }
+    }
   }
   
   protected final String id;

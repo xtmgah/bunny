@@ -18,7 +18,7 @@ public class InputUpdateEvent implements Event {
   private final boolean eventFromLookAhead;     // it's a look ahead event
   private final boolean eventFromScatter;       // scatter operation generated this event
   private final boolean scatteringInPlace;      // this event was produced while doing a scatter operation
-
+  
   public InputUpdateEvent(String contextId, String jobId, String portId, Object inputValue) {
     this.jobId = jobId;
     this.portId = portId;
