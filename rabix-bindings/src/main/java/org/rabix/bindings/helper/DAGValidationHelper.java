@@ -1,4 +1,4 @@
-package org.rabix.bindings.dag.validations;
+package org.rabix.bindings.helper;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,12 +10,12 @@ import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGNode;
 
-public class DAGValidations {
+public class DAGValidationHelper {
 
-  public static void DFSDetectLoop(final DAGContainer containerNode) throws BindingException {
+  public static void detectLoop(final DAGContainer containerNode) throws BindingException {
     Set<DAGNode> marked = new HashSet<DAGNode>();
     Set<DAGNode> stack = new HashSet<DAGNode>();
-    List<DAGNode> root = rootNodes(containerNode);
+    List<DAGNode> root = getRootNodes(containerNode);
     for (DAGNode node : root) {
       if (!marked.contains(node)) {
         checkForLoop(containerNode, node, marked, stack);
@@ -23,11 +23,10 @@ public class DAGValidations {
     }
   }
 
-  private static void checkForLoop(DAGContainer containerNode, DAGNode dagNode, Set<DAGNode> marked, Set<DAGNode> stack)
-      throws BindingException {
+  private static void checkForLoop(DAGContainer containerNode, DAGNode dagNode, Set<DAGNode> marked, Set<DAGNode> stack) throws BindingException {
     marked.add(dagNode);
     stack.add(dagNode);
-    List<DAGNode> adjacentNodes = adjacentNodes(containerNode, dagNode);
+    List<DAGNode> adjacentNodes = getAdjacentNodes(containerNode, dagNode);
     for (DAGNode s : adjacentNodes) {
       if (!marked.contains(s)) {
         checkForLoop(containerNode, s, marked, stack);
@@ -38,12 +37,11 @@ public class DAGValidations {
     stack.remove(dagNode);
   }
 
-  private static List<DAGNode> rootNodes(DAGContainer containerNode) {
+  private static List<DAGNode> getRootNodes(DAGContainer containerNode) {
     List<DAGNode> rootNodes = new ArrayList<DAGNode>();
     for (DAGNode node : containerNode.getChildren()) {
       for (DAGLink dataLink : containerNode.getLinks()) {
-        if (dataLink.getDestination().getNodeId().equals(node.getId())
-            && dataLink.getSource().getNodeId().equals(containerNode.getId())) {
+        if (dataLink.getDestination().getNodeId().equals(node.getId()) && dataLink.getSource().getNodeId().equals(containerNode.getId())) {
           rootNodes.add(node);
           break;
         }
@@ -52,7 +50,7 @@ public class DAGValidations {
     return rootNodes;
   }
 
-  private static List<DAGNode> adjacentNodes(DAGContainer containerNode, DAGNode dagNode) throws BindingException {
+  private static List<DAGNode> getAdjacentNodes(DAGContainer containerNode, DAGNode dagNode) throws BindingException {
     List<DAGNode> adjacentNodes = new ArrayList<DAGNode>();
     for (DAGLink dataLink : containerNode.getLinks()) {
       String nodeId = dataLink.getSource().getNodeId();
@@ -69,6 +67,6 @@ public class DAGValidations {
         return node;
       }
     }
-    throw new BindingException(String.format("Con't find DAGNode with id %s", id));
+    throw new BindingException(String.format("Can't find DAGNode with id %s", id));
   }
 }
