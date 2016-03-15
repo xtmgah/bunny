@@ -24,19 +24,24 @@ import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
 
-public class Draft2Translator implements ProtocolTranslator {
+public class Draft2ProtocolTranslator implements ProtocolTranslator {
 
   /**
    * Translates from Draft2 format to generic one
    */
   @Override
   public DAGNode translateToDAGFromPayload(String payload) throws BindingException {
+    payload = JSONHelper.transformToJSON(payload);
+    
     Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);
     return processBatchInfo(job, transformToGeneric(job.getId(), job));
   }
   
   @Override
   public DAGNode translateToDAG(String app, String inputs) throws BindingException {
+    app = JSONHelper.transformToJSON(app);
+    inputs = JSONHelper.transformToJSON(inputs);
+    
     Map<String, Object> inputsMap = JSONHelper.readMap(inputs);
     Draft2JobApp draft2JobApp = BeanSerializer.deserialize(app, Draft2JobApp.class);
     Draft2Job draft2Job = new Draft2Job(draft2JobApp, inputsMap);
@@ -47,9 +52,17 @@ public class Draft2Translator implements ProtocolTranslator {
   }
 
   @Override
-  public Map<String, Object> translateInputsFromPayload(String payload) {
+  public Object translateInputsFromPayload(String payload) {
+    payload = JSONHelper.transformToJSON(payload);
+    
     Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);
     return job.getInputs();
+  }
+  
+  @Override
+  public Object translateInputs(String inputs) throws BindingException {
+    inputs = JSONHelper.transformToJSON(inputs);
+    return JSONHelper.readMap(inputs);
   }
 
   @SuppressWarnings("unchecked")
@@ -143,11 +156,6 @@ public class Draft2Translator implements ProtocolTranslator {
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort));
     }
     return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children);
-  }
-
-  @Override
-  public Object translateInputs(String inputs) throws BindingException {
-    return JSONHelper.readMap(inputs);
   }
 
 }
