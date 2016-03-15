@@ -120,7 +120,7 @@ public class LocalExecutableHandler implements IterationCallback {
           }
           ContextRecord contextRecord = contextService.find(job.getContextId());
           Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-          executables.add(new Executable(job.getExternalId(), job.getId(), node, ExecutableStatus.READY, inputs, null, context));
+          executables.add(new Executable(job.getExternalId(), job.getId(), node, ExecutableStatus.READY, inputs, null, context, false));
         } catch (BindingException e) {
           logger.error("Cannot find Bindings.", e);
           System.exit(1);

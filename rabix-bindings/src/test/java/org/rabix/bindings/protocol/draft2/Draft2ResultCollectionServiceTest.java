@@ -50,7 +50,7 @@ public class Draft2ResultCollectionServiceTest {
 
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
+    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
     
     Bindings bindings = BindingsFactory.create(executable);
     executable = bindings.populateOutputs(executable, workingDir);
@@ -67,7 +67,7 @@ public class Draft2ResultCollectionServiceTest {
 
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
+    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
     
     Bindings bindings = BindingsFactory.create(executable);
     executable = bindings.populateOutputs(executable, workingDir);

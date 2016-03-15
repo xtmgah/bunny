@@ -19,6 +19,7 @@ import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
+import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
@@ -107,10 +108,11 @@ public class BackendCommandLine {
       ExecutorService executorService = injector.getInstance(ExecutorService.class);
       ContextService contextService = injector.getInstance(ContextService.class);
       
-      String appText = readFile(appFile.getAbsolutePath(), Charset.defaultCharset());
+      Bindings bindings = BindingsFactory.create(ProtocolType.DRAFT2);
+      
+      String appText = bindings.loadAppFromFile(appFile);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
 
-      Bindings bindings = BindingsFactory.createFromAppText(appText);
       DAGNode node = bindings.translateToDAG(appText, inputsText);
       Object inputs = bindings.translateInputs(inputsText);
 

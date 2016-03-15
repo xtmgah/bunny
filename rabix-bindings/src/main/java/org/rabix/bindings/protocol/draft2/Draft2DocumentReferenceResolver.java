@@ -69,7 +69,13 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
 
   public String resolve(File file) throws BindingException {
     try {
-      this.root = JSONHelper.readJsonNode(FileUtils.readFileToString(file));
+      String input = FileUtils.readFileToString(file);
+
+      try {
+        this.root = JSONHelper.readJsonNodeFromYAML(input);
+      } catch (Exception e) {
+        this.root = JSONHelper.readJsonNode(input);
+      }
     } catch (IOException e) {
       throw new BindingException(e);
     }

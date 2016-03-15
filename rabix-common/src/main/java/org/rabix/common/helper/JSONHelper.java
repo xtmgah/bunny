@@ -39,6 +39,12 @@ public class JSONHelper {
   }
   
   @SuppressWarnings("unchecked")
+  public static JsonNode readJsonNodeFromYAML(String yaml) {
+    Yaml reader = new Yaml();
+    return readJsonNode(writeObject((Map<String, Object>) reader.load(yaml)));
+  }
+  
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> readMap(String json) {
     return readObject(json, (Class<Map<String, Object>>) (Class<?>) Map.class);
   }

@@ -43,14 +43,14 @@ public class Executable {
   @JsonProperty("processed")
   private final boolean processed;
 
-  public Executable(String id, String nodeId, DAGNode node, ExecutableStatus status, Object inputs, Resources allocatedResources, Context context) {
+  public Executable(String id, String nodeId, DAGNode node, ExecutableStatus status, Object inputs, Resources allocatedResources, Context context, boolean processed) {
     this.id = id;
     this.nodeId = nodeId;
     this.status = status;
     this.inputs = inputs;
     this.outputs = null;
     this.context = context;
-    this.processed = false;
+    this.processed = processed;
     this.allocatedResources = allocatedResources;
     this.app = EncodingHelper.encodeBase64(node.getApp());
   }
