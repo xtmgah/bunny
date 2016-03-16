@@ -35,7 +35,6 @@ public class Draft2CommandLineToolTest {
       DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
       Bindings bindings = BindingsFactory.create(executable);
-      System.out.println(bindings.buildCommandLineParts(executable));
       resultList = bindings.buildCommandLineParts(executable);
 
       Assert.assertNotNull(resultList);
