@@ -155,10 +155,6 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
     Draft2CommandLineTool commandLineTool = (Draft2CommandLineTool) job.getApp();
     
-    if (schema != null && Draft2SchemaHelper.getInputBinding(schema) != null) {
-      inputBinding = (Map<String, Object>) Draft2SchemaHelper.getInputBinding(schema);
-    }
-
     if (inputBinding == null) {
       return null;
     }
@@ -233,7 +229,12 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
       for (Object item : ((List<?>) value)) {
         Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(commandLineTool.getSchemaDefs(), schema);
-        Draft2CommandLinePart subpart = buildCommandLinePart(job, inputPort, new HashMap<>(), item, arrayItemSchema, key);
+        Object arrayItemInputBinding = inputBinding;
+        if (schema != null && Draft2SchemaHelper.getInputBinding(schema) != null) {
+          arrayItemInputBinding = (Map<String, Object>) Draft2SchemaHelper.getInputBinding(schema);
+        }
+        
+        Draft2CommandLinePart subpart = buildCommandLinePart(job, inputPort, arrayItemInputBinding, item, arrayItemSchema, key);
 
         if (subpart != null) {
           commandLinePartBuilder.part(subpart);
