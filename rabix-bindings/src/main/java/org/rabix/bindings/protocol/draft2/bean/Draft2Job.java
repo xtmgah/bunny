@@ -126,6 +126,10 @@ public final class Draft2Job {
     return outputs;
   }
 
+  public void setResources(Draft2Resources resources) {
+    this.resources = resources;
+  }
+  
   public Draft2Resources getResources() {
     return resources;
   }

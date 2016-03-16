@@ -58,6 +58,11 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
+  public Object getJob(Executable executable) throws BindingException {
+    return protocolExecutableHelper.getJob(executable);
+  }
+  
+  @Override
   public boolean isSelfExecutable(Executable executable) throws BindingException {
     return protocolExecutableHelper.isSelfExecutable(executable);
   }

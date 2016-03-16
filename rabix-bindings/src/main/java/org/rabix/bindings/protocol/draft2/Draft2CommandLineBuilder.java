@@ -53,7 +53,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
   /**
    * Builds command line string with both STDIN and STDOUT
    */
-  private String buildCommandLine(Draft2Job job) throws BindingException {
+  public String buildCommandLine(Draft2Job job) throws BindingException {
     Draft2CommandLineTool commandLineTool = (Draft2CommandLineTool) job.getApp();
     
     List<Object> commandLineParts = buildCommandLineParts(job);
@@ -163,6 +163,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
     String separator = Draft2BindingHelper.getSeparator(inputBinding);
     String prefix = Draft2BindingHelper.getPrefix(inputBinding);
     String itemSeparator = Draft2BindingHelper.getItemSeparator(inputBinding);
+    String keyValue = inputPort != null ? inputPort.getId() : "";
 
     Object valueFrom = Draft2BindingHelper.getValueFrom(inputBinding);
     if (valueFrom != null) {
@@ -191,7 +192,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
         if (prefix == null) {
           throw new BindingException("Missing prefix for " + inputPort.getId() + " input.");
         }
-        return new Draft2CommandLinePart.Builder(position, isFile).part(prefix).build();
+        return new Draft2CommandLinePart.Builder(position, isFile).part(prefix).keyValue(keyValue).build();
       } else {
         return null;
       }
@@ -199,7 +200,8 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
     if (value instanceof Map<?, ?>) {
       Draft2CommandLinePart.Builder commandLinePartBuilder = new Draft2CommandLinePart.Builder(position, isFile);
-
+      commandLinePartBuilder.keyValue(keyValue);
+      
       for (Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()) {
         String fieldKey = entry.getKey();
         Object fieldValue = entry.getValue();
@@ -226,7 +228,8 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
     if (value instanceof List<?>) {
       Draft2CommandLinePart.Builder commandLinePartBuilder = new Draft2CommandLinePart.Builder(position, isFile);
-
+      commandLinePartBuilder.keyValue(keyValue);
+      
       for (Object item : ((List<?>) value)) {
         Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(commandLineTool.getSchemaDefs(), schema);
         Object arrayItemInputBinding = new HashMap<>();
@@ -235,7 +238,6 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
         }
         
         Draft2CommandLinePart subpart = buildCommandLinePart(job, inputPort, arrayItemInputBinding, item, arrayItemSchema, key);
-
         if (subpart != null) {
           commandLinePartBuilder.part(subpart);
         }
@@ -250,30 +252,29 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
         if (prefix == null) {
           return new Draft2CommandLinePart.Builder(position, isFile).part(joinedItems).build();
         }
-
         if (StringUtils.isWhitespace(separator)) {
-          return new Draft2CommandLinePart.Builder(position, isFile).part(prefix).part(joinedItems).build();
+          return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).part(prefix).part(joinedItems).build();
         } else {
-          return new Draft2CommandLinePart.Builder(position, isFile).part(prefix + separator + joinedItems).build();
+          return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).part(prefix + separator + joinedItems).build();
         }
       }
       if (prefix == null) {
-        return new Draft2CommandLinePart.Builder(position, isFile).parts(flattenedValues).build();
+        return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).parts(flattenedValues).build();
       }
       List<Object> prefixedValues = new ArrayList<>();
       for (Object arrayItem : flattenedValues) {
         prefixedValues.add(prefix + separator + arrayItem);
       }
-      return new Draft2CommandLinePart.Builder(position, isFile).parts(prefixedValues).build();
+      return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).parts(prefixedValues).build();
     }
 
     if (prefix == null) {
-      return new Draft2CommandLinePart.Builder(position, isFile).part(value).build();
+      return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).part(value).build();
     }
     if (Draft2BindingHelper.DEFAULT_SEPARATOR.equals(separator)) {
-      return new Draft2CommandLinePart.Builder(position, isFile).part(prefix).part(value).build();
+      return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).part(prefix).part(value).build();
     }
-    return new Draft2CommandLinePart.Builder(position, isFile).part(prefix + separator + value).build();
+    return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).part(prefix + separator + value).build();
   }
 
 }
