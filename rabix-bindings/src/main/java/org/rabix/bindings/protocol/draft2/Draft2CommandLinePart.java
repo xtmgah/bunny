@@ -118,7 +118,14 @@ public class Draft2CommandLinePart {
 
     public int compare(Object o1, Object o2) {
       if (o1 instanceof Draft2CommandLinePart && o2 instanceof Draft2CommandLinePart) {
-        return ((Draft2CommandLinePart) o1).position - ((Draft2CommandLinePart) o2).position;
+        Draft2CommandLinePart part1 = (Draft2CommandLinePart) o1;
+        Draft2CommandLinePart part2 = (Draft2CommandLinePart) o2;
+        int positionDiff = part1.position - part2.position;
+        
+        if (positionDiff != 0) {
+          return positionDiff;
+        }
+        return part1.keyValue.compareTo(part2.keyValue);
       }
       return 0;
     }

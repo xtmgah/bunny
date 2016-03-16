@@ -18,6 +18,34 @@ import org.testng.annotations.Test;
 public class Draft2CommandLineToolTest {
 
   @Test
+  public void testNestedBindingsCmdLine() throws IOException, BindingException {
+    String inputJson = ResourceHelper.readResource(this.getClass(), "nested-bindings-job.json");
+
+    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+
+    List<Object> expectedList = new LinkedList<Object>();
+    expectedList.add("bwa");
+    expectedList.add("mem");
+    expectedList.add("rabix/tests/test-files/chr20.fa");
+    expectedList.add("-XXX");
+    expectedList.add("-YYY rabix/tests/test-files/example_human_Illumina.pe_1.fastq -YYY rabix/tests/test-files/example_human_Illumina.pe_2.fastq");
+
+    List<?> resultList;
+    try {
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
+      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
+      Bindings bindings = BindingsFactory.create(executable);
+      resultList = bindings.buildCommandLineParts(executable);
+
+      Assert.assertNotNull(resultList);
+      Assert.assertEquals(resultList.size(), expectedList.size());
+      Assert.assertEquals(resultList, expectedList);
+    } catch (BindingException e) {
+      Assert.fail(e.getMessage());
+    }
+  }
+
+  @Test
   public void testBwaMemCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "bwa-mem-job.json");
 
@@ -50,7 +78,7 @@ public class Draft2CommandLineToolTest {
       Assert.fail(e.getMessage());
     }
   }
-  
+
   @Test
   public void testExpressionTool() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "expression-job.json");
@@ -112,7 +140,8 @@ public class Draft2CommandLineToolTest {
       Bindings bindings = BindingsFactory.create(executable);
       String commandLine = bindings.buildCommandLine(executable);
 
-      Assert.assertEquals(commandLine, "bwa mem -t 3 -m 3 -I 1,2,3,4 rabix/tests/test-files/chr20.fa.tmp rabix/tests/test-files/example_human_Illumina.pe_1.fastq rabix/tests/test-files/example_human_Illumina.pe_2.fastq < input.txt > output.sam");
+      Assert.assertEquals(commandLine,
+          "bwa mem -t 3 -m 3 -I 1,2,3,4 rabix/tests/test-files/chr20.fa.tmp rabix/tests/test-files/example_human_Illumina.pe_1.fastq rabix/tests/test-files/example_human_Illumina.pe_2.fastq < input.txt > output.sam");
     } catch (BindingException e) {
       Assert.fail(e.getMessage());
     }

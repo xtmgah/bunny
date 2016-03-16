@@ -218,7 +218,7 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
         try {
           String filePath = new File(file.getParentFile(), externalResource).getCanonicalPath();
           String fileContents = FileUtils.readFileToString(new File(filePath), DEFAULT_ENCODING);
-          return JSONHelper.readJsonNode(fileContents);
+          return JSONHelper.readJsonNode(JSONHelper.transformToJSON(fileContents));
         } catch (IOException e) {
           throw new BindingException("Couldn't fetch contents from " + externalResource);
         }

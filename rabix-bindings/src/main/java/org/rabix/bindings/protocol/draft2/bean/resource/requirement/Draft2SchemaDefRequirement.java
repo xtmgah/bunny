@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Draft2SchemaDefRequirement extends Draft2Resource {
 
-  public final static String KEY_SCHEMA_DEFS = "schemaDefs";
+  public final static String KEY_SCHEMA_DEFS = "types";
 
   @JsonIgnore
   public List<Map<String, Object>> getSchemaDefs() {
