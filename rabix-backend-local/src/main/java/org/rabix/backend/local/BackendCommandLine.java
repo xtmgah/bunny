@@ -14,6 +14,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.BindingException;
@@ -43,6 +44,7 @@ import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Guice;
@@ -54,6 +56,7 @@ import com.google.inject.Injector;
 public class BackendCommandLine {
 
   private static final Logger logger = LoggerFactory.getLogger(BackendCommandLine.class);
+  private static String configDir = "/.bunny/";
   
   public static void main(String[] commandLineArguments) {
     final CommandLineParser commandLineParser = new DefaultParser();
@@ -65,28 +68,35 @@ public class BackendCommandLine {
       if (commandLine.hasOption("h")) {
         printUsageAndExit(posixOptions);
       }
-      checkCommandLine(commandLine);
-
-      String inputsPath = commandLine.getOptionValue("inputs");
-      File inputsFile = new File(inputsPath);
-      if (!inputsFile.exists()) {
-        logger.info("Inputs file {} does not exist.", inputsFile.getCanonicalPath());
-        System.exit(10);
+      if (!checkCommandLine(commandLine)) {
+        printUsageAndExit(posixOptions);
       }
-      
-      String appPath = commandLine.getOptionValue("app");
+
+      String appPath = commandLine.getArgList().get(0);
       File appFile = new File(appPath);
       if (!appFile.exists()) {
         logger.info("Application file {} does not exist.", appFile.getCanonicalPath());
-        System.exit(10);
+        printUsageAndExit(posixOptions);
       }
       
-      File configDir = new File("config");
+      String inputsPath = commandLine.getArgList().get(1);
+      File inputsFile = new File(inputsPath);
+      if (!inputsFile.exists()) {
+        logger.info("Inputs file {} does not exist.", inputsFile.getCanonicalPath());
+        printUsageAndExit(posixOptions);
+      }
+      
+      
+      // print command line      
+      
+      // Search for config in /home
+      File configDir = getConfigDir(commandLine, posixOptions);
+      
       if (!configDir.exists() || !configDir.isDirectory()) {
         logger.info("Config directory {} doesn't exist or is not a directory", configDir.getCanonicalPath());
-        System.exit(10);
+        printUsageAndExit(posixOptions);
       }
-      
+
       Map<String, Object> configOverrides = new HashMap<>();
       String executionDirPath = commandLine.getOptionValue("execution-dir");
       if (executionDirPath != null) {
@@ -99,7 +109,8 @@ public class BackendCommandLine {
         }
       }
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
-      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(), new ExecutorModule(configModule));
+      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
+          new ExecutorModule(configModule));
       DAGNodeDB nodeDB = injector.getInstance(DAGNodeDB.class);
       EventProcessor eventProcessor = injector.getInstance(EventProcessor.class);
       JobService jobService = injector.getInstance(JobService.class);
@@ -107,9 +118,9 @@ public class BackendCommandLine {
       LinkService linkService = injector.getInstance(LinkService.class);
       ExecutorService executorService = injector.getInstance(ExecutorService.class);
       ContextService contextService = injector.getInstance(ContextService.class);
-      
+
       Bindings bindings = BindingsFactory.create(ProtocolType.DRAFT2);
-      
+
       String appText = bindings.loadAppFromFile(appFile);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
 
@@ -118,7 +129,7 @@ public class BackendCommandLine {
 
       Context context = new Context(Context.createUniqueID(), null);
       List<IterationCallback> callbacks = new ArrayList<>();
-      
+
       String outputDirPath = commandLine.getOptionValue("log-iterations-dir");
       if (outputDirPath != null) {
         File outputDir = new File(outputDirPath);
@@ -126,7 +137,8 @@ public class BackendCommandLine {
           logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
           System.exit(10);
         } else {
-          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobService, variableService, linkService, contextService, nodeDB));
+          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobService, variableService, linkService,
+              contextService, nodeDB));
         }
       }
       callbacks.add(new LocalExecutableHandler(executorService, jobService, variableService, contextService, nodeDB));
@@ -151,53 +163,70 @@ public class BackendCommandLine {
   }
 
   /**
-   * Create command line options 
+   * Create command line options
    */
   private static Options createOptions() {
     Options options = new Options();
-    options.addOption("a", "app", true, "application file");
-    options.addOption("i", "inputs", true, "inputs file");
     options.addOption("v", "verbose", false, "verbose");
     options.addOption("e", "execution-dir", true, "execution directory");
     options.addOption("l", "log-iterations-dir", true, "log engine tables directory");
+    options.addOption("c", "configuration-dir", true, "configuration directory");
     options.addOption("h", "help", false, "help");
     return options;
   }
 
   /**
-   * Check for missing options 
+   * Check for missing options
    */
-  private static void checkCommandLine(CommandLine commandLine) {
-    if (!commandLine.hasOption("app")) {
-      logger.info("missing application file");
-      System.exit(10);
+  private static boolean checkCommandLine(CommandLine commandLine) {
+    if (commandLine.getArgList().size() != 2) {
+      logger.info("Invalid number of arguments");
+      return false;
     }
-    if (!commandLine.hasOption("inputs")) {
-      logger.info("missing inputs file");
-      System.exit(10);
-    }
+    return true;
   }
 
   /**
-   * Prints command line usage 
+   * Prints command line usage
    */
   private static void printUsageAndExit(Options options) {
-    new HelpFormatter().printHelp("rabix [OPTION]...", options);
+    new HelpFormatter().printHelp("rabix [OPTION]... <tool> <job>", options);
     System.exit(0);
+  }
+  
+  private static File getConfigDir(CommandLine commandLine, Options options) throws IOException {
+    String configPath = commandLine.getOptionValue("configuration-dir");
+    if(configPath != null) {
+      File config = new File(configPath);
+      if (config.exists() && config.isDirectory()) {
+        return config;
+      }
+      else {
+        logger.info("Configuration directory {} doesn't exist or is not a directory. Using default configuration directory", configPath);
+      }
+    }
+    String homeDir = System.getProperty("user.home");
+    File config = new File(homeDir, configDir);
+    if(!config.exists() || !config.isDirectory()) {
+        logger.info("Config directory {} doesn't exist or is not a directory", config.getCanonicalPath());
+        printUsageAndExit(options);
+      }
+    return config;
   }
 
   /**
    * Detects end of execution per root Job
    */
   private static class EndRootCallback implements IterationCallback {
-    
+
     private Bindings bindings;
-    
+
     private JobService jobService;
     private ContextService contextService;
     private VariableService variableService;
 
-    public EndRootCallback(ContextService contextService, JobService jobService, VariableService variableService, Bindings bindings) {
+    public EndRootCallback(ContextService contextService, JobService jobService, VariableService variableService,
+        Bindings bindings) {
       this.jobService = jobService;
       this.contextService = contextService;
       this.variableService = variableService;
@@ -209,9 +238,9 @@ public class BackendCommandLine {
       ContextRecord context = contextService.find(contextId);
       if (context.getStatus().equals(ContextStatus.COMPLETED)) {
         JobRecord root = jobService.findRoot(contextId);
-        
+
         List<VariableRecord> outputVariables = variableService.find(root.getId(), LinkPortType.OUTPUT, contextId);
-        
+
         Object outputs = null;
         try {
           for (VariableRecord outputVariable : outputVariables) {
