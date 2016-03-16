@@ -229,7 +229,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
       for (Object item : ((List<?>) value)) {
         Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(commandLineTool.getSchemaDefs(), schema);
-        Object arrayItemInputBinding = inputBinding;
+        Object arrayItemInputBinding = new HashMap<>();
         if (schema != null && Draft2SchemaHelper.getInputBinding(schema) != null) {
           arrayItemInputBinding = (Map<String, Object>) Draft2SchemaHelper.getInputBinding(schema);
         }
