@@ -20,31 +20,43 @@ public class Draft2CommandLineTool extends Draft2JobApp {
   @JsonProperty("stdout")
   private Object stdout;
   @JsonProperty("baseCommand")
-  private List<Object> baseCommands;
+  private Object baseCommand;
   @JsonProperty("arguments")
   private List<Object> arguments;
   
 
   public Draft2CommandLineTool() {
     super();
-    this.baseCommands = new ArrayList<>();
+    this.baseCommand = new ArrayList<>();
     this.arguments = new ArrayList<>();
   }
 
+  @SuppressWarnings("unchecked")
   public List<Object> getBaseCmd(Draft2Job job) throws Draft2ExpressionException {
     List<Object> result = new LinkedList<>();
 
-    for (Object baseCmd : baseCommands) {
-      if (Draft2ExpressionBeanHelper.isExpression(baseCmd)) {
-        Object transformed = Draft2ExpressionBeanHelper.evaluate(job, baseCmd);
+    if (baseCommand instanceof List<?>) {
+      for (Object baseCmd : ((List<Object>) baseCommand)) {
+        Object transformed = transformBaseCommand(job, baseCmd);
         if (transformed != null) {
           result.add(transformed);
         }
-      } else {
-        result.add(baseCmd);
+      }
+    } else if (baseCommand instanceof String) {
+      Object transformed = transformBaseCommand(job, baseCommand);
+      if (transformed != null) {
+        result.add(transformed);
       }
     }
     return result;
+  }
+  
+  private Object transformBaseCommand(Draft2Job job, Object baseCommand) throws Draft2ExpressionException {
+    if (Draft2ExpressionBeanHelper.isExpression(baseCommand)) {
+      return Draft2ExpressionBeanHelper.evaluate(job, baseCommand);
+    } else {
+      return baseCommand;
+    }
   }
 
   public String getStdin(Draft2Job job) throws Draft2ExpressionException {
@@ -109,7 +121,7 @@ public class Draft2CommandLineTool extends Draft2JobApp {
 
   @Override
   public String toString() {
-    return "CommandLineTool [stdin=" + stdin + ", stdout=" + stdout + ", baseCommands=" + baseCommands + ", arguments="
+    return "CommandLineTool [stdin=" + stdin + ", stdout=" + stdout + ", baseCommands=" + baseCommand + ", arguments="
         + arguments + ", successCodes=" + successCodes + ", id=" + id + ", context=" + context + ", description="
         + description + ", label=" + label + ", contributor=" + contributor + ", owner=" + owner + ", inputs=" + getInputs()
         + ", outputs=" + getOutputs() + ", requirements=" + requirements + "]";
