@@ -56,10 +56,10 @@ public class Draft2CommandLineToolTest {
     expectedList.add("mem");
     expectedList.add("-t");
     expectedList.add(3);
-    expectedList.add("-m");
-    expectedList.add(3);
     expectedList.add("-I");
     expectedList.add("1,2,3,4");
+    expectedList.add("-m");
+    expectedList.add(3);
     expectedList.add("rabix/tests/test-files/chr20.fa.tmp");
     expectedList.add("rabix/tests/test-files/example_human_Illumina.pe_1.fastq");
     expectedList.add("rabix/tests/test-files/example_human_Illumina.pe_2.fastq");
@@ -70,7 +70,6 @@ public class Draft2CommandLineToolTest {
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
       Bindings bindings = BindingsFactory.create(executable);
       resultList = bindings.buildCommandLineParts(executable);
-
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
       Assert.assertEquals(resultList, expectedList);
@@ -139,9 +138,9 @@ public class Draft2CommandLineToolTest {
       Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
       Bindings bindings = BindingsFactory.create(executable);
       String commandLine = bindings.buildCommandLine(executable);
-
+      
       Assert.assertEquals(commandLine,
-          "bwa mem -t 3 -m 3 -I 1,2,3,4 rabix/tests/test-files/chr20.fa.tmp rabix/tests/test-files/example_human_Illumina.pe_1.fastq rabix/tests/test-files/example_human_Illumina.pe_2.fastq < input.txt > output.sam");
+          "bwa mem -t 3 -I 1,2,3,4 -m 3 rabix/tests/test-files/chr20.fa.tmp rabix/tests/test-files/example_human_Illumina.pe_1.fastq rabix/tests/test-files/example_human_Illumina.pe_2.fastq < input.txt > output.sam");
     } catch (BindingException e) {
       Assert.fail(e.getMessage());
     }
@@ -234,9 +233,9 @@ public class Draft2CommandLineToolTest {
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("java -jar /picard-tools-1.126/picard.jar SortSam");
     expectedList.add("OUTPUT=input.sorted.bam");
+    expectedList.add("COMPRESSION_LEVEL=50");
     expectedList.add("QUIET=True");
     expectedList.add("VALIDATION_STRINGENCY=SILENT");
-    expectedList.add("COMPRESSION_LEVEL=50");
     expectedList.add("SO=unsorted");
     expectedList.add("CREATE_INDEX=True");
 
@@ -267,12 +266,12 @@ public class Draft2CommandLineToolTest {
     expectedList.add("O=input.deduped.bam");
     expectedList.add("AS=False");
     expectedList.add("CREATE_INDEX=True");
-    expectedList.add("READ_NAME_REGEX=something");
-    expectedList.add("SORTING_COLLECTION_SIZE_RATIO=50");
+    expectedList.add("COMMENT=some_comment");
     expectedList.add("MAX_FILE_HANDLES=max_file_handles_something");
     expectedList.add("MAX_SEQS=20");
-    expectedList.add("COMMENT=some_comment");
     expectedList.add("PG_NAME=group_name");
+    expectedList.add("READ_NAME_REGEX=something");
+    expectedList.add("SORTING_COLLECTION_SIZE_RATIO=50");
 
     List<?> resultList;
     try {
@@ -396,4 +395,5 @@ public class Draft2CommandLineToolTest {
       Assert.fail(e.getMessage());
     }
   }
+  
 }
