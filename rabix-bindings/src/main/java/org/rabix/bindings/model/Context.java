@@ -3,12 +3,18 @@ package org.rabix.bindings.model;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Context {
 
+  @JsonProperty("id")
   private final String id;
+  @JsonProperty("config")
   private final Map<String, String> config;
 
-  public Context(String id, Map<String, String> config) {
+  @JsonCreator
+  public Context(@JsonProperty("id") String id, @JsonProperty("config") Map<String, String> config) {
     this.id = id;
     this.config = config;
   }

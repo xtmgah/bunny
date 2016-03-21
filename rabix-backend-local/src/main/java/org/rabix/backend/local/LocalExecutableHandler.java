@@ -68,7 +68,7 @@ public class LocalExecutableHandler implements IterationCallback {
           @Override
           public void run() {
             ExecutableStatus status = executorService.findStatus(executable.getId(), contextId);
-            while (!(status.equals(ExecutableStatus.FINISHED) || status.equals(ExecutableStatus.FAILED))) {
+            while (!(status.equals(ExecutableStatus.COMPLETED) || status.equals(ExecutableStatus.FAILED))) {
               try {
                 Thread.sleep(7000);
               } catch (InterruptedException e) {
@@ -79,7 +79,7 @@ public class LocalExecutableHandler implements IterationCallback {
             }
             try {
               Bindings bindings = BindingsFactory.create(executable);
-              if (status.equals(ExecutableStatus.FINISHED)) {
+              if (status.equals(ExecutableStatus.COMPLETED)) {
                 Object results = executorService.getResult(executable.getId(), contextId);
 
                 ProtocolType protocolType = bindings.getProtocolType();
@@ -120,7 +120,7 @@ public class LocalExecutableHandler implements IterationCallback {
           }
           ContextRecord contextRecord = contextService.find(job.getContextId());
           Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-          executables.add(new Executable(job.getExternalId(), job.getId(), node, ExecutableStatus.READY, inputs, null, context, false));
+          executables.add(new Executable(job.getExternalId(), job.getId(), node, ExecutableStatus.READY, inputs, null, context));
         } catch (BindingException e) {
           logger.error("Cannot find Bindings.", e);
           System.exit(1);

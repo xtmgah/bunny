@@ -51,7 +51,7 @@ public class StatusCommand extends ExecutableHandlerCommand {
         failed(executableData, message, null);
       } else {
         message = String.format("Executable %s completed successfully.", executable.getId());
-        executableDataService.save(executableData, message, ExecutableStatus.FINISHED, contextId);
+        executableDataService.save(executableData, message, ExecutableStatus.COMPLETED, contextId);
         completed(executableData, message, executable.getOutputs());
       }
     } catch (Exception e) {

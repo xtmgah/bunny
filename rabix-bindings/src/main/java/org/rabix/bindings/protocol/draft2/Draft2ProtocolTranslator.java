@@ -116,7 +116,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
     LinkMerge linkMerge = job.getLinkMerge() != null? LinkMerge.valueOf(job.getLinkMerge()) : LinkMerge.merge_nested;
     ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : ScatterMethod.dotproduct;
     if (!job.getApp().isWorkflow()) {
-      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp());
+      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp(), job.getInputs());
     }
 
     Draft2Workflow workflow = (Draft2Workflow) job.getApp();
@@ -155,7 +155,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
       DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getScattered() != null ? dataLink.getScattered() : false);
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort));
     }
-    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children);
+    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children, job.getInputs());
   }
 
 }

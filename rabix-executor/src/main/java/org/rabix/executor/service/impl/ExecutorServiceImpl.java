@@ -113,9 +113,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 
   private boolean isFinished(ExecutableStatus jobStatus) {
     switch (jobStatus) {
-    case FINISHED:
+    case COMPLETED:
     case FAILED:
-    case STOPPED:
+    case ABORTED:
       return true;
     default:
       return false;

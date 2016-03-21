@@ -26,7 +26,7 @@ public class StopCommand extends ExecutableHandlerCommand {
       handler.stop();
 
       String message = String.format("Executable %s aborted successfully.", executableId);
-      executableDataService.save(executableData, message, ExecutableStatus.STOPPED, contextId);
+      executableDataService.save(executableData, message, ExecutableStatus.ABORTED, contextId);
       stopped(executableData, message);
     } catch (ExecutorException e) {
       String message = String.format("Failed to stop %s. %s", executableId, e.toString());

@@ -75,7 +75,9 @@ public class Draft2Step {
       String id = Draft2SchemaHelper.getLastInputId(Draft2BindingHelper.getId(port));
       id = Draft2SchemaHelper.normalizeId(id);
       Object value = Draft2BindingHelper.getDefault(port);
-      portMap.put(id, value);
+      if (value != null) {
+        portMap.put(id, value);
+      }
     }
     return portMap;
   }

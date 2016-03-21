@@ -13,6 +13,7 @@ import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobService;
+import org.rabix.engine.service.JobService.JobState;
 
 import com.google.inject.Inject;
 
@@ -32,6 +33,10 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     JobRecord job = jobService.find(event.getJobId(), event.getContextId());
     
     switch (event.getState()) {
+      case RUNNING:
+        job.setState(JobState.RUNNING);
+        jobService.update(job);
+        break;
       case COMPLETED:
         try {
           Bindings bindings = BindingsFactory.create(event.getProtocolType());
@@ -46,6 +51,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         break;
       case FAILED:
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
+        break;
       default:
         break;
     }

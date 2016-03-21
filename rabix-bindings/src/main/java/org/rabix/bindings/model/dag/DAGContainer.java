@@ -1,14 +1,15 @@
 package org.rabix.bindings.model.dag;
 
 import java.util.List;
+import java.util.Map;
 
 public class DAGContainer extends DAGNode {
 
   private final List<DAGLink> links;
   private final List<DAGNode> children;
 
-  public DAGContainer(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, Object app, ScatterMethod scatterMethod, LinkMerge linkMerge, List<DAGLink> links, List<DAGNode> children) {
-    super(id, inputPorts, outputPorts, scatterMethod, linkMerge, app);
+  public DAGContainer(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, Object app, ScatterMethod scatterMethod, LinkMerge linkMerge, List<DAGLink> links, List<DAGNode> children, Map<String, Object> defaults) {
+    super(id, inputPorts, outputPorts, scatterMethod, linkMerge, app, defaults);
     this.links = links;
     this.children = children;
   }

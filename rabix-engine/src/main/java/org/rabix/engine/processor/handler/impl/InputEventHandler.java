@@ -1,7 +1,9 @@
 package org.rabix.engine.processor.handler.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.model.dag.DAGContainer;
@@ -288,8 +290,14 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       JobRecord childJob = new JobRecord(contextId, newJobId, JobHelper.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, false, false);
       jobService.create(childJob);
 
+      Map<?, ?> defaults = node.getDefaults() != null? node.getDefaults() : new HashMap<>();
       for (DAGLinkPort port : node.getInputPorts()) {
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null);
+        VariableRecord childVariable = null;
+        if (defaults.containsKey(port.getId())) {
+          childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, defaults.get(port.getId()), true);
+        } else {
+          childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null);
+        }
         variableService.create(childVariable);
       }
 
@@ -327,6 +335,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       handleLinkPort(jobService.find(sourceNodeId, contextId), link.getSource());
       handleLinkPort(jobService.find(destinationNodeId, contextId), link.getDestination());
     }
+    
   }
   
   /**
