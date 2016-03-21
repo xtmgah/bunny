@@ -3,30 +3,11 @@ package org.rabix.bindings.model.dag;
 import java.util.List;
 import java.util.Map;
 
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
+
 public class DAGNode {
 
-  public static enum ScatterMethod {
-    dotproduct,
-    nested_crossproduct,
-    flat_crossproduct
-  }
-  
-  public static enum LinkMerge {
-    merge_nested,
-    merge_flattened;
-    
-    public static boolean isBlocking(LinkMerge linkMerge) {
-      switch (linkMerge) {
-      case merge_nested:
-        return false;
-      case merge_flattened:
-        return true;
-      default:
-        return true;
-      }
-    }
-  }
-  
   protected final String id;
   protected final Object app;
   protected final LinkMerge linkMerge;

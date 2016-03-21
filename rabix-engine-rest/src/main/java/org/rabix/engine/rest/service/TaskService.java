@@ -46,6 +46,7 @@ public class TaskService {
 
     List<IterationCallback> callbacks = new ArrayList<>();
     callbacks.add(new EndTaskCallback(contextService, taskDB));
+    callbacks.add(new CommandLinePrinter(null, jobService, variableService, linkService, contextService, nodeDB));
     callbacks.add(new SendExecutablesCallback(executableService, backendPluginDispatcher));
     this.eventProcessor.start(callbacks);
   }
