@@ -1,18 +1,19 @@
-package org.rabix.engine.service;
+package org.rabix.engine.validator;
 
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.service.JobService.JobState;
 
-public class JobStateService {
+public class JobStateValidator {
 
-  private Map<JobState, List<JobState>> transitions = new HashMap<JobState, List<JobState>>();
+  private static Map<JobState, List<JobState>> transitions = new HashMap<JobState, List<JobState>>();
 
-  public JobStateService() {
-    transitions = new HashMap<JobState, List<JobState>>();
+  static {
     List<JobState> transitionFromPending = new ArrayList<JobState>();
     transitionFromPending.add(JobState.READY);
     transitions.put(JobState.PENDING, transitionFromPending);
@@ -29,14 +30,16 @@ public class JobStateService {
     transitions.put(JobState.COMPLETED, transitionFromCompleted);
     List<JobState> transitionFromFailed = new ArrayList<JobState>();
     transitions.put(JobState.FAILED, transitionFromFailed);
+    
+    transitions = Collections.unmodifiableMap(transitions);
   }
-
-  public JobState checkState(JobRecord jobRecord, JobState jobState) {
+  
+  public static JobState checkState(JobRecord jobRecord, JobState jobState) throws JobStateValidationException {
     JobState currentState = jobRecord.getState();
     if (transitions.get(currentState).contains(jobState)) {
       return jobState;
     } else {
-      throw new IllegalStateException();
+      throw new JobStateValidationException("Job state cannot transition from " + jobRecord.getState() + " to " + jobState);
     }
   }
 

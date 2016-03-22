@@ -400,7 +400,7 @@ public class Draft2CommandLineToolTest {
     String inputJson = ResourceHelper.readResource(this.getClass(), "vagner-app-test.json");
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     
-    DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
+    DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp(), null);
     Assert.assertTrue(dagNode.getApp() instanceof Draft2WagnerPythonTool); 
   }
   

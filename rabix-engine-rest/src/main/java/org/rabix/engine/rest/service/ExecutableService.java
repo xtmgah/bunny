@@ -22,6 +22,8 @@ import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.service.ContextService;
 import org.rabix.engine.service.JobService;
 import org.rabix.engine.service.VariableService;
+import org.rabix.engine.validator.JobStateValidationException;
+import org.rabix.engine.validator.JobStateValidator;
 import org.rabix.engine.service.JobService.JobState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,18 +88,23 @@ public class ExecutableService {
       Bindings bindings = BindingsFactory.create(executable);
       ProtocolType protocolType = bindings.getProtocolType();
       
+      JobRecord job = jobService.find(executable.getNodeId(), executable.getContext().getId());
+      
       JobStatusEvent statusEvent = null;
       ExecutableStatus status = executable.getStatus();
       switch (status) {
       case RUNNING:
+        JobStateValidator.checkState(job, JobState.RUNNING);
         statusEvent = new JobStatusEvent(executable.getNodeId(), executable.getContext().getId(), JobState.RUNNING, executable.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
+        JobStateValidator.checkState(job, JobState.FAILED);
         statusEvent = new JobStatusEvent(executable.getNodeId(), executable.getContext().getId(), JobState.FAILED, null, protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
       case COMPLETED:
+        JobStateValidator.checkState(job, JobState.COMPLETED);
         statusEvent = new JobStatusEvent(executable.getNodeId(), executable.getContext().getId(), JobState.COMPLETED, executable.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
@@ -107,6 +114,9 @@ public class ExecutableService {
     } catch (BindingException e) {
       logger.error("Cannot find Bindings", e);
       throw new ExecutableServiceException("Cannot find Bindings", e);
+    } catch (JobStateValidationException e) {
+      logger.error("Failed to update Job state");
+      throw new ExecutableServiceException("Failed to update Job state", e);
     }
   }
   
