@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Context {
 
   @JsonProperty("id")
-  private final String id;
+  private String id;
   @JsonProperty("config")
-  private final Map<String, String> config;
+  private Map<String, String> config;
 
   @JsonCreator
   public Context(@JsonProperty("id") String id, @JsonProperty("config") Map<String, String> config) {
@@ -23,10 +23,18 @@ public class Context {
     return UUID.randomUUID().toString();
   }
   
+  public void setId(String id) {
+    this.id = id;
+  }
+  
   public String getId() {
     return id;
   }
 
+  public void setConfig(Map<String, String> config) {
+    this.config = config;
+  }
+  
   public Map<String, String> getConfig() {
     return config;
   }

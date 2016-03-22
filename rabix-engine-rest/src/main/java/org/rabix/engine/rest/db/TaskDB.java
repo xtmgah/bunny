@@ -1,21 +1,33 @@
 package org.rabix.engine.rest.db;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import org.rabix.engine.rest.dto.Task;
 
 public class TaskDB {
 
-  private Map<String, Boolean> taskStates = new HashMap<>();
+  private Map<String, Task> tasks = new HashMap<>();
   
-  public void set(String contextId, Boolean state) {
-    taskStates.put(contextId, state);
+  public void add(Task task) {
+    tasks.put(task.getId(), task);
   }
   
-  public Boolean get(String contextId) {
-    return taskStates.get(contextId);
+  public void update(Task task) {
+    tasks.put(task.getId(), task);
   }
   
-  public Map<String, Boolean> getTaskStates() {
-    return taskStates;
+  public Task get(String id) {
+    return tasks.get(id);
+  }
+  
+  public Set<Task> getTasks() {
+    Set<Task> taskSet = new HashSet<>();
+    for (Task task : tasks.values()) {
+      taskSet.add(task);
+    }
+    return taskSet;
   }
 }
