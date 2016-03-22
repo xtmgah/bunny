@@ -16,16 +16,16 @@ public class Task {
   private ProtocolType type;
   @JsonProperty("context")
   private Context context;
-  @JsonProperty("completed")
-  private boolean completed;
+  @JsonProperty("status")
+  private TaskStatus status;
 
   @JsonCreator
-  public Task(@JsonProperty("id") String id, @JsonProperty("payload") String payload, @JsonProperty("type") ProtocolType type, @JsonProperty("context") Context context, @JsonProperty("completed") boolean completed) {
+  public Task(@JsonProperty("id") String id, @JsonProperty("payload") String payload, @JsonProperty("type") ProtocolType type, @JsonProperty("context") Context context, @JsonProperty("status") TaskStatus status) {
     this.id = id;
     this.type = type;
     this.payload = payload;
     this.context = context;
-    this.completed = completed;
+    this.status = status;
   }
 
   public String getId() {
@@ -60,17 +60,17 @@ public class Task {
     this.context = context;
   }
 
-  public boolean isCompleted() {
-    return completed;
+  public TaskStatus getStatus() {
+    return status;
   }
 
-  public void setCompleted(boolean completed) {
-    this.completed = completed;
+  public void setStatus(TaskStatus status) {
+    this.status = status;
   }
 
   @Override
   public String toString() {
-    return "Task [id=" + id + ", payload=" + payload + ", type=" + type + ", context=" + context + ", completed=" + completed + "]";
+    return "Task [id=" + id + ", payload=" + payload + ", type=" + type + ", context=" + context + ", status=" + status + "]";
   }
 
 }

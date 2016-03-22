@@ -15,8 +15,8 @@ angular.module('taskApp.controllers',[]).controller('TaskListController',functio
     		console.log('getting task status')
     		Task.get({ id: task.id }, function(data) {
     			console.log('returning task status')
-    			if (task.completed != data.completed) {
-    				task.completed = data.completed;
+    			if (task.status != data.status) {
+    				task.status = data.status;
         		}
     			defer.resolve(data);
     		}, function(err) {

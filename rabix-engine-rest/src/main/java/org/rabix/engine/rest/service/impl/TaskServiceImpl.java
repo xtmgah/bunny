@@ -15,12 +15,12 @@ import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.model.ContextRecord;
-import org.rabix.engine.model.ContextRecord.ContextStatus;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.EventProcessor.IterationCallback;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.rest.db.TaskDB;
 import org.rabix.engine.rest.dto.Task;
+import org.rabix.engine.rest.dto.TaskStatus;
 import org.rabix.engine.rest.plugin.BackendPluginDispatcher;
 import org.rabix.engine.rest.service.TaskService;
 import org.rabix.engine.rest.service.TaskServiceException;
@@ -122,10 +122,21 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) {
       ContextRecord context = contextService.find(contextId);
-      if (context.getStatus().equals(ContextStatus.COMPLETED)) {
-        Task task = taskDB.get(contextId);
-        task.setCompleted(true);
+      
+      Task task = null;
+      switch (context.getStatus()) {
+      case COMPLETED:
+        task = taskDB.get(contextId);
+        task.setStatus(TaskStatus.COMPLETED);
         taskDB.update(task);
+        break;
+      case FAILED:
+        task = taskDB.get(contextId);
+        task.setStatus(TaskStatus.FAILED);
+        taskDB.update(task);
+        break;
+      default:
+        break;
       }
     }
   }
