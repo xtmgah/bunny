@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolTranslator;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
@@ -19,6 +20,7 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.common.helper.JSONHelper;
@@ -26,6 +28,12 @@ import org.rabix.common.json.BeanSerializer;
 
 public class Draft2ProtocolTranslator implements ProtocolTranslator {
 
+  @Override
+  public DAGNode translateToDAG(Job job) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job)); 
+  }
+  
   /**
    * Translates from Draft2 format to generic one
    */

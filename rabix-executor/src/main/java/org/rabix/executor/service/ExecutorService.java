@@ -1,5 +1,7 @@
 package org.rabix.executor.service;
 
+import java.util.Map;
+
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 
@@ -13,7 +15,7 @@ public interface ExecutorService {
 
   boolean isRunning(String id, String contextId);
   
-  Object getResult(String id, String contextId);
+  Map<String, Object> getResult(String id, String contextId);
   
   boolean isStopped();
 

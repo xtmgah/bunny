@@ -107,8 +107,8 @@ public class JobHandlerCommandDispatcher {
         synchronized (jobHandlerRunnables) {
           logger.debug("Cleaner thread is executing. There are {} runnable(s) in the pool.", jobHandlerRunnables.size());
 
-          List<Map<String, String>> stoppedIds = new ArrayList<>();
-          List<Map<String, String>> runningIds = new ArrayList<>();
+          List<Pair> stoppedIds = new ArrayList<>();
+          List<Pair> runningIds = new ArrayList<>();
 
           for (Entry<String, Map<String, JobHandlerRunnable>> runnableEntry : jobHandlerRunnables.entrySet()) {
             String contextId = runnableEntry.getKey();
@@ -117,28 +117,31 @@ public class JobHandlerCommandDispatcher {
               JobHandlerRunnable thread = runnable.getValue();
 
               if (thread.isStopped()) {
-                stoppedIds.add(mapping(id, contextId));
+                stoppedIds.add(new Pair(id, contextId));
               } else {
-                runningIds.add(mapping(id, contextId));
+                runningIds.add(new Pair(id, contextId));
               }
             }
           }
 
-          for (Map<String, String> stopped : stoppedIds) {
-            logger.debug("Cleaner thread removes JobHandlerRunnable for context {} and job {}.", stopped.get("context_id"), stopped.get("job_id"));
-            jobHandlerRunnables.get(stopped.get("context_id")).remove(stopped.get("job_id"));
+          for (Pair stopped : stoppedIds) {
+            logger.debug("Cleaner thread removes JobHandlerRunnable for context {} and job {}.", stopped.contextId, stopped.jobId);
+            jobHandlerRunnables.get(stopped.contextId).remove(stopped.jobId);
           }
         }
       }
-
-      private Map<String, String> mapping(String jobId, String contextId) {
-        Map<String, String> mapping = new HashMap<>();
-        mapping.put("job_id", jobId);
-        mapping.put("context_id", contextId);
-        return mapping;
+      
+      class Pair {
+        private String jobId;
+        private String contextId;
+        
+        public Pair(String jobId, String contextId) {
+          this.jobId = jobId;
+          this.contextId = contextId;
+        }
       }
 
     }, 1, 1, TimeUnit.MINUTES);
   }
-
+  
 }

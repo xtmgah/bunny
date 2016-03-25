@@ -1,7 +1,9 @@
 package org.rabix.bindings.model;
 
-import org.rabix.bindings.BindingException;
+import java.util.Map;
+
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.common.helper.CloneHelper;
 import org.rabix.common.helper.EncodingHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -36,20 +38,17 @@ public class Job {
   @JsonProperty("context")
   private final Context context;
   @JsonProperty("inputs")
-  private final Object inputs;
+  private final Map<String, Object> inputs;
   @JsonProperty("outputs")
-  private final Object outputs;
-  @JsonProperty("allocatedResources")
-  private final Resources allocatedResources;
+  private final Map<String, Object> outputs;
   
-  public Job(String id, String nodeId, DAGNode node, JobStatus status, Object inputs, Resources allocatedResources, Context context) {
+  public Job(String id, String nodeId, DAGNode node, JobStatus status, Map<String, Object> inputs, Context context) {
     this.id = id;
     this.nodeId = nodeId;
     this.status = status;
     this.inputs = inputs;
     this.outputs = null;
     this.context = context;
-    this.allocatedResources = allocatedResources;
     this.app = EncodingHelper.encodeBase64(node.getApp());
   }
 
@@ -58,9 +57,8 @@ public class Job {
       @JsonProperty("nodeId") String nodeId,
       @JsonProperty("app") String app, 
       @JsonProperty("status") JobStatus status, 
-      @JsonProperty("allocatedResources") Resources allocatedResources,
-      @JsonProperty("inputs") Object inputs, 
-      @JsonProperty("outputs") Object otputs,
+      @JsonProperty("inputs") Map<String, Object> inputs, 
+      @JsonProperty("outputs") Map<String, Object> otputs,
       @JsonProperty("context") Context context) {
     this.id = id;
     this.nodeId = nodeId;
@@ -69,23 +67,22 @@ public class Job {
     this.inputs = inputs;
     this.outputs = otputs;
     this.context = context;
-    this.allocatedResources = allocatedResources;
   }
 
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.nodeId, job.app, job.status, resources, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, job.outputs, job.context);
   }
 
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.nodeId, job.app, status, job.allocatedResources, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.nodeId, job.app, status, job.inputs, job.outputs, job.context);
   }
   
-  public static Job cloneWithInputs(Job job, Object inputs) {
-    return new Job(job.id, job.nodeId, job.app, job.status, job.allocatedResources, inputs, job.outputs, job.context);
+  public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
+    return new Job(job.id, job.nodeId, job.app, job.status, inputs, job.outputs, job.context);
   }
   
-  public static Job cloneWithOutputs(Job job, Object outputs) {
-    return new Job(job.id, job.nodeId, job.app, job.status, job.allocatedResources, job.inputs, outputs, job.context);
+  public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
+    return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, outputs, job.context);
   }
   
   public String getId() {
@@ -101,38 +98,22 @@ public class Job {
     return EncodingHelper.decodeBase64(app, clazz);
   }
   
-  public Resources getAllocatedResources() {
-    return allocatedResources;
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> getInputs() {
+    try {
+      return (Map<String, Object>) CloneHelper.deepCopy(inputs);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to clone inputs", e);
+    }
   }
   
-  public Object getInputs() {
-    return inputs;
-  }
-  
-  @JsonIgnore
-  public <T> T getInputs(Class<T> clazz) throws BindingException {
-    if (inputs == null) {
-      return null;
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> getOutputs() {
+    try {
+      return (Map<String, Object>) CloneHelper.deepCopy(outputs);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to clone outputs", e);
     }
-    if (clazz.isInstance(inputs)) {
-      return clazz.cast(inputs);
-    }
-    throw new BindingException("Invalid Job inputs section. Inputs: " + inputs);
-  }
-  
-  public Object getOutputs() {
-    return outputs;
-  }
-  
-  @JsonIgnore
-  public <T> T getOutputs(Class<T> clazz) throws BindingException {
-    if (outputs == null) {
-      return null;
-    }
-    if (clazz.isInstance(outputs)) {
-      return clazz.cast(outputs);
-    }
-    throw new BindingException("Invalid Job outputs section. Outputs: " + inputs);
   }
   
   public JobStatus getStatus() {
@@ -176,6 +157,6 @@ public class Job {
 
   @Override
   public String toString() {
-    return "Job [id=" + id + ", nodeId=" + nodeId + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + ", allocatedResources=" + allocatedResources + "]";
+    return "Job [id=" + id + ", nodeId=" + nodeId + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
   }
 }

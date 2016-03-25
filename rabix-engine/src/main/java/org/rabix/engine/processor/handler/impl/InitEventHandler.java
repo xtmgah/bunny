@@ -1,8 +1,5 @@
 package org.rabix.engine.processor.handler.impl;
 
-import org.rabix.bindings.BindingException;
-import org.rabix.bindings.Bindings;
-import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
@@ -71,17 +68,10 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     }
     jobRecordService.create(job);
 
-    
-    try {
-      Bindings bindings = BindingsFactory.create(node.getApp());
-      
-      for (DAGLinkPort inputPort : node.getInputPorts()) {
-        Object value = bindings.getInputValueById(event.getValue(), inputPort.getId());
-        Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value);
-        eventProcessor.send(updateInputEvent);
-      }
-    } catch (BindingException e) {
-      throw new EventHandlerException("Failed to create Bindings", e);
+    for (DAGLinkPort inputPort : node.getInputPorts()) {
+      Object value = event.getValue().get(inputPort.getId());
+      Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value);
+      eventProcessor.send(updateInputEvent);
     }
   }
 

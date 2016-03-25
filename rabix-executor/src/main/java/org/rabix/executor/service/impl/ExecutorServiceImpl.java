@@ -1,6 +1,7 @@
 package org.rabix.executor.service.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.rabix.bindings.model.Job;
@@ -10,8 +11,8 @@ import org.rabix.executor.execution.command.StartCommand;
 import org.rabix.executor.execution.command.StatusCommand;
 import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +94,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   }
 
   @Override
-  public Object getResult(String id, String contextId) {
+  public Map<String, Object> getResult(String id, String contextId) {
     JobData jobData = jobDataService.find(id, contextId);
     return jobData.getResult();
   }

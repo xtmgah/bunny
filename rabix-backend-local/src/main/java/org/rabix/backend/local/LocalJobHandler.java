@@ -1,8 +1,10 @@
 package org.rabix.backend.local;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
@@ -80,7 +82,7 @@ public class LocalJobHandler implements IterationCallback {
             try {
               Bindings bindings = BindingsFactory.create(job);
               if (status.equals(JobStatus.COMPLETED)) {
-                Object results = executorService.getResult(job.getId(), contextId);
+                Map<String, Object> results = executorService.getResult(job.getId(), contextId);
 
                 ProtocolType protocolType = bindings.getProtocolType();
                 JobStatusEvent statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.COMPLETED, results, protocolType);
@@ -110,21 +112,14 @@ public class LocalJobHandler implements IterationCallback {
       for (JobRecord job : jobRecords) {
         DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
 
-        try {
-          Bindings bindings = BindingsFactory.create(node.getApp());
-
-          Object inputs = null;
-          List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
-          for (VariableRecord inputVariable : inputVariables) {
-            inputs = bindings.addToInputs(inputs, inputVariable.getPortId(), inputVariable.getValue());
-          }
-          ContextRecord contextRecord = contextRecordService.find(job.getContextId());
-          Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-          jobs.add(new Job(job.getExternalId(), job.getId(), node, JobStatus.READY, inputs, null, context));
-        } catch (BindingException e) {
-          logger.error("Cannot find Bindings.", e);
-          System.exit(1);
+        Map<String, Object> inputs = new HashMap<>();
+        List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
+        for (VariableRecord inputVariable : inputVariables) {
+          inputs.put(inputVariable.getPortId(), inputVariable.getValue());
         }
+        ContextRecord contextRecord = contextRecordService.find(job.getContextId());
+        Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
+        jobs.add(new Job(job.getExternalId(), job.getId(), node, JobStatus.READY, inputs, context));
       }
     }
     return jobs;

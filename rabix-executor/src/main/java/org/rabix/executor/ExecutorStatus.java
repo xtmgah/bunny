@@ -1,6 +1,6 @@
 package org.rabix.executor;
 
-public enum WorkerStatus {
+public enum ExecutorStatus {
   STARTED,
   RUNNING,
   STOPPED

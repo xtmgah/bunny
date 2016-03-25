@@ -1,5 +1,7 @@
 package org.rabix.engine.event.impl;
 
+import java.util.Map;
+
 import org.rabix.bindings.ProtocolType;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.service.JobRecordService.JobState;
@@ -10,10 +12,10 @@ public class JobStatusEvent implements Event {
   private final JobState state;
   private final String contextId;
   
-  private final Object result;
+  private final Map<String, Object> result;
   private final ProtocolType protocolType;
   
-  public JobStatusEvent(String jobId, String contextId, JobState state, Object result, ProtocolType protocolType) {
+  public JobStatusEvent(String jobId, String contextId, JobState state, Map<String, Object> result, ProtocolType protocolType) {
     this.jobId = jobId;
     this.contextId = contextId;
     this.state = state;
@@ -34,7 +36,7 @@ public class JobStatusEvent implements Event {
     return contextId;
   }
   
-  public Object getResult() {
+  public Map<String, Object> getResult() {
     return result;
   }
   

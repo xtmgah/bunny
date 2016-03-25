@@ -64,7 +64,7 @@ public class TaskServiceImpl implements TaskService {
       bindings = BindingsFactory.create(task.getType());
 
       DAGNode node = bindings.translateToDAGFromPayload(task.getPayload());
-      Object inputs = bindings.translateInputsFromPayload(task.getPayload());
+      Map<String, Object> inputs = (Map<String, Object>) bindings.translateInputsFromPayload(task.getPayload());
       InitEvent initEvent = new InitEvent(context, node, inputs);
 
       eventProcessor.send(initEvent);

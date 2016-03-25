@@ -11,12 +11,4 @@ public interface ProtocolValueOperator {
   
   Set<FileValue> getOutputFiles(Job job) throws BindingException;
   
-  Object getInputValueById(Object inputs, String id);
-  
-  Object getOutputValueById(Object outputs, String id);
-  
-  Object addToInputs(Object inputs, String id, Object value) throws BindingException;
-  
-  Object addToOutputs(Object outputs, String id, Object value) throws BindingException;
-
 }

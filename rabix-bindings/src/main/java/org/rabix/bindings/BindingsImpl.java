@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.filemapper.FileMapper;
-import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.FileValue;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
@@ -58,11 +58,6 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public Object getJob(Job job) throws BindingException {
-    return protocolJobHelper.getJob(job);
-  }
-  
-  @Override
   public boolean isSelfExecutable(Job job) throws BindingException {
     return protocolJobHelper.isSelfExecutable(job);
   }
@@ -103,16 +98,6 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public Object addToInputs(Object inputs, String id, Object value) throws BindingException {
-    return valueOperator.addToInputs(inputs, id, value);
-  }
-  
-  @Override
-  public Object addToOutputs(Object outputs, String id, Object value) throws BindingException {
-    return valueOperator.addToOutputs(outputs, id, value);
-  }
-
-  @Override
   public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
     return protocolProcessor.mapInputFilePaths(job, fileMapper);
   }
@@ -151,6 +136,11 @@ public class BindingsImpl implements Bindings {
   public List<Requirement> getHints(Job job) throws BindingException {
     return requirementProvider.getHints(job);
   }
+  
+  @Override
+  public DAGNode translateToDAG(Job job) throws BindingException {
+    return protocolTranslator.translateToDAG(job);
+  }
 
   @Override
   public DAGNode translateToDAGFromPayload(String job) throws BindingException {
@@ -170,16 +160,6 @@ public class BindingsImpl implements Bindings {
   @Override
   public Object translateInputsFromPayload(String job) {
     return protocolTranslator.translateInputsFromPayload(job);
-  }
-
-  @Override
-  public Object getInputValueById(Object inputs, String id) {
-    return valueOperator.getInputValueById(inputs, id);
-  }
-
-  @Override
-  public Object getOutputValueById(Object outputs, String id) {
-    return valueOperator.getOutputValueById(outputs, id);
   }
 
   @Override

@@ -1,7 +1,9 @@
 package org.rabix.engine.rest.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
@@ -99,21 +101,14 @@ public class JobServiceImpl implements JobService {
       for (JobRecord jobRecord : jobRecords) {
         DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(jobRecord.getId()), contextId);
 
-        try {
-          Bindings bindings = BindingsFactory.create(node.getApp());
-
-          Object inputs = null;
-          List<VariableRecord> inputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.INPUT, contextId);
-          for (VariableRecord inputVariable : inputVariables) {
-            inputs = bindings.addToInputs(inputs, inputVariable.getPortId(), inputVariable.getValue());
-          }
-          ContextRecord contextRecord = contextRecordService.find(jobRecord.getContextId());
-          Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-          jobs.add(new Job(jobRecord.getExternalId(), jobRecord.getId(), node, JobStatus.READY, inputs, null, context));
-        } catch (BindingException e) {
-          logger.error("Cannot find Bindings.", e);
-          throw new JobServiceException("Cannot find Bindings", e);
+        Map<String, Object> inputs = new HashMap<>();
+        List<VariableRecord> inputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.INPUT, contextId);
+        for (VariableRecord inputVariable : inputVariables) {
+          inputs.put(inputVariable.getPortId(), inputVariable.getValue());
         }
+        ContextRecord contextRecord = contextRecordService.find(jobRecord.getContextId());
+        Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
+        jobs.add(new Job(jobRecord.getExternalId(), jobRecord.getId(), node, JobStatus.READY, inputs, context));
       }
     }
     return jobs;

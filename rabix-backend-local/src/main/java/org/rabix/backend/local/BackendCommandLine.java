@@ -16,7 +16,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
@@ -121,7 +120,7 @@ public class BackendCommandLine {
       String appText = bindings.loadAppFromFile(appFile);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
 
-      Object inputs = bindings.translateInputs(inputsText);
+      Map<String, Object> inputs = (Map<String, Object>) bindings.translateInputs(inputsText);
       DAGNode dagNode = bindings.translateToDAG(appText, inputsText);
 
       Context context = new Context(Context.createUniqueID(), null);
@@ -138,7 +137,7 @@ public class BackendCommandLine {
         }
       }
       callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
-      callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService, bindings));
+      callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService));
 
       InitEvent initEvent = new InitEvent(context, dagNode, inputs);
       eventProcessor.send(initEvent);
@@ -203,10 +202,10 @@ public class BackendCommandLine {
     }
     String homeDir = System.getProperty("user.home");
     File config = new File(homeDir, configDir);
-    if(!config.exists() || !config.isDirectory()) {
-        logger.info("Config directory {} doesn't exist or is not a directory", config.getCanonicalPath());
-        printUsageAndExit(options);
-      }
+    if (!config.exists() || !config.isDirectory()) {
+      logger.info("Config directory {} doesn't exist or is not a directory", config.getCanonicalPath());
+      printUsageAndExit(options);
+    }
     return config;
   }
 
@@ -215,14 +214,11 @@ public class BackendCommandLine {
    */
   private static class EndRootCallback implements IterationCallback {
 
-    private Bindings bindings;
-
     private JobRecordService jobRecordService;
     private ContextRecordService contextRecordService;
     private VariableRecordService variableRecordService;
 
-    public EndRootCallback(ContextRecordService contextRecordService, JobRecordService jobRecordService, VariableRecordService variableRecordService, Bindings bindings) {
-      this.bindings = bindings;
+    public EndRootCallback(ContextRecordService contextRecordService, JobRecordService jobRecordService, VariableRecordService variableRecordService) {
       this.jobRecordService = jobRecordService;
       this.contextRecordService = contextRecordService;
       this.variableRecordService = variableRecordService;
@@ -236,14 +232,15 @@ public class BackendCommandLine {
 
         List<VariableRecord> outputVariables = variableRecordService.find(root.getId(), LinkPortType.OUTPUT, contextId);
 
-        Object outputs = null;
+        Map<String, Object> outputs = new HashMap<>();
+        for (VariableRecord outputVariable : outputVariables) {
+          outputs.put(outputVariable.getPortId(), outputVariable.getValue());
+        }
         try {
-          for (VariableRecord outputVariable : outputVariables) {
-            outputs = bindings.addToOutputs(outputs, outputVariable.getPortId(), outputVariable.getValue());
-          }
           logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(outputs));
-        } catch (BindingException | JsonProcessingException e) {
-          logger.error("Failed to create outputs.", e);
+        } catch (JsonProcessingException e) {
+          logger.error("Failed to write outputs to standard out", e);
+          System.exit(10);
         }
         System.exit(0);
       }

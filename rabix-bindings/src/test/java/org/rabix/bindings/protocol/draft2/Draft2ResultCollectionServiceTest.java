@@ -50,15 +50,15 @@ public class Draft2ResultCollectionServiceTest {
 
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-    Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null, null);
+    Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
     
     Bindings bindings = BindingsFactory.create(job);
     job = bindings.populateOutputs(job, workingDir);
     
     Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
-    Assert.assertTrue((job.getOutputs(Map.class)).containsKey("single"));
-    Assert.assertTrue((job.getOutputs(Map.class)).containsKey("array"));
-    Assert.assertTrue((job.getOutputs(Map.class)).containsKey("record"));
+    Assert.assertTrue((job.getOutputs()).containsKey("single"));
+    Assert.assertTrue((job.getOutputs()).containsKey("array"));
+    Assert.assertTrue((job.getOutputs()).containsKey("record"));
   }
   
   @Test
@@ -67,13 +67,13 @@ public class Draft2ResultCollectionServiceTest {
 
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-    Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null, null);
+    Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
     
     Bindings bindings = BindingsFactory.create(job);
     job = bindings.populateOutputs(job, workingDir);
     
     Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
-    Assert.assertTrue((job.getOutputs(Map.class)).containsKey("output"));
+    Assert.assertTrue((job.getOutputs()).containsKey("output"));
   }
 
 }

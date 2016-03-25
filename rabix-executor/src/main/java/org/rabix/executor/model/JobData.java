@@ -1,5 +1,7 @@
 package org.rabix.executor.model;
 
+import java.util.Map;
+
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 
@@ -7,7 +9,7 @@ public class JobData {
 
   private Job job;
   private JobStatus status;
-  private Object result;
+  private Map<String, Object> result;
   private String message;
   private boolean important;
   private boolean terminal;
@@ -37,11 +39,11 @@ public class JobData {
     this.status = status;
   }
 
-  public Object getResult() {
+  public Map<String, Object> getResult() {
     return result;
   }
 
-  public void setResult(Object result) {
+  public void setResult(Map<String, Object> result) {
     this.result = result;
   }
 

@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
-import org.rabix.executor.WorkerStatus;
+import org.rabix.executor.ExecutorStatus;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.service.ExecutorService;
 
@@ -49,9 +49,9 @@ public class ExecutorHTTPServiceImpl implements ExecutorHTTPService {
 
   public Response workerStatus() {
     if (executorService.isStopped()) {
-      return ok(WorkerStatus.STOPPED);
+      return ok(ExecutorStatus.STOPPED);
     }
-    return ok(WorkerStatus.RUNNING);
+    return ok(ExecutorStatus.RUNNING);
   }
 
   public Response shutdown() {

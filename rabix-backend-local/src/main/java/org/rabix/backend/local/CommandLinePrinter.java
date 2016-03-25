@@ -216,7 +216,7 @@ public class CommandLinePrinter implements IterationCallback {
         }
         ContextRecord contextRecord = contextRecordService.find(job.getContextId());
         Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-        jobs.add(new Job(job.getExternalId(), job.getId(), node, JobStatus.READY, inputs, null, context));
+        jobs.add(new Job(job.getExternalId(), job.getId(), node, JobStatus.READY, inputs, context));
       }
     }
     return jobs;
