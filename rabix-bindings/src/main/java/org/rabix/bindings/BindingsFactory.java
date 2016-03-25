@@ -1,6 +1,6 @@
 package org.rabix.bindings;
 
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.common.json.BeanSerializer;
 
@@ -14,8 +14,8 @@ public class BindingsFactory {
     return create(sniffProtocolFromAppText(appStr));
   }
   
-  public static Bindings create(Executable executable) throws BindingException {
-    return create(sniffProtocol(executable));
+  public static Bindings create(Job job) throws BindingException {
+    return create(sniffProtocol(job));
   }
   
   public static Bindings create(ProtocolType type) throws BindingException {
@@ -25,9 +25,9 @@ public class BindingsFactory {
     return new BindingsImpl(type);
   }
  
-  public static ProtocolType sniffProtocol(Executable executable) {
+  public static ProtocolType sniffProtocol(Job job) {
     try {
-      executable.getApp(Draft2JobApp.class);
+      job.getApp(Draft2JobApp.class);
       return ProtocolType.DRAFT2;
     } catch (Exception e) {
       // do nothing

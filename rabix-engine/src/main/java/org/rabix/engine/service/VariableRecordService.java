@@ -8,18 +8,18 @@ import java.util.Map;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.engine.model.VariableRecord;
 
-public class VariableService {
+public class VariableRecordService {
 
-  private Map<String, List<VariableRecord>> variablesPerContext = new HashMap<String, List<VariableRecord>>();
+  private Map<String, List<VariableRecord>> variableRecordsPerContext = new HashMap<String, List<VariableRecord>>();
 
-  public synchronized void create(VariableRecord variable) {
-    getVariables(variable.getContextId()).add(variable);
+  public synchronized void create(VariableRecord variableRecord) {
+    getVariableRecords(variableRecord.getContextId()).add(variableRecord);
   }
 
-  public synchronized void update(VariableRecord variable) {
-    for (VariableRecord vr : getVariables(variable.getContextId())) {
-      if (vr.getJobId().equals(variable.getJobId()) && vr.getPortId().equals(variable.getPortId()) && vr.getType().equals(variable.getType()) && vr.getContextId().equals(variable.getContextId())) {
-        vr.setValue(variable.getValue());
+  public synchronized void update(VariableRecord variableRecord) {
+    for (VariableRecord vr : getVariableRecords(variableRecord.getContextId())) {
+      if (vr.getJobId().equals(variableRecord.getJobId()) && vr.getPortId().equals(variableRecord.getPortId()) && vr.getType().equals(variableRecord.getType()) && vr.getContextId().equals(variableRecord.getContextId())) {
+        vr.setValue(variableRecord.getValue());
         return;
       }
     }
@@ -27,7 +27,7 @@ public class VariableService {
   
   public synchronized List<VariableRecord> find(String jobId, LinkPortType type, String contextId) {
     List<VariableRecord> result = new ArrayList<>();
-    for (VariableRecord vr : getVariables(contextId)) {
+    for (VariableRecord vr : getVariableRecords(contextId)) {
       if (vr.getJobId().equals(jobId) && vr.getType().equals(type) && vr.getContextId().equals(contextId)) {
         result.add(vr);
       }
@@ -37,7 +37,7 @@ public class VariableService {
   
   public synchronized List<VariableRecord> find(String jobId, String portId, String contextId) {
     List<VariableRecord> result = new ArrayList<>();
-    for (VariableRecord vr : getVariables(contextId)) {
+    for (VariableRecord vr : getVariableRecords(contextId)) {
       if (vr.getJobId().equals(jobId) && vr.getPortId().equals(portId) && vr.getContextId().equals(contextId)) {
         result.add(vr);
       }
@@ -46,7 +46,7 @@ public class VariableService {
   }
 
   public synchronized VariableRecord find(String jobId, String portId, LinkPortType type, String contextId) {
-    for (VariableRecord vr : getVariables(contextId)) {
+    for (VariableRecord vr : getVariableRecords(contextId)) {
       if (vr.getJobId().equals(jobId) && vr.getPortId().equals(portId) && vr.getType().equals(type) && vr.getContextId().equals(contextId)) {
         return vr;
       }
@@ -56,7 +56,7 @@ public class VariableService {
 
   public synchronized List<VariableRecord> findByJobId(String jobId, LinkPortType type, String contextId) {
     List<VariableRecord> result = new ArrayList<>();
-    for (VariableRecord vr : getVariables(contextId)) {
+    for (VariableRecord vr : getVariableRecords(contextId)) {
       if (vr.getJobId().equals(jobId) && vr.getType().equals(type) && vr.getContextId().equals(contextId)) {
         result.add(vr);
       }
@@ -65,14 +65,14 @@ public class VariableService {
   }
 
   public synchronized List<VariableRecord> find(String contextId) {
-    return getVariables(contextId);
+    return getVariableRecords(contextId);
   }
   
-  private synchronized List<VariableRecord> getVariables(String contextId) {
-    List<VariableRecord> variableList = variablesPerContext.get(contextId);
+  private synchronized List<VariableRecord> getVariableRecords(String contextId) {
+    List<VariableRecord> variableList = variableRecordsPerContext.get(contextId);
     if (variableList == null) {
       variableList = new ArrayList<>();
-      variablesPerContext.put(contextId, variableList);
+      variableRecordsPerContext.put(contextId, variableList);
     }
     return variableList;
   }

@@ -8,9 +8,9 @@ import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolProcessor;
 import org.rabix.bindings.filemapper.FileMapper;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
@@ -23,21 +23,21 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   
   @Override
   @SuppressWarnings("unchecked")
-  public Executable preprocess(final Executable executable, final File workingDir) throws BindingException {
-    Draft2ProtocolExecutableHelper executableHelper = new Draft2ProtocolExecutableHelper();
+  public Job preprocess(final Job job, final File workingDir) throws BindingException {
+    Draft2ProtocolJobHelper jobHelper = new Draft2ProtocolJobHelper();
     
-    Draft2Job draft2Job = executableHelper.getJob(executable);
+    Draft2Job draft2Job = jobHelper.getJob(job);
     Draft2PortProcessorHelper portProcessorHelper = new Draft2PortProcessorHelper(draft2Job);
     try {
       File jobFile = new File(workingDir, JOB_FILE);
-      String serializedJob = BeanSerializer.serializePartial(executableHelper.getJob(executable));
+      String serializedJob = BeanSerializer.serializePartial(jobHelper.getJob(job));
       FileUtils.writeStringToFile(jobFile, serializedJob);
       
-      Map<String, Object> inputs = executable.getInputs(Map.class);
+      Map<String, Object> inputs = job.getInputs(Map.class);
       inputs = portProcessorHelper.setFileSize(inputs);
       inputs = portProcessorHelper.loadInputContents(inputs);
       inputs = portProcessorHelper.stageInputFiles(inputs, workingDir);
-      return Executable.cloneWithInputs(executable, inputs);
+      return Job.cloneWithInputs(job, inputs);
     } catch (Draft2PortProcessorException | IOException e) {
       throw new BindingException(e);
     }
@@ -45,13 +45,13 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   
   @Override
   @SuppressWarnings("unchecked")
-  public Executable mapInputFilePaths(final Executable executable, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public Job mapInputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
-      Map<String, Object> inputs = draft2PortProcessor.processInputs(executable.getInputs(Map.class), new FilePathMapProcessorCallback(fileMapper));
-      return Executable.cloneWithInputs(executable, inputs);
+      Map<String, Object> inputs = draft2PortProcessor.processInputs(job.getInputs(Map.class), new FilePathMapProcessorCallback(fileMapper));
+      return Job.cloneWithInputs(job, inputs);
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }
@@ -59,13 +59,13 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Executable mapOutputFilePaths(final Executable executable, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public Job mapOutputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
-      Map<String, Object> outputs = draft2PortProcessor.processOutputs(executable.getOutputs(Map.class), new FilePathMapProcessorCallback(fileMapper));
-      return Executable.cloneWithOutputs(executable, outputs);
+      Map<String, Object> outputs = draft2PortProcessor.processOutputs(job.getOutputs(Map.class), new FilePathMapProcessorCallback(fileMapper));
+      return Job.cloneWithOutputs(job, outputs);
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }

@@ -6,9 +6,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Simple thread factory used to create {@link ExecutableHandlerRunnable} threads.
+ * Simple thread factory used to create {@link JobHandlerRunnable} threads.
  */
-public class ExecutableHandlerThreadFactoryBuilder {
+public class JobHandlerThreadFactoryBuilder {
   
   private String namePrefix = null;
   private boolean daemon = false;
@@ -16,7 +16,7 @@ public class ExecutableHandlerThreadFactoryBuilder {
   private ThreadFactory backingThreadFactory = null;
   private UncaughtExceptionHandler uncaughtExceptionHandler = null;
 
-  public ExecutableHandlerThreadFactoryBuilder setNamePrefix(String namePrefix) {
+  public JobHandlerThreadFactoryBuilder setNamePrefix(String namePrefix) {
     if (namePrefix == null) {
       throw new NullPointerException();
     }
@@ -24,12 +24,12 @@ public class ExecutableHandlerThreadFactoryBuilder {
     return this;
   }
 
-  public ExecutableHandlerThreadFactoryBuilder setDaemon(boolean daemon) {
+  public JobHandlerThreadFactoryBuilder setDaemon(boolean daemon) {
     this.daemon = daemon;
     return this;
   }
 
-  public ExecutableHandlerThreadFactoryBuilder setPriority(int priority) {
+  public JobHandlerThreadFactoryBuilder setPriority(int priority) {
     if (priority < Thread.MIN_PRIORITY) {
       throw new IllegalArgumentException(
           String.format("Thread priority (%s) must be >= %s", priority, Thread.MIN_PRIORITY));
@@ -44,7 +44,7 @@ public class ExecutableHandlerThreadFactoryBuilder {
     return this;
   }
 
-  public ExecutableHandlerThreadFactoryBuilder setUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
+  public JobHandlerThreadFactoryBuilder setUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
     if (null == uncaughtExceptionHandler) {
       throw new NullPointerException("UncaughtExceptionHandler cannot be null");
     }
@@ -52,7 +52,7 @@ public class ExecutableHandlerThreadFactoryBuilder {
     return this;
   }
 
-  public ExecutableHandlerThreadFactoryBuilder setThreadFactory(ThreadFactory backingThreadFactory) {
+  public JobHandlerThreadFactoryBuilder setThreadFactory(ThreadFactory backingThreadFactory) {
     if (null == uncaughtExceptionHandler) {
       throw new NullPointerException("BackingThreadFactory cannot be null");
     }
@@ -64,7 +64,7 @@ public class ExecutableHandlerThreadFactoryBuilder {
     return build(this);
   }
 
-  private static ThreadFactory build(ExecutableHandlerThreadFactoryBuilder builder) {
+  private static ThreadFactory build(JobHandlerThreadFactoryBuilder builder) {
     final String namePrefix = builder.namePrefix;
     final Boolean daemon = builder.daemon;
     final Integer priority = builder.priority;

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.filemapper.FileMapper;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
@@ -27,7 +27,7 @@ public class BindingsImpl implements Bindings {
   private final CommandLineBuilder commandLineBuilder;
   private final ProtocolTranslator protocolTranslator;
   private final RequirementProvider requirementProvider;
-  private final ProtocolExecutableHelper protocolExecutableHelper;
+  private final ProtocolJobHelper protocolJobHelper;
   private final DocumentReferenceResolver documentReferenceResolver;
   
   public BindingsImpl(ProtocolType protocolType) throws BindingException {
@@ -39,7 +39,7 @@ public class BindingsImpl implements Bindings {
       this.valueOperator = ProtocolValueOperatorFactory.create(protocolType);
       this.protocolTranslator = ProtocolTranslatorFactory.create(protocolType);
       this.requirementProvider = RequirementProviderFactory.create(protocolType);
-      this.protocolExecutableHelper = ProtocolExecutableHelperFactory.create(protocolType);
+      this.protocolJobHelper = ProtocolJobHelperFactory.create(protocolType);
       this.documentReferenceResolver = DocumentReferenceResolverFactory.create(protocolType);
     } catch (BindingException e) {
       logger.error("Failed to create Bindings for type " + protocolType, e);
@@ -53,53 +53,53 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public Object getApp(Executable executable) throws BindingException {
-    return protocolExecutableHelper.getApp(executable);
+  public Object getApp(Job job) throws BindingException {
+    return protocolJobHelper.getApp(job);
   }
   
   @Override
-  public Object getJob(Executable executable) throws BindingException {
-    return protocolExecutableHelper.getJob(executable);
+  public Object getJob(Job job) throws BindingException {
+    return protocolJobHelper.getJob(job);
   }
   
   @Override
-  public boolean isSelfExecutable(Executable executable) throws BindingException {
-    return protocolExecutableHelper.isSelfExecutable(executable);
+  public boolean isSelfExecutable(Job job) throws BindingException {
+    return protocolJobHelper.isSelfExecutable(job);
   }
   
   @Override
-  public boolean isSuccessfull(Executable executable, int statusCode) throws BindingException {
-    return resultCollector.isSuccessfull(executable, statusCode);
+  public boolean isSuccessfull(Job job, int statusCode) throws BindingException {
+    return resultCollector.isSuccessfull(job, statusCode);
   }
 
   @Override
-  public Executable populateOutputs(Executable executable, File workingDir) throws BindingException {
-    return resultCollector.populateOutputs(executable, workingDir);
+  public Job populateOutputs(Job job, File workingDir) throws BindingException {
+    return resultCollector.populateOutputs(job, workingDir);
   }
 
   @Override
-  public Executable preprocess(Executable executable, File workingDir) throws BindingException {
-    return protocolProcessor.preprocess(executable, workingDir);
+  public Job preprocess(Job job, File workingDir) throws BindingException {
+    return protocolProcessor.preprocess(job, workingDir);
   }
 
   @Override
-  public String buildCommandLine(Executable executable) throws BindingException {
-    return commandLineBuilder.buildCommandLine(executable);
+  public String buildCommandLine(Job job) throws BindingException {
+    return commandLineBuilder.buildCommandLine(job);
   }
 
   @Override
-  public List<Object> buildCommandLineParts(Executable executable) throws BindingException {
-    return commandLineBuilder.buildCommandLineParts(executable);
+  public List<Object> buildCommandLineParts(Job job) throws BindingException {
+    return commandLineBuilder.buildCommandLineParts(job);
   }
 
   @Override
-  public Set<FileValue> getInputFiles(Executable executable) throws BindingException {
-    return valueOperator.getInputFiles(executable);
+  public Set<FileValue> getInputFiles(Job job) throws BindingException {
+    return valueOperator.getInputFiles(job);
   }
 
   @Override
-  public Set<FileValue> getOutputFiles(Executable executable) throws BindingException {
-    return valueOperator.getOutputFiles(executable);
+  public Set<FileValue> getOutputFiles(Job job) throws BindingException {
+    return valueOperator.getOutputFiles(job);
   }
   
   @Override
@@ -113,43 +113,43 @@ public class BindingsImpl implements Bindings {
   }
 
   @Override
-  public Executable mapInputFilePaths(Executable executable, FileMapper fileMapper) throws BindingException {
-    return protocolProcessor.mapInputFilePaths(executable, fileMapper);
+  public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
+    return protocolProcessor.mapInputFilePaths(job, fileMapper);
   }
 
   @Override
-  public Executable mapOutputFilePaths(Executable executable, FileMapper fileMapper) throws BindingException {
-    return protocolProcessor.mapOutputFilePaths(executable, fileMapper);
+  public Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
+    return protocolProcessor.mapOutputFilePaths(job, fileMapper);
   }
 
   @Override
-  public DockerContainerRequirement getDockerRequirement(Executable executable) throws BindingException {
-    return requirementProvider.getDockerRequirement(executable);
+  public DockerContainerRequirement getDockerRequirement(Job job) throws BindingException {
+    return requirementProvider.getDockerRequirement(job);
   }
 
   @Override
-  public EnvironmentVariableRequirement getEnvironmentVariableRequirement(Executable executable) throws BindingException {
-    return requirementProvider.getEnvironmentVariableRequirement(executable);
+  public EnvironmentVariableRequirement getEnvironmentVariableRequirement(Job job) throws BindingException {
+    return requirementProvider.getEnvironmentVariableRequirement(job);
   }
 
   @Override
-  public FileRequirement getFileRequirement(Executable executable) throws BindingException {
-    return requirementProvider.getFileRequirement(executable);
+  public FileRequirement getFileRequirement(Job job) throws BindingException {
+    return requirementProvider.getFileRequirement(job);
   }
   
   @Override
-  public Executable populateResources(Executable executable) throws BindingException {
-    return requirementProvider.populateResources(executable);
+  public Job populateResources(Job job) throws BindingException {
+    return requirementProvider.populateResources(job);
   }
   
   @Override
-  public List<Requirement> getRequirements(Executable executable) throws BindingException {
-    return requirementProvider.getRequirements(executable);
+  public List<Requirement> getRequirements(Job job) throws BindingException {
+    return requirementProvider.getRequirements(job);
   }
 
   @Override
-  public List<Requirement> getHints(Executable executable) throws BindingException {
-    return requirementProvider.getHints(executable);
+  public List<Requirement> getHints(Job job) throws BindingException {
+    return requirementProvider.getHints(job);
   }
 
   @Override

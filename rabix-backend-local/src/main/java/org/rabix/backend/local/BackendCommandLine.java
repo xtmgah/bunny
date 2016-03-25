@@ -34,10 +34,10 @@ import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.EventProcessor.IterationCallback;
-import org.rabix.engine.service.ContextService;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.LinkService;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.VariableRecordService;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
@@ -53,8 +53,8 @@ import com.google.inject.Injector;
  */
 public class BackendCommandLine {
 
-  private static final Logger logger = LoggerFactory.getLogger(BackendCommandLine.class);
   private static String configDir = "/.bunny/";
+  private static final Logger logger = LoggerFactory.getLogger(BackendCommandLine.class);
   
   public static void main(String[] commandLineArguments) {
     final CommandLineParser commandLineParser = new DefaultParser();
@@ -107,23 +107,22 @@ public class BackendCommandLine {
         }
       }
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
-      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
-          new ExecutorModule(configModule));
-      DAGNodeDB nodeDB = injector.getInstance(DAGNodeDB.class);
+      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(), new ExecutorModule(configModule));
+      DAGNodeDB dagNodeDB = injector.getInstance(DAGNodeDB.class);
       EventProcessor eventProcessor = injector.getInstance(EventProcessor.class);
-      JobService jobService = injector.getInstance(JobService.class);
-      VariableService variableService = injector.getInstance(VariableService.class);
-      LinkService linkService = injector.getInstance(LinkService.class);
       ExecutorService executorService = injector.getInstance(ExecutorService.class);
-      ContextService contextService = injector.getInstance(ContextService.class);
+      JobRecordService jobRecordService = injector.getInstance(JobRecordService.class);
+      VariableRecordService variableRecordService = injector.getInstance(VariableRecordService.class);
+      LinkRecordService linkRecordService = injector.getInstance(LinkRecordService.class);
+      ContextRecordService contextRecordService = injector.getInstance(ContextRecordService.class);
 
       Bindings bindings = BindingsFactory.create(ProtocolType.DRAFT2);
 
       String appText = bindings.loadAppFromFile(appFile);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
 
-      DAGNode node = bindings.translateToDAG(appText, inputsText);
       Object inputs = bindings.translateInputs(inputsText);
+      DAGNode dagNode = bindings.translateToDAG(appText, inputsText);
 
       Context context = new Context(Context.createUniqueID(), null);
       List<IterationCallback> callbacks = new ArrayList<>();
@@ -135,14 +134,13 @@ public class BackendCommandLine {
           logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
           System.exit(10);
         } else {
-          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobService, variableService, linkService,
-              contextService, nodeDB));
+          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB));
         }
       }
-      callbacks.add(new LocalExecutableHandler(executorService, jobService, variableService, contextService, nodeDB));
-      callbacks.add(new EndRootCallback(contextService, jobService, variableService, bindings));
+      callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
+      callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService, bindings));
 
-      InitEvent initEvent = new InitEvent(context, node, inputs);
+      InitEvent initEvent = new InitEvent(context, dagNode, inputs);
       eventProcessor.send(initEvent);
       eventProcessor.start(callbacks);
     } catch (ParseException e) {
@@ -219,25 +217,24 @@ public class BackendCommandLine {
 
     private Bindings bindings;
 
-    private JobService jobService;
-    private ContextService contextService;
-    private VariableService variableService;
+    private JobRecordService jobRecordService;
+    private ContextRecordService contextRecordService;
+    private VariableRecordService variableRecordService;
 
-    public EndRootCallback(ContextService contextService, JobService jobService, VariableService variableService,
-        Bindings bindings) {
-      this.jobService = jobService;
-      this.contextService = contextService;
-      this.variableService = variableService;
+    public EndRootCallback(ContextRecordService contextRecordService, JobRecordService jobRecordService, VariableRecordService variableRecordService, Bindings bindings) {
       this.bindings = bindings;
+      this.jobRecordService = jobRecordService;
+      this.contextRecordService = contextRecordService;
+      this.variableRecordService = variableRecordService;
     }
 
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) {
-      ContextRecord context = contextService.find(contextId);
+      ContextRecord context = contextRecordService.find(contextId);
       if (context.getStatus().equals(ContextStatus.COMPLETED)) {
-        JobRecord root = jobService.findRoot(contextId);
+        JobRecord root = jobRecordService.findRoot(contextId);
 
-        List<VariableRecord> outputVariables = variableService.find(root.getId(), LinkPortType.OUTPUT, contextId);
+        List<VariableRecord> outputVariables = variableRecordService.find(root.getId(), LinkPortType.OUTPUT, contextId);
 
         Object outputs = null;
         try {

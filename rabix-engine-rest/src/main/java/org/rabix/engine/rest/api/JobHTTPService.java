@@ -7,14 +7,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/v0/engine/jobs")
-public interface ExecutableHTTPService {
+public interface JobHTTPService {
 
   @PUT
   @Path("/{id}")
-  Response save(@PathParam("id") String id, Executable executable);
+  Response save(@PathParam("id") String id, Job job);
   
 }

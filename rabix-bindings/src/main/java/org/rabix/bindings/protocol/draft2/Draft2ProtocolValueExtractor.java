@@ -6,10 +6,10 @@ import java.util.Set;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolValueOperator;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
 import org.rabix.common.helper.CloneHelper;
@@ -17,10 +17,10 @@ import org.rabix.common.helper.CloneHelper;
 public class Draft2ProtocolValueExtractor implements ProtocolValueOperator {
 
   @SuppressWarnings("unchecked")
-  public Set<FileValue> getInputFiles(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public Set<FileValue> getInputFiles(Job job) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     try {
-      return new Draft2PortProcessorHelper(draft2Job).flattenInputFiles(executable.getInputs(Map.class));
+      return new Draft2PortProcessorHelper(draft2Job).flattenInputFiles(job.getInputs(Map.class));
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }
@@ -28,10 +28,10 @@ public class Draft2ProtocolValueExtractor implements ProtocolValueOperator {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Set<FileValue> getOutputFiles(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public Set<FileValue> getOutputFiles(Job job) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     try {
-      return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(executable.getInputs(Map.class));
+      return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getInputs(Map.class));
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }

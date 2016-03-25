@@ -2,7 +2,7 @@ package org.rabix.engine.event.impl;
 
 import org.rabix.bindings.ProtocolType;
 import org.rabix.engine.event.Event;
-import org.rabix.engine.service.JobService.JobState;
+import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobStatusEvent implements Event {
 

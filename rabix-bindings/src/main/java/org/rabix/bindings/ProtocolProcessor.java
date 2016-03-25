@@ -3,14 +3,14 @@ package org.rabix.bindings;
 import java.io.File;
 
 import org.rabix.bindings.filemapper.FileMapper;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 
 public interface ProtocolProcessor {
 
-  Executable preprocess(final Executable executable, final File workingDir) throws BindingException;
+  Job preprocess(final Job job, final File workingDir) throws BindingException;
   
-  Executable mapInputFilePaths(final Executable executable, final FileMapper fileMapper) throws BindingException;
+  Job mapInputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException;
   
-  Executable mapOutputFilePaths(final Executable executable, final FileMapper fileMapper) throws BindingException;
+  Job mapOutputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException;
   
 }

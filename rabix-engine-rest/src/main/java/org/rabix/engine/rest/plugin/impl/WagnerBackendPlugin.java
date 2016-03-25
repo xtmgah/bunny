@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.plugin.BackendPlugin;
 import org.rabix.engine.rest.plugin.BackendPluginConfig;
 import org.rabix.engine.rest.plugin.BackendPluginType;
@@ -25,7 +25,7 @@ public class WagnerBackendPlugin extends BackendPlugin {
 
   private final String uri;
   
-  private Set<Executable> runningExecutables = new HashSet<>();
+  private Set<Job> runningJobs = new HashSet<>();
   
   private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()/2);
   
@@ -35,9 +35,9 @@ public class WagnerBackendPlugin extends BackendPlugin {
   }
   
   @Override
-  public synchronized void send(final Executable executable) {
-    if (!runningExecutables.contains(executable)) {
-      runningExecutables.add(executable);
+  public synchronized void send(final Job job) {
+    if (!runningJobs.contains(job)) {
+      runningJobs.add(job);
       
       executorService.submit(new Runnable() {
         @Override
@@ -45,8 +45,8 @@ public class WagnerBackendPlugin extends BackendPlugin {
         public void run() {
           Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
           WebTarget webTarget = client.target(path("/v1/jobs"));
-          Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON).header("context-id", executable.getContext().getId());
-          Response response = invocationBuilder.post(Entity.entity(executable, MediaType.APPLICATION_JSON));
+          Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON).header("context-id", job.getContext().getId());
+          Response response = invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
           Map<String, String> responseMap = response.readEntity(Map.class);
           System.out.println(responseMap); 
         }

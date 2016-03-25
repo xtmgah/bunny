@@ -10,7 +10,7 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Context;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
@@ -22,12 +22,11 @@ import org.rabix.engine.rest.db.TaskDB;
 import org.rabix.engine.rest.dto.Task;
 import org.rabix.engine.rest.dto.TaskStatus;
 import org.rabix.engine.rest.plugin.BackendPluginDispatcher;
+import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.TaskService;
 import org.rabix.engine.rest.service.TaskServiceException;
-import org.rabix.engine.service.ContextService;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.LinkService;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.JobRecordService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +40,13 @@ public class TaskServiceImpl implements TaskService {
   private final EventProcessor eventProcessor;
 
   @Inject
-  public TaskServiceImpl(TaskDB taskDB, JobService jobService, VariableService variableService, LinkService linkService, DAGNodeDB nodeDB, ExecutableServiceImpl executableService, ContextService contextService, BackendPluginDispatcher backendPluginDispatcher, EventProcessor eventProcessor) {
+  public TaskServiceImpl(TaskDB taskDB, JobRecordService jobRecordService, DAGNodeDB nodeDB, JobService jobService, ContextRecordService contextRecordService, BackendPluginDispatcher backendPluginDispatcher, EventProcessor eventProcessor) {
     this.taskDB = taskDB;
     this.eventProcessor = eventProcessor;
 
     List<IterationCallback> callbacks = new ArrayList<>();
-    callbacks.add(new EndTaskCallback(contextService, taskDB));
-    callbacks.add(new SendExecutablesCallback(executableService, backendPluginDispatcher));
+    callbacks.add(new EndTaskCallback(contextRecordService, taskDB));
+    callbacks.add(new SendJobsCallback(jobService, backendPluginDispatcher));
     this.eventProcessor.start(callbacks);
   }
 
@@ -60,7 +59,7 @@ public class TaskServiceImpl implements TaskService {
     task.setContext(context);
     taskDB.add(task);
 
-    Bindings bindings;
+    Bindings bindings = null;
     try {
       bindings = BindingsFactory.create(task.getType());
 
@@ -92,36 +91,35 @@ public class TaskServiceImpl implements TaskService {
     return taskDB.get(id);
   }
 
-  private static class SendExecutablesCallback implements IterationCallback {
+  private static class SendJobsCallback implements IterationCallback {
 
-    private ExecutableServiceImpl executableService;
+    private JobService jobService;
     private BackendPluginDispatcher backendPluginDispatcher;
 
-    public SendExecutablesCallback(ExecutableServiceImpl executableService, BackendPluginDispatcher backendPluginDispatcher) {
-      this.executableService = executableService;
+    public SendJobsCallback(JobService jobService, BackendPluginDispatcher backendPluginDispatcher) {
+      this.jobService = jobService;
       this.backendPluginDispatcher = backendPluginDispatcher;
     }
 
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
-      List<Executable> executables = executableService.getReady(eventProcessor, contextId);
-      backendPluginDispatcher.send(executables);
+      List<Job> jobs = jobService.getReady(eventProcessor, contextId);
+      backendPluginDispatcher.send(jobs);
     }
-
   }
 
   private static class EndTaskCallback implements IterationCallback {
     private TaskDB taskDB;
-    private ContextService contextService;
+    private ContextRecordService contextRecordService;
 
-    public EndTaskCallback(ContextService contextService, TaskDB taskDB) {
+    public EndTaskCallback(ContextRecordService contextRecordService, TaskDB taskDB) {
       this.taskDB = taskDB;
-      this.contextService = contextService;
+      this.contextRecordService = contextRecordService;
     }
 
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) {
-      ContextRecord context = contextService.find(contextId);
+      ContextRecord context = contextRecordService.find(contextId);
       
       Task task = null;
       switch (context.getStatus()) {

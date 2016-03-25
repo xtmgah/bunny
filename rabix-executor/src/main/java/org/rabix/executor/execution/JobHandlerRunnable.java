@@ -5,43 +5,43 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.rabix.executor.execution.ExecutableHandlerCommand.Repeat;
-import org.rabix.executor.handler.ExecutableHandler;
+import org.rabix.executor.execution.JobHandlerCommand.Repeat;
+import org.rabix.executor.handler.JobHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Executable execution thread runnable. It executes commands one by one in synchronous matter. 
+ * Job execution thread runnable. It executes commands one by one in synchronous matter. 
  */
-public class ExecutableHandlerRunnable implements Runnable {
+public class JobHandlerRunnable implements Runnable {
 
-  private final static Logger logger = LoggerFactory.getLogger(ExecutableHandlerRunnable.class);
+  private final static Logger logger = LoggerFactory.getLogger(JobHandlerRunnable.class);
 
   private final static long DEFAULT_SLEEP_TIME = TimeUnit.SECONDS.toMillis(1);
 
+  private final String jobId;
   private final String contextId;
-  private final String executableId;
-  private final ExecutableHandler executableHandler;
-  private final BlockingQueue<ExecutableHandlerCommand> commands;
+  private final JobHandler jobHandler;
+  private final BlockingQueue<JobHandlerCommand> commands;
 
   private final AtomicBoolean stop = new AtomicBoolean(false);
 
-  public ExecutableHandlerRunnable(String id, String contextId, ExecutableHandler executableHandler) {
-    this.executableId = id;
+  public JobHandlerRunnable(String jobId, String contextId, JobHandler jobHandler) {
+    this.jobId = jobId;
     this.contextId = contextId;
-    this.executableHandler = executableHandler;
+    this.jobHandler = jobHandler;
     this.commands = new LinkedBlockingQueue<>();
   }
 
   @Override
   public void run() {
-    logger.info("ExecutableHandlerRunnable {} started.", Thread.currentThread().getName());
+    logger.info("JobHandlerRunnable {} started.", Thread.currentThread().getName());
 
     long sleepTime = DEFAULT_SLEEP_TIME;
     
     while (!isStopped()) {
       try {
-        ExecutableHandlerCommand command = commands.poll();
+        JobHandlerCommand command = commands.poll();
         if (command == null) {
           logger.debug("No active commands. Sleep for {}", sleepTime);
           Thread.sleep(sleepTime);
@@ -56,23 +56,23 @@ public class ExecutableHandlerRunnable implements Runnable {
           addCommand(command);
         }
 
-        ExecutableHandlerCommand.Result result = command.run(executableId, contextId, executableHandler);
+        JobHandlerCommand.Result result = command.run(jobId, contextId, jobHandler);
         if (result.isLastCommand) {
           logger.debug("Command {} is last command. Stop thread.", command);
           stop();
         }
       } catch (Exception e) {
-        logger.error("ExecutableHandlerRunnable faced a runtime error. Stop execution.", e);
+        logger.error("JobHandlerRunnable faced a runtime error. Stop execution.", e);
         stop();
       }
     }
-    logger.info("ExecutableHandlerRunnable {} finished.", Thread.currentThread().getName());
+    logger.info("JobHandlerRunnable {} finished.", Thread.currentThread().getName());
   }
 
   /**
    * Add command to queue 
    */
-  public void addCommand(ExecutableHandlerCommand command) {
+  public void addCommand(JobHandlerCommand command) {
     if (stop.get()) {
       logger.error("Failed to add command {}. Thread is stopped.", command);
     }
@@ -84,7 +84,7 @@ public class ExecutableHandlerRunnable implements Runnable {
    */
   public void stop() {
     stop.set(true);
-    logger.info("ExecutableHandlerRunnable {} stopped.", Thread.currentThread().getName());
+    logger.info("JobHandlerRunnable {} stopped.", Thread.currentThread().getName());
   }
 
   /**

@@ -2,7 +2,7 @@ package org.rabix.bindings;
 
 import java.io.File;
 
-public interface Bindings extends CommandLineBuilder, ProtocolExecutableHelper, ProtocolValueOperator, ProtocolProcessor, ProtocolTranslator, RequirementProvider, ResultCollector {
+public interface Bindings extends CommandLineBuilder, ProtocolJobHelper, ProtocolValueOperator, ProtocolProcessor, ProtocolTranslator, RequirementProvider, ResultCollector {
 
   /**
    * Loads application from the file 

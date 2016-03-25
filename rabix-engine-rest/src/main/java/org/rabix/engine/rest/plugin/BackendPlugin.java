@@ -1,6 +1,6 @@
 package org.rabix.engine.rest.plugin;
 
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 
 public abstract class BackendPlugin {
 
@@ -10,7 +10,7 @@ public abstract class BackendPlugin {
     this.backendPluginConfig = backendPluginConfig;
   }
   
-  public abstract void send(Executable executable);
+  public abstract void send(Job job);
   
   public abstract BackendPluginType getType();
 }

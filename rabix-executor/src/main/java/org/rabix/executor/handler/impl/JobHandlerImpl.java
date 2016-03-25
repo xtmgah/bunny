@@ -13,7 +13,7 @@ import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.FileRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement.SingleFileRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement.SingleInputFileRequirement;
@@ -28,73 +28,73 @@ import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
 import org.rabix.executor.container.impl.CompletedContainerHandler;
-import org.rabix.executor.handler.ExecutableHandler;
-import org.rabix.executor.model.ExecutableData;
+import org.rabix.executor.handler.JobHandler;
+import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.DownloadFileService;
-import org.rabix.executor.service.ExecutableDataService;
+import org.rabix.executor.service.JobDataService;
 import org.rabix.ftp.SimpleFTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.assistedinject.Assisted;
 
-public class ExecutableHandlerImpl implements ExecutableHandler {
+public class JobHandlerImpl implements JobHandler {
 
   private static final String ERROR_LOG = "job.err.log";
   
-  private static final Logger logger = LoggerFactory.getLogger(ExecutableHandlerImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(JobHandlerImpl.class);
 
   private final File workingDir;
   
   private final DownloadFileService downloadFileService;
-  private final ExecutableDataService executableDataService;
+  private final JobDataService jobDataService;
 
   private final SimpleFTPClient ftpClient;
   
-  private Executable executable;
+  private Job job;
   private Configuration configuration;
   private ContainerHandler containerHandler;
 
   @Inject
-  public ExecutableHandlerImpl(@Assisted Executable executable, ExecutableDataService executableDataService, DownloadFileService downloadFileService, FileConfig fileConfig, Configuration configuration, SimpleFTPClient ftpClient) {
-    this.executable = executable;
+  public JobHandlerImpl(@Assisted Job job, JobDataService jobDataService, DownloadFileService downloadFileService, FileConfig fileConfig, Configuration configuration, SimpleFTPClient ftpClient) {
+    this.job = job;
     this.configuration = configuration;
     this.downloadFileService = downloadFileService;
-    this.executableDataService = executableDataService;
-    this.workingDir = StorageConfig.getWorkingDir(executable, configuration);
+    this.jobDataService = jobDataService;
+    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
   }
 
   @Override
   public void start() throws ExecutorException {
-    logger.info("Start command line tool for id={}", executable.getId());
+    logger.info("Start command line tool for id={}", job.getId());
     try {
-      Bindings bindings = BindingsFactory.create(executable);
-      downloadFileService.download(executable, bindings.getInputFiles(executable));
+      Bindings bindings = BindingsFactory.create(job);
+      downloadFileService.download(job, bindings.getInputFiles(job));
       createFileRequirements(bindings);
       
-      executable = bindings.mapInputFilePaths(executable, new InputFileMapper());
-      executable = bindings.preprocess(executable, workingDir);
+      job = bindings.mapInputFilePaths(job, new InputFileMapper());
+      job = bindings.preprocess(job, workingDir);
       
-      if (bindings.isSelfExecutable(executable)) {
+      if (bindings.isSelfExecutable(job)) {
         containerHandler = new CompletedContainerHandler();
       } else {
-        Requirement containerRequirement = bindings.getDockerRequirement(executable);
+        Requirement containerRequirement = bindings.getDockerRequirement(job);
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(executable, containerRequirement, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, configuration);
       }
       containerHandler.start();
     } catch (Exception e) {
-      String message = String.format("Execution failed for %s. %s", executable.getId(), e.getMessage());
+      String message = String.format("Execution failed for %s. %s", job.getId(), e.getMessage());
       throw new ExecutorException(message, e);
     }
   }
 
   private void createFileRequirements(Bindings bindings) throws ExecutorException {
     try {
-      FileRequirement fileRequirementResource = bindings.getFileRequirement(executable);
+      FileRequirement fileRequirementResource = bindings.getFileRequirement(job);
       if (fileRequirementResource == null) {
         return;
       }
@@ -131,27 +131,27 @@ public class ExecutableHandlerImpl implements ExecutableHandler {
   }
 
   @Override
-  public Executable postprocess(boolean isTerminal) throws ExecutorException {
-    logger.debug("postprocess(id={})", executable.getId());
+  public Job postprocess(boolean isTerminal) throws ExecutorException {
+    logger.debug("postprocess(id={})", job.getId());
     try {
       containerHandler.dumpContainerLogs(new File(workingDir, ERROR_LOG));
 
       if (!isSuccessful()) {
         upload(workingDir);
-        return executable;
+        return job;
       }
       
-      Bindings bindings = BindingsFactory.create(executable);
-      executable = bindings.populateOutputs(executable, workingDir);
-      executable = bindings.mapOutputFilePaths(executable, new OutputFileMapper());
+      Bindings bindings = BindingsFactory.create(job);
+      job = bindings.populateOutputs(job, workingDir);
+      job = bindings.mapOutputFilePaths(job, new OutputFileMapper());
       upload(workingDir);
       
-      ExecutableData executableData = executableDataService.find(executable.getId(), executable.getContext().getId());
-      executableData.setResult(executable.getOutputs());
-      executableDataService.save(executableData, executable.getContext().getId());
+      JobData jobData = jobDataService.find(job.getId(), job.getContext().getId());
+      jobData.setResult(job.getOutputs());
+      jobDataService.save(jobData, job.getContext().getId());
       
-      logger.debug("Command line tool {} returned result {}.", executable.getId(), executable.getOutputs());
-      return executable;
+      logger.debug("Command line tool {} returned result {}.", job.getId(), job.getOutputs());
+      return job;
     } catch (ContainerException e) {
       logger.error("Failed to query container.", e);
       throw new ExecutorException("Failed to query container.", e);
@@ -175,7 +175,7 @@ public class ExecutableHandlerImpl implements ExecutableHandler {
   }
 
   public void stop() throws ExecutorException {
-    logger.debug("stop(id={})", executable.getId());
+    logger.debug("stop(id={})", job.getId());
     if (containerHandler == null) {
       logger.debug("Container hasn't started yet.");
       return;
@@ -237,8 +237,8 @@ public class ExecutableHandlerImpl implements ExecutableHandler {
   @Override
   public boolean isSuccessful(int processExitCode) throws ExecutorException {
     try {
-      Bindings bindings = BindingsFactory.create(executable);
-      return bindings.isSuccessfull(executable, processExitCode);
+      Bindings bindings = BindingsFactory.create(job);
+      return bindings.isSuccessfull(job, processExitCode);
     } catch (BindingException e) {
       logger.error("Failed to create Bindings", e);
       throw new ExecutorException(e);

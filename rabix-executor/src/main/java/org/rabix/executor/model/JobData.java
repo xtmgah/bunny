@@ -1,39 +1,39 @@
 package org.rabix.executor.model;
 
-import org.rabix.bindings.model.Executable;
-import org.rabix.bindings.model.Executable.ExecutableStatus;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 
-public class ExecutableData {
+public class JobData {
 
-  private Executable executable;
-  private ExecutableStatus status;
+  private Job job;
+  private JobStatus status;
   private Object result;
   private String message;
   private boolean important;
   private boolean terminal;
   private boolean logsUploaded;
 
-  public ExecutableData(Executable executable, ExecutableStatus status, boolean important, boolean terminal) {
-    this.executable = executable;
+  public JobData(Job job, JobStatus status, boolean important, boolean terminal) {
+    this.job = job;
     this.status = status;
     this.important = important;
     this.terminal = terminal;
     this.logsUploaded = false;
   }
 
-  public Executable getExecutable() {
-    return executable;
+  public Job getJob() {
+    return job;
   }
 
-  public void setExecutable(Executable executable) {
-    this.executable = executable;
+  public void setJob(Job job) {
+    this.job = job;
   }
 
-  public ExecutableStatus getStatus() {
+  public JobStatus getStatus() {
     return status;
   }
 
-  public void setStatus(ExecutableStatus status) {
+  public void setStatus(JobStatus status) {
     this.status = status;
   }
 
@@ -81,7 +81,7 @@ public class ExecutableData {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((executable == null) ? 0 : executable.hashCode());
+    result = prime * result + ((job == null) ? 0 : job.hashCode());
     result = prime * result + (important ? 1231 : 1237);
     result = prime * result + (logsUploaded ? 1231 : 1237);
     result = prime * result + ((message == null) ? 0 : message.hashCode());
@@ -98,11 +98,11 @@ public class ExecutableData {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    ExecutableData other = (ExecutableData) obj;
-    if (executable == null) {
-      if (other.executable != null)
+    JobData other = (JobData) obj;
+    if (job == null) {
+      if (other.job != null)
         return false;
-    } else if (!executable.equals(other.executable))
+    } else if (!job.equals(other.job))
       return false;
     if (important != other.important)
       return false;
@@ -122,6 +122,6 @@ public class ExecutableData {
 
   @Override
   public String toString() {
-    return "ExecutableData [executableID=" + executable.getId() + ", status=" + status + ", message=" + message + ", important="  + important + ", terminal=" + terminal + ", logsUploaded=" + logsUploaded + "]";
+    return "JobData [jobId=" + job.getId() + ", status=" + status + ", message=" + message + ", important="  + important + ", terminal=" + terminal + ", logsUploaded=" + logsUploaded + "]";
   }
 }

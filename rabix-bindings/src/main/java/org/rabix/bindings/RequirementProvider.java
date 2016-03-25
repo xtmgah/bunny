@@ -2,7 +2,7 @@ package org.rabix.bindings;
 
 import java.util.List;
 
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement;
@@ -10,15 +10,15 @@ import org.rabix.bindings.model.requirement.Requirement;
 
 public interface RequirementProvider {
 
-  Executable populateResources(Executable executable) throws BindingException;
+  Job populateResources(Job job) throws BindingException;
   
-  DockerContainerRequirement getDockerRequirement(Executable executable) throws BindingException;
+  DockerContainerRequirement getDockerRequirement(Job job) throws BindingException;
   
-  EnvironmentVariableRequirement getEnvironmentVariableRequirement(Executable executable) throws BindingException;
+  EnvironmentVariableRequirement getEnvironmentVariableRequirement(Job job) throws BindingException;
   
-  FileRequirement getFileRequirement(Executable executable) throws BindingException;
+  FileRequirement getFileRequirement(Job job) throws BindingException;
   
-  List<Requirement> getRequirements(Executable executable) throws BindingException;
+  List<Requirement> getRequirements(Job job) throws BindingException;
   
-  List<Requirement> getHints(Executable executable) throws BindingException;
+  List<Requirement> getHints(Job job) throws BindingException;
 }

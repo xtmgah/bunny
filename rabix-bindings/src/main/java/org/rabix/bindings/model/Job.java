@@ -13,9 +13,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Executable {
+public class Job {
 
-  public static enum ExecutableStatus {
+  public static enum JobStatus {
     PENDING,
     READY,
     STARTED,
@@ -32,7 +32,7 @@ public class Executable {
   @JsonProperty("app")
   private final String app;
   @JsonProperty("status")
-  private final ExecutableStatus status;
+  private final JobStatus status;
   @JsonProperty("context")
   private final Context context;
   @JsonProperty("inputs")
@@ -42,7 +42,7 @@ public class Executable {
   @JsonProperty("allocatedResources")
   private final Resources allocatedResources;
   
-  public Executable(String id, String nodeId, DAGNode node, ExecutableStatus status, Object inputs, Resources allocatedResources, Context context) {
+  public Job(String id, String nodeId, DAGNode node, JobStatus status, Object inputs, Resources allocatedResources, Context context) {
     this.id = id;
     this.nodeId = nodeId;
     this.status = status;
@@ -54,10 +54,10 @@ public class Executable {
   }
 
   @JsonCreator
-  public Executable(@JsonProperty("id") String id, 
+  public Job(@JsonProperty("id") String id, 
       @JsonProperty("nodeId") String nodeId,
       @JsonProperty("app") String app, 
-      @JsonProperty("status") ExecutableStatus status, 
+      @JsonProperty("status") JobStatus status, 
       @JsonProperty("allocatedResources") Resources allocatedResources,
       @JsonProperty("inputs") Object inputs, 
       @JsonProperty("outputs") Object otputs,
@@ -72,20 +72,20 @@ public class Executable {
     this.allocatedResources = allocatedResources;
   }
 
-  public static Executable cloneWithResources(Executable executable, Resources resources) {
-    return new Executable(executable.id, executable.nodeId, executable.app, executable.status, resources, executable.inputs, executable.outputs, executable.context);
+  public static Job cloneWithResources(Job job, Resources resources) {
+    return new Job(job.id, job.nodeId, job.app, job.status, resources, job.inputs, job.outputs, job.context);
   }
 
-  public static Executable cloneWithStatus(Executable executable, ExecutableStatus status) {
-    return new Executable(executable.id, executable.nodeId, executable.app, status, executable.allocatedResources, executable.inputs, executable.outputs, executable.context);
+  public static Job cloneWithStatus(Job job, JobStatus status) {
+    return new Job(job.id, job.nodeId, job.app, status, job.allocatedResources, job.inputs, job.outputs, job.context);
   }
   
-  public static Executable cloneWithInputs(Executable executable, Object inputs) {
-    return new Executable(executable.id, executable.nodeId, executable.app, executable.status, executable.allocatedResources, inputs, executable.outputs, executable.context);
+  public static Job cloneWithInputs(Job job, Object inputs) {
+    return new Job(job.id, job.nodeId, job.app, job.status, job.allocatedResources, inputs, job.outputs, job.context);
   }
   
-  public static Executable cloneWithOutputs(Executable executable, Object outputs) {
-    return new Executable(executable.id, executable.nodeId, executable.app, executable.status, executable.allocatedResources, executable.inputs, outputs, executable.context);
+  public static Job cloneWithOutputs(Job job, Object outputs) {
+    return new Job(job.id, job.nodeId, job.app, job.status, job.allocatedResources, job.inputs, outputs, job.context);
   }
   
   public String getId() {
@@ -117,7 +117,7 @@ public class Executable {
     if (clazz.isInstance(inputs)) {
       return clazz.cast(inputs);
     }
-    throw new BindingException("Invalid Executable inputs section. Inputs: " + inputs);
+    throw new BindingException("Invalid Job inputs section. Inputs: " + inputs);
   }
   
   public Object getOutputs() {
@@ -132,10 +132,10 @@ public class Executable {
     if (clazz.isInstance(outputs)) {
       return clazz.cast(outputs);
     }
-    throw new BindingException("Invalid Executable outputs section. Outputs: " + inputs);
+    throw new BindingException("Invalid Job outputs section. Outputs: " + inputs);
   }
   
-  public ExecutableStatus getStatus() {
+  public JobStatus getStatus() {
     return status;
   }
   
@@ -160,7 +160,7 @@ public class Executable {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    Executable other = (Executable) obj;
+    Job other = (Job) obj;
     if (context == null) {
       if (other.context != null)
         return false;
@@ -176,6 +176,6 @@ public class Executable {
 
   @Override
   public String toString() {
-    return "Executable [id=" + id + ", nodeId=" + nodeId + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + ", allocatedResources=" + allocatedResources + "]";
+    return "Job [id=" + id + ", nodeId=" + nodeId + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + ", allocatedResources=" + allocatedResources + "]";
   }
 }

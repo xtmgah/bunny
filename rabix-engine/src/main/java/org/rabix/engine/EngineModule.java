@@ -10,10 +10,10 @@ import org.rabix.engine.processor.handler.impl.InputEventHandler;
 import org.rabix.engine.processor.handler.impl.JobStatusEventHandler;
 import org.rabix.engine.processor.handler.impl.OutputEventHandler;
 import org.rabix.engine.processor.impl.EventProcessorImpl;
-import org.rabix.engine.service.ContextService;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.LinkService;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -24,10 +24,10 @@ public class EngineModule extends AbstractModule {
   protected void configure() {
     bind(DAGNodeDB.class).in(Scopes.SINGLETON);
     
-    bind(JobService.class).in(Scopes.SINGLETON);
-    bind(VariableService.class).in(Scopes.SINGLETON);
-    bind(LinkService.class).in(Scopes.SINGLETON);
-    bind(ContextService.class).in(Scopes.SINGLETON);
+    bind(JobRecordService.class).in(Scopes.SINGLETON);
+    bind(VariableRecordService.class).in(Scopes.SINGLETON);
+    bind(LinkRecordService.class).in(Scopes.SINGLETON);
+    bind(ContextRecordService.class).in(Scopes.SINGLETON);
 
     bind(InitEventHandler.class).in(Scopes.SINGLETON);
     bind(InputEventHandler.class).in(Scopes.SINGLETON);

@@ -6,7 +6,7 @@ import java.util.List;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.engine.model.scatter.ScatterMapping;
-import org.rabix.engine.service.JobService.JobState;
+import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobRecord {
 

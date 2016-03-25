@@ -11,7 +11,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ResultCollector;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2ExpressionTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
@@ -21,7 +21,7 @@ import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobException;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobService;
@@ -51,8 +51,8 @@ public class Draft2ResultCollector implements ResultCollector {
   }
   
   @Override
-  public boolean isSuccessfull(Executable executable, int statusCode) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public boolean isSuccessfull(Job job, int statusCode) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     List<Integer> successCodes = draft2Job.getApp().getSuccessCodes();
 
     if (successCodes == null) {
@@ -70,8 +70,8 @@ public class Draft2ResultCollector implements ResultCollector {
   }
 
   @Override
-  public Executable populateOutputs(Executable executable, File workingDir) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public Job populateOutputs(Job job, File workingDir) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     try {
       Map<String, Object> outputs = null;
 
@@ -85,7 +85,7 @@ public class Draft2ResultCollector implements ResultCollector {
       } else {
         outputs = collectOutputs(draft2Job, workingDir, null);
       }
-      return Executable.cloneWithOutputs(executable, outputs);
+      return Job.cloneWithOutputs(job, outputs);
     } catch (Draft2GlobException | Draft2ExpressionException | IOException e) {
       throw new BindingException(e);
     }

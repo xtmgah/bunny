@@ -1,11 +1,11 @@
 package org.rabix.executor.service;
 
-import org.rabix.bindings.model.Executable;
-import org.rabix.bindings.model.Executable.ExecutableStatus;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 
 public interface ExecutorService {
 
-  void start(final Executable executable, String contextId);
+  void start(final Job job, String contextId);
 
   void stop(String id, String contextId);
 
@@ -17,6 +17,6 @@ public interface ExecutorService {
   
   boolean isStopped();
 
-  ExecutableStatus findStatus(String id, String contextId);
+  JobStatus findStatus(String id, String contextId);
   
 }

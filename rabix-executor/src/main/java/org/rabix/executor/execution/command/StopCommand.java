@@ -2,42 +2,42 @@ package org.rabix.executor.execution.command;
 
 import javax.inject.Inject;
 
-import org.rabix.bindings.model.Executable.ExecutableStatus;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.ExecutorException;
-import org.rabix.executor.execution.ExecutableHandlerCommand;
-import org.rabix.executor.handler.ExecutableHandler;
-import org.rabix.executor.model.ExecutableData;
-import org.rabix.executor.service.ExecutableDataService;
+import org.rabix.executor.execution.JobHandlerCommand;
+import org.rabix.executor.handler.JobHandler;
+import org.rabix.executor.model.JobData;
+import org.rabix.executor.service.JobDataService;
 
 /**
- * Command that stops {@link ExecutableHandler} 
+ * Command that stops {@link JobHandler} 
  */
-public class StopCommand extends ExecutableHandlerCommand {
+public class StopCommand extends JobHandlerCommand {
 
   @Inject
-  public StopCommand(ExecutableDataService executableDataService) {
-    super(executableDataService);
+  public StopCommand(JobDataService jobDataService) {
+    super(jobDataService);
   }
 
   @Override
-  public Result run(ExecutableData executableData, ExecutableHandler handler, String contextId) {
-    String executableId = executableData.getExecutable().getId();
+  public Result run(JobData jobData, JobHandler handler, String contextId) {
+    String jobId = jobData.getJob().getId();
     try {
       handler.stop();
 
-      String message = String.format("Executable %s aborted successfully.", executableId);
-      executableDataService.save(executableData, message, ExecutableStatus.ABORTED, contextId);
-      stopped(executableData, message);
+      String message = String.format("Job %s aborted successfully.", jobId);
+      jobDataService.save(jobData, message, JobStatus.ABORTED, contextId);
+      stopped(jobData, message);
     } catch (ExecutorException e) {
-      String message = String.format("Failed to stop %s. %s", executableId, e.toString());
-      executableDataService.save(executableData, message, ExecutableStatus.FAILED, contextId);
+      String message = String.format("Failed to stop %s. %s", jobId, e.toString());
+      jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
     }
     return new Result(true);
   }
 
   @Override
-  public ExecutableHandlerCommandType getType() {
-    return ExecutableHandlerCommandType.STOP;
+  public JobHandlerCommandType getType() {
+    return JobHandlerCommandType.STOP;
   }
 
 }

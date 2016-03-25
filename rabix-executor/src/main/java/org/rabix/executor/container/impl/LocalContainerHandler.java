@@ -16,7 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -27,24 +27,24 @@ public class LocalContainerHandler implements ContainerHandler {
 
   private final static Logger logger = LoggerFactory.getLogger(LocalContainerHandler.class);
 
+  private Job job;
   private File workingDir;
-  private Executable executable;
-
+  
   private Future<Integer> processFuture;
   private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   private Process process;
 
-  public LocalContainerHandler(Executable executable, Configuration configuration) {
-    this.executable = executable;
-    this.workingDir = StorageConfig.getWorkingDir(executable, configuration);
+  public LocalContainerHandler(Job job, Configuration configuration) {
+    this.job = job;
+    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
   }
 
   @Override
   public synchronized void start() throws ContainerException {
     try {
-      Bindings bindings = BindingsFactory.create(executable);
-      String commandLine = bindings.buildCommandLine(executable);
+      Bindings bindings = BindingsFactory.create(job);
+      String commandLine = bindings.buildCommandLine(job);
 
       File commandLineFile = new File(workingDir, "cmd.log");
       FileUtils.writeStringToFile(commandLineFile, commandLine);

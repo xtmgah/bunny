@@ -18,10 +18,10 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
-import org.rabix.engine.service.ContextService;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.JobService.JobState;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
 
@@ -31,24 +31,24 @@ import com.google.inject.Inject;
 public class InitEventHandler implements EventHandler<InitEvent> {
 
   private DAGNodeDB nodeDB;
-  private JobService jobService;
   private EventProcessor eventProcessor;
-  private VariableService variableService;
-  private ContextService contextService;
+  private JobRecordService jobRecordService;
+  private ContextRecordService contextRecordService;
+  private VariableRecordService variableRecordService;
 
   @Inject
-  public InitEventHandler(EventProcessor eventProcessor, JobService jobService, VariableService variableService, ContextService contextService, DAGNodeDB nodeDB) {
-    this.nodeDB = nodeDB;
-    this.jobService = jobService;
+  public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
+    this.nodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
-    this.variableService = variableService;
-    this.contextService = contextService;
+    this.jobRecordService = jobRecordService;
+    this.contextRecordService = contextRecordService;
+    this.variableRecordService = variableRecordService;
   }
 
   public void handle(final InitEvent event) throws EventHandlerException {
     ContextRecord context = new ContextRecord(event.getContext().getId(), event.getContext().getConfig(), ContextStatus.RUNNING);
     
-    contextService.create(context);
+    contextRecordService.create(context);
     nodeDB.loadDB(event.getNode(), event.getContextId());
     
     DAGNode node = nodeDB.get(event.getNode().getId(), event.getContextId());
@@ -60,16 +60,16 @@ public class InitEventHandler implements EventHandler<InitEvent> {
       }
 
       VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), inputPort.getId(), LinkPortType.INPUT, null);
-      variableService.create(variable);
+      variableRecordService.create(variable);
     }
 
     for (DAGLinkPort outputPort : node.getOutputPorts()) {
       job.incrementPortCounter(outputPort, LinkPortType.OUTPUT);
 
       VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), outputPort.getId(), LinkPortType.OUTPUT, null);
-      variableService.create(variable);
+      variableRecordService.create(variable);
     }
-    jobService.create(job);
+    jobRecordService.create(job);
 
     
     try {

@@ -3,7 +3,7 @@ package org.rabix.engine.rest.plugin;
 import java.util.List;
 
 import org.rabix.bindings.model.Context;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +22,16 @@ public class BackendPluginDispatcher {
     this.backendPluginRegister = backendPluginRegister;
   }
   
-  public void send(List<Executable> executables) {
-    for (Executable executable : executables) {
-      Context context = executable.getContext();
+  public void send(List<Job> jobs) {
+    for (Job job : jobs) {
+      Context context = job.getContext();
 
       String backendType = context.getConfig().get(BACKEND_TYPE);
       if (backendType != null) {
         try {
           BackendPluginType backendPluginType = BackendPluginType.valueOf(backendType.toUpperCase());
           BackendPlugin backendPlugin = backendPluginRegister.get(backendPluginType);
-          backendPlugin.send(executable);
+          backendPlugin.send(job);
           continue;
         } catch (Exception e) {
           logger.error("Cannot find backend for type " + backendType, e);

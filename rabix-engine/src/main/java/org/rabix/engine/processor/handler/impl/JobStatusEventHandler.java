@@ -12,38 +12,38 @@ import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.JobService.JobState;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.JobRecordService.JobState;
 
 import com.google.inject.Inject;
 
 public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
-  private final JobService jobService;
+  private final JobRecordService jobRecordService;
   private final EventProcessor eventProcessor;
 
   @Inject
-  public JobStatusEventHandler(final JobService jobService, final EventProcessor eventProcessor) {
-    this.jobService = jobService;
+  public JobStatusEventHandler(final JobRecordService jobRecordService, final EventProcessor eventProcessor) {
     this.eventProcessor = eventProcessor;
+    this.jobRecordService = jobRecordService;
   }
 
   @Override
   public void handle(JobStatusEvent event) throws EventHandlerException {
-    JobRecord job = jobService.find(event.getJobId(), event.getContextId());
+    JobRecord jobRecord = jobRecordService.find(event.getJobId(), event.getContextId());
     
     switch (event.getState()) {
       case RUNNING:
-        job.setState(JobState.RUNNING);
-        jobService.update(job);
+        jobRecord.setState(JobState.RUNNING);
+        jobRecordService.update(jobRecord);
         break;
       case COMPLETED:
         try {
           Bindings bindings = BindingsFactory.create(event.getProtocolType());
 
-          for (PortCounter portCounter : job.getOutputCounters()) {
+          for (PortCounter portCounter : jobRecord.getOutputCounters()) {
             Object output = bindings.getOutputValueById(event.getResult(), portCounter.getPort());
-            eventProcessor.addToQueue(new OutputUpdateEvent(job.getContextId(), job.getId(), portCounter.getPort(), output));
+            eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getContextId(), jobRecord.getId(), portCounter.getPort(), output));
           }
         } catch (BindingException e) {
           throw new EventHandlerException(e);

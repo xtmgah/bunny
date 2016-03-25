@@ -4,8 +4,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
-import org.rabix.bindings.model.Executable;
-import org.rabix.bindings.model.Executable.ExecutableStatus;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.WorkerStatus;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.service.ExecutorService;
@@ -21,28 +21,28 @@ public class ExecutorHTTPServiceImpl implements ExecutorHTTPService {
     this.executorService = executorService;
   }
 
-  public Response startExecutable(Executable executable, HttpHeaders headers) {
+  public Response startJob(Job job, HttpHeaders headers) {
     String contextId = headers.getHeaderString(CONTEXT_ID);
-    executorService.start(executable, contextId);
+    executorService.start(job, contextId);
     return ok();
   }
 
-  public Response stopExecutable(String id, HttpHeaders headers) {
+  public Response stopJob(String id, HttpHeaders headers) {
     String contextId = headers.getHeaderString(CONTEXT_ID);
     executorService.stop(id, contextId);
     return ok();
   }
 
-  public Response executableStatus(String id, HttpHeaders headers) {
+  public Response jobStatus(String id, HttpHeaders headers) {
     String contextId = headers.getHeaderString(CONTEXT_ID);
-    ExecutableStatus status = executorService.findStatus(id, contextId);
+    JobStatus status = executorService.findStatus(id, contextId);
     if (status == null) {
       throw new WebApplicationException(404);
     }
     return ok(status);
   }
 
-  public Response executableResult(String id, HttpHeaders headers) {
+  public Response jobResult(String id, HttpHeaders headers) {
     String contextId = headers.getHeaderString(CONTEXT_ID);
     return ok(executorService.getResult(id, contextId));
   }

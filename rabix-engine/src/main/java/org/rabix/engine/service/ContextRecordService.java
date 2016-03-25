@@ -5,16 +5,16 @@ import java.util.List;
 
 import org.rabix.engine.model.ContextRecord;
 
-public class ContextService {
+public class ContextRecordService {
 
-  private List<ContextRecord> contexts = new ArrayList<>();
+  private List<ContextRecord> contextRecords = new ArrayList<>();
   
-  public synchronized void create(ContextRecord context) {
-    contexts.add(context);
+  public synchronized void create(ContextRecord contextRecord) {
+    contextRecords.add(contextRecord);
   }
   
   public synchronized void update(ContextRecord context) {
-    for (ContextRecord c : contexts) {
+    for (ContextRecord c : contextRecords) {
       if (c.getId().equals(context.getId())) {
         c.setStatus(context.getStatus());
         return;
@@ -23,9 +23,9 @@ public class ContextService {
   }
   
   public synchronized ContextRecord find(String id) {
-    for (ContextRecord context : contexts) {
-      if (context.getId().equals(id)) {
-        return context;
+    for (ContextRecord contextRecord : contextRecords) {
+      if (contextRecord.getId().equals(id)) {
+        return contextRecord;
       }
     }
     return null;
