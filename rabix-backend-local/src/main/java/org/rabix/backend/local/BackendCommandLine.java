@@ -14,7 +14,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.BindingException;
@@ -23,9 +22,16 @@ import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.protocol.draft2.Draft2CommandLineBuilder;
+import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
+import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
+import org.rabix.bindings.protocol.draft2.bean.Draft2Resources;
+import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
+import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
+import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
@@ -44,7 +50,6 @@ import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Guice;
@@ -56,8 +61,8 @@ import com.google.inject.Injector;
 public class BackendCommandLine {
 
   private static final Logger logger = LoggerFactory.getLogger(BackendCommandLine.class);
-  private static String configDir = "/.bunny/";
-  
+  private static String configDir = "/.bunny/config";
+
   public static void main(String[] commandLineArguments) {
     final CommandLineParser commandLineParser = new DefaultParser();
     final Options posixOptions = createOptions();
@@ -78,20 +83,16 @@ public class BackendCommandLine {
         logger.info("Application file {} does not exist.", appFile.getCanonicalPath());
         printUsageAndExit(posixOptions);
       }
-      
+
       String inputsPath = commandLine.getArgList().get(1);
       File inputsFile = new File(inputsPath);
       if (!inputsFile.exists()) {
         logger.info("Inputs file {} does not exist.", inputsFile.getCanonicalPath());
         printUsageAndExit(posixOptions);
       }
-      
-      
-      // print command line      
-      
-      // Search for config in /home
+
       File configDir = getConfigDir(commandLine, posixOptions);
-      
+
       if (!configDir.exists() || !configDir.isDirectory()) {
         logger.info("Config directory {} doesn't exist or is not a directory", configDir.getCanonicalPath());
         printUsageAndExit(posixOptions);
@@ -108,6 +109,7 @@ public class BackendCommandLine {
           configOverrides.put("backend.execution.directory", executionDir.getCanonicalPath());
         }
       }
+
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
       Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
           new ExecutorModule(configModule));
@@ -126,6 +128,38 @@ public class BackendCommandLine {
 
       DAGNode node = bindings.translateToDAG(appText, inputsText);
       Object inputs = bindings.translateInputs(inputsText);
+
+      if (commandLine.hasOption("t")) {
+        Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(appText, Draft2CommandLineTool.class);
+        Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
+
+        Map<String, Object> allocatedResources = (Map<String, Object>) ((Map<String, Object>) inputs)
+            .get("allocatedResources");
+        Integer cpu = allocatedResources != null ? (Integer) allocatedResources.get("cpu") : null;
+        Integer mem = allocatedResources != null ? (Integer) allocatedResources.get("mem") : null;
+        draft2Job.setResources(new Draft2Resources(false, cpu, mem));
+
+        Draft2CommandLineBuilder draft2CommandLineBuilder = new Draft2CommandLineBuilder();
+        List<Object> commandLineParts = draft2CommandLineBuilder.buildCommandLineParts(draft2Job);
+        String stdin = draft2CommandLineTool.getStdin(draft2Job);
+        String stdout = draft2CommandLineTool.getStdout(draft2Job);
+        
+        Draft2CreateFileRequirement draft2CreateFileRequirement = draft2CommandLineTool.getCreateFileRequirement();
+        Map<Object, Object> createdFiles = new HashMap<>();
+        if (draft2CreateFileRequirement != null) {
+          for (Draft2FileRequirement fileRequirement : draft2CreateFileRequirement.getFileRequirements()) {
+            createdFiles.put(fileRequirement.getFilename(draft2Job), fileRequirement.getContent(draft2Job));
+          }
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("args", commandLineParts);
+        result.put("stdin", stdin);
+        result.put("stdout", stdout);
+        result.put("createfiles", createdFiles);
+
+        System.out.println(JSONHelper.writeObject(result));
+        System.exit(0);
+      }
 
       Context context = new Context(Context.createUniqueID(), null);
       List<IterationCallback> callbacks = new ArrayList<>();
@@ -171,6 +205,7 @@ public class BackendCommandLine {
     options.addOption("e", "execution-dir", true, "execution directory");
     options.addOption("l", "log-iterations-dir", true, "log engine tables directory");
     options.addOption("c", "configuration-dir", true, "configuration directory");
+    options.addOption("t", "conformance-test", false, "conformance test");
     options.addOption("h", "help", false, "help");
     return options;
   }
@@ -193,24 +228,28 @@ public class BackendCommandLine {
     new HelpFormatter().printHelp("rabix [OPTION]... <tool> <job>", options);
     System.exit(0);
   }
-  
+
   private static File getConfigDir(CommandLine commandLine, Options options) throws IOException {
     String configPath = commandLine.getOptionValue("configuration-dir");
-    if(configPath != null) {
+    if (configPath != null) {
       File config = new File(configPath);
       if (config.exists() && config.isDirectory()) {
         return config;
-      }
-      else {
-        logger.info("Configuration directory {} doesn't exist or is not a directory. Using default configuration directory", configPath);
+      } else {
+        logger.debug("Configuration directory {} doesn't exist or is not a directory.", configPath);
       }
     }
+    File config = new File("config");
+    if (config.exists() && config.isDirectory()) {
+      logger.debug("Configuration directory found localy.");
+      return config;
+    }
     String homeDir = System.getProperty("user.home");
-    File config = new File(homeDir, configDir);
-    if(!config.exists() || !config.isDirectory()) {
-        logger.info("Config directory {} doesn't exist or is not a directory", config.getCanonicalPath());
-        printUsageAndExit(options);
-      }
+    config = new File(homeDir, configDir);
+    if (!config.exists() || !config.isDirectory()) {
+      logger.info("Config directory doesn't exist or is not a directory");
+      printUsageAndExit(options);
+    }
     return config;
   }
 
