@@ -12,12 +12,14 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
+import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.model.ContextRecord;
@@ -119,7 +121,8 @@ public class LocalJobHandler implements IterationCallback {
         }
         ContextRecord contextRecord = contextRecordService.find(job.getContextId());
         Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-        jobs.add(new Job(job.getExternalId(), job.getId(), node, JobStatus.READY, inputs, context));
+        String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(node.getApp()));
+        jobs.add(new Job(job.getExternalId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
       }
     }
     return jobs;

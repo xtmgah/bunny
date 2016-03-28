@@ -1,10 +1,12 @@
 package org.rabix.bindings.model;
 
+import java.io.IOException;
 import java.util.Map;
 
-import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.bindings.BindingException;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.CloneHelper;
-import org.rabix.common.helper.EncodingHelper;
+import org.rabix.common.json.BeanSerializer;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -42,16 +44,6 @@ public class Job {
   @JsonProperty("outputs")
   private final Map<String, Object> outputs;
   
-  public Job(String id, String nodeId, DAGNode node, JobStatus status, Map<String, Object> inputs, Context context) {
-    this.id = id;
-    this.nodeId = nodeId;
-    this.status = status;
-    this.inputs = inputs;
-    this.outputs = null;
-    this.context = context;
-    this.app = EncodingHelper.encodeBase64(node.getApp());
-  }
-
   @JsonCreator
   public Job(@JsonProperty("id") String id, 
       @JsonProperty("nodeId") String nodeId,
@@ -94,8 +86,13 @@ public class Job {
   }
   
   @JsonIgnore
-  public <T> T getApp(Class<T> clazz) {
-    return EncodingHelper.decodeBase64(app, clazz);
+  public <T> T getApp(Class<T> clazz) throws BindingException {
+    try {
+      String decodedApp = URIHelper.getData(app);
+      return BeanSerializer.deserialize(decodedApp, clazz);
+    } catch (IOException e) {
+      throw new BindingException("Failed to get applicaton object", e);
+    }
   }
   
   @SuppressWarnings("unchecked")

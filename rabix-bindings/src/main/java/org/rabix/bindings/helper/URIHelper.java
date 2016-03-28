@@ -10,6 +10,7 @@ import java.net.URLConnection;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.rabix.common.helper.EncodingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ public class URIHelper {
   
   private final static String DATA_URI_BASE_64 = "base64";
   private final static String DATA_URI_PAYLOAD_SEPARATOR = ",";
+  private final static String DATA_URI_MEDIA_TYPE_DEFAULT = "text/plain";
   
   public static String getData(String uri) throws IOException {
     if (isHTTP(uri)) {
@@ -37,6 +39,14 @@ public class URIHelper {
       return loadData(uri);
     }
     return null;
+  }
+  
+  public static String createURI(String scheme, String payload) {
+    return scheme + ":" + payload;
+  }
+  
+  public static String createDataURI(String payload) {
+    return DATA_URI_SCHEME + ":" + DATA_URI_MEDIA_TYPE_DEFAULT + ";" + DATA_URI_BASE_64 + "," + EncodingHelper.encodeBase64(payload);
   }
   
   public static boolean isFile(String uri) {

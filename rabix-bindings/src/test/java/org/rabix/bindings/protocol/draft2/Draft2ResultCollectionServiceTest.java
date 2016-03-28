@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.common.helper.ResourceHelper;
 import org.rabix.common.json.BeanSerializer;
@@ -49,8 +49,8 @@ public class Draft2ResultCollectionServiceTest {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "output-collection-job.json");
 
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-    Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+    String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+    Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(job);
     job = bindings.populateOutputs(job, workingDir);
@@ -66,8 +66,8 @@ public class Draft2ResultCollectionServiceTest {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "bean/expression-job.json");
 
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-    Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+    String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+    Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(job);
     job = bindings.populateOutputs(job, workingDir);
