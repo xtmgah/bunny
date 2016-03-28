@@ -68,7 +68,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
   }
   
   @Override
-  public Object translateInputs(String inputs) throws BindingException {
+  public Map<String, Object> translateInputs(String inputs) throws BindingException {
     inputs = JSONHelper.transformToJSON(inputs);
     return JSONHelper.readMap(inputs);
   }

@@ -18,7 +18,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.BindingsFactory.Pair;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
@@ -115,13 +116,17 @@ public class BackendCommandLine {
       LinkRecordService linkRecordService = injector.getInstance(LinkRecordService.class);
       ContextRecordService contextRecordService = injector.getInstance(ContextRecordService.class);
 
-      Bindings bindings = BindingsFactory.create(ProtocolType.DRAFT2);
-
-      String appText = bindings.loadAppFromFile(appFile);
+      String appURI = URIHelper.FILE_URI_SCHEME + ":" + appPath;
+      
+      Pair<Bindings, String> bindingsPair = BindingsFactory.create(appURI);
+      
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
 
+      Bindings bindings = bindingsPair.getT();
+      String resolvedAppString = bindingsPair.getK();
+      
       Map<String, Object> inputs = (Map<String, Object>) bindings.translateInputs(inputsText);
-      DAGNode dagNode = bindings.translateToDAG(appText, inputsText);
+      DAGNode dagNode = bindings.translateToDAG(resolvedAppString, inputsText);
 
       Context context = new Context(Context.createUniqueID(), null);
       List<IterationCallback> callbacks = new ArrayList<>();

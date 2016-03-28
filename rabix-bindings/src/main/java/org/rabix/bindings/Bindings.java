@@ -7,7 +7,7 @@ public interface Bindings extends CommandLineBuilder, ProtocolJobHelper, Protoco
   /**
    * Loads application from the file 
    */
-  String loadAppFromFile(File file) throws BindingException;
+  String loadApp(String appURI) throws BindingException;
   
   /**
    * Returns {@link ProtocolType} 

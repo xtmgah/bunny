@@ -2,6 +2,7 @@ package org.rabix.bindings;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.filemapper.FileMapper;
@@ -48,8 +49,8 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public String loadAppFromFile(File file) throws BindingException {
-    return documentReferenceResolver.resolve(file);
+  public String loadApp(String uri) throws BindingException {
+    return documentReferenceResolver.resolve(uri);
   }
   
   @Override
@@ -148,7 +149,7 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public Object translateInputs(String inputs) throws BindingException {
+  public Map<String, Object> translateInputs(String inputs) throws BindingException {
     return protocolTranslator.translateInputs(inputs);
   }
   
