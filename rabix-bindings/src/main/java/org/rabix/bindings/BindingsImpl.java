@@ -159,7 +159,7 @@ public class BindingsImpl implements Bindings {
   }
 
   @Override
-  public Object translateInputsFromPayload(String job) {
+  public Map<String, Object> translateInputsFromPayload(String job) {
     return protocolTranslator.translateInputsFromPayload(job);
   }
 

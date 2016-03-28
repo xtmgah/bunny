@@ -60,7 +60,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
   }
 
   @Override
-  public Object translateInputsFromPayload(String payload) {
+  public Map<String, Object> translateInputsFromPayload(String payload) {
     payload = JSONHelper.transformToJSON(payload);
     
     Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);

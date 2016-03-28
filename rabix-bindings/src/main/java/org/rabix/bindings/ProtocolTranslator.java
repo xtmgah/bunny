@@ -20,7 +20,7 @@ public interface ProtocolTranslator {
   /**
    * Get inputs from the pay-load
    */
-  Object translateInputsFromPayload(String payload);
+  Map<String, Object> translateInputsFromPayload(String payload);
   
   /**
    * Translates to DAG format

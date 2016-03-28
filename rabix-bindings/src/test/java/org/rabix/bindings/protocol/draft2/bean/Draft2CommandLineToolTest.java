@@ -7,8 +7,8 @@ import java.util.List;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.ResourceHelper;
 import org.rabix.common.json.BeanSerializer;
 import org.testng.Assert;
@@ -32,8 +32,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -66,8 +66,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
       Assert.assertNotNull(resultList);
@@ -86,8 +86,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -114,8 +114,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -134,8 +134,8 @@ public class Draft2CommandLineToolTest {
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       String commandLine = bindings.buildCommandLine(job);
       
@@ -180,8 +180,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -211,8 +211,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -241,8 +241,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -275,8 +275,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -302,8 +302,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -329,8 +329,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -356,8 +356,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -383,8 +383,8 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
-      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+      Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 

@@ -21,7 +21,7 @@ public class Draft2ProtocolJobHelper implements ProtocolJobHelper {
     return new Draft2Job(app, job.getInputs());
   }
 
-  public boolean isSelfExecutable(Job job) {
+  public boolean isSelfExecutable(Job job) throws BindingException {
     Draft2JobApp app = BeanSerializer.deserialize(JSONHelper.writeObject(job.getApp(Draft2JobApp.class)), Draft2JobApp.class);
     return app.getType().equals(Draft2JobAppType.EXPRESSION_TOOL);
   }
