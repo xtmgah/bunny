@@ -26,11 +26,11 @@ public class BindingsFactory {
     }
   }
   
-  public static Pair<Bindings, String> create(String appURL) {
+  public static BindingsPair create(String appURL) {
     for (Bindings binding : bindings.values()) {
       try {
         String resolvedApp = binding.loadApp(appURL);
-        return new Pair<Bindings, String>(binding, resolvedApp);  
+        return new BindingsPair(binding, resolvedApp);  
       } catch (BindingException e) {
         // do nothing
       }
@@ -73,22 +73,23 @@ public class BindingsFactory {
     return null;
   }
   
-  public static class Pair<T, K> {
-    private T t;
-    private K k;
+  public static class BindingsPair {
+    private final String resolved;
+    private final Bindings bindings;
     
-    public Pair(T t, K k) {
-      this.t = t;
-      this.k = k;
+    public BindingsPair(Bindings bindings, String resolved) {
+      this.bindings = bindings;
+      this.resolved = resolved;
+    }
+
+    public String getResolved() {
+      return resolved;
+    }
+
+    public Bindings getBindings() {
+      return bindings;
     }
     
-    public T getT() {
-      return t;
-    }
-    
-    public K getK() {
-      return k;
-    }
   }
   
 }

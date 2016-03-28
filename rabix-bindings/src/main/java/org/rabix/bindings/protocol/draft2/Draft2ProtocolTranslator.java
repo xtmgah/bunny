@@ -2,7 +2,6 @@ package org.rabix.bindings.protocol.draft2;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolTranslator;
@@ -16,15 +15,12 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
 import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.common.helper.JSONHelper;
-import org.rabix.common.json.BeanSerializer;
 
 public class Draft2ProtocolTranslator implements ProtocolTranslator {
 
@@ -34,45 +30,6 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
     return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job)); 
   }
   
-  /**
-   * Translates from Draft2 format to generic one
-   */
-  @Override
-  public DAGNode translateToDAGFromPayload(String payload) throws BindingException {
-    payload = JSONHelper.transformToJSON(payload);
-    
-    Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);
-    return processBatchInfo(job, transformToGeneric(job.getId(), job));
-  }
-  
-  @Override
-  public DAGNode translateToDAG(String app, String inputs) throws BindingException {
-    app = JSONHelper.transformToJSON(app);
-    inputs = JSONHelper.transformToJSON(inputs);
-    
-    Map<String, Object> inputsMap = JSONHelper.readMap(inputs);
-    Draft2JobApp draft2JobApp = BeanSerializer.deserialize(app, Draft2JobApp.class);
-    Draft2Job draft2Job = new Draft2Job(draft2JobApp, inputsMap);
-    
-    Draft2JobProcessor draft2JobProcessor = new Draft2JobProcessor();
-    draft2Job = draft2JobProcessor.process(draft2Job);
-    return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job));
-  }
-
-  @Override
-  public Map<String, Object> translateInputsFromPayload(String payload) {
-    payload = JSONHelper.transformToJSON(payload);
-    
-    Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);
-    return job.getInputs();
-  }
-  
-  @Override
-  public Map<String, Object> translateInputs(String inputs) throws BindingException {
-    inputs = JSONHelper.transformToJSON(inputs);
-    return JSONHelper.readMap(inputs);
-  }
-
   @SuppressWarnings("unchecked")
   private DAGNode processBatchInfo(Draft2Job job, DAGNode node) {
     Object batch = job.getScatter();

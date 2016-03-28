@@ -238,7 +238,7 @@ public class JobHandlerImpl implements JobHandler {
   public boolean isSuccessful(int processExitCode) throws ExecutorException {
     try {
       Bindings bindings = BindingsFactory.create(job);
-      return bindings.isSuccessfull(job, processExitCode);
+      return bindings.isSuccessful(job, processExitCode);
     } catch (BindingException e) {
       logger.error("Failed to create Bindings", e);
       throw new ExecutorException(e);

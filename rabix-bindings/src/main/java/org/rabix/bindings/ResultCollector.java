@@ -6,7 +6,7 @@ import org.rabix.bindings.model.Job;
 
 public interface ResultCollector {
 
-  boolean isSuccessfull(Job job, int statusCode) throws BindingException;
+  boolean isSuccessful(Job job, int statusCode) throws BindingException;
   
   Job populateOutputs(Job job, File workingDir) throws BindingException;
   

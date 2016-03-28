@@ -10,8 +10,10 @@ public class Task {
 
   @JsonProperty("id")
   private String id;
-  @JsonProperty("payload")
-  private String payload;
+  @JsonProperty("app")
+  private String app;
+  @JsonProperty("inputs")
+  private String inputs;
   @JsonProperty("type")
   private ProtocolType type;
   @JsonProperty("context")
@@ -20,10 +22,11 @@ public class Task {
   private TaskStatus status;
 
   @JsonCreator
-  public Task(@JsonProperty("id") String id, @JsonProperty("payload") String payload, @JsonProperty("type") ProtocolType type, @JsonProperty("context") Context context, @JsonProperty("status") TaskStatus status) {
+  public Task(@JsonProperty("id") String id, @JsonProperty("app") String app, @JsonProperty("inputs") String inputs, @JsonProperty("type") ProtocolType type, @JsonProperty("context") Context context, @JsonProperty("status") TaskStatus status) {
     this.id = id;
     this.type = type;
-    this.payload = payload;
+    this.app = app;
+    this.inputs = inputs;
     this.context = context;
     this.status = status;
   }
@@ -36,12 +39,20 @@ public class Task {
     this.id = id;
   }
 
-  public String getPayload() {
-    return payload;
+  public String getApp() {
+    return app;
   }
 
-  public void setPayload(String payload) {
-    this.payload = payload;
+  public void setApp(String app) {
+    this.app = app;
+  }
+
+  public String getInputs() {
+    return inputs;
+  }
+
+  public void setInputs(String inputs) {
+    this.inputs = inputs;
   }
 
   public ProtocolType getType() {
@@ -70,7 +81,7 @@ public class Task {
 
   @Override
   public String toString() {
-    return "Task [id=" + id + ", payload=" + payload + ", type=" + type + ", context=" + context + ", status=" + status + "]";
+    return "Task [id=" + id + ", app=" + app + ", inputs=" + inputs + ", type=" + type + ", context=" + context + ", status=" + status + "]";
   }
 
 }

@@ -51,7 +51,7 @@ public class Draft2ResultCollector implements ResultCollector {
   }
   
   @Override
-  public boolean isSuccessfull(Job job, int statusCode) throws BindingException {
+  public boolean isSuccessful(Job job, int statusCode) throws BindingException {
     Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     List<Integer> successCodes = draft2Job.getApp().getSuccessCodes();
 

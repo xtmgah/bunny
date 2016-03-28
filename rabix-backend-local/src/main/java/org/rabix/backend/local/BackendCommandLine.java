@@ -18,17 +18,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.BindingsFactory.Pair;
+import org.rabix.bindings.BindingsFactory.BindingsPair;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.protocol.draft2.Draft2CommandLineBuilder;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Resources;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
@@ -111,8 +112,7 @@ public class BackendCommandLine {
       }
 
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
-      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
-          new ExecutorModule(configModule));
+      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(), new ExecutorModule(configModule));
       DAGNodeDB dagNodeDB = injector.getInstance(DAGNodeDB.class);
       EventProcessor eventProcessor = injector.getInstance(EventProcessor.class);
       ExecutorService executorService = injector.getInstance(ExecutorService.class);
@@ -123,15 +123,16 @@ public class BackendCommandLine {
 
       String appURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
 
-      Pair<Bindings, String> bindingsPair = BindingsFactory.create(appURI);
+      BindingsPair bindingsPair = BindingsFactory.create(appURI);
 
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
+      Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
+      
+      Bindings bindings = bindingsPair.getBindings();
+      String resolvedAppString = bindingsPair.getResolved();
 
-      Bindings bindings = bindingsPair.getT();
-      String resolvedAppString = bindingsPair.getK();
-
-      Map<String, Object> inputs = (Map<String, Object>) bindings.translateInputs(inputsText);
-      DAGNode dagNode = bindings.translateToDAG(resolvedAppString, inputsText);
+      Job job = new Job(appURI, inputs); 
+      DAGNode dagNode = bindings.translateToDAG(job);
 
       if (commandLine.hasOption("t")) {
         Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(resolvedAppString, Draft2CommandLineTool.class);
@@ -174,12 +175,10 @@ public class BackendCommandLine {
           logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
           System.exit(10);
         } else {
-          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobRecordService, variableRecordService,
-              linkRecordService, contextRecordService, dagNodeDB));
+          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB));
         }
       }
-      callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService,
-          dagNodeDB));
+      callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
       callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService));
 
       InitEvent initEvent = new InitEvent(context, dagNode, inputs);

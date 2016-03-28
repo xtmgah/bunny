@@ -2,7 +2,6 @@ package org.rabix.bindings;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.filemapper.FileMapper;
@@ -54,18 +53,13 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public Object getApp(Job job) throws BindingException {
-    return protocolJobHelper.getApp(job);
-  }
-  
-  @Override
   public boolean isSelfExecutable(Job job) throws BindingException {
     return protocolJobHelper.isSelfExecutable(job);
   }
   
   @Override
-  public boolean isSuccessfull(Job job, int statusCode) throws BindingException {
-    return resultCollector.isSuccessfull(job, statusCode);
+  public boolean isSuccessful(Job job, int statusCode) throws BindingException {
+    return resultCollector.isSuccessful(job, statusCode);
   }
 
   @Override
@@ -141,26 +135,6 @@ public class BindingsImpl implements Bindings {
   @Override
   public DAGNode translateToDAG(Job job) throws BindingException {
     return protocolTranslator.translateToDAG(job);
-  }
-
-  @Override
-  public DAGNode translateToDAGFromPayload(String job) throws BindingException {
-    return protocolTranslator.translateToDAGFromPayload(job);
-  }
-  
-  @Override
-  public Map<String, Object> translateInputs(String inputs) throws BindingException {
-    return protocolTranslator.translateInputs(inputs);
-  }
-  
-  @Override
-  public DAGNode translateToDAG(String app, String inputs) throws BindingException {
-    return protocolTranslator.translateToDAG(app, inputs);
-  }
-
-  @Override
-  public Map<String, Object> translateInputsFromPayload(String job) {
-    return protocolTranslator.translateInputsFromPayload(job);
   }
 
   @Override

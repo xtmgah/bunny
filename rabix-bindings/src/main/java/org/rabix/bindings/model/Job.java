@@ -44,6 +44,10 @@ public class Job {
   @JsonProperty("outputs")
   private final Map<String, Object> outputs;
   
+  public Job(String app, Map<String, Object> inputs) {
+    this(null, null, app, null, inputs, null, null);
+  }
+  
   @JsonCreator
   public Job(@JsonProperty("id") String id, 
       @JsonProperty("nodeId") String nodeId,
@@ -83,6 +87,10 @@ public class Job {
   
   public String getNodeId() {
     return nodeId;
+  }
+  
+  public String getApp() {
+    return app;
   }
   
   @JsonIgnore

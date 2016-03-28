@@ -29,6 +29,10 @@ public enum Draft2ExpressionLanguage {
     throw new Draft2ExpressionException("Language " + lang + " is not supported");
   }
 
+  public String getDefault() {
+    return "#cwl-js-engine";
+  }
+  
   public String[] getLanguages() {
     return languages;
   }

@@ -12,6 +12,7 @@ import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.common.helper.JSONHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.model.ContextRecord;
@@ -63,8 +64,9 @@ public class TaskServiceImpl implements TaskService {
     try {
       bindings = BindingsFactory.create(task.getType());
 
-      DAGNode node = bindings.translateToDAGFromPayload(task.getPayload());
-      Map<String, Object> inputs = (Map<String, Object>) bindings.translateInputsFromPayload(task.getPayload());
+      Map<String, Object> inputs = JSONHelper.readMap(task.getInputs());
+      Job job = new Job(task.getApp(), inputs);
+      DAGNode node = bindings.translateToDAG(job);
       InitEvent initEvent = new InitEvent(context, node, inputs);
 
       eventProcessor.send(initEvent);
