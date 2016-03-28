@@ -39,6 +39,7 @@ public class URIHelper {
       return loadData(uri);
     }
     return null;
+    
   }
   
   public static String createURI(String scheme, String payload) {
@@ -75,25 +76,16 @@ public class URIHelper {
   }
 
   private static String fetchFromHTTP(String uri) throws IOException {
-    try {
-      URL website = new URL(uri);
+    URL website = new URL(uri);
 
-      URLConnection connection = website.openConnection();
-      BufferedReader in = null;
-      try {
-        in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-        StringBuilder response = new StringBuilder();
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-          response.append(inputLine);
-        }
-        return response.toString();
-      } finally {
-        if (in != null) {
-          in.close();
-        }
+    URLConnection connection = website.openConnection();
+    try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+      StringBuilder response = new StringBuilder();
+      String inputLine;
+      while ((inputLine = in.readLine()) != null) {
+        response.append(inputLine);
       }
+      return response.toString();
     } catch (IOException e) {
       logger.error("Failed to load data from URL " + uri, e);
       throw e;
