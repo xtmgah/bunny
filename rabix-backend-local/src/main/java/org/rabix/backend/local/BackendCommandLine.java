@@ -116,8 +116,7 @@ public class BackendCommandLine {
       LinkRecordService linkRecordService = injector.getInstance(LinkRecordService.class);
       ContextRecordService contextRecordService = injector.getInstance(ContextRecordService.class);
 
-      String appURI = URIHelper.FILE_URI_SCHEME + ":" + appPath;
-      
+      String appURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
       Pair<Bindings, String> bindingsPair = BindingsFactory.create(appURI);
       
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());

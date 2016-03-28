@@ -39,6 +39,10 @@ public class URIHelper {
     return null;
   }
   
+  public static String createURI(String scheme, String payload) {
+    return scheme + ":" + payload;
+  }
+  
   public static boolean isFile(String uri) {
     return uri.startsWith(FILE_URI_SCHEME);
   }

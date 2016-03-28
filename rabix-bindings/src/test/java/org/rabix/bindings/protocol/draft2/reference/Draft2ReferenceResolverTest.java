@@ -18,7 +18,7 @@ public class Draft2ReferenceResolverTest {
   @Test
   public void test() throws Exception {
     String filePath = Draft2ReferenceResolverTest.class.getResource("count-lines1-wf.cwl.json").getFile();
-    String fileURI = URIHelper.FILE_URI_SCHEME + ":" + filePath;
+    String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
     Draft2DocumentReferenceResolver referenceResolver = new Draft2DocumentReferenceResolver();
     JsonNode resolvedRoot = readJsonNode("count-lines1-wf-resolved.cwl.json");
@@ -28,7 +28,7 @@ public class Draft2ReferenceResolverTest {
   @Test
   public void testRegular() throws Exception {
     String filePath = Draft2ReferenceResolverTest.class.getResource("regular.json").getFile();
-    String fileURI = URIHelper.FILE_URI_SCHEME + ":" + filePath;
+    String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
     Draft2DocumentReferenceResolver referenceResolver = new Draft2DocumentReferenceResolver();
     JsonNode resolvedRoot = readJsonNode("regular-resolved.json");
@@ -38,7 +38,7 @@ public class Draft2ReferenceResolverTest {
   @Test
   public void testRegularJsonPointer() throws Exception {
     String filePath = Draft2ReferenceResolverTest.class.getResource("regular-json-pointer.json").getFile();
-    String fileURI = URIHelper.FILE_URI_SCHEME + ":" + filePath;
+    String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
     Draft2DocumentReferenceResolver referenceResolver = new Draft2DocumentReferenceResolver();
     JsonNode resolvedRoot = readJsonNode("regular-json-pointer-resolved.json");
@@ -48,7 +48,7 @@ public class Draft2ReferenceResolverTest {
   @Test(expectedExceptions = { BindingException.class })
   public void testCircular() throws Exception {
     String filePath = Draft2ReferenceResolverTest.class.getResource("circular.json").getFile();
-    String fileURI = URIHelper.FILE_URI_SCHEME + ":" + filePath;
+    String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
     Draft2DocumentReferenceResolver referenceResolver = new Draft2DocumentReferenceResolver();
     referenceResolver.resolve(fileURI);
