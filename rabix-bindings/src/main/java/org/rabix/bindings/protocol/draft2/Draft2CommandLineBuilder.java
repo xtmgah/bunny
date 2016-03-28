@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.CommandLineBuilder;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
@@ -19,7 +19,7 @@ import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +33,8 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
   private final static Logger logger = LoggerFactory.getLogger(Draft2CommandLineBuilder.class);
 
   @Override
-  public String buildCommandLine(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public String buildCommandLine(Job job) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     if (draft2Job.getApp().isExpressionTool()) {
       return null;
     }
@@ -42,8 +42,8 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
   }
   
   @Override
-  public List<Object> buildCommandLineParts(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public List<Object> buildCommandLineParts(Job job) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
     if (draft2Job.getApp().isExpressionTool()) {
       return null;
     }

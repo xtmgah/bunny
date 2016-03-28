@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.model.Context;
-import org.rabix.bindings.model.Executable;
-import org.rabix.bindings.model.Executable.ExecutableStatus;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.FileHelper;
@@ -24,10 +24,10 @@ import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.EventProcessor.IterationCallback;
-import org.rabix.engine.service.ContextService;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.LinkService;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.VariableRecordService;
 
 import dnl.utils.text.table.TextTable;
 
@@ -40,23 +40,23 @@ public class CommandLinePrinter implements IterationCallback {
   private static final String LINKS_FILE = "links.txt";
   private static final String VARIABLES_FILE = "variables.txt";
   
-  private static final String READY_EXECUTABLES_DIR = "ready";
+  private static final String READY_JOBS_DIR = "ready";
   
   
   private final File outputDir;
 
-  private final DAGNodeDB nodeDB;
-  private final JobService jobService;
-  private final VariableService variableService;
-  private final LinkService linkService;
-  private final ContextService contextService;
+  private final DAGNodeDB dagNodeDB;
+  private final JobRecordService jobRecordService;
+  private final VariableRecordService variableRecordService;
+  private final LinkRecordService linkRecordService;
+  private final ContextRecordService contextRecordService;
 
-  public CommandLinePrinter(File outputDir, String contextId, JobService jobService, VariableService variableService, LinkService linkService, ContextService contextService, DAGNodeDB nodeDB) {
-    this.nodeDB = nodeDB;
-    this.jobService = jobService;
-    this.variableService = variableService;
-    this.contextService = contextService;
-    this.linkService = linkService;
+  public CommandLinePrinter(File outputDir, String contextId, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
+    this.dagNodeDB = dagNodeDB;
+    this.jobRecordService = jobRecordService;
+    this.variableRecordService = variableRecordService;
+    this.contextRecordService = contextRecordService;
+    this.linkRecordService = linkRecordService;
     this.outputDir = outputDir;
   }
 
@@ -70,20 +70,20 @@ public class CommandLinePrinter implements IterationCallback {
     if (!iterationDirectory.exists()) {
       iterationDirectory.mkdirs();
     }
-    List<Executable> executables = createExecutables(eventProcessor, contextId);
-    if (!executables.isEmpty()) {
-      File readyDirectory = new File(iterationDirectory, READY_EXECUTABLES_DIR);
+    List<Job> jobs = createJobs(eventProcessor, contextId);
+    if (!jobs.isEmpty()) {
+      File readyDirectory = new File(iterationDirectory, READY_JOBS_DIR);
       readyDirectory.mkdirs();
 
       int suffix = 0;
-      for (Executable executable : executables) {
-        FileHelper.serialize(new File(readyDirectory, "executable_" + suffix++ + ".json"), executable);
+      for (Job job : jobs) {
+        FileHelper.serialize(new File(readyDirectory, "job_" + suffix++ + ".json"), job);
       }
     }
   }
 
   private void printJobs(EventProcessor eventProcessor, String contextId, int iteration) {
-    List<JobRecord> jobs = jobService.find(contextId);
+    List<JobRecord> jobs = jobRecordService.find(contextId);
     Object[][] data = new Object[jobs.size()][8];
 
     for (int i = 0; i < jobs.size(); i++) {
@@ -138,7 +138,7 @@ public class CommandLinePrinter implements IterationCallback {
   }
 
   private void printLinks(EventProcessor eventProcessor, String contextId, int iteration) {
-    List<LinkRecord> links = linkService.find(contextId);
+    List<LinkRecord> links = linkRecordService.find(contextId);
     Object[][] data = new Object[links.size()][7];
 
     for (int i = 0; i < links.size(); i++) {
@@ -171,7 +171,7 @@ public class CommandLinePrinter implements IterationCallback {
   }
 
   private void printVariables(EventProcessor eventProcessor, String contextId, int iteration) {
-    List<VariableRecord> variables = variableService.find(contextId);
+    List<VariableRecord> variables = variableRecordService.find(contextId);
     Object[][] data = new Object[variables.size()][5];
 
     for (int i = 0; i < variables.size(); i++) {
@@ -201,25 +201,25 @@ public class CommandLinePrinter implements IterationCallback {
     }
   }
 
-  private List<Executable> createExecutables(EventProcessor eventProcessor, String contextId) {
-    List<Executable> executables = new ArrayList<>();
-    List<JobRecord> jobs = jobService.findReady(contextId);
+  private List<Job> createJobs(EventProcessor eventProcessor, String contextId) {
+    List<Job> jobs = new ArrayList<>();
+    List<JobRecord> jobRecords = jobRecordService.findReady(contextId);
 
-    if (!jobs.isEmpty()) {
-      for (JobRecord job : jobs) {
-        DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
+    if (!jobRecords.isEmpty()) {
+      for (JobRecord job : jobRecords) {
+        DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
         Map<String, Object> inputs = new HashMap<>();
 
-        List<VariableRecord> inputVariables = variableService.find(job.getId(), LinkPortType.INPUT, contextId);
+        List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
         for (VariableRecord inputVariable : inputVariables) {
           inputs.put(inputVariable.getPortId(), inputVariable.getValue());
         }
-        ContextRecord contextRecord = contextService.find(job.getContextId());
+        ContextRecord contextRecord = contextRecordService.find(job.getContextId());
         Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-        executables.add(new Executable(job.getExternalId(), job.getId(), node, ExecutableStatus.READY, inputs, null, context, false));
+        jobs.add(new Job(job.getExternalId(), job.getId(), node, JobStatus.READY, inputs, context));
       }
     }
-    return executables;
+    return jobs;
   }
 
 }

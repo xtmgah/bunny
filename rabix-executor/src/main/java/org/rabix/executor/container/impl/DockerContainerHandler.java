@@ -17,7 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.executor.config.StorageConfig;
@@ -52,17 +52,17 @@ public class DockerContainerHandler implements ContainerHandler {
   private String containerId;
   private DockerClient dockerClient;
 
-  private final Executable executable;
+  private final Job job;
   private final DockerContainerRequirement dockerResource;
 
   private final File workingDir;
   private final Configuration configuration;
 
-  public DockerContainerHandler(Executable executable, DockerContainerRequirement dockerResource, Configuration configuration) {
-    this.executable = executable;
+  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) {
+    this.job = job;
     this.dockerResource = dockerResource;
     this.configuration = configuration;
-    this.workingDir = StorageConfig.getWorkingDir(executable, configuration);
+    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.dockerClient = createDockerClient(configuration);
   }
   
@@ -100,14 +100,14 @@ public class DockerContainerHandler implements ContainerHandler {
       HostConfig hostConfig = hostConfigBuilder.build();
       builder.hostConfig(hostConfig);
 
-      Bindings bindings = BindingsFactory.create(executable);
-      String commandLine = bindings.buildCommandLine(executable);
+      Bindings bindings = BindingsFactory.create(job);
+      String commandLine = bindings.buildCommandLine(job);
 
       File commandLineFile = new File(workingDir, COMMAND_FILE);
       FileUtils.writeStringToFile(commandLineFile, commandLine);
       builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
 
-      EnvironmentVariableRequirement environmentVariableResource = bindings.getEnvironmentVariableRequirement(executable);
+      EnvironmentVariableRequirement environmentVariableResource = bindings.getEnvironmentVariableRequirement(job);
       if (environmentVariableResource != null) {
         builder.env(environmentVariableResource.getVariables());
       }
@@ -192,7 +192,7 @@ public class DockerContainerHandler implements ContainerHandler {
    */
   @Override
   public void dumpContainerLogs(final File logFile) throws ContainerException {
-    logger.debug("Saving standard error files for id={}", executable.getId());
+    logger.debug("Saving standard error files for id={}", job.getId());
 
     if (logFile != null) {
       try {

@@ -7,7 +7,7 @@ import java.util.List;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.ResourceHelper;
 import org.rabix.common.json.BeanSerializer;
@@ -21,7 +21,7 @@ public class Draft2CommandLineToolTest {
   public void testNestedBindingsCmdLine() throws IOException, BindingException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "nested-bindings-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("bwa");
@@ -32,10 +32,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -49,7 +49,7 @@ public class Draft2CommandLineToolTest {
   public void testBwaMemCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "bwa-mem-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("bwa");
@@ -66,10 +66,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
       Assert.assertEquals(resultList, expectedList);
@@ -82,14 +82,14 @@ public class Draft2CommandLineToolTest {
   public void testExpressionTool() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "expression-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNull(resultList);
     } catch (BindingException e) {
@@ -101,7 +101,7 @@ public class Draft2CommandLineToolTest {
   public void testPicardGather() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "picard-gather-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("java");
@@ -114,10 +114,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -131,13 +131,13 @@ public class Draft2CommandLineToolTest {
   public void testBwaMemCmdLineStr() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "bwa-mem-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      String commandLine = bindings.buildCommandLine(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      String commandLine = bindings.buildCommandLine(job);
       
       Assert.assertEquals(commandLine,
           "bwa mem -t 3 -I 1,2,3,4 -m 3 rabix/tests/test-files/chr20.fa.tmp rabix/tests/test-files/example_human_Illumina.pe_1.fastq rabix/tests/test-files/example_human_Illumina.pe_2.fastq < input.txt > output.sam");
@@ -146,11 +146,11 @@ public class Draft2CommandLineToolTest {
     }
   }
 
-  @Test(enabled = true)
+  @Test(enabled = false)
   public void testTMapCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "tmap-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("tmap");
@@ -180,10 +180,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -197,7 +197,7 @@ public class Draft2CommandLineToolTest {
   public void testCleanSamCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "cleansam.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("java");
@@ -211,10 +211,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -228,7 +228,7 @@ public class Draft2CommandLineToolTest {
   public void testSortSamCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "sortsam.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("java -jar /picard-tools-1.126/picard.jar SortSam");
@@ -241,10 +241,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -258,7 +258,7 @@ public class Draft2CommandLineToolTest {
   public void testMarkDuplicatesCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "mark-duplicates.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("java -jar /picard-tools-1.126/picard.jar MarkDuplicates");
@@ -275,10 +275,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -292,7 +292,7 @@ public class Draft2CommandLineToolTest {
   public void testSha1CmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "sha1.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("/usr/local/bin/sha1.py");
@@ -302,10 +302,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -319,7 +319,7 @@ public class Draft2CommandLineToolTest {
   public void testSha1ObjCmdLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "sha1-obj.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("/usr/local/bin/sha1.py");
@@ -329,10 +329,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -346,7 +346,7 @@ public class Draft2CommandLineToolTest {
   public void testSha1ArrLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "sha1-arr.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("/usr/local/bin/sha1.py");
@@ -356,10 +356,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -373,7 +373,7 @@ public class Draft2CommandLineToolTest {
   public void testSha1ObjArrLine() throws IOException {
     String inputJson = ResourceHelper.readResource(this.getClass(), "sha1-arr-obj.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
 
     List<Object> expectedList = new LinkedList<Object>();
     expectedList.add("/usr/local/bin/sha1.py");
@@ -383,10 +383,10 @@ public class Draft2CommandLineToolTest {
 
     List<?> resultList;
     try {
-      DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-      Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null, true);
-      Bindings bindings = BindingsFactory.create(executable);
-      resultList = bindings.buildCommandLineParts(executable);
+      DAGNode dagNode = new DAGNode("id", null, null, null, null, draft2Job.getApp(), null);
+      Job job = new Job("id", "id", dagNode, null, draft2Job.getInputs(), null);
+      Bindings bindings = BindingsFactory.create(job);
+      resultList = bindings.buildCommandLineParts(job);
 
       Assert.assertNotNull(resultList);
       Assert.assertEquals(resultList.size(), expectedList.size());
@@ -394,14 +394,6 @@ public class Draft2CommandLineToolTest {
     } catch (BindingException e) {
       Assert.fail(e.getMessage());
     }
-  }
-  
-  public void testWagnerPythonTool() throws IOException {
-    String inputJson = ResourceHelper.readResource(this.getClass(), "vagner-app-test.json");
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    
-    DAGNode dagNode = new DAGNode("id", null, null, null, null, job.getApp());
-    Assert.assertTrue(dagNode.getApp() instanceof Draft2WagnerPythonTool); 
   }
   
 }

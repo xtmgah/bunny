@@ -1,6 +1,7 @@
 package org.rabix.engine.rest.dto;
 
 import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.model.Context;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,23 +14,18 @@ public class Task {
   private String payload;
   @JsonProperty("type")
   private ProtocolType type;
-  @JsonProperty("completed")
-  private boolean completed;
+  @JsonProperty("context")
+  private Context context;
+  @JsonProperty("status")
+  private TaskStatus status;
 
   @JsonCreator
-  public Task(@JsonProperty("id") String id, @JsonProperty("payload") String payload, @JsonProperty("type") ProtocolType type, @JsonProperty("completed") boolean completed) {
+  public Task(@JsonProperty("id") String id, @JsonProperty("payload") String payload, @JsonProperty("type") ProtocolType type, @JsonProperty("context") Context context, @JsonProperty("status") TaskStatus status) {
     this.id = id;
     this.type = type;
-    this.completed = completed;
     this.payload = payload;
-  }
-
-  public boolean isCompleted() {
-    return completed;
-  }
-
-  public void setCompleted(boolean running) {
-    this.completed = running;
+    this.context = context;
+    this.status = status;
   }
 
   public String getId() {
@@ -56,9 +52,25 @@ public class Task {
     this.type = type;
   }
 
+  public Context getContext() {
+    return context;
+  }
+
+  public void setContext(Context context) {
+    this.context = context;
+  }
+
+  public TaskStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(TaskStatus status) {
+    this.status = status;
+  }
+
   @Override
   public String toString() {
-    return "Task [payload=" + payload + ", type=" + type + "]";
+    return "Task [id=" + id + ", payload=" + payload + ", type=" + type + ", context=" + context + ", status=" + status + "]";
   }
 
 }

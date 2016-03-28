@@ -1,6 +1,6 @@
 angular.module('taskApp.directives',[]).directive('trRow', function () {
     return {
-        template: '<td>{{task.id}}</td><td ng-if="task.completed == false"><button type="button" class="btn btn-success">Running</button></td><td ng-if="task.completed == true"><button type="button" class="btn btn-primary">Completed</button></td><td>'
+        template: '<td>{{task.id}}</td><td ng-if="task.status == \"COMPLETED\""><button type="button" class="btn btn-success">Running</button></td><td ng-if="task.status == \"COMPLETED\""><button type="button" class="btn btn-primary">Completed</button></td><td>'
     };
 }).directive('json', function() {
 	  return {

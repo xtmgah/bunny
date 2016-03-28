@@ -1,45 +1,30 @@
 package org.rabix.bindings.model.dag;
 
 import java.util.List;
+import java.util.Map;
+
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
 
 public class DAGNode {
 
-  public static enum ScatterMethod {
-    dotproduct,
-    nested_crossproduct,
-    flat_crossproduct
-  }
-  
-  public static enum LinkMerge {
-    merge_nested,
-    merge_flattened;
-    
-    public static boolean isBlocking(LinkMerge linkMerge) {
-      switch (linkMerge) {
-      case merge_nested:
-        return false;
-      case merge_flattened:
-        return true;
-      default:
-        return true;
-      }
-    }
-  }
-  
   protected final String id;
   protected final Object app;
   protected final LinkMerge linkMerge;
   protected final ScatterMethod scatterMethod;
   protected final List<DAGLinkPort> inputPorts;
   protected final List<DAGLinkPort> outputPorts;
+  
+  protected final Map<String, Object> defaults;
 
-  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, LinkMerge linkMerge, Object app) {
+  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, LinkMerge linkMerge, Object app, Map<String, Object> defaults) {
     this.id = id;
     this.app = app;
     this.inputPorts = inputPorts;
     this.outputPorts = outputPorts;
     this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
+    this.defaults = defaults;
   }
 
   public String getId() {
@@ -64,6 +49,10 @@ public class DAGNode {
   
   public LinkMerge getLinkMerge() {
     return linkMerge;
+  }
+  
+  public Map<String, Object> getDefaults() {
+    return defaults;
   }
 
   @Override

@@ -6,19 +6,21 @@ import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolTranslator;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
-import org.rabix.bindings.model.dag.DAGNode.ScatterMethod;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.common.helper.JSONHelper;
@@ -26,6 +28,12 @@ import org.rabix.common.json.BeanSerializer;
 
 public class Draft2ProtocolTranslator implements ProtocolTranslator {
 
+  @Override
+  public DAGNode translateToDAG(Job job) throws BindingException {
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job)); 
+  }
+  
   /**
    * Translates from Draft2 format to generic one
    */
@@ -60,7 +68,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
   }
   
   @Override
-  public Object translateInputs(String inputs) throws BindingException {
+  public Map<String, Object> translateInputs(String inputs) throws BindingException {
     inputs = JSONHelper.transformToJSON(inputs);
     return JSONHelper.readMap(inputs);
   }
@@ -116,7 +124,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
     LinkMerge linkMerge = job.getLinkMerge() != null? LinkMerge.valueOf(job.getLinkMerge()) : LinkMerge.merge_nested;
     ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : ScatterMethod.dotproduct;
     if (!job.getApp().isWorkflow()) {
-      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp());
+      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp(), job.getInputs());
     }
 
     Draft2Workflow workflow = (Draft2Workflow) job.getApp();
@@ -155,7 +163,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
       DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getScattered() != null ? dataLink.getScattered() : false);
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort));
     }
-    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children);
+    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children, job.getInputs());
   }
 
 }

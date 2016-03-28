@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
 
 public class VariableRecord {
 
@@ -19,13 +19,23 @@ public class VariableRecord {
   private boolean isWrapped;        // is value wrapped into array?
   private int numberOfGlobals;      // number of 'global' outputs if node is scattered 
 
+  private boolean isDefault;
+  
   public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value) {
-    this.contextId = contextId;
-    
     this.jobId = jobId;
     this.portId = portId;
     this.type = type;
     this.value = value;
+    this.contextId = contextId;
+  }
+  
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, boolean isDefault) {
+    this.jobId = jobId;
+    this.portId = portId;
+    this.type = type;
+    this.value = value;
+    this.isDefault = isDefault;
+    this.contextId = contextId;
   }
 
   public String getContextId() {
@@ -35,6 +45,10 @@ public class VariableRecord {
   public void addValue(Object value, LinkMerge linkMerge) {
     if (value == null) {
       return;
+    }
+    if (isDefault) {
+      isDefault = false;
+      this.value = null;
     }
     if (linkMerge == null) {
       linkMerge = LinkMerge.merge_nested;
@@ -98,7 +112,7 @@ public class VariableRecord {
   }
   
   @SuppressWarnings("unchecked")
-  public <T> Collection<T> wrap(final T... objects){
+  private <T> Collection<T> wrap(final T... objects){
     final Collection<T> collection = new ArrayList<T>();
     for (T t : objects) {
       collection.add(t);

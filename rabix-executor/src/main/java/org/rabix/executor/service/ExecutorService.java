@@ -1,11 +1,13 @@
 package org.rabix.executor.service;
 
-import org.rabix.bindings.model.Executable;
-import org.rabix.bindings.model.Executable.ExecutableStatus;
+import java.util.Map;
+
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 
 public interface ExecutorService {
 
-  void start(final Executable executable, String contextId);
+  void start(final Job job, String contextId);
 
   void stop(String id, String contextId);
 
@@ -13,10 +15,10 @@ public interface ExecutorService {
 
   boolean isRunning(String id, String contextId);
   
-  Object getResult(String id, String contextId);
+  Map<String, Object> getResult(String id, String contextId);
   
   boolean isStopped();
 
-  ExecutableStatus findStatus(String id, String contextId);
+  JobStatus findStatus(String id, String contextId);
   
 }

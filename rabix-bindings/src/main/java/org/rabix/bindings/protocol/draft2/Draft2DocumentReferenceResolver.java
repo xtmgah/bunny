@@ -17,6 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.DocumentReferenceResolver;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.JSONHelper;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -67,9 +68,16 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
     this.replacements = new ArrayList<>();
   }
 
-  public String resolve(File file) throws BindingException {
+  public String resolve(String app) throws BindingException {
+    File file = null;
     try {
-      String input = JSONHelper.transformToJSON(FileUtils.readFileToString(file));
+      boolean isFile = URIHelper.isFile(app);
+      if (isFile) {
+        file = new File(URIHelper.getURIInfo(app));
+      } else {
+        file = new File(".");
+      }
+      String input = JSONHelper.transformToJSON(URIHelper.getData(app));
       this.root = JSONHelper.readJsonNode(input);
     } catch (IOException e) {
       throw new BindingException(e);
@@ -85,7 +93,7 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
     }
     return JSONHelper.writeObject(root);
   }
-
+  
   private JsonNode traverse(File file, JsonNode parentNode, JsonNode currentNode, boolean addReplacement) throws BindingException {
     Preconditions.checkNotNull(currentNode, "current node id is null");
 

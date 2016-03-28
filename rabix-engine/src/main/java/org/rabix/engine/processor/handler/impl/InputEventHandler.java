@@ -1,16 +1,18 @@
 package org.rabix.engine.processor.handler.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.bindings.model.dag.DAGNode.LinkMerge;
-import org.rabix.bindings.model.dag.DAGNode.ScatterMethod;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.JobHelper;
 import org.rabix.engine.db.DAGNodeDB;
@@ -26,10 +28,10 @@ import org.rabix.engine.model.scatter.impl.ScatterOneToOneMapping;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.JobService.JobState;
-import org.rabix.engine.service.LinkService;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
 
@@ -39,23 +41,23 @@ import com.google.inject.Inject;
 public class InputEventHandler implements EventHandler<InputUpdateEvent> {
 
   private final DAGNodeDB nodeDB;
-  private final JobService jobService;
-  private final LinkService linkService;
-  private final VariableService variableService;
+  private final JobRecordService jobRecordService;
+  private final LinkRecordService linkRecordService;
+  private final VariableRecordService variableRecordService;
   private final EventProcessor eventProcessor;
 
   @Inject
-  public InputEventHandler(EventProcessor eventProcessor, JobService jobService, VariableService variableService, LinkService linkService, DAGNodeDB nodeDB) {
+  public InputEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, DAGNodeDB nodeDB) {
     this.nodeDB = nodeDB;
-    this.jobService = jobService;
-    this.linkService = linkService;
-    this.variableService = variableService;
+    this.jobRecordService = jobRecordService;
+    this.linkRecordService = linkRecordService;
+    this.variableRecordService = variableRecordService;
     this.eventProcessor = eventProcessor;
   }
 
   public void handle(InputUpdateEvent event) throws EventHandlerException {
-    JobRecord job = jobService.find(event.getJobId(), event.getContextId());
-    VariableRecord variable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
+    JobRecord job = jobRecordService.find(event.getJobId(), event.getContextId());
+    VariableRecord variable = variableRecordService.find(event.getJobId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
 
     DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
     if (!job.isInputPortReady(event.getPortId()) && !event.isEventFromScatter()) {
@@ -93,8 +95,8 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       ready(job, event);
     }
 
-    jobService.update(job);
-    variableService.update(variable);
+    jobRecordService.update(job);
+    variableRecordService.update(variable);
   }
 
   /**
@@ -114,10 +116,10 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       }
       rollOutContainer(job, containerNode, event.getContextId());
 
-      List<LinkRecord> containerLinks = linkService.findBySourceAndSourceType(event.getJobId(), LinkPortType.INPUT, event.getContextId());
+      List<LinkRecord> containerLinks = linkRecordService.findBySourceAndSourceType(event.getJobId(), LinkPortType.INPUT, event.getContextId());
       for (LinkRecord link : containerLinks) {
-        VariableRecord sourceVariable = variableService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, event.getContextId());
-        VariableRecord destinationVariable = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, event.getContextId());
+        VariableRecord sourceVariable = variableRecordService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, event.getContextId());
+        VariableRecord destinationVariable = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, event.getContextId());
 
         Event updateEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue());
         eventProcessor.send(updateEvent);
@@ -138,17 +140,17 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     
     int numberOfScattered = getNumberOfScattered(job, event);
     if (!event.isScatteringInPlace()) {
-      VariableRecord variable = variableService.find(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
+      VariableRecord variable = variableRecordService.find(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
       
       if (event.isEventFromLookAhead() && !LinkMerge.isBlocking(node.getLinkMerge())) {
         job.resetInputPortCounters(numberOfScattered);
         job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
 
         variable.addValue(event.getValue(), node.getLinkMerge());
-        variableService.update(variable);
+        variableRecordService.update(variable);
       } else {
         job.setScatterWrapper(true);
-        jobService.update(job);
+        jobRecordService.update(job);
 
         Object value = null;
         List<Object> values = null;
@@ -183,7 +185,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     
     for (RowMapping mapping : mappings) {
       job.setState(JobState.RUNNING);
-      jobService.update(job);
+      jobRecordService.update(job);
 
       List<Event> events = new ArrayList<>();
 
@@ -193,20 +195,20 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         VariableRecord variableN = new VariableRecord(event.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null);
         variableN.setNumberGlobals(numberOfScattered);
-        variableService.create(variableN);
+        variableRecordService.create(variableN);
 
         if (jobN.getState().equals(JobState.PENDING)) {
           jobN.incrementPortCounter(inputPort, LinkPortType.INPUT);
         }
         LinkRecord link = new LinkRecord(event.getContextId(), job.getId(), inputPort.getId(), LinkPortType.INPUT, jobNId, inputPort.getId(), LinkPortType.INPUT);
-        linkService.create(link);
+        linkRecordService.create(link);
 
         if (inputPort.isScatter()) {
           Event eventInputPort = new InputUpdateEvent(event.getContextId(), jobNId, inputPort.getId(), mapping.getValue(inputPort.getId()));
           events.add(eventInputPort);
         } else {
           if (job.isInputPortReady(inputPort.getId())) {
-            VariableRecord variable = variableService.find(job.getId(), inputPort.getId(), LinkPortType.INPUT, event.getContextId());
+            VariableRecord variable = variableRecordService.find(job.getId(), inputPort.getId(), LinkPortType.INPUT, event.getContextId());
             events.add(new InputUpdateEvent(event.getContextId(), jobNId, inputPort.getId(), variable.getValue()));
           }
         }
@@ -214,19 +216,19 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       for (DAGLinkPort outputPort : node.getOutputPorts()) {
         VariableRecord variableN = new VariableRecord(event.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null);
         variableN.setNumberGlobals(numberOfScattered);
-        variableService.create(variableN);
+        variableRecordService.create(variableN);
         jobN.incrementPortCounter(outputPort, LinkPortType.OUTPUT);
 
         LinkRecord link = new LinkRecord(event.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, job.getId(), outputPort.getId(), LinkPortType.OUTPUT);
-        linkService.create(link);
+        linkRecordService.create(link);
       }
 
       job.setState(JobState.RUNNING);
       job.setScatterWrapper(true);
       
       job.resetOutputPortCounters(getNumberOfScattered(job, event));
-      jobService.update(job);
-      jobService.create(jobN);
+      jobRecordService.update(job);
+      jobRecordService.create(jobN);
 
       for (Event subevent : events) {
         eventProcessor.send(subevent);
@@ -264,11 +266,11 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
    * Send events from scatter wrapper to scattered jobs
    */
   private void sendValuesToScatteredJobs(JobRecord job, VariableRecord variable, InputUpdateEvent event) throws EventHandlerException {
-    List<LinkRecord> links = linkService.findBySourceAndDestinationType(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
+    List<LinkRecord> links = linkRecordService.findBySourceAndDestinationType(job.getId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
 
     List<Event> events = new ArrayList<>();
     for (LinkRecord link : links) {
-      VariableRecord destinationVariable = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, event.getContextId());
+      VariableRecord destinationVariable = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, event.getContextId());
 
       Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), variable.getValue());
       events.add(updateInputEvent);
@@ -286,16 +288,22 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
       JobRecord childJob = new JobRecord(contextId, newJobId, JobHelper.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, false, false);
-      jobService.create(childJob);
+      jobRecordService.create(childJob);
 
+      Map<?, ?> defaults = node.getDefaults() != null? node.getDefaults() : new HashMap<>();
       for (DAGLinkPort port : node.getInputPorts()) {
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null);
-        variableService.create(childVariable);
+        VariableRecord childVariable = null;
+        if (defaults.containsKey(port.getId())) {
+          childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, defaults.get(port.getId()), true);
+        } else {
+          childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null);
+        }
+        variableRecordService.create(childVariable);
       }
 
       for (DAGLinkPort port : node.getOutputPorts()) {
         VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.OUTPUT, null);
-        variableService.create(childVariable);
+        variableRecordService.create(childVariable);
       }
     }
 
@@ -322,11 +330,12 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       }
 
       LinkRecord childLink = new LinkRecord(contextId, sourceNodeId, link.getSource().getId(), LinkPortType.valueOf(link.getSource().getType().toString()), destinationNodeId, link.getDestination().getId(), LinkPortType.valueOf(link.getDestination().getType().toString()));
-      linkService.create(childLink);
+      linkRecordService.create(childLink);
 
-      handleLinkPort(jobService.find(sourceNodeId, contextId), link.getSource());
-      handleLinkPort(jobService.find(destinationNodeId, contextId), link.getDestination());
+      handleLinkPort(jobRecordService.find(sourceNodeId, contextId), link.getSource());
+      handleLinkPort(jobRecordService.find(destinationNodeId, contextId), link.getDestination());
     }
+    
   }
   
   /**
@@ -340,7 +349,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     } else {
       job.incrementPortCounterIfThereIsNo(linkPort, LinkPortType.OUTPUT);
     }
-    jobService.update(job);
+    jobRecordService.update(job);
   }
 
 }

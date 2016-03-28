@@ -16,10 +16,10 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.BindingsFactory.Pair;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.protocol.draft2.Draft2CommandLineBuilder;
@@ -41,10 +41,10 @@ import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.EventProcessor.IterationCallback;
-import org.rabix.engine.service.ContextService;
-import org.rabix.engine.service.JobService;
-import org.rabix.engine.service.LinkService;
-import org.rabix.engine.service.VariableService;
+import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.VariableRecordService;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
@@ -113,28 +113,31 @@ public class BackendCommandLine {
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
       Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
           new ExecutorModule(configModule));
-      DAGNodeDB nodeDB = injector.getInstance(DAGNodeDB.class);
+      DAGNodeDB dagNodeDB = injector.getInstance(DAGNodeDB.class);
       EventProcessor eventProcessor = injector.getInstance(EventProcessor.class);
-      JobService jobService = injector.getInstance(JobService.class);
-      VariableService variableService = injector.getInstance(VariableService.class);
-      LinkService linkService = injector.getInstance(LinkService.class);
       ExecutorService executorService = injector.getInstance(ExecutorService.class);
-      ContextService contextService = injector.getInstance(ContextService.class);
+      JobRecordService jobRecordService = injector.getInstance(JobRecordService.class);
+      VariableRecordService variableRecordService = injector.getInstance(VariableRecordService.class);
+      LinkRecordService linkRecordService = injector.getInstance(LinkRecordService.class);
+      ContextRecordService contextRecordService = injector.getInstance(ContextRecordService.class);
 
-      Bindings bindings = BindingsFactory.create(ProtocolType.DRAFT2);
+      String appURI = URIHelper.FILE_URI_SCHEME + ":" + appPath;
 
-      String appText = bindings.loadAppFromFile(appFile);
+      Pair<Bindings, String> bindingsPair = BindingsFactory.create(appURI);
+
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
 
-      DAGNode node = bindings.translateToDAG(appText, inputsText);
-      Object inputs = bindings.translateInputs(inputsText);
+      Bindings bindings = bindingsPair.getT();
+      String resolvedAppString = bindingsPair.getK();
+
+      Map<String, Object> inputs = (Map<String, Object>) bindings.translateInputs(inputsText);
+      DAGNode dagNode = bindings.translateToDAG(resolvedAppString, inputsText);
 
       if (commandLine.hasOption("t")) {
-        Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(appText, Draft2CommandLineTool.class);
+        Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(resolvedAppString, Draft2CommandLineTool.class);
         Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
-
-        Map<String, Object> allocatedResources = (Map<String, Object>) ((Map<String, Object>) inputs)
-            .get("allocatedResources");
+        Map<String, Object> inputsMap = (Map<String, Object>) inputs;
+        Map<String, Object> allocatedResources = (Map<String, Object>) inputsMap.get("allocatedResources");
         Integer cpu = allocatedResources != null ? (Integer) allocatedResources.get("cpu") : null;
         Integer mem = allocatedResources != null ? (Integer) allocatedResources.get("mem") : null;
         draft2Job.setResources(new Draft2Resources(false, cpu, mem));
@@ -143,7 +146,7 @@ public class BackendCommandLine {
         List<Object> commandLineParts = draft2CommandLineBuilder.buildCommandLineParts(draft2Job);
         String stdin = draft2CommandLineTool.getStdin(draft2Job);
         String stdout = draft2CommandLineTool.getStdout(draft2Job);
-        
+
         Draft2CreateFileRequirement draft2CreateFileRequirement = draft2CommandLineTool.getCreateFileRequirement();
         Map<Object, Object> createdFiles = new HashMap<>();
         if (draft2CreateFileRequirement != null) {
@@ -171,14 +174,15 @@ public class BackendCommandLine {
           logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
           System.exit(10);
         } else {
-          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobService, variableService, linkService,
-              contextService, nodeDB));
+          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobRecordService, variableRecordService,
+              linkRecordService, contextRecordService, dagNodeDB));
         }
       }
-      callbacks.add(new LocalExecutableHandler(executorService, jobService, variableService, contextService, nodeDB));
-      callbacks.add(new EndRootCallback(contextService, jobService, variableService, bindings));
+      callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService,
+          dagNodeDB));
+      callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService));
 
-      InitEvent initEvent = new InitEvent(context, node, inputs);
+      InitEvent initEvent = new InitEvent(context, dagNode, inputs);
       eventProcessor.send(initEvent);
       eventProcessor.start(callbacks);
     } catch (ParseException e) {
@@ -245,6 +249,7 @@ public class BackendCommandLine {
       return config;
     }
     String homeDir = System.getProperty("user.home");
+
     config = new File(homeDir, configDir);
     if (!config.exists() || !config.isDirectory()) {
       logger.info("Config directory doesn't exist or is not a directory");
@@ -258,36 +263,34 @@ public class BackendCommandLine {
    */
   private static class EndRootCallback implements IterationCallback {
 
-    private Bindings bindings;
+    private JobRecordService jobRecordService;
+    private ContextRecordService contextRecordService;
+    private VariableRecordService variableRecordService;
 
-    private JobService jobService;
-    private ContextService contextService;
-    private VariableService variableService;
-
-    public EndRootCallback(ContextService contextService, JobService jobService, VariableService variableService,
-        Bindings bindings) {
-      this.jobService = jobService;
-      this.contextService = contextService;
-      this.variableService = variableService;
-      this.bindings = bindings;
+    public EndRootCallback(ContextRecordService contextRecordService, JobRecordService jobRecordService,
+        VariableRecordService variableRecordService) {
+      this.jobRecordService = jobRecordService;
+      this.contextRecordService = contextRecordService;
+      this.variableRecordService = variableRecordService;
     }
 
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) {
-      ContextRecord context = contextService.find(contextId);
+      ContextRecord context = contextRecordService.find(contextId);
       if (context.getStatus().equals(ContextStatus.COMPLETED)) {
-        JobRecord root = jobService.findRoot(contextId);
+        JobRecord root = jobRecordService.findRoot(contextId);
 
-        List<VariableRecord> outputVariables = variableService.find(root.getId(), LinkPortType.OUTPUT, contextId);
+        List<VariableRecord> outputVariables = variableRecordService.find(root.getId(), LinkPortType.OUTPUT, contextId);
 
-        Object outputs = null;
+        Map<String, Object> outputs = new HashMap<>();
+        for (VariableRecord outputVariable : outputVariables) {
+          outputs.put(outputVariable.getPortId(), outputVariable.getValue());
+        }
         try {
-          for (VariableRecord outputVariable : outputVariables) {
-            outputs = bindings.addToOutputs(outputs, outputVariable.getPortId(), outputVariable.getValue());
-          }
           logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(outputs));
-        } catch (BindingException | JsonProcessingException e) {
-          logger.error("Failed to create outputs.", e);
+        } catch (JsonProcessingException e) {
+          logger.error("Failed to write outputs to standard out", e);
+          System.exit(10);
         }
         System.exit(0);
       }

@@ -1,5 +1,8 @@
 package org.rabix.bindings;
 
+import java.util.Map;
+
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 
 /**
@@ -7,6 +10,8 @@ import org.rabix.bindings.model.dag.DAGNode;
  */
 public interface ProtocolTranslator {
 
+  DAGNode translateToDAG(Job job) throws BindingException;
+  
   /**
    * Translates to DAG format
    */
@@ -26,5 +31,5 @@ public interface ProtocolTranslator {
   /**
    * Get inputs from the inputs
    */
-  Object translateInputs(String inputs) throws BindingException;
+  Map<String, Object> translateInputs(String inputs) throws BindingException;
 }

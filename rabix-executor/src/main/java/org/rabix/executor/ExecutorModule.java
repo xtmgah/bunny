@@ -1,15 +1,15 @@
 package org.rabix.executor;
 
 import org.rabix.common.config.ConfigModule;
-import org.rabix.executor.execution.ExecutableHandlerCommandDispatcher;
-import org.rabix.executor.handler.ExecutableHandler;
-import org.rabix.executor.handler.ExecutableHandlerFactory;
-import org.rabix.executor.handler.impl.ExecutableHandlerImpl;
+import org.rabix.executor.execution.JobHandlerCommandDispatcher;
+import org.rabix.executor.handler.JobHandler;
+import org.rabix.executor.handler.JobHandlerFactory;
+import org.rabix.executor.handler.impl.JobHandlerImpl;
 import org.rabix.executor.service.DownloadFileService;
-import org.rabix.executor.service.ExecutableDataService;
+import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.impl.DownloadServiceImpl;
-import org.rabix.executor.service.impl.ExecutableDataServiceImpl;
+import org.rabix.executor.service.impl.JobDataServiceImpl;
 import org.rabix.executor.service.impl.ExecutorServiceImpl;
 
 import com.google.inject.AbstractModule;
@@ -27,12 +27,12 @@ public class ExecutorModule extends AbstractModule {
   @Override
   protected void configure() {
     install(configModule);
-    install(new FactoryModuleBuilder().implement(ExecutableHandler.class, ExecutableHandlerImpl.class).build(ExecutableHandlerFactory.class));
+    install(new FactoryModuleBuilder().implement(JobHandler.class, JobHandlerImpl.class).build(JobHandlerFactory.class));
 
     bind(DownloadFileService.class).to(DownloadServiceImpl.class).in(Scopes.SINGLETON);
 
-    bind(ExecutableDataService.class).to(ExecutableDataServiceImpl.class).in(Scopes.SINGLETON);
-    bind(ExecutableHandlerCommandDispatcher.class).in(Scopes.SINGLETON);
+    bind(JobDataService.class).to(JobDataServiceImpl.class).in(Scopes.SINGLETON);
+    bind(JobHandlerCommandDispatcher.class).in(Scopes.SINGLETON);
 
     bind(ExecutorService.class).to(ExecutorServiceImpl.class).in(Scopes.SINGLETON);
   }

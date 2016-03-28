@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.config.StorageConfig.BackendStore;
@@ -25,7 +25,7 @@ public class DownloadServiceImpl implements DownloadFileService {
   }
   
   @Override
-  public void download(final Executable executable, final Set<FileValue> fileValues) throws Exception {
+  public void download(final Job job, final Set<FileValue> fileValues) throws Exception {
     for (FileValue fileValue : fileValues) {
       File file = new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), fileValue.getPath());
       if (file.exists()) {

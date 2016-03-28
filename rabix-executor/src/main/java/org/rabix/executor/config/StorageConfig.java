@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.configuration.Configuration;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.common.helper.InternalSchemaHelper;
 
 public class StorageConfig {
@@ -14,15 +14,15 @@ public class StorageConfig {
     FTP
   }
   
-  public static File getWorkingDir(Executable executable, Configuration configuration) {
+  public static File getWorkingDir(Job job, Configuration configuration) {
     File baseDir = new File(getLocalExecutionDirectory(configuration));
-    File contextDir = new File(baseDir, executable.getContext().getId());
+    File contextDir = new File(baseDir, job.getContext().getId());
     if (!contextDir.exists()) {
       contextDir.mkdirs();
     }
     
     File workingDir = contextDir;
-    String[] idArray = transformLocalIDsToPath(executable);
+    String[] idArray = transformLocalIDsToPath(job);
 
     for (String id : idArray) {
       workingDir = new File(workingDir, sanitize(id));
@@ -33,8 +33,8 @@ public class StorageConfig {
     return workingDir;
   }
   
-  private static String[] transformLocalIDsToPath(Executable executable) {
-    String nodeId = executable.getNodeId();
+  private static String[] transformLocalIDsToPath(Job job) {
+    String nodeId = job.getNodeId();
     return nodeId.split("\\" + InternalSchemaHelper.SEPARATOR);
   }
   

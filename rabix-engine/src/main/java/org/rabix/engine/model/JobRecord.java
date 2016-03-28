@@ -6,7 +6,7 @@ import java.util.List;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.engine.model.scatter.ScatterMapping;
-import org.rabix.engine.service.JobService.JobState;
+import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobRecord {
 
@@ -151,14 +151,20 @@ public class JobRecord {
   public void incrementPortCounterIfThereIsNo(DAGLinkPort port, LinkPortType type) {
     List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
 
+    boolean exists = false;
     for (PortCounter pc : counters) {
-      if (pc.port.equals(port.getId()) && pc.counter < 1) {
-        pc.counter = pc.counter + 1;
-        return;
+      if (pc.port.equals(port.getId())) {
+        exists = true;
+        if (pc.counter < 1) {
+          pc.counter = pc.counter + 1;
+          return;
+        }
       }
     }
-    PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
-    counters.add(portCounter);
+    if (!exists) {
+      PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
+      counters.add(portCounter);
+    }
   }
   
   public void decrementPortCounter(String portId, LinkPortType type) {

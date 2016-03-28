@@ -2,12 +2,12 @@ package org.rabix.bindings;
 
 import java.util.List;
 
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 
 public interface CommandLineBuilder {
 
-  String buildCommandLine(Executable executable) throws BindingException;
+  String buildCommandLine(Job job) throws BindingException;
   
-  List<Object> buildCommandLineParts(Executable executable) throws BindingException;
+  List<Object> buildCommandLineParts(Job job) throws BindingException;
   
 }
