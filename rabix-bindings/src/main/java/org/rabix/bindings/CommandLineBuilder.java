@@ -8,6 +8,6 @@ public interface CommandLineBuilder {
 
   String buildCommandLine(Job job) throws BindingException;
   
-  List<Object> buildCommandLineParts(Job job) throws BindingException;
+  List<String> buildCommandLineParts(Job job) throws BindingException;
   
 }

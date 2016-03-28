@@ -78,7 +78,7 @@ public class BindingsImpl implements Bindings {
   }
 
   @Override
-  public List<Object> buildCommandLineParts(Job job) throws BindingException {
+  public List<String> buildCommandLineParts(Job job) throws BindingException {
     return commandLineBuilder.buildCommandLineParts(job);
   }
 

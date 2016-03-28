@@ -24,7 +24,9 @@ import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
@@ -42,12 +44,16 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
   }
   
   @Override
-  public List<Object> buildCommandLineParts(Job job) throws BindingException {
+  public List<String> buildCommandLineParts(Job job) throws BindingException {
     Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
-    if (draft2Job.getApp().isExpressionTool()) {
+    if (!draft2Job.getApp().isCommandLineTool()) {
       return null;
     }
-    return buildCommandLineParts(draft2Job);
+    return Lists.transform(buildCommandLineParts(draft2Job), new Function<Object, String>() {
+      public String apply(Object obj) {
+        return obj.toString();
+      }
+    });
   }
   
   /**
