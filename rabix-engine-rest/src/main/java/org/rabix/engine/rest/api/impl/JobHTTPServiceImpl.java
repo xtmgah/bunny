@@ -23,6 +23,29 @@ public class JobHTTPServiceImpl implements JobHTTPService {
   }
   
   @Override
+  public Response create(Job job) {
+    try {
+      return ok(jobService.create(job));
+    } catch (Exception e) {
+      return error();
+    }
+  }
+  
+  @Override
+  public Response get() {
+    return ok(jobService.get());
+  }
+  
+  @Override
+  public Response get(String id) {
+    Job job = jobService.get(id);
+    if (job == null) {
+      return error();
+    }
+    return ok(job);
+  }
+  
+  @Override
   public Response save(String id, Job job) {
     try {
       jobService.update(job);
@@ -38,5 +61,12 @@ public class JobHTTPServiceImpl implements JobHTTPService {
   
   private Response ok() {
     return Response.ok(Collections.emptyMap()).build();
+  }
+  
+  private Response ok(Object items) {
+    if (items == null) {
+      return ok();
+    }
+    return Response.ok().entity(items).build();
   }
 }

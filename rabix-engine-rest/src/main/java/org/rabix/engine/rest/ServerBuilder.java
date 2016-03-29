@@ -20,16 +20,12 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.JobHTTPService;
-import org.rabix.engine.rest.api.TaskHTTPService;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
-import org.rabix.engine.rest.api.impl.TaskHTTPServiceImpl;
-import org.rabix.engine.rest.db.TaskDB;
+import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.plugin.BackendPluginConfig;
 import org.rabix.engine.rest.plugin.BackendPluginRegister;
 import org.rabix.engine.rest.service.JobService;
-import org.rabix.engine.rest.service.TaskService;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
-import org.rabix.engine.rest.service.impl.TaskServiceImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -59,13 +55,11 @@ public class ServerBuilder {
         new AbstractModule() {
           @Override
           protected void configure() {
-            bind(TaskDB.class).in(Scopes.SINGLETON);
-            bind(TaskService.class).to(TaskServiceImpl.class).in(Scopes.SINGLETON);
+            bind(JobDB.class).in(Scopes.SINGLETON);
             bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
             bind(BackendPluginRegister.class).in(Scopes.SINGLETON);
             bind(BackendPluginConfig.class).in(Scopes.SINGLETON);
             bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
-            bind(TaskHTTPService.class).to(TaskHTTPServiceImpl.class).in(Scopes.SINGLETON);
           }
         }));
 

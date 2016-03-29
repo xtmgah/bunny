@@ -65,6 +65,14 @@ public class Job {
     this.context = context;
   }
 
+  public static Job cloneWithId(Job job, String id) {
+    return new Job(id, job.nodeId, job.app, job.status, job.inputs, job.outputs, job.context);
+  }
+  
+  public static Job cloneWithContext(Job job, Context context) {
+    return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, job.outputs, context);
+  }
+  
   public static Job cloneWithResources(Job job, Resources resources) {
     return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, job.outputs, job.context);
   }

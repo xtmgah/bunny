@@ -9,7 +9,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.rabix.engine.rest.dto.Task;
+import org.rabix.bindings.model.Job;
 
 public class EngineRESTClient {
 
@@ -21,12 +21,12 @@ public class EngineRESTClient {
     this.port = port;
   }
   
-  public void upload(Task task) {
+  public void upload(Job job) {
     Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
-    WebTarget webTarget = client.target(host + ":" + port + "/v0/engine");
+    WebTarget webTarget = client.target(host + ":" + port + "/v0/engine/jobs");
 
     Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
-    invocationBuilder.post(Entity.entity(task, MediaType.APPLICATION_JSON));
+    invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
   }
   
 }

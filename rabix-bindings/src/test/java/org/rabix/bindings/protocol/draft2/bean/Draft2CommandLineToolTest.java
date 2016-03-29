@@ -55,11 +55,11 @@ public class Draft2CommandLineToolTest {
     expectedList.add("bwa");
     expectedList.add("mem");
     expectedList.add("-t");
-    expectedList.add(3);
+    expectedList.add("3");
     expectedList.add("-I");
     expectedList.add("1,2,3,4");
     expectedList.add("-m");
-    expectedList.add(3);
+    expectedList.add("3");
     expectedList.add("rabix/tests/test-files/chr20.fa.tmp");
     expectedList.add("rabix/tests/test-files/example_human_Illumina.pe_1.fastq");
     expectedList.add("rabix/tests/test-files/example_human_Illumina.pe_2.fastq");
