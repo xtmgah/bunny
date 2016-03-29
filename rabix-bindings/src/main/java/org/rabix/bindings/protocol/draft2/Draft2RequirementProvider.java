@@ -148,6 +148,9 @@ public class Draft2RequirementProvider implements RequirementProvider {
   }
   
   private List<Requirement> convertRequirements(Job job, List<Draft2Resource> resources) throws BindingException {
+    if (resources == null) {
+      return Collections.<Requirement>emptyList();
+    }
     Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
 
     List<Requirement> result = new ArrayList<>();
