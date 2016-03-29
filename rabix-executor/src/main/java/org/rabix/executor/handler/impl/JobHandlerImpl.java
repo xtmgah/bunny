@@ -2,6 +2,7 @@ package org.rabix.executor.handler.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -14,6 +15,7 @@ import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
 import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement.SingleFileRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement.SingleInputFileRequirement;
@@ -71,15 +73,21 @@ public class JobHandlerImpl implements JobHandler {
     try {
       Bindings bindings = BindingsFactory.create(job);
       downloadFileService.download(job, bindings.getInputFiles(job));
-      createFileRequirements(bindings);
+      
+
+      List<Requirement> combinedRequirements = new ArrayList<>();
+      combinedRequirements.addAll(bindings.getHints(job));
+      combinedRequirements.addAll(bindings.getRequirements(job));
+
+      createFileRequirements(combinedRequirements);
       
       job = bindings.mapInputFilePaths(job, new InputFileMapper());
       job = bindings.preprocess(job, workingDir);
       
-      if (bindings.isSelfExecutable(job)) {
+      if (bindings.canExecute(job)) {
         containerHandler = new CompletedContainerHandler();
       } else {
-        Requirement containerRequirement = bindings.getDockerRequirement(job);
+        Requirement containerRequirement = getRequirement(combinedRequirements, DockerContainerRequirement.class);
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
           containerRequirement = new LocalContainerRequirement();
         }
@@ -92,9 +100,9 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  private void createFileRequirements(Bindings bindings) throws ExecutorException {
+  private void createFileRequirements(List<Requirement> requirements) throws ExecutorException {
     try {
-      FileRequirement fileRequirementResource = bindings.getFileRequirement(job);
+      FileRequirement fileRequirementResource = getRequirement(requirements, FileRequirement.class);
       if (fileRequirementResource == null) {
         return;
       }
@@ -124,10 +132,20 @@ public class JobHandlerImpl implements JobHandler {
           }
         }
       }
-    } catch (IOException | BindingException e) {
+    } catch (IOException e) {
       logger.error("Failed to process file requirements.", e);
       throw new ExecutorException("Failed to process file requirements.");
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  private <T extends Requirement> T getRequirement(List<Requirement> requirements, Class<T> clazz) {
+    for (Requirement requirement : requirements) {
+      if (requirement.getClass().equals(clazz)) {
+        return (T) requirement;
+      }
+    }
+    return null;
   }
 
   @Override
@@ -142,7 +160,7 @@ public class JobHandlerImpl implements JobHandler {
       }
       
       Bindings bindings = BindingsFactory.create(job);
-      job = bindings.populateOutputs(job, workingDir);
+      job = bindings.postprocess(job, workingDir);
       job = bindings.mapOutputFilePaths(job, new OutputFileMapper());
       upload(workingDir);
       

@@ -53,7 +53,7 @@ public class Draft2ResultCollectionServiceTest {
     Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(job);
-    job = bindings.populateOutputs(job, workingDir);
+    job = bindings.postprocess(job, workingDir);
     
     Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
     Assert.assertTrue((job.getOutputs()).containsKey("single"));
@@ -70,7 +70,7 @@ public class Draft2ResultCollectionServiceTest {
     Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(job);
-    job = bindings.populateOutputs(job, workingDir);
+    job = bindings.postprocess(job, workingDir);
     
     Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
     Assert.assertTrue((job.getOutputs()).containsKey("output"));

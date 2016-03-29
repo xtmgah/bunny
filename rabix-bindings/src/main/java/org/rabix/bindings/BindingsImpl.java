@@ -8,9 +8,6 @@ import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.bindings.model.requirement.DockerContainerRequirement;
-import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
-import org.rabix.bindings.model.requirement.FileRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +50,7 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
-  public boolean isSelfExecutable(Job job) throws BindingException {
+  public boolean canExecute(Job job) throws BindingException {
     return protocolJobHelper.isSelfExecutable(job);
   }
   
@@ -63,7 +60,7 @@ public class BindingsImpl implements Bindings {
   }
 
   @Override
-  public Job populateOutputs(Job job, File workingDir) throws BindingException {
+  public Job postprocess(Job job, File workingDir) throws BindingException {
     return resultCollector.populateOutputs(job, workingDir);
   }
 
@@ -102,21 +99,6 @@ public class BindingsImpl implements Bindings {
     return protocolProcessor.mapOutputFilePaths(job, fileMapper);
   }
 
-  @Override
-  public DockerContainerRequirement getDockerRequirement(Job job) throws BindingException {
-    return requirementProvider.getDockerRequirement(job);
-  }
-
-  @Override
-  public EnvironmentVariableRequirement getEnvironmentVariableRequirement(Job job) throws BindingException {
-    return requirementProvider.getEnvironmentVariableRequirement(job);
-  }
-
-  @Override
-  public FileRequirement getFileRequirement(Job job) throws BindingException {
-    return requirementProvider.getFileRequirement(job);
-  }
-  
   @Override
   public Job populateResources(Job job) throws BindingException {
     return requirementProvider.populateResources(job);

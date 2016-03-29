@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +22,7 @@ import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
+import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -107,7 +110,11 @@ public class DockerContainerHandler implements ContainerHandler {
       FileUtils.writeStringToFile(commandLineFile, commandLine);
       builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
 
-      EnvironmentVariableRequirement environmentVariableResource = bindings.getEnvironmentVariableRequirement(job);
+      List<Requirement> combinedRequirements = new ArrayList<>();
+      combinedRequirements.addAll(bindings.getHints(job));
+      combinedRequirements.addAll(bindings.getRequirements(job));
+      
+      EnvironmentVariableRequirement environmentVariableResource = getRequirement(combinedRequirements, EnvironmentVariableRequirement.class);
       if (environmentVariableResource != null) {
         builder.env(environmentVariableResource.getVariables());
       }
@@ -133,6 +140,16 @@ public class DockerContainerHandler implements ContainerHandler {
       logger.error("Failed to start container.", e);
       throw new ContainerException("Failed to start container.", e);
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  private <T extends Requirement> T getRequirement(List<Requirement> requirements, Class<T> clazz) {
+    for (Requirement requirement : requirements) {
+      if (requirement.getClass().equals(clazz)) {
+        return (T) requirement;
+      }
+    }
+    return null;
   }
 
   @Override
