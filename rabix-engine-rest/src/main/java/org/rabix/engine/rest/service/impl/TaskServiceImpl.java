@@ -105,7 +105,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
-      List<Job> jobs = jobService.getReady(eventProcessor, contextId);
+      Set<Job> jobs = jobService.getReady(eventProcessor, contextId);
       backendPluginDispatcher.send(jobs);
     }
   }

@@ -1,27 +1,17 @@
 package org.rabix.engine.rest.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
-import org.rabix.bindings.helper.URIHelper;
-import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
-import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.common.json.BeanSerializer;
+import org.rabix.engine.JobHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.JobStatusEvent;
-import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.JobRecord;
-import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -95,26 +85,8 @@ public class JobServiceImpl implements JobService {
     }
   }
   
-  public List<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    List<Job> jobs = new ArrayList<>();
-    List<JobRecord> jobRecords = jobRecordService.findReady(contextId);
-
-    if (!jobRecords.isEmpty()) {
-      for (JobRecord jobRecord : jobRecords) {
-        DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(jobRecord.getId()), contextId);
-
-        Map<String, Object> inputs = new HashMap<>();
-        List<VariableRecord> inputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.INPUT, contextId);
-        for (VariableRecord inputVariable : inputVariables) {
-          inputs.put(inputVariable.getPortId(), inputVariable.getValue());
-        }
-        ContextRecord contextRecord = contextRecordService.find(jobRecord.getContextId());
-        Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-        String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(node.getApp()));
-        jobs.add(new Job(jobRecord.getExternalId(), jobRecord.getId(), encodedApp, JobStatus.READY, inputs, null, context));
-      }
-    }
-    return jobs;
+  public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
+    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
   }
   
 }

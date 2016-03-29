@@ -14,7 +14,6 @@ import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.engine.JobHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.InputUpdateEvent;
@@ -190,7 +189,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       List<Event> events = new ArrayList<>();
 
       String jobNId = InternalSchemaHelper.scatterId(job.getId(), mapping.getIndex());
-      JobRecord jobN = new JobRecord(event.getContextId(), jobNId, JobHelper.generateUniqueId(), JobState.PENDING, job.isContainer(), true, false);
+      JobRecord jobN = new JobRecord(event.getContextId(), jobNId, JobRecordService.generateUniqueId(), JobState.PENDING, job.isContainer(), true, false);
 
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         VariableRecord variableN = new VariableRecord(event.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null);
@@ -287,7 +286,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     for (DAGNode node : containerNode.getChildren()) {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
-      JobRecord childJob = new JobRecord(contextId, newJobId, JobHelper.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, false, false);
+      JobRecord childJob = new JobRecord(contextId, newJobId, JobRecordService.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, false, false);
       jobRecordService.create(childJob);
 
       Map<?, ?> defaults = node.getDefaults() != null? node.getDefaults() : new HashMap<>();

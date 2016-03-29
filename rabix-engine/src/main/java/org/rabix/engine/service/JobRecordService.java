@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.rabix.engine.model.JobRecord;
 
@@ -19,6 +20,10 @@ public class JobRecordService {
 
   private Map<String, List<JobRecord>> jobRecordsPerContext = new HashMap<String, List<JobRecord>>();
 
+  public static String generateUniqueId() {
+    return UUID.randomUUID().toString();
+  }
+  
   public synchronized void create(JobRecord jobRecord) {
     getJobRecords(jobRecord.getContextId()).add(jobRecord);
   }

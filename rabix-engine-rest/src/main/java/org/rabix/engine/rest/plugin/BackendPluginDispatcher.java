@@ -1,6 +1,6 @@
 package org.rabix.engine.rest.plugin;
 
-import java.util.List;
+import java.util.Set;
 
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
@@ -22,7 +22,7 @@ public class BackendPluginDispatcher {
     this.backendPluginRegister = backendPluginRegister;
   }
   
-  public void send(List<Job> jobs) {
+  public void send(Set<Job> jobs) {
     for (Job job : jobs) {
       Context context = job.getContext();
 
