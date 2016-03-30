@@ -153,7 +153,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
 
         Object value = null;
         List<Object> values = null;
-        if (job.isInputPortReady(event.getPortId())) {
+        if (job.isInputPortReady(event.getPortId()) && LinkMerge.isBlocking(node.getLinkMerge())) {
           value = variable.getValue();
         } else {
           value = event.getValue();
