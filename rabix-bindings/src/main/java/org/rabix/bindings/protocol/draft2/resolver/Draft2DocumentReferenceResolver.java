@@ -1,4 +1,4 @@
-package org.rabix.bindings.protocol.draft2;
+package org.rabix.bindings.protocol.draft2.resolver;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -37,17 +37,6 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
   private String referenceKey;
   private String jsonPointerKey;
 
-  private class Replacement {
-    String normalizedReferencePath;
-    JsonNode parentNode = null;
-    JsonNode referenceNode = null;
-  }
-
-  private class Reference {
-    boolean isResolving = true;
-    JsonNode resolvedNode = null;
-  }
-
   private class ParentChild {
     JsonNode parent;
     JsonNode child;
@@ -56,16 +45,21 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
       this.parent = parent;
       this.child = child;
     }
+
+    @Override
+    public String toString() {
+      return "ParentChild [parent=" + parent + ", child=" + child + "]";
+    }
   }
 
-  private List<Replacement> replacements;
-  private Map<String, Reference> referenceCache;
+  private Set<Draft2DocumentResolverReplacement> replacements;
+  private Map<String, Draft2DocumentResolverReference> referenceCache;
 
   public Draft2DocumentReferenceResolver() {
     this.referenceKey = RESOLVER_REFERENCE_KEY;
     this.jsonPointerKey = RESOLVER_JSON_POINTER_KEY;
     this.referenceCache = new HashMap<>();
-    this.replacements = new ArrayList<>();
+    this.replacements = new LinkedHashSet<>();
   }
 
   public String resolve(String app) throws BindingException {
@@ -84,10 +78,10 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
     }
     traverse(file, null, root, true);
 
-    for (Replacement replacement : replacements) {
-      if (replacement.parentNode.isArray()) {
+    for (Draft2DocumentResolverReplacement replacement : replacements) {
+      if (replacement.getParentNode().isArray()) {
         replaceArrayItem(replacement);
-      } else if (replacement.parentNode.isObject()) {
+      } else if (replacement.getParentNode().isObject()) {
         replaceObjectItem(replacement);
       }
     }
@@ -98,7 +92,9 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
     Preconditions.checkNotNull(currentNode, "current node id is null");
 
     boolean isReference = currentNode.has(referenceKey);
-    if (isReference) {
+    boolean isJsonPointer = currentNode.has(jsonPointerKey) && parentNode != null; // we skip the first level $job
+
+    if (isReference || isJsonPointer) {
       String referencePath = null;
       if (isReference) {
         referencePath = currentNode.get(referenceKey).textValue();
@@ -106,29 +102,26 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
         referencePath = currentNode.get(jsonPointerKey).textValue();
       }
 
-      Reference reference = referenceCache.get(referencePath);
+      Draft2DocumentResolverReference reference = referenceCache.get(referencePath);
       if (reference != null) {
-        if (reference.isResolving) {
+        if (reference.isResolving()) {
           throw new BindingException("Circular dependency detected!");
         }
       } else {
-        reference = new Reference();
+        reference = new Draft2DocumentResolverReference();
+        reference.setResolving(true);
         referenceCache.put(referencePath, reference);
 
-        JsonNode referenceDocumentRoot = findDocumentRoot(file, referencePath);
+        JsonNode referenceDocumentRoot = findDocumentRoot(file, referencePath, isJsonPointer);
         ParentChild parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
-        reference.resolvedNode = traverse(file, parentChild.parent, parentChild.child, true);
-        reference.isResolving = false;
+        reference.setResolvedNode(traverse(file, parentChild.parent, parentChild.child, true));
+        reference.setResolving(false);
         referenceCache.put(referencePath, reference);
       }
       if (addReplacement) {
-        Replacement cachedReference = new Replacement();
-        cachedReference.referenceNode = currentNode;
-        cachedReference.parentNode = parentNode;
-        cachedReference.normalizedReferencePath = referencePath;
-        replacements.add(cachedReference);
+        replacements.add(new Draft2DocumentResolverReplacement(parentNode, currentNode, referencePath));
       }
-      return reference.resolvedNode;
+      return reference.getResolvedNode();
     } else if (currentNode.isContainerNode()) {
       for (JsonNode subnode : currentNode) {
         traverse(file, currentNode, subnode, addReplacement);
@@ -138,50 +131,53 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
   }
 
   @SuppressWarnings("deprecation")
-  private void replaceObjectItem(Replacement replacement) throws BindingException {
-    JsonNode parent = replacement.parentNode == null ? root : replacement.parentNode;
+  private void replaceObjectItem(Draft2DocumentResolverReplacement replacement) throws BindingException {
+    JsonNode parent = replacement.getParentNode() == null ? root : replacement.getParentNode();
 
     Iterator<Entry<String, JsonNode>> fieldIterator = parent.fields();
     String fieldName = null;
     while (fieldIterator.hasNext()) {
       Entry<String, JsonNode> fieldEntry = fieldIterator.next();
-      if (fieldEntry.getValue().equals(replacement.referenceNode)) {
+      if (fieldEntry.getValue().equals(replacement.getReferenceNode())) {
         fieldName = fieldEntry.getKey();
         fieldIterator.remove();
         break;
       }
     }
-    Reference reference = referenceCache.get(replacement.normalizedReferencePath);
+    Draft2DocumentResolverReference reference = referenceCache.get(replacement.getNormalizedReferencePath());
     if (reference != null) {
-      ((ObjectNode) parent).put(fieldName, reference.resolvedNode);
+      ((ObjectNode) parent).put(fieldName, reference.getResolvedNode());
     } else {
-      throw new BindingException("Cannot find reference " + replacement.normalizedReferencePath);
+      throw new BindingException("Cannot find reference " + replacement.getNormalizedReferencePath());
     }
   }
 
-  private void replaceArrayItem(Replacement replacement) throws BindingException {
-    JsonNode parent = replacement.parentNode == null ? root : replacement.parentNode;
+  private void replaceArrayItem(Draft2DocumentResolverReplacement replacement) throws BindingException {
+    JsonNode parent = replacement.getParentNode() == null ? root : replacement.getParentNode();
 
     Iterator<JsonNode> nodeIterator = parent.elements();
     while (nodeIterator.hasNext()) {
       JsonNode subnode = nodeIterator.next();
-      if (subnode.equals(replacement.referenceNode)) {
+      if (subnode.equals(replacement.getReferenceNode())) {
         nodeIterator.remove();
         break;
       }
     }
     if (parent.isArray()) {
-      Reference reference = referenceCache.get(replacement.normalizedReferencePath);
+      Draft2DocumentResolverReference reference = referenceCache.get(replacement.getNormalizedReferencePath());
       if (reference != null) {
-        ((ArrayNode) parent).add(reference.resolvedNode);
+        ((ArrayNode) parent).add(reference.getResolvedNode());
       } else {
-        throw new BindingException("Cannot find reference " + replacement.normalizedReferencePath);
+        throw new BindingException("Cannot find reference " + replacement.getNormalizedReferencePath());
       }
     }
   }
 
-  private JsonNode findDocumentRoot(File file, String reference) throws BindingException {
+  private JsonNode findDocumentRoot(File file, String reference, boolean isJsonPointer) throws BindingException {
     JsonNode startNode = root;
+    if (isJsonPointer) {
+      startNode = startNode.get(jsonPointerKey);
+    }
     int start = reference.indexOf("#");
 
     if (start == 0) {

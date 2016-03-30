@@ -1,6 +1,6 @@
 package org.rabix.bindings;
 
-import org.rabix.bindings.protocol.draft2.Draft2DocumentReferenceResolver;
+import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentReferenceResolver;
 
 public class DocumentReferenceResolverFactory {
 

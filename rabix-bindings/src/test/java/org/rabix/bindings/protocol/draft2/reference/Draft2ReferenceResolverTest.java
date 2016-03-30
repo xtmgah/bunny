@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.helper.URIHelper;
-import org.rabix.bindings.protocol.draft2.Draft2DocumentReferenceResolver;
+import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentReferenceResolver;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.helper.ResourceHelper;
 import org.testng.Assert;
