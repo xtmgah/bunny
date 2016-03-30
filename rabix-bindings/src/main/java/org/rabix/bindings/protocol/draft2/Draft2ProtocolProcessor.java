@@ -25,11 +25,11 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   public Job preprocess(final Job job, final File workingDir) throws BindingException {
     Draft2ProtocolJobHelper jobHelper = new Draft2ProtocolJobHelper();
     
-    Draft2Job draft2Job = jobHelper.getJob(job);
+    Draft2Job draft2Job = jobHelper.getDraft2Job(job);
     Draft2PortProcessorHelper portProcessorHelper = new Draft2PortProcessorHelper(draft2Job);
     try {
       File jobFile = new File(workingDir, JOB_FILE);
-      String serializedJob = BeanSerializer.serializePartial(jobHelper.getJob(job));
+      String serializedJob = BeanSerializer.serializePartial(jobHelper.getDraft2Job(job));
       FileUtils.writeStringToFile(jobFile, serializedJob);
       
       Map<String, Object> inputs = job.getInputs();
@@ -44,7 +44,7 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   
   @Override
   public Job mapInputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
@@ -57,7 +57,7 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
 
   @Override
   public Job mapOutputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {

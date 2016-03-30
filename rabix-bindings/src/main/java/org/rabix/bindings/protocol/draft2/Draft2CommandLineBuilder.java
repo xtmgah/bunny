@@ -36,7 +36,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
   @Override
   public String buildCommandLine(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     if (draft2Job.getApp().isExpressionTool()) {
       return null;
     }
@@ -45,7 +45,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
   
   @Override
   public List<String> buildCommandLineParts(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     if (!draft2Job.getApp().isCommandLineTool()) {
       return null;
     }

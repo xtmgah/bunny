@@ -13,7 +13,7 @@ import org.rabix.bindings.model.requirement.Requirement;
 public interface Bindings {
 
   String loadApp(String appURI) throws BindingException;
-  
+
   boolean canExecute(Job job) throws BindingException;
   
   boolean isSuccessful(Job job, int statusCode) throws BindingException;
@@ -42,6 +42,8 @@ public interface Bindings {
   
   DAGNode translateToDAG(Job job) throws BindingException;
 
+  void validate(Job job) throws BindingException;
+  
   ProtocolType getProtocolType();
-
+  
 }

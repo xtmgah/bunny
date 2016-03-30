@@ -120,6 +120,11 @@ public class BindingsImpl implements Bindings {
   }
 
   @Override
+  public void validate(Job job) throws BindingException {
+    protocolJobHelper.validate(job);
+  }
+  
+  @Override
   public ProtocolType getProtocolType() {
     return protocolType;
   }

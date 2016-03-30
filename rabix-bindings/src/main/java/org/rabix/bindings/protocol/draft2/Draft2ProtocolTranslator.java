@@ -26,7 +26,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
 
   @Override
   public DAGNode translateToDAG(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job)); 
   }
   

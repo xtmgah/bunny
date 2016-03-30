@@ -14,7 +14,7 @@ import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessor
 public class Draft2ProtocolValueExtractor implements ProtocolValueOperator {
 
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     try {
       return new Draft2PortProcessorHelper(draft2Job).flattenInputFiles(job.getInputs());
     } catch (Draft2PortProcessorException e) {
@@ -24,7 +24,7 @@ public class Draft2ProtocolValueExtractor implements ProtocolValueOperator {
 
   @Override
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     try {
       return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getInputs());
     } catch (Draft2PortProcessorException e) {

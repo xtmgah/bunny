@@ -52,7 +52,7 @@ public class Draft2ResultCollector implements ResultCollector {
   
   @Override
   public boolean isSuccessful(Job job, int statusCode) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     List<Integer> successCodes = draft2Job.getApp().getSuccessCodes();
 
     if (successCodes == null) {
@@ -71,7 +71,7 @@ public class Draft2ResultCollector implements ResultCollector {
 
   @Override
   public Job populateOutputs(Job job, File workingDir) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     try {
       Map<String, Object> outputs = null;
 

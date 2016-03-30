@@ -35,7 +35,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public Job populateResources(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     try {
       Resources resources = new Resources(draft2Job.getCPU(), draft2Job.getMemory(), null, null);   // TODO populate
       return Job.cloneWithResources(job, resources);
@@ -46,7 +46,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
   
   @Override
   public DockerContainerRequirement getDockerRequirement(Job job) throws BindingException {
-    Draft2JobApp draft2JobApp = new Draft2ProtocolJobHelper().getJob(job).getApp();
+    Draft2JobApp draft2JobApp = new Draft2ProtocolJobHelper().getDraft2Job(job).getApp();
     Draft2DockerResource draft2DockerResource = draft2JobApp.getContainerResource();
     return getDockerRequirement(draft2DockerResource);
   }
@@ -60,7 +60,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public EnvironmentVariableRequirement getEnvironmentVariableRequirement(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
 
     Draft2EnvVarRequirement envVarRequirement = draft2Job.getApp().getEnvVarRequirement();
     return getEnvironmentVariableRequirement(draft2Job, envVarRequirement);
@@ -97,7 +97,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public FileRequirement getFileRequirement(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
 
     Draft2CreateFileRequirement createFileRequirement = draft2Job.getApp().getCreateFileRequirement();
     return getFileRequirement(draft2Job, createFileRequirement);
@@ -135,14 +135,14 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
   @Override
   public List<Requirement> getRequirements(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
     return convertRequirements(job, draft2JobApp.getRequirements());
   }
   
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
     return convertRequirements(job, draft2JobApp.getHints());
   }
@@ -151,7 +151,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
     if (resources == null) {
       return Collections.<Requirement>emptyList();
     }
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getJob(job);
+    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
 
     List<Requirement> result = new ArrayList<>();
     try {
