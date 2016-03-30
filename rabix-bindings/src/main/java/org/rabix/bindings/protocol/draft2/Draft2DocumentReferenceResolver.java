@@ -98,9 +98,7 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
     Preconditions.checkNotNull(currentNode, "current node id is null");
 
     boolean isReference = currentNode.has(referenceKey);
-    boolean isJsonPointer = currentNode.has(jsonPointerKey) && parentNode != null; // we skip the first level $job
-
-    if (isReference || isJsonPointer) {
+    if (isReference) {
       String referencePath = null;
       if (isReference) {
         referencePath = currentNode.get(referenceKey).textValue();
@@ -117,9 +115,9 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
         reference = new Reference();
         referenceCache.put(referencePath, reference);
 
-        JsonNode referenceDocumentRoot = findDocumentRoot(file, referencePath, isJsonPointer);
+        JsonNode referenceDocumentRoot = findDocumentRoot(file, referencePath);
         ParentChild parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
-        reference.resolvedNode = traverse(file, parentChild.parent, parentChild.child, false);
+        reference.resolvedNode = traverse(file, parentChild.parent, parentChild.child, true);
         reference.isResolving = false;
         referenceCache.put(referencePath, reference);
       }
@@ -182,11 +180,8 @@ public class Draft2DocumentReferenceResolver implements DocumentReferenceResolve
     }
   }
 
-  private JsonNode findDocumentRoot(File file, String reference, boolean isJsonPointer) throws BindingException {
+  private JsonNode findDocumentRoot(File file, String reference) throws BindingException {
     JsonNode startNode = root;
-    if (isJsonPointer) {
-      startNode = startNode.get(jsonPointerKey);
-    }
     int start = reference.indexOf("#");
 
     if (start == 0) {
