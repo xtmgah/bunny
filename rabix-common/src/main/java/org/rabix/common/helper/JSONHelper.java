@@ -150,10 +150,20 @@ public class JSONHelper {
 
   @SuppressWarnings("unchecked")
   public static <T> Map<String, T> convertToMap(Object value) {
-    if (value == null)
+    if (value == null) {
       return null;
+    }
     JsonNode node = JSONHelper.convertToJsonNode(value);
     return readObject(node, Map.class);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static <T> List<T> convertToList(Object value) {
+    if (value == null) {
+      return null;
+    }
+    JsonNode node = JSONHelper.convertToJsonNode(value);
+    return readObject(node, List.class);
   }
   
   /**

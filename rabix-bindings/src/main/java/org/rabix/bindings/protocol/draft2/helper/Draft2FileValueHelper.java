@@ -137,10 +137,11 @@ public class Draft2FileValueHelper extends Draft2BeanHelper {
   private static String loadContents(Object fileData) throws IOException {
     String path = Draft2FileValueHelper.getPath(fileData);
 
-    byte[] buffer = new byte[CONTENTS_NUMBER_OF_BYTES];
     InputStream is = null;
     try {
-      is = new FileInputStream(new File(path));
+      File file = new File(path);
+      is = new FileInputStream(file);
+      byte[] buffer = new byte[Math.min(CONTENTS_NUMBER_OF_BYTES, (int) file.length())];
       is.read(buffer);
       return new String(buffer, "UTF-8");
     } finally {

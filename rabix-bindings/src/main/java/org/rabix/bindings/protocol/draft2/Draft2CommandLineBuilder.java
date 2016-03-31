@@ -121,6 +121,12 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
       if (commandLineTool.hasArguments()) {
         for (int i = 0; i < commandLineTool.getArguments().size(); i++) {
           Object argBinding = commandLineTool.getArguments().get(i);
+          if (argBinding instanceof String) {
+            Draft2CommandLinePart commandLinePart = new Draft2CommandLinePart.Builder(0, false).part(argBinding).keyValue("").build();
+            commandLinePart.setArgsArrayOrder(i);
+            commandLineParts.add(commandLinePart);
+            continue;
+          }
           Object argValue = commandLineTool.getArgument(job, argBinding);
           Map<String, Object> emptySchema = new HashMap<>();
           Draft2CommandLinePart commandLinePart = buildCommandLinePart(job, null, argBinding, argValue, emptySchema, null);
