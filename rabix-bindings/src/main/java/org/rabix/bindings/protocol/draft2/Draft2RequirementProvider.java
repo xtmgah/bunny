@@ -2,12 +2,14 @@ package org.rabix.bindings.protocol.draft2;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.RequirementProvider;
-import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.FileValue;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Resources;
 import org.rabix.bindings.model.requirement.CPURequirement;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
@@ -27,8 +29,8 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVarRequirement.EnvironmentDef;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 
 public class Draft2RequirementProvider implements RequirementProvider {
@@ -73,9 +75,9 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
     List<EnvironmentDef> envDefinitions = envVarRequirement.getEnvironmentDefinitions();
     if (envDefinitions == null) {
-      return new EnvironmentVariableRequirement(Collections.<String> emptyList());
+      return new EnvironmentVariableRequirement(Collections.<String, String> emptyMap());
     }
-    List<String> result = new ArrayList<>();
+    Map<String, String> result = new HashMap<>();
     for (EnvironmentDef envDef : envDefinitions) {
       String key = envDef.getName();
       Object value = envDef.getValue();
@@ -90,7 +92,7 @@ public class Draft2RequirementProvider implements RequirementProvider {
       if (value == null) {
         throw new BindingException("Environment variable for " + key + " is empty.");
       }
-      result.add(key + "=" + value);
+      result.put(key, value.toString());
     }
     return new EnvironmentVariableRequirement(result);
   }

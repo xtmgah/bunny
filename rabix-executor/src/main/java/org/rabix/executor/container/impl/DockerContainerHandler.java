@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -116,7 +118,7 @@ public class DockerContainerHandler implements ContainerHandler {
       
       EnvironmentVariableRequirement environmentVariableResource = getRequirement(combinedRequirements, EnvironmentVariableRequirement.class);
       if (environmentVariableResource != null) {
-        builder.env(environmentVariableResource.getVariables());
+        builder.env(transformEnvironmentVariables(environmentVariableResource.getVariables()));
       }
       ContainerCreation creation = null;
       try {
@@ -140,6 +142,14 @@ public class DockerContainerHandler implements ContainerHandler {
       logger.error("Failed to start container.", e);
       throw new ContainerException("Failed to start container.", e);
     }
+  }
+  
+  private List<String> transformEnvironmentVariables(Map<String, String> variables) {
+    List<String> transformed = new ArrayList<>();
+    for (Entry<String, String> variableEntry : variables.entrySet()) {
+      transformed.add(variableEntry.getKey() + "=" + variableEntry.getValue());
+    }
+    return transformed;
   }
   
   @SuppressWarnings("unchecked")
