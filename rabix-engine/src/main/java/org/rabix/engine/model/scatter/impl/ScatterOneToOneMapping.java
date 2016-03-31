@@ -132,8 +132,12 @@ public class ScatterOneToOneMapping implements ScatterMapping {
   @Override
   public void commit(List<RowMapping> mappings) {
     for (RowMapping mapping : mappings) {
-      Combination combination = combinations.get(mapping.getIndex());
-      combination.enabled = true;
+      for (Combination combination : combinations) {
+        if (combination.position == mapping.getIndex()) {
+          combination.enabled = true;
+          break;
+        }
+      }
     }
   }
   
