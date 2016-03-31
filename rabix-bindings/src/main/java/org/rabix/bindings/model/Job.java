@@ -64,7 +64,7 @@ public class Job {
     this.outputs = otputs;
     this.context = context;
   }
-
+  
   public static Job cloneWithId(Job job, String id) {
     return new Job(id, job.nodeId, job.app, job.status, job.inputs, job.outputs, job.context);
   }

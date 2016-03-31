@@ -20,6 +20,9 @@ public abstract class Draft2Port {
   @JsonProperty("id")
   protected String id;
   
+  @JsonProperty("default")
+  protected Object defaultValue;
+  
   @JsonProperty("type")
   protected Object schema;
   
@@ -29,10 +32,11 @@ public abstract class Draft2Port {
   protected Map<String, Object> raw = new HashMap<>();
 
   @JsonCreator
-  public Draft2Port(@JsonProperty("id") String id, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter) {
+  public Draft2Port(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter) {
     this.id = id;
     this.schema = schema;
     this.scatter = scatter;
+    this.defaultValue = defaultValue;
   }
 
   @JsonAnySetter
@@ -65,4 +69,12 @@ public abstract class Draft2Port {
     this.scatter = scatter;
   }
 
+  public Object getDefaultValue() {
+    return defaultValue;
+  }
+
+  public void setDefaultValue(Object defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+  
 }

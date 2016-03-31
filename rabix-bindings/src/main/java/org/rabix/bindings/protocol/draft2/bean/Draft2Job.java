@@ -7,6 +7,7 @@ import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2IORequirement;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
+import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.json.BeanPropertyView;
 import org.rabix.common.json.processor.BeanProcessorClass;
 
@@ -65,6 +66,19 @@ public final class Draft2Job {
     this.scatter = scatter;
     this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
+    processPortDefaults();
+  }
+  
+  private void processPortDefaults() {
+    if (inputs == null) {
+      return;
+    }
+    for (Draft2InputPort inputPort : app.getInputs()) {
+      String normalizedId = Draft2SchemaHelper.normalizeId(inputPort.id);
+      if (!inputs.containsKey(normalizedId) && inputPort.defaultValue != null) {
+        inputs.put(normalizedId, inputPort.defaultValue);
+      }
+    }
   }
 
   public Draft2Job(Draft2JobApp app, Map<String, Object> inputs, Map<String, Object> outputs, Object scatter, String scatterMethod, String linkMerge, String id) {
@@ -75,11 +89,13 @@ public final class Draft2Job {
     this.outputs = outputs;
     this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
+    processPortDefaults();
   }
   
   public Draft2Job(Draft2JobApp app, Map<String, Object> inputs) {
     this.app = app;
     this.inputs = inputs;
+    processPortDefaults();
   }
 
   @JsonIgnore
