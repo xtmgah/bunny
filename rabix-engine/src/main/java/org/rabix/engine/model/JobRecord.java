@@ -298,7 +298,11 @@ public class JobRecord {
     public void setScatter(boolean scatter) {
       this.scatter = scatter;
     }
-
   }
 
+  @Override
+  public String toString() {
+    return "JobRecord [id=" + id + ", externalId=" + externalId + ", contextId=" + contextId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterMapping=" + scatterMapping + "]";
+  }
+  
 }

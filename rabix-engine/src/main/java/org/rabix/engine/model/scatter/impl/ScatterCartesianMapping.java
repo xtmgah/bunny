@@ -36,7 +36,7 @@ public class ScatterCartesianMapping implements ScatterMapping {
     }
   }
 
-  public void enable(String port, Object value) {
+  public void enable(String port, Object value, Integer position) {
     this.values.get(port).addLast(value);
     this.indexes.get(port).addLast(indexes.get(port).size());
   }

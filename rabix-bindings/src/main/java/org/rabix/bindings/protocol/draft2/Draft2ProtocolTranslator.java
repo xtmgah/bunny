@@ -118,7 +118,7 @@ public class Draft2ProtocolTranslator implements ProtocolTranslator {
 
       DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, false);
       DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getScattered() != null ? dataLink.getScattered() : false);
-      links.add(new DAGLink(sourceLinkPort, destinationLinkPort));
+      links.add(new DAGLink(sourceLinkPort, destinationLinkPort, dataLink.getPosition()));
     }
     return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children, job.getInputs());
   }

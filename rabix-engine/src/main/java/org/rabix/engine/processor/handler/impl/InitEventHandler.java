@@ -70,7 +70,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
 
     for (DAGLinkPort inputPort : node.getInputPorts()) {
       Object value = event.getValue().get(inputPort.getId());
-      Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value);
+      Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, null);
       eventProcessor.send(updateInputEvent);
     }
   }

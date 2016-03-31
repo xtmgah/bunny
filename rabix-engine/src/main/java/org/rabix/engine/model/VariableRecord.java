@@ -42,7 +42,7 @@ public class VariableRecord {
     return contextId;
   }
   
-  public void addValue(Object value, LinkMerge linkMerge) {
+  public void addValue(Object value, LinkMerge linkMerge, Integer position) {
     if (value == null) {
       return;
     }
@@ -55,23 +55,34 @@ public class VariableRecord {
     }
     switch (linkMerge) {
     case merge_nested:
-      addMergeNested(value);
+      addMergeNested(value, position);
       break;
     case merge_flattened:
-      addMergeFlattened(value);
+      addMergeFlattened(value, position);
     default:
       break;
     }
   }
 
   @SuppressWarnings("unchecked")
-  private void addMergeNested(Object value) {
+  private void addMergeNested(Object value, Integer position) {
     if (this.value == null) {
-      this.value = value;
+      if (position != null) {
+        this.isWrapped = true;
+        this.value = new ArrayList<>(position);
+        ((List<Object>) this.value).set(position - 1, value);
+      } else {
+        this.value = value;
+      }
       return;
     }
     if (isWrapped) {
-      ((List<Object>) this.value).add(value);
+      if (position != null) {
+        expand((List<Object>) this.value, position);
+        ((List<Object>) this.value).set(position - 1, value);
+      } else {
+        ((List<Object>) this.value).add(value);
+      }
     } else {
       this.value = wrap(this.value, value);
       this.isWrapped = true;
@@ -79,7 +90,7 @@ public class VariableRecord {
   }
 
   @SuppressWarnings("unchecked")
-  private void addMergeFlattened(Object value) {
+  private void addMergeFlattened(Object value, Integer position) {
     List<Object> flattened = flatten(value);
     
     if (this.value == null) {
@@ -96,6 +107,17 @@ public class VariableRecord {
       this.value = wrap(this.value);
       ((List<Object>) this.value).addAll(flattened);
     }
+  }
+  
+  private <T> void expand(List<T> list, Integer position) {
+    int initialSize = list.size();
+    if (initialSize >= position) {
+      return;
+    }
+    for (int i = 0; i < position - initialSize; i++) {
+      list.add(null);
+    }
+    return;
   }
   
   private List<Object> flatten(Object value) {
@@ -167,6 +189,10 @@ public class VariableRecord {
   public void setNumberGlobals(int numberOfGlobals) {
     this.numberOfGlobals = numberOfGlobals;
   }
-  
+
+  @Override
+  public String toString() {
+    return "VariableRecord [contextId=" + contextId + ", jobId=" + jobId + ", portId=" + portId + ", type=" + type + ", value=" + value + ", isWrapped=" + isWrapped + ", numberOfGlobals=" + numberOfGlobals + ", isDefault=" + isDefault + "]";
+  }
   
 }

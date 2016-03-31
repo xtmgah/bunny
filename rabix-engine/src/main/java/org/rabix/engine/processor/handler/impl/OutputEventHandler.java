@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
@@ -43,7 +44,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
     VariableRecord sourceVariable = variableRecordService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
-    sourceVariable.addValue(event.getValue(), LinkMerge.merge_nested);
+    sourceVariable.addValue(event.getValue(), LinkMerge.merge_nested, event.getPosition());
     
     JobRecord sourceJob = jobRecordService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {
@@ -115,11 +116,13 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
           if (!isDestinationPortScatterable && !event.isFromScatter()) {
             value = sourceVariable.getValue();
           }
-          Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, isFromScatter, numberOfOutputs);
+          Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, isFromScatter, numberOfOutputs, event.getPosition());
           eventProcessor.send(updateInputEvent);
           break;
         default:
-          Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, numberOfOutputs);
+          Integer position = InternalSchemaHelper.getScatteredNumber(sourceJob.getId());
+          position = position != null ? position : event.getPosition();
+          Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, numberOfOutputs, position);
           eventProcessor.send(updateOutputEvent);
           break;
         }

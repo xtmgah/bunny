@@ -19,7 +19,9 @@ public class InputUpdateEvent implements Event {
   private final boolean eventFromScatter;       // scatter operation generated this event
   private final boolean scatteringInPlace;      // this event was produced while doing a scatter operation
   
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object inputValue) {
+  private final Integer position;
+  
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object inputValue, Integer position) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = inputValue;
@@ -28,9 +30,10 @@ public class InputUpdateEvent implements Event {
     this.eventFromLookAhead = false;
     this.scatteringInPlace = false;
     this.scatteredNodes = null;
+    this.position = null;
   }
 
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes) {
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes, Integer position) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = value;
@@ -39,6 +42,7 @@ public class InputUpdateEvent implements Event {
     this.eventFromScatter = eventFromScatter;
     this.eventFromLookAhead = eventFromLookAhead;
     this.scatteredNodes = scatteredNodes;
+    this.position = position;
   }
 
   public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes, boolean scatteringInPlace) {
@@ -50,6 +54,7 @@ public class InputUpdateEvent implements Event {
     this.eventFromLookAhead = eventFromLookAhead;
     this.scatteredNodes = scatteredNodes;
     this.scatteringInPlace = scatteringInPlace;
+    this.position = null;
   }
 
   public String getJobId() {
@@ -78,6 +83,10 @@ public class InputUpdateEvent implements Event {
 
   public boolean isEventFromLookAhead() {
     return eventFromLookAhead;
+  }
+  
+  public Integer getPosition() {
+    return position;
   }
 
   @Override

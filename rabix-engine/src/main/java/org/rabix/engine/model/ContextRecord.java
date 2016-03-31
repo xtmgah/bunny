@@ -46,7 +46,7 @@ public class ContextRecord {
 
   @Override
   public String toString() {
-    return "Context2 [id=" + id + ", config=" + config + ", status=" + status + "]";
+    return "ContextRecord [id=" + id + ", config=" + config + ", status=" + status + "]";
   }
-  
+
 }

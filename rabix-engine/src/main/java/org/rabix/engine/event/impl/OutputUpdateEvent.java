@@ -15,6 +15,7 @@ public class OutputUpdateEvent implements Event {
   
   private final boolean fromScatter;        // it's a scatter event
   private final Integer scatteredNodes;     // number of scattered nodes
+  private final Integer position;
 
   public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue) {
     this.jobId = jobId;
@@ -23,15 +24,17 @@ public class OutputUpdateEvent implements Event {
     this.value = outputValue;
     this.fromScatter = false;
     this.scatteredNodes = null;
+    this.position = null;
   }
   
-  public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue, boolean fromScatter, Integer scatteredNodes) {
+  public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue, boolean fromScatter, Integer scatteredNodes, Integer position) {
     this.jobId = jobId;
     this.contextId = contextId;
     this.portId = portId;
     this.value = outputValue;
     this.fromScatter = fromScatter;
     this.scatteredNodes = scatteredNodes;
+    this.position = position;
   }
   
   public String getJobId() {
@@ -57,6 +60,10 @@ public class OutputUpdateEvent implements Event {
   @Override
   public String getContextId() {
     return contextId;
+  }
+  
+  public Integer getPosition() {
+    return position;
   }
   
   @Override
