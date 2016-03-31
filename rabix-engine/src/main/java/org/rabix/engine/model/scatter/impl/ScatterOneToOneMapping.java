@@ -27,15 +27,6 @@ public class ScatterOneToOneMapping implements ScatterMapping {
     initialize(dagNode);
   }
   
-  public static void main(String[] args) {
-    ScatterOneToOneMapping oneToOne = new ScatterOneToOneMapping(null);
-    
-    oneToOne.enable("A", 20, 2);
-    System.out.println(oneToOne.getEnabledRows());
-    oneToOne.enable("B", 40, 2);
-    System.out.println(oneToOne.getEnabledRows());
-  }
-  
   public void initialize(DAGNode dagNode) {
     for(DAGLinkPort port : dagNode.getInputPorts()) {
       if (port.isScatter()) {
@@ -47,6 +38,18 @@ public class ScatterOneToOneMapping implements ScatterMapping {
   
   public void enable(String port, Object value, Integer position) {
     List<Object> valueList = values.get(port);
+    
+    List<Boolean> indexList = indexes.get(port);
+    if (position != null && indexList.size() >= position) {
+      position = indexList.get(position - 1)? indexList.size() + 1 : position;
+    }
+    
+    if (position != null) {
+      expand(indexList, position);
+      indexList.set(position - 1, true);
+    } else {
+      indexList.add(true);
+    }
     if (position != null) {
       expand(valueList, position);
       valueList.set(position - 1, value);
@@ -54,13 +57,6 @@ public class ScatterOneToOneMapping implements ScatterMapping {
       valueList.add(value);
     }
     
-    List<Boolean> indexList = indexes.get(port); 
-    if (position != null) {
-      expand(indexList, position);
-      indexList.set(position - 1, true);
-    } else {
-      indexList.add(true);
-    }
   }
   
   private <T> void expand(List<T> list, Integer position) {
