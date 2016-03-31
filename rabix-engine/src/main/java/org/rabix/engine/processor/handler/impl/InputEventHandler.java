@@ -120,7 +120,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         VariableRecord sourceVariable = variableRecordService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, event.getContextId());
         VariableRecord destinationVariable = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, event.getContextId());
 
-        Event updateEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), null);
+        Event updateEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
         eventProcessor.send(updateEvent);
       }
     }
@@ -165,7 +165,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
           values.add(value);
         }
         for (Object subvalue : values) {
-          eventProcessor.send(new InputUpdateEvent(event.getContextId(), job.getId(), event.getPortId(), subvalue, true, true, values.size(), true));
+          eventProcessor.send(new InputUpdateEvent(event.getContextId(), job.getId(), event.getPortId(), subvalue, true, true, values.size(), true, event.getPosition()));
         }
         return;
       }

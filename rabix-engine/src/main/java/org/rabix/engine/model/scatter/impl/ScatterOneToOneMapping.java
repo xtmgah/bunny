@@ -105,7 +105,7 @@ public class ScatterOneToOneMapping implements ScatterMapping {
         for (int index = 0; index < combinations.size(); index++) {
           Combination c = combinations.get(index);
 
-          if (c.position == i) {
+          if (c.position == i + 1) {
             combination = c;
             break;
           }

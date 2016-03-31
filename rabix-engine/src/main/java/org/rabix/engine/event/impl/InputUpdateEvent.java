@@ -30,7 +30,7 @@ public class InputUpdateEvent implements Event {
     this.eventFromLookAhead = false;
     this.scatteringInPlace = false;
     this.scatteredNodes = null;
-    this.position = null;
+    this.position = position;
   }
 
   public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes, Integer position) {
@@ -45,7 +45,7 @@ public class InputUpdateEvent implements Event {
     this.position = position;
   }
 
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes, boolean scatteringInPlace) {
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes, boolean scatteringInPlace, Integer position) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = value;
@@ -54,7 +54,7 @@ public class InputUpdateEvent implements Event {
     this.eventFromLookAhead = eventFromLookAhead;
     this.scatteredNodes = scatteredNodes;
     this.scatteringInPlace = scatteringInPlace;
-    this.position = null;
+    this.position = position;
   }
 
   public String getJobId() {

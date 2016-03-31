@@ -68,7 +68,7 @@ public class CommandLinePrinter implements IterationCallback {
       File readyDirectory = new File(iterationDirectory, READY_JOBS_DIR);
       readyDirectory.mkdirs();
 
-      int suffix = 0;
+      int suffix = 1;
       for (Job job : jobs) {
         FileHelper.serialize(new File(readyDirectory, "job_" + suffix++ + ".json"), job);
       }

@@ -16,6 +16,7 @@ public class VariableRecord {
   private LinkPortType type;
   private Object value;
   
+  private Integer position;
   private boolean isWrapped;        // is value wrapped into array?
   private int numberOfGlobals;      // number of 'global' outputs if node is scattered 
 
@@ -67,13 +68,8 @@ public class VariableRecord {
   @SuppressWarnings("unchecked")
   private void addMergeNested(Object value, Integer position) {
     if (this.value == null) {
-      if (position != null) {
-        this.isWrapped = true;
-        this.value = new ArrayList<>(position);
-        ((List<Object>) this.value).set(position - 1, value);
-      } else {
-        this.value = value;
-      }
+      this.value = value;
+      this.position = position;
       return;
     }
     if (isWrapped) {
@@ -84,8 +80,18 @@ public class VariableRecord {
         ((List<Object>) this.value).add(value);
       }
     } else {
-      this.value = wrap(this.value, value);
-      this.isWrapped = true;
+      if (this.position != null) {
+    	Object tmpValue = this.value;
+    	this.value = new ArrayList<>();
+    	expand((List<Object>) this.value, this.position);
+    	((List<Object>) this.value).set(this.position - 1, tmpValue);
+      
+    	expand((List<Object>) this.value, position);
+    	((List<Object>) this.value).set(position - 1, value);
+      } else {
+    	this.value = wrap(this.value, value);
+      }
+  	  this.isWrapped = true;
     }
   }
 
@@ -140,7 +146,7 @@ public class VariableRecord {
       collection.add(t);
     }
     return collection;
-}
+  }
   
   public String getJobId() {
     return jobId;
