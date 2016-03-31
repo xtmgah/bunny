@@ -1,8 +1,13 @@
 package org.rabix.engine.processor.handler.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.common.helper.CloneHelper;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
@@ -68,10 +73,29 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     }
     jobRecordService.create(job);
 
+    Map<String, Object> mixedInputs = mixInputs(node, event.getValue());
     for (DAGLinkPort inputPort : node.getInputPorts()) {
-      Object value = event.getValue().get(inputPort.getId());
+      Object value = mixedInputs.get(inputPort.getId());
       Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, null);
       eventProcessor.send(updateInputEvent);
+    }
+  }
+  
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> mixInputs(DAGNode dagNode, Map<String, Object> inputs) {
+    Map<String, Object> mixedInputs;
+    try {
+      mixedInputs = (Map<String, Object>) CloneHelper.deepCopy(dagNode.getDefaults());
+      if (inputs == null) {
+        return mixedInputs;
+      }
+
+      for (Entry<String, Object> inputEntry : inputs.entrySet()) {
+        mixedInputs.put(inputEntry.getKey(), inputEntry.getValue());
+      }
+      return mixedInputs;
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to clone default inputs for node " + dagNode.getId());
     }
   }
 
