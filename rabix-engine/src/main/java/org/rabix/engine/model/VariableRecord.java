@@ -20,6 +20,8 @@ public class VariableRecord {
   private boolean isWrapped;        // is value wrapped into array?
   private int numberOfGlobals;      // number of 'global' outputs if node is scattered 
 
+  private int numberOfTimesUpdated = 0;
+  
   private boolean isDefault;
   
   public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value) {
@@ -44,6 +46,8 @@ public class VariableRecord {
   }
   
   public void addValue(Object value, LinkMerge linkMerge, Integer position) {
+    numberOfTimesUpdated++;
+    
     if (value == null) {
       return;
     }
@@ -150,6 +154,10 @@ public class VariableRecord {
   
   public String getJobId() {
     return jobId;
+  }
+  
+  public int getNumberOfTimesUpdated() {
+    return numberOfTimesUpdated;
   }
 
   public void setJobId(String jobId) {

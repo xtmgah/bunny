@@ -158,7 +158,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         } else {
           value = event.getValue();
         }
-        if (value instanceof List<?> && job.isInputPortReady(event.getPortId())) {
+        if (value instanceof List<?> && job.isInputPortReady(event.getPortId()) && variable.getNumberOfTimesUpdated() == 1) {    // TODO remove
           values = (List<Object>) value;
         } else {
           values = new ArrayList<>();
