@@ -158,7 +158,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         } else {
           value = event.getValue();
         }
-        if (value instanceof List<?>) {
+        if (value instanceof List<?> && job.isInputPortReady(event.getPortId())) {
           values = (List<Object>) value;
         } else {
           values = new ArrayList<>();

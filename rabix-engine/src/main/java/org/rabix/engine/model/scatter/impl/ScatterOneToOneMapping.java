@@ -12,18 +12,20 @@ import org.rabix.engine.model.scatter.PortMapping;
 import org.rabix.engine.model.scatter.RowMapping;
 import org.rabix.engine.model.scatter.ScatterMapping;
 
+import com.google.common.base.Preconditions;
+
 public class ScatterOneToOneMapping implements ScatterMapping {
 
+  private LinkedList<Combination> combinations;
+  
   private Map<String, LinkedList<Object>> values;
   private Map<String, LinkedList<Boolean>> indexes;
-
-  private LinkedList<Combination> combinations;
 
   public ScatterOneToOneMapping(DAGNode dagNode) {
     values = new HashMap<>();
     indexes = new HashMap<>();
     combinations = new LinkedList<>();
-
+    
     initialize(dagNode);
   }
   
@@ -37,26 +39,21 @@ public class ScatterOneToOneMapping implements ScatterMapping {
   }
   
   public void enable(String port, Object value, Integer position) {
+    Preconditions.checkNotNull(port);
+    Preconditions.checkNotNull(value);
+    Preconditions.checkNotNull(position);
+    
     List<Object> valueList = values.get(port);
-    
     List<Boolean> indexList = indexes.get(port);
-    if (position != null && indexList.size() >= position) {
-      position = indexList.get(position - 1)? indexList.size() + 1 : position;
+
+    if (indexList.size() >= position) {
+      position = indexList.get(position - 1) ? indexList.size() + 1 : position;
     }
-    
-    if (position != null) {
-      expand(indexList, position);
-      indexList.set(position - 1, true);
-    } else {
-      indexList.add(true);
-    }
-    if (position != null) {
-      expand(valueList, position);
-      valueList.set(position - 1, value);
-    } else {
-      valueList.add(value);
-    }
-    
+    expand(indexList, position);
+    expand(valueList, position);
+
+    indexList.set(position - 1, true);
+    valueList.set(position - 1, value);
   }
   
   private <T> void expand(List<T> list, Integer position) {
