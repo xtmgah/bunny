@@ -58,9 +58,10 @@ public class Draft2Step {
    */
   @JsonIgnore
   private Draft2Job constructJob() {
+    String jobId = id != null ? id : app.getId();
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
-    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, id);
+    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, jobId);
   }
 
   /**
