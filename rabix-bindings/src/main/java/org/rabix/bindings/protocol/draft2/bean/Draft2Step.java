@@ -3,6 +3,7 @@ package org.rabix.bindings.protocol.draft2.bean;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
@@ -59,6 +60,9 @@ public class Draft2Step {
   @JsonIgnore
   private Draft2Job constructJob() {
     String jobId = id != null ? id : app.getId();
+    if (jobId == null) {
+      jobId = UUID.randomUUID().toString();
+    }
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
     return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, jobId);
