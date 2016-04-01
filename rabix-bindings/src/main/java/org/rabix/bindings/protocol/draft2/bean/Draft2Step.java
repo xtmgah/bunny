@@ -3,7 +3,6 @@ package org.rabix.bindings.protocol.draft2.bean;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
@@ -59,13 +58,20 @@ public class Draft2Step {
    */
   @JsonIgnore
   private Draft2Job constructJob() {
-    String jobId = id != null ? id : app.getId();
-    if (jobId == null) {
-      jobId = UUID.randomUUID().toString();
+    if (id == null) {
+      String portId = null;
+      if (inputs != null && inputs.size() > 0) {
+        portId = (String) inputs.get(0).get(Draft2SchemaHelper.STEP_PORT_ID);
+      } else if (outputs != null && outputs.size() > 0) {
+        portId = (String) outputs.get(0).get(Draft2SchemaHelper.STEP_PORT_ID);
+      }
+      if (portId.contains(Draft2SchemaHelper.PORT_ID_SEPARATOR)) {
+        id = portId.substring(1, portId.lastIndexOf(Draft2SchemaHelper.PORT_ID_SEPARATOR));
+      }
     }
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
-    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, jobId);
+    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, id);
   }
 
   /**
