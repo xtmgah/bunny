@@ -8,4 +8,5 @@ public interface ProtocolJobHelper {
   
   boolean isSelfExecutable(Job job) throws BindingException;
   
+  Object getAppObject(String app) throws BindingException;
 }

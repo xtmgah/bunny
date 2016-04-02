@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.BindingsFactory.BindingsPair;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.common.helper.ResourceHelper;
@@ -25,7 +25,7 @@ public class Draft2ValidationTest {
 
       String appURI = URIHelper.createDataURI(appText);
 
-      BindingsPair pair = BindingsFactory.create(appURI);
+      Bindings bindings = BindingsFactory.create(appURI);
 
       Map<String, Object> inputs = new HashMap<>();
 
@@ -43,7 +43,7 @@ public class Draft2ValidationTest {
       inputs.put("minimum_seed_length", 7);
 
       Job job = new Job(appURI, inputs);
-      pair.getBindings().validate(job);
+      bindings.validate(job);
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
@@ -56,7 +56,7 @@ public class Draft2ValidationTest {
 
       String appURI = URIHelper.createDataURI(appText);
 
-      BindingsPair pair = BindingsFactory.create(appURI);
+      Bindings bindings = BindingsFactory.create(appURI);
 
       Map<String, Object> inputs = new HashMap<>();
       inputs.put("reference", createFile("path_0"));
@@ -75,7 +75,7 @@ public class Draft2ValidationTest {
       inputs.put("minimum_seed_length", 7);
 
       Job job = new Job(appURI, inputs);
-      pair.getBindings().validate(job);
+      bindings.validate(job);
     } catch (Exception e) {
       Assert.fail(e.getMessage());
     }

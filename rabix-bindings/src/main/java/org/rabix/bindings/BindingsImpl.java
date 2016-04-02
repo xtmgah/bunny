@@ -50,6 +50,11 @@ public class BindingsImpl implements Bindings {
   }
   
   @Override
+  public Object loadAppObject(String uri) throws BindingException {
+    return protocolJobHelper.getAppObject(loadApp(uri));
+  }
+  
+  @Override
   public boolean canExecute(Job job) throws BindingException {
     return protocolJobHelper.isSelfExecutable(job);
   }

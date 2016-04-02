@@ -13,6 +13,8 @@ import org.rabix.bindings.model.requirement.Requirement;
 public interface Bindings {
 
   String loadApp(String appURI) throws BindingException;
+  
+  Object loadAppObject(String uri) throws BindingException;
 
   boolean canExecute(Job job) throws BindingException;
   
@@ -45,5 +47,5 @@ public interface Bindings {
   void validate(Job job) throws BindingException;
   
   ProtocolType getProtocolType();
-  
+
 }

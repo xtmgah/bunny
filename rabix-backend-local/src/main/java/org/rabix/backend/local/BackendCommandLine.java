@@ -18,7 +18,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.BindingsFactory.BindingsPair;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
@@ -125,19 +124,14 @@ public class BackendCommandLine {
 
       String appURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
 
-      BindingsPair bindingsPair = BindingsFactory.create(appURI);
+      Bindings bindings = BindingsFactory.create(appURI);
 
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
       
-      Bindings bindings = bindingsPair.getBindings();
-      String resolvedAppString = bindingsPair.getResolved();
-
-      Job job = new Job(appURI, inputs); 
-      DAGNode dagNode = bindings.translateToDAG(job);
-
       if (commandLine.hasOption("t")) {
-        Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(resolvedAppString, Draft2CommandLineTool.class);
+        String app = bindings.loadApp(appURI);
+        Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(app, Draft2CommandLineTool.class);
         Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
         Map<String, Object> inputsMap = (Map<String, Object>) inputs;
         Map<String, Object> allocatedResources = (Map<String, Object>) inputsMap.get("allocatedResources");
@@ -183,6 +177,9 @@ public class BackendCommandLine {
       callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
       callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService));
 
+      Job job = new Job(appURI, inputs); 
+      DAGNode dagNode = bindings.translateToDAG(job);
+      
       InitEvent initEvent = new InitEvent(context, dagNode, inputs);
       eventProcessor.send(initEvent);
       eventProcessor.start(callbacks);

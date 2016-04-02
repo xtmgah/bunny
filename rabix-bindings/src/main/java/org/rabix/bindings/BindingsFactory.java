@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
-import org.rabix.common.json.BeanSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,20 +25,16 @@ public class BindingsFactory {
     }
   }
   
-  public static BindingsPair create(String appURL) {
-    for (Bindings binding : bindings.values()) {
+  public static Bindings create(String appURL) {
+    for (Bindings bindings : bindings.values()) {
       try {
-        String resolvedApp = binding.loadApp(appURL);
-        return new BindingsPair(binding, resolvedApp);  
+        bindings.loadAppObject(appURL);
+        return bindings; 
       } catch (BindingException e) {
         // do nothing
       }
     }
     return null;
-  }
-  
-  public static Bindings createFromAppText(String appStr) throws BindingException {
-    return create(sniffProtocolFromAppText(appStr));
   }
   
   public static Bindings create(Job job) throws BindingException {
@@ -61,35 +56,6 @@ public class BindingsFactory {
       // do nothing
     }
     return null;
-  }
-  
-  private static ProtocolType sniffProtocolFromAppText(String appStr) {
-    try {
-      BeanSerializer.deserialize(appStr, Draft2JobApp.class);
-      return ProtocolType.DRAFT2;
-    } catch (Exception e) {
-      // do nothing
-    }
-    return null;
-  }
-  
-  public static class BindingsPair {
-    private final String resolved;
-    private final Bindings bindings;
-    
-    public BindingsPair(Bindings bindings, String resolved) {
-      this.bindings = bindings;
-      this.resolved = resolved;
-    }
-
-    public String getResolved() {
-      return resolved;
-    }
-
-    public Bindings getBindings() {
-      return bindings;
-    }
-    
   }
   
 }

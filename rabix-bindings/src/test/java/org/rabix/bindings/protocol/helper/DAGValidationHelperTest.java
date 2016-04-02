@@ -1,8 +1,8 @@
 package org.rabix.bindings.protocol.helper;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.BindingsFactory.BindingsPair;
 import org.rabix.bindings.helper.DAGValidationHelper;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
@@ -19,10 +19,10 @@ public class DAGValidationHelperTest {
     String appText = ResourceHelper.readResource(this.getClass(), "grep-wf-loop.cwl.json");
     String appURI = URIHelper.createDataURI(appText);
 
-    BindingsPair pair = BindingsFactory.create(appURI);
+    Bindings bindings = BindingsFactory.create(appURI);
     
     Job job = new Job(null, null, appURI, null, null, null, null); 
-    DAGNode node = pair.getBindings().translateToDAG(job);
+    DAGNode node = bindings.translateToDAG(job);
     DAGValidationHelper.detectLoop((DAGContainer) node);
   }
 
@@ -31,10 +31,10 @@ public class DAGValidationHelperTest {
     String appText = ResourceHelper.readResource(this.getClass(), "grep-wf.cwl.json");
     String appURI = URIHelper.createDataURI(appText);
     
-    BindingsPair pair = BindingsFactory.create(appURI);
+    Bindings bindings = BindingsFactory.create(appURI);
     
     Job job = new Job(null, null, appURI, null, null, null, null); 
-    DAGNode node = pair.getBindings().translateToDAG(job);
+    DAGNode node = bindings.translateToDAG(job);
     DAGValidationHelper.detectLoop((DAGContainer) node);
   }
 
