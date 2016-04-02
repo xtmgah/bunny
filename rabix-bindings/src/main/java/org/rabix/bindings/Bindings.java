@@ -36,8 +36,6 @@ public interface Bindings {
 
   Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException;
 
-  Job populateResources(Job job) throws BindingException;
-  
   List<Requirement> getRequirements(Job job) throws BindingException;
 
   List<Requirement> getHints(Job job) throws BindingException;

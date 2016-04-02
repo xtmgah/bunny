@@ -5,7 +5,7 @@ import java.util.Set;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.FileValue;
 
-public interface ProtocolValueOperator {
+public interface ProtocolValueProcessor {
 
   Set<FileValue> getInputFiles(Job job) throws BindingException;
   

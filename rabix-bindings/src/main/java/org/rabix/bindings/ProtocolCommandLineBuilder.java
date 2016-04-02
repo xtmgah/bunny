@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.rabix.bindings.model.Job;
 
-public interface CommandLineBuilder {
+public interface ProtocolCommandLineBuilder {
 
   String buildCommandLine(Job job) throws BindingException;
   

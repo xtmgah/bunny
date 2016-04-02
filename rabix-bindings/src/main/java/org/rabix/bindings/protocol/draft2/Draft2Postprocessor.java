@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.ResultCollector;
+import org.rabix.bindings.ProtocolPostprocessor;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2ExpressionTool;
@@ -21,7 +21,7 @@ import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobException;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobService;
@@ -34,25 +34,25 @@ import org.rabix.common.json.BeanSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Draft2ResultCollector implements ResultCollector {
+public class Draft2Postprocessor implements ProtocolPostprocessor {
 
   public final static int DEFAULT_SUCCESS_CODE = 0;
   
   public final static String resultFilename = "cwl.output.json";
   
-  private final static Logger logger = LoggerFactory.getLogger(Draft2ResultCollector.class);
+  private final static Logger logger = LoggerFactory.getLogger(Draft2Postprocessor.class);
 
   private final Draft2GlobService globService;
   private final Draft2MetadataService metadataService;
 
-  public Draft2ResultCollector() {
+  public Draft2Postprocessor() {
     this.globService = new Draft2GlobServiceImpl();
     this.metadataService = new Draft2MetadataServiceImpl();
   }
   
   @Override
   public boolean isSuccessful(Job job, int statusCode) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
+    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
     List<Integer> successCodes = draft2Job.getApp().getSuccessCodes();
 
     if (successCodes == null) {
@@ -70,8 +70,8 @@ public class Draft2ResultCollector implements ResultCollector {
   }
 
   @Override
-  public Job populateOutputs(Job job, File workingDir) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
+  public Job postprocess(Job job, File workingDir) throws BindingException {
+    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
     try {
       Map<String, Object> outputs = null;
 

@@ -6,24 +6,24 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.ProtocolProcessor;
+import org.rabix.bindings.ProtocolPreprocessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
 import org.rabix.bindings.protocol.draft2.processor.callback.FilePathMapProcessorCallback;
 import org.rabix.common.json.BeanSerializer;
 
-public class Draft2ProtocolProcessor implements ProtocolProcessor {
+public class Draft2Preprocessor implements ProtocolPreprocessor {
 
   private static final String JOB_FILE = "job.json";
   
   @Override
   public Job preprocess(final Job job, final File workingDir) throws BindingException {
-    Draft2ProtocolJobHelper jobHelper = new Draft2ProtocolJobHelper();
+    Draft2AppProcessor jobHelper = new Draft2AppProcessor();
     
     Draft2Job draft2Job = jobHelper.getDraft2Job(job);
     Draft2PortProcessorHelper portProcessorHelper = new Draft2PortProcessorHelper(draft2Job);
@@ -44,7 +44,7 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   
   @Override
   public Job mapInputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
+    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
@@ -57,7 +57,7 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
 
   @Override
   public Job mapOutputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
+    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {

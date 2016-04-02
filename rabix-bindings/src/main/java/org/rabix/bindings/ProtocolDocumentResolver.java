@@ -1,6 +1,6 @@
 package org.rabix.bindings;
 
-public interface DocumentReferenceResolver {
+public interface ProtocolDocumentResolver {
 
   String resolve(String uri) throws BindingException;
   

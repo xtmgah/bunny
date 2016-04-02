@@ -5,7 +5,7 @@ import java.io.File;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Job;
 
-public interface ProtocolProcessor {
+public interface ProtocolPreprocessor {
 
   Job preprocess(final Job job, final File workingDir) throws BindingException;
   

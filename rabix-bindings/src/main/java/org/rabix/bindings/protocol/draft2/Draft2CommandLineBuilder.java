@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.CommandLineBuilder;
+import org.rabix.bindings.ProtocolCommandLineBuilder;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
@@ -19,7 +19,7 @@ import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-public class Draft2CommandLineBuilder implements CommandLineBuilder {
+public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
 
   public static final String PART_SEPARATOR = "\u0020";
 
@@ -36,7 +36,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
 
   @Override
   public String buildCommandLine(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
+    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
     if (draft2Job.getApp().isExpressionTool()) {
       return null;
     }
@@ -45,7 +45,7 @@ public class Draft2CommandLineBuilder implements CommandLineBuilder {
   
   @Override
   public List<String> buildCommandLineParts(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolJobHelper().getDraft2Job(job);
+    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
     if (!draft2Job.getApp().isCommandLineTool()) {
       return null;
     }

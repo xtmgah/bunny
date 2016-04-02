@@ -6,76 +6,79 @@ import java.util.Set;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
-import org.rabix.bindings.CommandLineBuilder;
-import org.rabix.bindings.DocumentReferenceResolver;
-import org.rabix.bindings.ProtocolJobHelper;
-import org.rabix.bindings.ProtocolProcessor;
+import org.rabix.bindings.ProtocolCommandLineBuilder;
+import org.rabix.bindings.ProtocolDocumentResolver;
+import org.rabix.bindings.ProtocolAppProcessor;
+import org.rabix.bindings.ProtocolPreprocessor;
 import org.rabix.bindings.ProtocolTranslator;
 import org.rabix.bindings.ProtocolType;
-import org.rabix.bindings.ProtocolValueOperator;
-import org.rabix.bindings.RequirementProvider;
-import org.rabix.bindings.ResultCollector;
+import org.rabix.bindings.ProtocolValueProcessor;
+import org.rabix.bindings.ProtocolRequirementProvider;
+import org.rabix.bindings.ProtocolPostprocessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolJobHelper;
-import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentReferenceResolver;
+import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
+import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 
 public class Draft2Bindings implements Bindings {
 
   private final ProtocolType protocolType;
   
-  private final ResultCollector resultCollector;
-  private final ProtocolProcessor protocolProcessor;
-  private final ProtocolValueOperator valueOperator;
-  private final CommandLineBuilder commandLineBuilder;
-  private final ProtocolTranslator protocolTranslator;
-  private final RequirementProvider requirementProvider;
-  private final ProtocolJobHelper protocolJobHelper;
-  private final DocumentReferenceResolver documentReferenceResolver;
+  private final ProtocolTranslator translator;
+  private final ProtocolAppProcessor appProcessor;
+  private final ProtocolValueProcessor valueProcessor;
+  
+  private final ProtocolPreprocessor preprocessor;
+  private final ProtocolPostprocessor postprocessor;
+  
+  private final ProtocolCommandLineBuilder commandLineBuilder;
+  private final ProtocolRequirementProvider requirementProvider;
+  
+  private final ProtocolDocumentResolver documentResolver;
   
   public Draft2Bindings() throws BindingException {
     this.protocolType = ProtocolType.DRAFT2;
-    this.resultCollector = new Draft2ResultCollector();
-    this.protocolProcessor = new Draft2ProtocolProcessor();
+    this.postprocessor = new Draft2Postprocessor();
+    this.preprocessor = new Draft2Preprocessor();
     this.commandLineBuilder = new Draft2CommandLineBuilder();
-    this.valueOperator = new Draft2ProtocolValueExtractor();
-    this.protocolTranslator = new Draft2ProtocolTranslator();
+    this.valueProcessor = new Draft2ValueProcessor();
+    this.translator = new Draft2Translator();
     this.requirementProvider = new Draft2RequirementProvider();
-    this.protocolJobHelper = new Draft2ProtocolJobHelper();
-    this.documentReferenceResolver = new Draft2DocumentReferenceResolver();
+    this.appProcessor = new Draft2AppProcessor();
+    this.documentResolver = new Draft2DocumentResolver();
   }
   
   @Override
   public String loadApp(String uri) throws BindingException {
-    return documentReferenceResolver.resolve(uri);
+    return documentResolver.resolve(uri);
   }
   
   @Override
   public Object loadAppObject(String uri) throws BindingException {
-    return protocolJobHelper.getAppObject(loadApp(uri));
+    return appProcessor.getAppObject(loadApp(uri));
   }
   
   @Override
   public boolean canExecute(Job job) throws BindingException {
-    return protocolJobHelper.isSelfExecutable(job);
+    return appProcessor.isSelfExecutable(job);
   }
   
   @Override
   public boolean isSuccessful(Job job, int statusCode) throws BindingException {
-    return resultCollector.isSuccessful(job, statusCode);
+    return postprocessor.isSuccessful(job, statusCode);
   }
 
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
-    return resultCollector.populateOutputs(job, workingDir);
+    return postprocessor.postprocess(job, workingDir);
   }
 
   @Override
   public Job preprocess(Job job, File workingDir) throws BindingException {
-    return protocolProcessor.preprocess(job, workingDir);
+    return preprocessor.preprocess(job, workingDir);
   }
 
   @Override
@@ -90,29 +93,24 @@ public class Draft2Bindings implements Bindings {
 
   @Override
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
-    return valueOperator.getInputFiles(job);
+    return valueProcessor.getInputFiles(job);
   }
 
   @Override
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
-    return valueOperator.getOutputFiles(job);
+    return valueProcessor.getOutputFiles(job);
   }
   
   @Override
   public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
-    return protocolProcessor.mapInputFilePaths(job, fileMapper);
+    return preprocessor.mapInputFilePaths(job, fileMapper);
   }
 
   @Override
   public Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
-    return protocolProcessor.mapOutputFilePaths(job, fileMapper);
+    return preprocessor.mapOutputFilePaths(job, fileMapper);
   }
 
-  @Override
-  public Job populateResources(Job job) throws BindingException {
-    return requirementProvider.populateResources(job);
-  }
-  
   @Override
   public List<Requirement> getRequirements(Job job) throws BindingException {
     return requirementProvider.getRequirements(job);
@@ -125,12 +123,12 @@ public class Draft2Bindings implements Bindings {
   
   @Override
   public DAGNode translateToDAG(Job job) throws BindingException {
-    return protocolTranslator.translateToDAG(job);
+    return translator.translateToDAG(job);
   }
 
   @Override
   public void validate(Job job) throws BindingException {
-    protocolJobHelper.validate(job);
+    appProcessor.validate(job);
   }
   
   @Override

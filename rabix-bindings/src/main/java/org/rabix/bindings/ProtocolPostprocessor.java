@@ -4,10 +4,10 @@ import java.io.File;
 
 import org.rabix.bindings.model.Job;
 
-public interface ResultCollector {
+public interface ProtocolPostprocessor {
 
   boolean isSuccessful(Job job, int statusCode) throws BindingException;
   
-  Job populateOutputs(Job job, File workingDir) throws BindingException;
+  Job postprocess(Job job, File workingDir) throws BindingException;
   
 }
