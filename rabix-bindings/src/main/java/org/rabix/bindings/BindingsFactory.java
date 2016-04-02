@@ -9,45 +9,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BindingsFactory {
-  
+
   private final static Logger logger = LoggerFactory.getLogger(BindingsFactory.class);
 
   private static ConcurrentMap<ProtocolType, Bindings> bindings = new ConcurrentHashMap<>();
-  
+
   static {
     try {
       for (ProtocolType type : ProtocolType.values()) {
-        bindings.put(type, new BindingsImpl(type));
+        bindings.put(type, type.getBindingsClass().newInstance());
       }
-    } catch (BindingException e) {
+    } catch (Exception e) {
       logger.error("Failed to initialize bindings", e);
       throw new RuntimeException("Failed to initialize bindings", e);
     }
   }
-  
+
   public static Bindings create(String appURL) {
     for (Bindings bindings : bindings.values()) {
       try {
         bindings.loadAppObject(appURL);
-        return bindings; 
+        return bindings;
       } catch (BindingException e) {
         // do nothing
       }
     }
     return null;
   }
-  
+
   public static Bindings create(Job job) throws BindingException {
     return create(sniffProtocol(job));
   }
-  
+
   public static Bindings create(ProtocolType type) throws BindingException {
     if (type == null) {
       throw new BindingException("Failed to create bindings. Unsupported protocol.");
     }
     return bindings.get(type);
   }
- 
+
   private static ProtocolType sniffProtocol(Job job) {
     try {
       job.getApp(Draft2JobApp.class);
@@ -57,5 +57,5 @@ public class BindingsFactory {
     }
     return null;
   }
-  
+
 }
