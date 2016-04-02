@@ -19,6 +19,7 @@ import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
 
   @Override
   public String buildCommandLine(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     if (draft2Job.getApp().isExpressionTool()) {
       return null;
     }
@@ -44,7 +45,7 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
   
   @Override
   public List<String> buildCommandLineParts(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     if (!draft2Job.getApp().isCommandLineTool()) {
       return null;
     }

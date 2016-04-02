@@ -10,6 +10,7 @@ import org.rabix.bindings.ProtocolPreprocessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
@@ -22,13 +23,11 @@ public class Draft2Preprocessor implements ProtocolPreprocessor {
   
   @Override
   public Job preprocess(final Job job, final File workingDir) throws BindingException {
-    Draft2AppProcessor jobHelper = new Draft2AppProcessor();
-    
-    Draft2Job draft2Job = jobHelper.getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     Draft2PortProcessorHelper portProcessorHelper = new Draft2PortProcessorHelper(draft2Job);
     try {
       File jobFile = new File(workingDir, JOB_FILE);
-      String serializedJob = BeanSerializer.serializePartial(jobHelper.getDraft2Job(job));
+      String serializedJob = BeanSerializer.serializePartial(Draft2JobHelper.getDraft2Job(job));
       FileUtils.writeStringToFile(jobFile, serializedJob);
       
       Map<String, Object> inputs = job.getInputs();
@@ -43,7 +42,7 @@ public class Draft2Preprocessor implements ProtocolPreprocessor {
   
   @Override
   public Job mapInputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
@@ -56,7 +55,7 @@ public class Draft2Preprocessor implements ProtocolPreprocessor {
 
   @Override
   public Job mapOutputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {

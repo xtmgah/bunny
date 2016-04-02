@@ -29,6 +29,7 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 
 public class Draft2RequirementProvider implements ProtocolRequirementProvider {
@@ -101,14 +102,14 @@ public class Draft2RequirementProvider implements ProtocolRequirementProvider {
 
   @Override
   public List<Requirement> getRequirements(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
     return convertRequirements(job, draft2JobApp.getRequirements());
   }
   
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
     return convertRequirements(job, draft2JobApp.getHints());
   }
@@ -117,7 +118,7 @@ public class Draft2RequirementProvider implements ProtocolRequirementProvider {
     if (resources == null) {
       return Collections.<Requirement>emptyList();
     }
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
 
     List<Requirement> result = new ArrayList<>();
     try {

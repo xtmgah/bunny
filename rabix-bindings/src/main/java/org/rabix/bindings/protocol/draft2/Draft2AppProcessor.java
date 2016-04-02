@@ -7,23 +7,14 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobAppType;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
-import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
 
 public class Draft2AppProcessor implements ProtocolAppProcessor {
 
-  private final Draft2DocumentResolver documentResolver;
-
   public Draft2AppProcessor() {
-    this.documentResolver = new Draft2DocumentResolver();
-  }
-  
-  public Draft2Job getDraft2Job(Job job) throws BindingException {
-    String resolvedAppStr = documentResolver.resolve(job.getApp());
-    Draft2JobApp app = BeanSerializer.deserialize(JSONHelper.transformToJSON(resolvedAppStr), Draft2JobApp.class);
-    return new Draft2JobProcessor().process(new Draft2Job(app, job.getInputs()));
   }
   
   public Object getAppObject(String app) throws BindingException {
@@ -37,7 +28,7 @@ public class Draft2AppProcessor implements ProtocolAppProcessor {
 
   @Override
   public void validate(Job job) throws BindingException {
-    Draft2Job draft2Job = getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
 
     boolean throwException = false;
     StringBuilder builder = new StringBuilder("Missing inputs: ");

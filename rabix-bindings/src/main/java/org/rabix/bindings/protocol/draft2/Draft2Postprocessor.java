@@ -21,6 +21,7 @@ import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobException;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobService;
@@ -51,7 +52,7 @@ public class Draft2Postprocessor implements ProtocolPostprocessor {
   
   @Override
   public boolean isSuccessful(Job job, int statusCode) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     List<Integer> successCodes = draft2Job.getApp().getSuccessCodes();
 
     if (successCodes == null) {
@@ -70,7 +71,7 @@ public class Draft2Postprocessor implements ProtocolPostprocessor {
 
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
-    Draft2Job draft2Job = new Draft2AppProcessor().getDraft2Job(job);
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     try {
       Map<String, Object> outputs = null;
 
