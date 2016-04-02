@@ -10,7 +10,6 @@ import org.rabix.bindings.ProtocolPreprocessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;

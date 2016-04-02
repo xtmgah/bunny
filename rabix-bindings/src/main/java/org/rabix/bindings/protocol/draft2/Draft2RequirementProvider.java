@@ -28,7 +28,6 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVarRequirement.EnvironmentDef;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 

@@ -18,7 +18,6 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
-import org.rabix.bindings.protocol.draft2.helper.Draft2AppProcessor;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
 

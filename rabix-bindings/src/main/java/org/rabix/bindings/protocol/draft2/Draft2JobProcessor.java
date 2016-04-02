@@ -27,18 +27,16 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
 
   private final static Logger logger = LoggerFactory.getLogger(Draft2JobProcessor.class);
   
-  private final static String ID_PREFIX = "id" + "_";
-  
   public Draft2Job process(Draft2Job job) throws BeanProcessorException {
     try {
-      return process(null, job, 1);
+      return process(null, job);
     } catch (Draft2Exception e) {
       logger.error("Failed to process Job.", e);
       throw new BeanProcessorException(e);
     }
   }
   
-  private Draft2Job process(Draft2Job parentJob, Draft2Job job, Integer number) throws Draft2Exception {
+  private Draft2Job process(Draft2Job parentJob, Draft2Job job) throws Draft2Exception {
     if (job.getId() == null) {
       String workflowId = parentJob != null ? parentJob.getId() : null;
       String id = workflowId != null? workflowId + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.MASTER_JOB_ID : Draft2SchemaHelper.MASTER_JOB_ID;
@@ -50,10 +48,10 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
       Draft2Workflow workflow = (Draft2Workflow) job.getApp();
       for (Draft2Step step : workflow.getSteps()) {
         Draft2Job stepJob = step.getJob();
-        String stepId = job.getId() + Draft2SchemaHelper.PORT_ID_SEPARATOR + (step.getId() != null? Draft2SchemaHelper.normalizeId(step.getId()) : ID_PREFIX + number++);
+        String stepId = job.getId() + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.normalizeId(step.getId());
         stepJob.setId(stepId);
         processElements(job, stepJob);
-        process(job, stepJob, number);
+        process(job, stepJob);
       }
     }
     return job;

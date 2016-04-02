@@ -1,13 +1,13 @@
-package org.rabix.bindings.protocol.draft2.helper;
+package org.rabix.bindings.protocol.draft2;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolAppProcessor;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.protocol.draft2.Draft2JobProcessor;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobAppType;
+import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
