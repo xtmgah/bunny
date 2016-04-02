@@ -17,6 +17,8 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   public static final String ID_SEPARATOR = "/";
   public static final String PORT_ID_SEPARATOR = ".";
 
+  public static final String STEP_PORT_ID = "id";
+  
   public static final String KEY_SCHEMA_TYPE = "type";
   public static final String KEY_SCHEMA_NAME = "name";
   public static final String KEY_SCHEMA_ITEMS = "items";

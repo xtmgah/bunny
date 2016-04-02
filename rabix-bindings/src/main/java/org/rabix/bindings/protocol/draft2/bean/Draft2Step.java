@@ -58,6 +58,17 @@ public class Draft2Step {
    */
   @JsonIgnore
   private Draft2Job constructJob() {
+    if (id == null) {
+      String portId = null;
+      if (inputs != null && inputs.size() > 0) {
+        portId = (String) inputs.get(0).get(Draft2SchemaHelper.STEP_PORT_ID);
+      } else if (outputs != null && outputs.size() > 0) {
+        portId = (String) outputs.get(0).get(Draft2SchemaHelper.STEP_PORT_ID);
+      }
+      if (portId.contains(Draft2SchemaHelper.PORT_ID_SEPARATOR)) {
+        id = portId.substring(1, portId.lastIndexOf(Draft2SchemaHelper.PORT_ID_SEPARATOR));
+      }
+    }
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
     return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, id);
