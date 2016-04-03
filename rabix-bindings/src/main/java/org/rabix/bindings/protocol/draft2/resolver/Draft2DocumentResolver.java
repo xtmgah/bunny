@@ -16,7 +16,6 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.ProtocolDocumentResolver;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.JSONHelper;
 
@@ -25,7 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
-public class Draft2DocumentResolver implements ProtocolDocumentResolver {
+public class Draft2DocumentResolver {
 
   public static final String RESOLVER_REFERENCE_KEY = "import";
   public static final String RESOLVER_JSON_POINTER_KEY = "$job";

@@ -6,21 +6,19 @@ import java.util.Set;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
-import org.rabix.bindings.ProtocolCommandLineBuilder;
-import org.rabix.bindings.ProtocolDocumentResolver;
 import org.rabix.bindings.ProtocolAppProcessor;
+import org.rabix.bindings.ProtocolCommandLineBuilder;
+import org.rabix.bindings.ProtocolPostprocessor;
 import org.rabix.bindings.ProtocolPreprocessor;
+import org.rabix.bindings.ProtocolRequirementProvider;
 import org.rabix.bindings.ProtocolTranslator;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.ProtocolValueProcessor;
-import org.rabix.bindings.ProtocolRequirementProvider;
-import org.rabix.bindings.ProtocolPostprocessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
-import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 
 public class Draft2Bindings implements Bindings {
 
@@ -36,8 +34,6 @@ public class Draft2Bindings implements Bindings {
   private final ProtocolCommandLineBuilder commandLineBuilder;
   private final ProtocolRequirementProvider requirementProvider;
   
-  private final ProtocolDocumentResolver documentResolver;
-  
   public Draft2Bindings() throws BindingException {
     this.protocolType = ProtocolType.DRAFT2;
     this.postprocessor = new Draft2Postprocessor();
@@ -47,17 +43,16 @@ public class Draft2Bindings implements Bindings {
     this.translator = new Draft2Translator();
     this.requirementProvider = new Draft2RequirementProvider();
     this.appProcessor = new Draft2AppProcessor();
-    this.documentResolver = new Draft2DocumentResolver();
   }
   
   @Override
   public String loadApp(String uri) throws BindingException {
-    return documentResolver.resolve(uri);
+    return appProcessor.loadApp(uri);
   }
   
   @Override
   public Object loadAppObject(String uri) throws BindingException {
-    return appProcessor.getAppObject(loadApp(uri));
+    return appProcessor.loadAppObject(uri);
   }
   
   @Override

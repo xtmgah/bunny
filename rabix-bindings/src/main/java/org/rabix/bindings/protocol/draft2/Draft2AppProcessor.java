@@ -9,20 +9,30 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobAppType;
 import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
-import org.rabix.common.helper.JSONHelper;
+import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 import org.rabix.common.json.BeanSerializer;
 
 public class Draft2AppProcessor implements ProtocolAppProcessor {
 
+  private final Draft2DocumentResolver documentResolver;
+  
   public Draft2AppProcessor() {
+    documentResolver = new Draft2DocumentResolver();
   }
   
-  public Object getAppObject(String app) throws BindingException {
-    return BeanSerializer.deserialize(app, Draft2JobApp.class);
+  @Override
+  public String loadApp(String uri) throws BindingException {
+    return documentResolver.resolve(uri);
+  }
+  
+  @Override
+  public Object loadAppObject(String app) throws BindingException {
+    return BeanSerializer.deserialize(loadApp(app), Draft2JobApp.class);
   }
 
+  @Override
   public boolean isSelfExecutable(Job job) throws BindingException {
-    Draft2JobApp app = BeanSerializer.deserialize(JSONHelper.writeObject(job.getApp(Draft2JobApp.class)), Draft2JobApp.class);
+    Draft2JobApp app = (Draft2JobApp) loadAppObject(job.getApp());
     return app.getType().equals(Draft2JobAppType.EXPRESSION_TOOL);
   }
 

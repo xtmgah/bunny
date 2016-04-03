@@ -4,7 +4,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,7 @@ public class BindingsFactory {
   }
 
   public static Bindings create(Job job) throws BindingException {
-    return create(sniffProtocol(job));
+    return create(job.getApp());
   }
 
   public static Bindings create(ProtocolType type) throws BindingException {
@@ -46,16 +45,6 @@ public class BindingsFactory {
       throw new BindingException("Failed to create bindings. Unsupported protocol.");
     }
     return bindings.get(type);
-  }
-
-  private static ProtocolType sniffProtocol(Job job) {
-    try {
-      job.getApp(Draft2JobApp.class);
-      return ProtocolType.DRAFT2;
-    } catch (Exception e) {
-      // do nothing
-    }
-    return null;
   }
 
 }

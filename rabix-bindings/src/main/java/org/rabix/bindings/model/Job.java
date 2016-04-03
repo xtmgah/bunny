@@ -1,15 +1,10 @@
 package org.rabix.bindings.model;
 
-import java.io.IOException;
 import java.util.Map;
 
-import org.rabix.bindings.BindingException;
-import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.CloneHelper;
-import org.rabix.common.json.BeanSerializer;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -99,16 +94,6 @@ public class Job {
   
   public String getApp() {
     return app;
-  }
-  
-  @JsonIgnore
-  public <T> T getApp(Class<T> clazz) throws BindingException {
-    try {
-      String decodedApp = URIHelper.getData(app);
-      return BeanSerializer.deserialize(decodedApp, clazz);
-    } catch (IOException e) {
-      throw new BindingException("Failed to get applicaton object", e);
-    }
   }
   
   @SuppressWarnings("unchecked")
