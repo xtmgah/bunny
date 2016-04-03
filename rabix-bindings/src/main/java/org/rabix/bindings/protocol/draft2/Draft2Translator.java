@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolTranslator;
+import org.rabix.bindings.helper.DAGValidationHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
@@ -27,7 +28,9 @@ public class Draft2Translator implements ProtocolTranslator {
   @Override
   public DAGNode translateToDAG(Job job) throws BindingException {
     Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
-    return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job)); 
+    DAGNode dagNode = processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job));
+    DAGValidationHelper.detectLoop(dagNode);
+    return dagNode;
   }
   
   @SuppressWarnings("unchecked")

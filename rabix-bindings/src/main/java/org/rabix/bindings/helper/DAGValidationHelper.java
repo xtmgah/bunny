@@ -12,7 +12,11 @@ import org.rabix.bindings.model.dag.DAGNode;
 
 public class DAGValidationHelper {
 
-  public static void detectLoop(final DAGContainer containerNode) throws BindingException {
+  public static void detectLoop(final DAGNode dagNode) throws BindingException {
+    if (!(dagNode instanceof DAGContainer)) {
+      return;
+    }
+    DAGContainer containerNode = (DAGContainer) dagNode;
     Set<DAGNode> marked = new HashSet<DAGNode>();
     Set<DAGNode> stack = new HashSet<DAGNode>();
     List<DAGNode> root = getRootNodes(containerNode);
