@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.ProtocolPostprocessor;
+import org.rabix.bindings.ProtocolProcessor;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2ExpressionTool;
@@ -23,6 +23,8 @@ import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
+import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
+import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobException;
 import org.rabix.bindings.protocol.draft2.service.Draft2GlobService;
 import org.rabix.bindings.protocol.draft2.service.Draft2MetadataService;
@@ -34,20 +36,40 @@ import org.rabix.common.json.BeanSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Draft2Postprocessor implements ProtocolPostprocessor {
+public class Draft2Processor implements ProtocolProcessor {
 
   public final static int DEFAULT_SUCCESS_CODE = 0;
   
-  public final static String resultFilename = "cwl.output.json";
+  private final static String JOB_FILE = "job.json";
+  private final static String resultFilename = "cwl.output.json";
   
-  private final static Logger logger = LoggerFactory.getLogger(Draft2Postprocessor.class);
+  private final static Logger logger = LoggerFactory.getLogger(Draft2Processor.class);
 
   private final Draft2GlobService globService;
   private final Draft2MetadataService metadataService;
 
-  public Draft2Postprocessor() {
+  public Draft2Processor() {
     this.globService = new Draft2GlobServiceImpl();
     this.metadataService = new Draft2MetadataServiceImpl();
+  }
+
+  @Override
+  public Job preprocess(final Job job, final File workingDir) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    Draft2PortProcessorHelper portProcessorHelper = new Draft2PortProcessorHelper(draft2Job);
+    try {
+      File jobFile = new File(workingDir, JOB_FILE);
+      String serializedJob = BeanSerializer.serializePartial(Draft2JobHelper.getDraft2Job(job));
+      FileUtils.writeStringToFile(jobFile, serializedJob);
+      
+      Map<String, Object> inputs = job.getInputs();
+      inputs = portProcessorHelper.setFileSize(inputs);
+      inputs = portProcessorHelper.loadInputContents(inputs);
+      inputs = portProcessorHelper.stageInputFiles(inputs, workingDir);
+      return Job.cloneWithInputs(job, inputs);
+    } catch (Draft2PortProcessorException | IOException e) {
+      throw new BindingException(e);
+    }
   }
   
   @Override
