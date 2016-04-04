@@ -8,8 +8,8 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.ProtocolAppProcessor;
 import org.rabix.bindings.ProtocolCommandLineBuilder;
-import org.rabix.bindings.ProtocolPostprocessor;
-import org.rabix.bindings.ProtocolPreprocessor;
+import org.rabix.bindings.ProtocolFilePathMapper;
+import org.rabix.bindings.ProtocolProcessor;
 import org.rabix.bindings.ProtocolRequirementProvider;
 import org.rabix.bindings.ProtocolTranslator;
 import org.rabix.bindings.ProtocolType;
@@ -28,16 +28,16 @@ public class Draft2Bindings implements Bindings {
   private final ProtocolAppProcessor appProcessor;
   private final ProtocolValueProcessor valueProcessor;
   
-  private final ProtocolPreprocessor preprocessor;
-  private final ProtocolPostprocessor postprocessor;
+  private final ProtocolProcessor processor;
+  private final ProtocolFilePathMapper filePathMapper;
   
   private final ProtocolCommandLineBuilder commandLineBuilder;
   private final ProtocolRequirementProvider requirementProvider;
   
   public Draft2Bindings() throws BindingException {
     this.protocolType = ProtocolType.DRAFT2;
-    this.postprocessor = new Draft2Postprocessor();
-    this.preprocessor = new Draft2Preprocessor();
+    this.filePathMapper = new Draft2FilePathMapper();
+    this.processor = new Draft2Processor();
     this.commandLineBuilder = new Draft2CommandLineBuilder();
     this.valueProcessor = new Draft2ValueProcessor();
     this.translator = new Draft2Translator();
@@ -61,18 +61,18 @@ public class Draft2Bindings implements Bindings {
   }
   
   @Override
+  public Job preprocess(Job job, File workingDir) throws BindingException {
+    return processor.preprocess(job, workingDir);
+  }
+  
+  @Override
   public boolean isSuccessful(Job job, int statusCode) throws BindingException {
-    return postprocessor.isSuccessful(job, statusCode);
+    return processor.isSuccessful(job, statusCode);
   }
 
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
-    return postprocessor.postprocess(job, workingDir);
-  }
-
-  @Override
-  public Job preprocess(Job job, File workingDir) throws BindingException {
-    return preprocessor.preprocess(job, workingDir);
+    return processor.postprocess(job, workingDir);
   }
 
   @Override
@@ -97,12 +97,12 @@ public class Draft2Bindings implements Bindings {
   
   @Override
   public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
-    return preprocessor.mapInputFilePaths(job, fileMapper);
+    return filePathMapper.mapInputFilePaths(job, fileMapper);
   }
 
   @Override
   public Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
-    return preprocessor.mapOutputFilePaths(job, fileMapper);
+    return filePathMapper.mapOutputFilePaths(job, fileMapper);
   }
 
   @Override
