@@ -10,7 +10,7 @@ import org.rabix.bindings.ProtocolProcessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Executable;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ExecutableHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException;
 import org.rabix.bindings.protocol.draft2.processor.callback.Draft2PortProcessorHelper;
@@ -24,11 +24,13 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   @Override
   @SuppressWarnings("unchecked")
   public Executable preprocess(final Executable executable, final File workingDir) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2ProtocolExecutableHelper executableHelper = new Draft2ProtocolExecutableHelper();
+    
+    Draft2Job draft2Job = executableHelper.getJob(executable);
     Draft2PortProcessorHelper portProcessorHelper = new Draft2PortProcessorHelper(draft2Job);
     try {
       File jobFile = new File(workingDir, JOB_FILE);
-      String serializedJob = BeanSerializer.serializePartial(Draft2ExecutableHelper.convertToJob(executable));
+      String serializedJob = BeanSerializer.serializePartial(executableHelper.getJob(executable));
       FileUtils.writeStringToFile(jobFile, serializedJob);
       
       Map<String, Object> inputs = executable.getInputs(Map.class);
@@ -44,7 +46,7 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   @Override
   @SuppressWarnings("unchecked")
   public Executable mapInputFilePaths(final Executable executable, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
@@ -58,7 +60,7 @@ public class Draft2ProtocolProcessor implements ProtocolProcessor {
   @Override
   @SuppressWarnings("unchecked")
   public Executable mapOutputFilePaths(final Executable executable, final FileMapper fileMapper) throws BindingException {
-    Draft2Job draft2Job = Draft2ExecutableHelper.convertToJob(executable);
+    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {

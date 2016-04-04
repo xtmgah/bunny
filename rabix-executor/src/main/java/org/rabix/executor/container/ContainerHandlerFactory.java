@@ -5,8 +5,8 @@ import org.rabix.bindings.model.Executable;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.LocalContainerRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
-import org.rabix.executor.container.docker.DockerContainerHandler;
-import org.rabix.executor.container.local.LocalContainerHandler;
+import org.rabix.executor.container.impl.DockerContainerHandler;
+import org.rabix.executor.container.impl.LocalContainerHandler;
 
 public class ContainerHandlerFactory {
 

@@ -1,0 +1,10 @@
+{
+    "$job": {
+            "import": "#$tool"
+    },
+    "$tool": {
+        "softwareDescription": {
+        	"import": "#$job"
+        }
+    }
+}

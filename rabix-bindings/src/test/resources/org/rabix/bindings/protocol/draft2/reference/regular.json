@@ -1,0 +1,16 @@
+{
+    "job": {
+            "import": "#tool/softwareDescription"
+    },
+    "tool": {
+        "softwareDescription": {
+        	"import": "#node/something"
+        }
+    },
+    "node": {
+    	"something": {
+    		"cool" : "story"
+    	}
+    }
+    		
+}

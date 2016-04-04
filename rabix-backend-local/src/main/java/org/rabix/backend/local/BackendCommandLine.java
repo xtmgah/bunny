@@ -88,12 +88,14 @@ public class BackendCommandLine {
       
       Map<String, Object> configOverrides = new HashMap<>();
       String executionDirPath = commandLine.getOptionValue("execution-dir");
-      File executionDir = new File(executionDirPath);
-      if (!executionDir.exists() || !executionDir.isDirectory()) {
-        logger.info("Execution directory {} doesn't exist or is not a directory", executionDirPath);
-        System.exit(10);
-      } else {
-        configOverrides.put("backend.execution.directory", executionDir.getCanonicalPath());
+      if (executionDirPath != null) {
+        File executionDir = new File(executionDirPath);
+        if (!executionDir.exists() || !executionDir.isDirectory()) {
+          logger.info("Execution directory {} doesn't exist or is not a directory", executionDirPath);
+          System.exit(10);
+        } else {
+          configOverrides.put("backend.execution.directory", executionDir.getCanonicalPath());
+        }
       }
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
       Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(), new ExecutorModule(configModule));
@@ -116,12 +118,14 @@ public class BackendCommandLine {
       List<IterationCallback> callbacks = new ArrayList<>();
       
       String outputDirPath = commandLine.getOptionValue("log-iterations-dir");
-      File outputDir = new File(outputDirPath);
-      if (!outputDir.exists() || !outputDir.isDirectory()) {
-        logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
-        System.exit(10);
-      } else {
-        callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobService, variableService, linkService, contextService, nodeDB));
+      if (outputDirPath != null) {
+        File outputDir = new File(outputDirPath);
+        if (!outputDir.exists() || !outputDir.isDirectory()) {
+          logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
+          System.exit(10);
+        } else {
+          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobService, variableService, linkService, contextService, nodeDB));
+        }
       }
       callbacks.add(new LocalExecutableHandler(executorService, jobService, variableService, contextService, nodeDB));
       callbacks.add(new EndRootCallback(contextService, jobService, variableService, bindings));

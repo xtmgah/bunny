@@ -100,7 +100,7 @@ public class Draft2Translator implements ProtocolTranslator {
     }
     
     ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : null;
-    if (job.getApp().isCommandLineTool()) {
+    if (!job.getApp().isWorkflow()) {
       return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, job.getApp());
     }
 

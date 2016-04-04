@@ -45,7 +45,7 @@ public class Draft2ResultCollectionServiceTest {
   }
 
   @Test
-  public void test() throws Exception {
+  public void testCommandLineTool() throws Exception {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "output-collection-job.json");
 
     Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
@@ -59,6 +59,21 @@ public class Draft2ResultCollectionServiceTest {
     Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("single"));
     Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("array"));
     Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("record"));
+  }
+  
+  @Test
+  public void testExpressionTool() throws Exception {
+    String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "bean/expression-job.json");
+
+    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
+    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
+    
+    Bindings bindings = BindingsFactory.create(executable);
+    executable = bindings.populateOutputs(executable, workingDir);
+    
+    Assert.assertTrue(executable.getOutputs() instanceof Map<?,?>);
+    Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("output"));
   }
 
 }

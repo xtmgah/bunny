@@ -22,7 +22,7 @@ public class DAGNodeDB {
    */
   public synchronized DAGNode get(String id, String contextId) {
     Map<String, DAGNode> contextNodes = nodes.get(contextId);
-    return contextNodes.get(id);
+    return contextNodes == null ? null : contextNodes.get(id);
   }
   
   /**

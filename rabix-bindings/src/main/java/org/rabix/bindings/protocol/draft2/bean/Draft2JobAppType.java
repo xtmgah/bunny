@@ -4,5 +4,6 @@ public enum Draft2JobAppType {
 
   WORKFLOW,
   COMMAND_LINE_TOOL,
+  EXPRESSION_TOOL
 
 }
