@@ -92,16 +92,14 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     for (LinkRecord link : links) {
       List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
       
-      boolean isFromScatter = false;
+      boolean isLookAhead = sourceJob.isScattered() || sourceJob.isScatterWrapper();
       Integer numberOfOutputs = null;
       Object value = event.getValue();
       
       if (sourceJob.isScattered()) {
-        isFromScatter = true;
         numberOfOutputs = sourceVariable.getNumberOfGlobals();
         value = sourceVariable.getValue();
       } else if (sourceJob.isScatterWrapper()) {
-        isFromScatter = true;
         numberOfOutputs = sourceJob.getNumberOfGlobalOutputs();
         value = event.getValue();
       }
@@ -114,11 +112,11 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
           if (!isDestinationPortScatterable && !event.isFromScatter()) {
             value = sourceVariable.getValue();
           }
-          Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, isFromScatter, numberOfOutputs);
+          Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isLookAhead, numberOfOutputs);
           eventProcessor.send(updateInputEvent);
           break;
         default:
-          Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, numberOfOutputs);
+          Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isLookAhead, numberOfOutputs);
           eventProcessor.send(updateOutputEvent);
           break;
         }

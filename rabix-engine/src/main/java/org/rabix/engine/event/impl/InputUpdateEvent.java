@@ -16,40 +16,23 @@ public class InputUpdateEvent implements Event {
   private final Integer scatteredNodes;         // number of scattered nodes
 
   private final boolean eventFromLookAhead;     // it's a look ahead event
-  private final boolean eventFromScatter;       // scatter operation generated this event
-  private final boolean scatteringInPlace;      // this event was produced while doing a scatter operation
 
   public InputUpdateEvent(String contextId, String jobId, String portId, Object inputValue) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = inputValue;
     this.contextId = contextId;
-    this.eventFromScatter = false;
     this.eventFromLookAhead = false;
-    this.scatteringInPlace = false;
     this.scatteredNodes = null;
   }
 
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes) {
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromLookAhead, Integer scatteredNodes) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = value;
     this.contextId = contextId;
-    this.scatteringInPlace = false;
-    this.eventFromScatter = eventFromScatter;
     this.eventFromLookAhead = eventFromLookAhead;
     this.scatteredNodes = scatteredNodes;
-  }
-
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromScatter, boolean eventFromLookAhead, Integer scatteredNodes, boolean scatteringInPlace) {
-    this.jobId = jobId;
-    this.portId = portId;
-    this.value = value;
-    this.contextId = contextId;
-    this.eventFromScatter = eventFromScatter;
-    this.eventFromLookAhead = eventFromLookAhead;
-    this.scatteredNodes = scatteredNodes;
-    this.scatteringInPlace = scatteringInPlace;
   }
 
   public String getJobId() {
@@ -63,15 +46,7 @@ public class InputUpdateEvent implements Event {
   public Object getValue() {
     return value;
   }
-
-  public boolean isEventFromScatter() {
-    return eventFromScatter;
-  }
   
-  public boolean isScatteringInPlace() {
-    return scatteringInPlace;
-  }
-
   public Integer getScatteredNodes() {
     return scatteredNodes;
   }
@@ -96,11 +71,9 @@ public class InputUpdateEvent implements Event {
     int result = 1;
     result = prime * result + ((contextId == null) ? 0 : contextId.hashCode());
     result = prime * result + (eventFromLookAhead ? 1231 : 1237);
-    result = prime * result + (eventFromScatter ? 1231 : 1237);
     result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
     result = prime * result + ((portId == null) ? 0 : portId.hashCode());
     result = prime * result + ((scatteredNodes == null) ? 0 : scatteredNodes.hashCode());
-    result = prime * result + (scatteringInPlace ? 1231 : 1237);
     result = prime * result + ((value == null) ? 0 : value.hashCode());
     return result;
   }
@@ -121,8 +94,6 @@ public class InputUpdateEvent implements Event {
       return false;
     if (eventFromLookAhead != other.eventFromLookAhead)
       return false;
-    if (eventFromScatter != other.eventFromScatter)
-      return false;
     if (jobId == null) {
       if (other.jobId != null)
         return false;
@@ -138,8 +109,6 @@ public class InputUpdateEvent implements Event {
         return false;
     } else if (!scatteredNodes.equals(other.scatteredNodes))
       return false;
-    if (scatteringInPlace != other.scatteringInPlace)
-      return false;
     if (value == null) {
       if (other.value != null)
         return false;
@@ -150,7 +119,7 @@ public class InputUpdateEvent implements Event {
 
   @Override
   public String toString() {
-    return "InputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", scatteredNodes=" + scatteredNodes + ", eventFromLookAhead=" + eventFromLookAhead + ", eventFromScatter=" + eventFromScatter + ", scatteringInPlace=" + scatteringInPlace + "]";
+    return "InputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", scatteredNodes=" + scatteredNodes + ", eventFromLookAhead=" + eventFromLookAhead + "]";
   }
 
 }
