@@ -16,82 +16,55 @@ import org.rabix.engine.model.scatter.ScatterMapping;
 public class ScatterCartesianMapping implements ScatterMapping {
 
   private LinkedList<Combination> combinations;
+
   private Map<String, LinkedList<Object>> values;
-  private Map<String, LinkedList<Integer>> indexes;
+  private Map<String, LinkedList<Integer>> positions;
 
   public ScatterCartesianMapping(DAGNode dagNode) {
     this.values = new HashMap<>();
-    this.indexes = new HashMap<>();
+    this.positions = new HashMap<>();
     this.combinations = new LinkedList<>();
-
     initialize(dagNode);
   }
 
-  private void initialize(DAGNode dagNode) {
+  public void initialize(DAGNode dagNode) {
     for (DAGLinkPort port : dagNode.getInputPorts()) {
       if (port.isScatter()) {
         values.put(port.getId(), new LinkedList<Object>());
-        indexes.put(port.getId(), new LinkedList<Integer>());
+        positions.put(port.getId(), new LinkedList<Integer>());
       }
     }
   }
 
+  @Override
   public void enable(String port, Object value, Integer position) {
-    this.values.get(port).addLast(value);
-    this.indexes.get(port).addLast(indexes.get(port).size());
+    LinkedList<Integer> positionList = positions.get(port);
+    positionList = expand(positionList, position);
+    positionList.set(position - 1, position);
+    positions.put(port, positionList);
+
+    LinkedList<Object> valueList = values.get(port);
+    valueList = expand(valueList, position);
+    valueList.set(position - 1, value);
+    values.put(port, valueList);
   }
 
-  public List<RowMapping> getEnabledRows() throws BindingException {
-    List<RowMapping> result = new LinkedList<>();
-
-    List<String> ports = new LinkedList<>();
-    LinkedList<LinkedList<Integer>> lists = new LinkedList<>();
-
-    for (Entry<String, LinkedList<Integer>> entry : indexes.entrySet()) {
-      ports.add(entry.getKey());
-      lists.add(entry.getValue());
+  private <T> LinkedList<T> expand(LinkedList<T> list, Integer position) {
+    if (list == null) {
+      list = new LinkedList<>();
     }
-
-    LinkedList<LinkedList<Integer>> product = cartesianProduct(lists);
-
-    for (LinkedList<Integer> list : product) {
-      Combination combination = null;
-      for (int index = 0; index < combinations.size(); index++) {
-        Combination c = combinations.get(index);
-
-        if (c.combination.equals(list)) {
-          combination = c;
-          break;
-        }
-      }
-      if (combination == null) {
-        combination = new Combination(combinations.size(), false, list);
-        combinations.add(combination);
-      }
-
-      if (!combination.enabled) {
-        List<PortMapping> portMappings = new LinkedList<>();
-
-        for (int subindex = 0; subindex < list.size(); subindex++) {
-          String portId = ports.get(subindex);
-          Object value = values.get(portId).get(list.get(subindex));
-          portMappings.add(new PortMapping(portId, value));
-        }
-
-        result.add(new RowMapping(combination.index, portMappings));
-      }
+    int initialSize = list.size();
+    if (initialSize >= position) {
+      return list;
     }
-    return result;
+    for (int i = 0; i < position - initialSize; i++) {
+      list.add(null);
+    }
+    return list;
   }
 
-  public void commit(List<RowMapping> mappings) {
-    for (RowMapping mapping : mappings) {
-      Combination combination = combinations.get(mapping.getIndex());
-      combination.enabled = true;
-    }
-  }
-
-  private LinkedList<LinkedList<Integer>> cartesianProduct(LinkedList<LinkedList<Integer>> lists) throws BindingException {
+  private LinkedList<LinkedList<Integer>> cartesianProduct(LinkedList<LinkedList<Integer>> lists)
+      throws BindingException {
     if (lists.size() < 2) {
       throw new BindingException("Can't have a product of fewer than two lists (got " + lists.size() + ")");
     }
@@ -114,17 +87,78 @@ public class ScatterCartesianMapping implements ScatterMapping {
   }
 
   @Override
+  public void commit(List<RowMapping> mappings) {
+    for (RowMapping mapping : mappings) {
+      Combination combination = combinations.get(mapping.getIndex());
+      combination.enabled = true;
+    }
+  }
+
+  @Override
   public int getNumberOfRows() {
     return combinations.size();
   }
-  
+
+  @Override
+  public List<RowMapping> getEnabledRows() throws BindingException {
+    List<RowMapping> result = new LinkedList<>();
+    LinkedList<LinkedList<Integer>> mapping = new LinkedList<>();
+    for (Entry<String, LinkedList<Integer>> positionEntry : positions.entrySet()) {
+      mapping.add(positionEntry.getValue());
+    }
+    LinkedList<LinkedList<Integer>> newMapping = cartesianProduct(mapping);
+
+    for (int i = 0; i < newMapping.size(); i++) {
+      LinkedList<Integer> positions = newMapping.get(i);
+      if (!hasNull(positions)) {
+        Combination combination = getCombination(i + 1);
+        if (combination == null) {
+          combination = new Combination(i + 1, false, positions);
+          combinations.add(combination);
+        }
+        if (!combination.enabled) {
+          List<PortMapping> portMappings = new LinkedList<>();
+
+          int positionIndex = 1;
+          for (Entry<String, LinkedList<Object>> valueEntry : values.entrySet()) {
+            String port = valueEntry.getKey();
+            int position = combination.combination.get(positionIndex - 1);
+            Object value = valueEntry.getValue().get(position - 1);
+            portMappings.add(new PortMapping(port, value));
+            positionIndex++;
+          }
+          result.add(new RowMapping(combination.position, portMappings));
+        }
+      }
+    }
+    return result;
+  }
+
+  private boolean hasNull(LinkedList<Integer> list) {
+    for (Integer value : list) {
+      if (value == null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private Combination getCombination(int position) {
+    for (Combination combination : combinations) {
+      if (combination.position == position) {
+        return combination;
+      }
+    }
+    return null;
+  }
+
   private class Combination {
-    int index;
+    int position;
     boolean enabled;
     LinkedList<Integer> combination;
 
-    public Combination(int index, boolean enabled, LinkedList<Integer> combination) {
-      this.index = index;
+    public Combination(int position, boolean enabled, LinkedList<Integer> combination) {
+      this.position = position;
       this.enabled = enabled;
       this.combination = combination;
     }
