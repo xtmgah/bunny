@@ -28,33 +28,33 @@ import com.google.inject.Inject;
  */
 public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
-  private JobRecordService jobRecordService;
-  private VariableRecordService variableRecordService;
-  private LinkRecordService linkRecordService;
+  private JobRecordService jobService;
+  private VariableRecordService variableService;
+  private LinkRecordService linkService;
   
   private final EventProcessor eventProcessor;
   
   @Inject
-  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService) {
-    this.jobRecordService = jobRecordService;
-    this.linkRecordService = linkRecordService;
-    this.variableRecordService = variableRecordService;
+  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService) {
+    this.jobService = jobService;
+    this.linkService = linkService;
+    this.variableService = variableService;
     this.eventProcessor = eventProcessor;
   }
 
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
-    VariableRecord sourceVariable = variableRecordService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
+    VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
     sourceVariable.addValue(event.getValue(), LinkMerge.merge_nested, event.getPosition());
     
-    JobRecord sourceJob = jobRecordService.find(event.getJobId(), event.getContextId());
+    JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {
-      sourceJob.resetOutputPortCounters(event.getScatteredNodes());
+      sourceJob.resetOutputPortCounters(event.getNumberOfScattered());
     }
     sourceJob.decrementPortCounter(event.getPortId(), LinkPortType.OUTPUT);
     
     if (sourceJob.isCompleted()) {
       sourceJob.setState(JobState.COMPLETED);
-      jobRecordService.update(sourceJob);
+      jobService.update(sourceJob);
       
       if (sourceJob.isMaster()) {
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
@@ -75,7 +75,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
    * Dispatch look-ahead events 
    */
   private void dispatchLookAheadEvents(JobRecord sourceJob, VariableRecord sourceVariable, OutputUpdateEvent event) throws EventHandlerException {
-    List<LinkRecord> links = linkRecordService.findBySource(sourceVariable.getJobId(), sourceVariable.getPortId(), event.getContextId());
+    List<LinkRecord> links = linkService.findBySource(sourceVariable.getJobId(), sourceVariable.getPortId(), event.getContextId());
     dispatchEvents(sourceJob, sourceVariable, links, event);
   }
   
@@ -83,7 +83,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
    * Dispatch ready outputs 
    */
   private void dispatchReadyOutputs(JobRecord sourceJob, VariableRecord sourceVariable, OutputUpdateEvent event) throws EventHandlerException {
-    List<LinkRecord> links = linkRecordService.findBySource(event.getJobId(), event.getPortId(), event.getContextId());
+    List<LinkRecord> links = linkService.findBySource(event.getJobId(), event.getPortId(), event.getContextId());
     dispatchEvents(sourceJob, sourceVariable, links, event);
   }
   
@@ -92,37 +92,40 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
    */
   private void dispatchEvents(JobRecord sourceJob, VariableRecord sourceVariable, List<LinkRecord> links, OutputUpdateEvent event) throws EventHandlerException {
     for (LinkRecord link : links) {
-      List<VariableRecord> destinationVariables = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
+      List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
       
-      boolean isFromScatter = false;
+      boolean isLookAhead = sourceJob.isScattered() || sourceJob.isScatterWrapper();
       Integer numberOfOutputs = null;
       Object value = event.getValue();
       
       if (sourceJob.isScattered()) {
-        isFromScatter = true;
         numberOfOutputs = sourceVariable.getNumberOfGlobals();
         value = sourceVariable.getValue();
       } else if (sourceJob.isScatterWrapper()) {
-        isFromScatter = true;
         numberOfOutputs = sourceJob.getNumberOfGlobalOutputs();
         value = event.getValue();
       }
       
+      Integer position = null;
       for (VariableRecord destinationVariable : destinationVariables) {
         switch (destinationVariable.getType()) {
         case INPUT:
-          JobRecord destinationJob = jobRecordService.find(destinationVariable.getJobId(), event.getContextId());
+          JobRecord destinationJob = jobService.find(destinationVariable.getJobId(), event.getContextId());
           boolean isDestinationPortScatterable = destinationJob.isScatterPort(destinationVariable.getPortId());
           if (!isDestinationPortScatterable && !event.isFromScatter()) {
             value = sourceVariable.getValue();
           }
-          Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, isFromScatter, numberOfOutputs, event.getPosition());
+          position = link.getPosition();
+          if (isLookAhead) {
+            position = position * event.getPosition();
+          }
+          Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isLookAhead, numberOfOutputs, position);
           eventProcessor.send(updateInputEvent);
           break;
         default:
-          Integer position = InternalSchemaHelper.getScatteredNumber(sourceJob.getId());
-          position = position != null ? position : event.getPosition();
-          Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isFromScatter, numberOfOutputs, position);
+          position = InternalSchemaHelper.getScatteredNumber(sourceJob.getId());
+          position = position != null ? position : 1;
+          Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, isLookAhead, numberOfOutputs, position);
           eventProcessor.send(updateOutputEvent);
           break;
         }

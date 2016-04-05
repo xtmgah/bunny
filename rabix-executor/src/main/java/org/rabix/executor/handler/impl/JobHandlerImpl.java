@@ -108,7 +108,7 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  private void createFileRequirements(List<Requirement> requirements) throws ExecutorException {
+  private void createFileRequirements(List<Requirement> requirements) throws ExecutorException, FileMappingException {
     try {
       FileRequirement fileRequirementResource = getRequirement(requirements, FileRequirement.class);
       if (fileRequirementResource == null) {
@@ -129,7 +129,8 @@ public class JobHandlerImpl implements JobHandler {
         }
         if (fileRequirement instanceof SingleInputFileRequirement) {
           String path = ((SingleInputFileRequirement) fileRequirement).getContent().getPath();
-          File file = new File(path);
+          String mappedPath = new InputFileMapper().map(path);
+          File file = new File(mappedPath);
           if (!file.exists()) {
             continue;
           }

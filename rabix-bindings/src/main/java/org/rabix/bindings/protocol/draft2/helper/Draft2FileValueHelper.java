@@ -45,7 +45,8 @@ public class Draft2FileValueHelper extends Draft2BeanHelper {
   }
 
   public static Long getSize(Object raw) {
-    return (Long) getValue(KEY_SIZE, raw);
+    Integer value = getValue(KEY_SIZE, raw);
+    return value == null ? null : new Long(Integer.toString(value));
   }
 
   public static void setChecksum(File file, Object raw, HashAlgorithm hashAlgorithm) {

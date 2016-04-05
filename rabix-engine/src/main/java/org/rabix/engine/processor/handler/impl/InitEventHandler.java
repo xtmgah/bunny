@@ -75,7 +75,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     Map<String, Object> mixedInputs = mixInputs(node, event.getValue());
     for (DAGLinkPort inputPort : node.getInputPorts()) {
       Object value = mixedInputs.get(inputPort.getId());
-      Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, null);
+      Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, 1);
       eventProcessor.send(updateInputEvent);
     }
   }
