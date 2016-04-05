@@ -13,6 +13,7 @@
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<docker-client.version>3.5.12</docker-client.version>
 	</properties>
 	<build>
 		<plugins>
@@ -40,7 +41,7 @@
 		<dependency>
 			<groupId>com.spotify</groupId>
 			<artifactId>docker-client</artifactId>
-			<version>3.5.12</version>
+			<version>${docker-client.version}</version>
 		</dependency>
 	</dependencies>
 </project>
