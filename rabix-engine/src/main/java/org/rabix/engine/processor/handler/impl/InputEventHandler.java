@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
@@ -176,8 +177,8 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       List<Event> events = new ArrayList<>();
 
       String jobNId = InternalSchemaHelper.scatterId(job.getId(), mapping.getIndex());
-      JobRecord jobN = new JobRecord(job.getContextId(), jobNId, JobRecordService.generateUniqueId(), JobState.PENDING, job.isContainer(), true, false);
-
+      JobRecord jobN = createJobRecord(jobNId, node, true, job.getContextId());
+          
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null);
         variableN.setNumberGlobals(numberOfScattered);
@@ -273,7 +274,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     for (DAGNode node : containerNode.getChildren()) {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
-      JobRecord childJob = new JobRecord(contextId, newJobId, JobRecordService.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, false, false);
+      JobRecord childJob = createJobRecord(newJobId, node, false, contextId);
       jobService.create(childJob);
 
       for (DAGLinkPort port : node.getInputPorts()) {
@@ -322,11 +323,30 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     if (linkPort.getType().equals(LinkPortType.INPUT)) {
       if (job.getState().equals(JobState.PENDING)) {
         job.incrementPortCounter(linkPort, LinkPortType.INPUT);
+        if (job.getInputCounter(linkPort.getId()).getCounter() > 1) {
+          job.setBlocking(true);
+          job.setInputPortBlocking(linkPort.getId(), true);
+        }
       }
     } else {
-      job.incrementPortCounterIfThereIsNo(linkPort, LinkPortType.OUTPUT);
+      job.incrementPortCounter(linkPort, LinkPortType.OUTPUT);
+      if (job.getOutputCounter(linkPort.getId()).getCounter() > 1) {
+        job.setOutputPortBlocking(linkPort.getId(), true);
+      }
     }
     jobService.update(job);
   }
-
+  
+  private JobRecord createJobRecord(String id, DAGNode node, boolean isScattered, String contextId) {
+    boolean isBlocking = false;
+    if (LinkMerge.isBlocking(node.getLinkMerge())) {
+      isBlocking = true;
+    }
+    if (ScatterMethod.isBlocking(node.getScatterMethod())) {
+      isBlocking = true;
+    }
+    JobRecord job = new JobRecord(contextId, id, JobRecordService.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, isScattered, false, isBlocking);
+    jobService.create(job);
+    return job;
+  }
 }

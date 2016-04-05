@@ -14,6 +14,7 @@ public class JobRecord {
   private final String externalId;
   private final String contextId;
   private final boolean master;
+  private boolean blocking;
   
   private JobState state;
   
@@ -29,14 +30,15 @@ public class JobRecord {
   
   private ScatterMapping scatterMapping;
   
-  public JobRecord(String contextId, String id, String uniqueId, JobState state, boolean isContainer, boolean fromScatter, boolean master) {
+  public JobRecord(String contextId, String id, String uniqueId, JobState state, boolean isContainer, boolean isScattered, boolean master, boolean blocking) {
     this.id = id;
     this.externalId = uniqueId;
     this.contextId = contextId;
     this.state = state;
     this.master = master;
+    this.blocking = blocking;
     this.isContainer = isContainer;
-    this.isScattered = fromScatter;
+    this.isScattered = isScattered;
     this.inputCounters = new ArrayList<>();
     this.outputCounters = new ArrayList<>();
   }
@@ -57,6 +59,32 @@ public class JobRecord {
     return master;
   }
   
+  public boolean isBlocking() {
+    return blocking;
+  }
+  
+  public void setBlocking(boolean blocking) {
+    this.blocking = blocking;
+  }
+  
+  public void setInputPortBlocking(String port, boolean blocking) {
+    for (PortCounter portCounter : inputCounters) {
+      if (portCounter.port.equals(port)) {
+        portCounter.blocking = blocking;
+        return;
+      }
+    }
+  }
+  
+  public void setOutputPortBlocking(String port, boolean blocking) {
+    for (PortCounter portCounter : outputCounters) {
+      if (portCounter.port.equals(port)) {
+        portCounter.blocking = blocking;
+        return;
+      }
+    }
+  }
+  
   public JobState getState() {
     return state;
   }
@@ -75,6 +103,24 @@ public class JobRecord {
 
   public List<PortCounter> getOutputCounters() {
     return outputCounters;
+  }
+  
+  public PortCounter getInputCounter(String port) {
+    for (PortCounter portCounter : inputCounters) {
+      if (portCounter.port.equals(port)) {
+        return portCounter;
+      }
+    }
+    return null;
+  }
+  
+  public PortCounter getOutputCounter(String port) {
+    for (PortCounter portCounter : outputCounters) {
+      if (portCounter.port.equals(port)) {
+        return portCounter;
+      }
+    }
+    return null;
   }
 
   public void setOutputCounters(List<PortCounter> outputCounters) {
@@ -268,13 +314,23 @@ public class JobRecord {
     private String port;
     private int counter;
     private boolean scatter;
+    private boolean blocking;
 
     PortCounter(String port, int counter, boolean scatter) {
       this.port = port;
       this.counter = counter;
       this.scatter = scatter;
+      this.blocking = false;
     }
 
+    public boolean isBlocking() {
+      return blocking;
+    }
+    
+    public void setBlocking(boolean blocking) {
+      this.blocking = blocking;
+    }
+    
     public String getPort() {
       return port;
     }
