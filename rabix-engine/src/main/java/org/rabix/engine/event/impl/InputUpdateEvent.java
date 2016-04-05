@@ -13,8 +13,7 @@ public class InputUpdateEvent implements Event {
   private final String portId;
   private final Object value;
 
-  private final Integer scatteredNodes;         // number of scattered nodes
-
+  private final Integer numberOfScattered;      // number of scattered nodes
   private final boolean eventFromLookAhead;     // it's a look ahead event
 
   public InputUpdateEvent(String contextId, String jobId, String portId, Object inputValue) {
@@ -23,7 +22,7 @@ public class InputUpdateEvent implements Event {
     this.value = inputValue;
     this.contextId = contextId;
     this.eventFromLookAhead = false;
-    this.scatteredNodes = null;
+    this.numberOfScattered = null;
   }
 
   public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromLookAhead, Integer scatteredNodes) {
@@ -32,7 +31,7 @@ public class InputUpdateEvent implements Event {
     this.value = value;
     this.contextId = contextId;
     this.eventFromLookAhead = eventFromLookAhead;
-    this.scatteredNodes = scatteredNodes;
+    this.numberOfScattered = scatteredNodes;
   }
 
   public String getJobId() {
@@ -47,8 +46,8 @@ public class InputUpdateEvent implements Event {
     return value;
   }
   
-  public Integer getScatteredNodes() {
-    return scatteredNodes;
+  public Integer getNumberOfScattered() {
+    return numberOfScattered;
   }
 
   public boolean isEventFromLookAhead() {
@@ -73,7 +72,7 @@ public class InputUpdateEvent implements Event {
     result = prime * result + (eventFromLookAhead ? 1231 : 1237);
     result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
     result = prime * result + ((portId == null) ? 0 : portId.hashCode());
-    result = prime * result + ((scatteredNodes == null) ? 0 : scatteredNodes.hashCode());
+    result = prime * result + ((numberOfScattered == null) ? 0 : numberOfScattered.hashCode());
     result = prime * result + ((value == null) ? 0 : value.hashCode());
     return result;
   }
@@ -104,10 +103,10 @@ public class InputUpdateEvent implements Event {
         return false;
     } else if (!portId.equals(other.portId))
       return false;
-    if (scatteredNodes == null) {
-      if (other.scatteredNodes != null)
+    if (numberOfScattered == null) {
+      if (other.numberOfScattered != null)
         return false;
-    } else if (!scatteredNodes.equals(other.scatteredNodes))
+    } else if (!numberOfScattered.equals(other.numberOfScattered))
       return false;
     if (value == null) {
       if (other.value != null)
@@ -119,7 +118,7 @@ public class InputUpdateEvent implements Event {
 
   @Override
   public String toString() {
-    return "InputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", scatteredNodes=" + scatteredNodes + ", eventFromLookAhead=" + eventFromLookAhead + "]";
+    return "InputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", numberOfScattered=" + numberOfScattered + ", eventFromLookAhead=" + eventFromLookAhead + "]";
   }
 
 }

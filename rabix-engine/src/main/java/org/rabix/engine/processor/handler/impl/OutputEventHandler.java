@@ -46,7 +46,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     
     JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {
-      sourceJob.resetOutputPortCounters(event.getScatteredNodes());
+      sourceJob.resetOutputPortCounters(event.getNumberOfScattered());
     }
     sourceJob.decrementPortCounter(event.getPortId(), LinkPortType.OUTPUT);
     

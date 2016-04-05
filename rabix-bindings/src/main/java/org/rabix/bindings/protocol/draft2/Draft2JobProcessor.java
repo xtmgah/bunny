@@ -48,7 +48,8 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
       Draft2Workflow workflow = (Draft2Workflow) job.getApp();
       for (Draft2Step step : workflow.getSteps()) {
         Draft2Job stepJob = step.getJob();
-        stepJob.setId(job.getId() + "." + Draft2SchemaHelper.normalizeId(step.getId()));
+        String stepId = job.getId() + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.normalizeId(step.getId());
+        stepJob.setId(stepId);
         processElements(job, stepJob);
         process(job, stepJob);
       }
@@ -180,9 +181,9 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
         if (strip) {
           mod = mod.substring(mod.indexOf(Draft2SchemaHelper.PORT_ID_SEPARATOR) + 1);
         }
-        scatter = Draft2SchemaHelper.ID_START + mod + Draft2SchemaHelper.PORT_ID_SEPARATOR + port.getId();
+        scatter = Draft2SchemaHelper.ID_START + mod + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.normalizeId(port.getId());
       } else {
-        scatter = Draft2SchemaHelper.ID_START + port.getId();
+        scatter = port.getId();
       }
       
       // TODO fix

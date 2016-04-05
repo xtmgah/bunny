@@ -57,7 +57,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     VariableRecord variable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
 
     if (event.isEventFromLookAhead()) {
-      job.resetInputPortCounters(event.getScatteredNodes());
+      job.resetInputPortCounters(event.getNumberOfScattered());
     } else if (!job.isInputPortReady(event.getPortId())) {
       variable.addValue(event.getValue());
       job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
@@ -66,18 +66,29 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     if (!job.isScattered()) {
       if (job.isScatterPort(event.getPortId())) {
         scatterPort(job, event);
+        update(job, variable);
+        return;
       } else if (job.isScatterWrapper()) {
         sendValuesToScatteredJobs(job, variable, event);
+        update(job, variable);
+        return;
+      } else if (event.isEventFromLookAhead()) {
+        variable.addValue(event.getValue());
+        job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
       }
     }
     
     if (job.isReady()) {
       ready(job, event);
     }
+    update(job, variable);
+  }
+  
+  private void update(JobRecord job, VariableRecord variable) {
     jobService.update(job);
     variableService.update(variable);
   }
-
+  
   /**
    * Job is ready
    */
@@ -117,7 +128,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       job.setScatterMapping(getScatterMapping(node));
     }
 
-    int numberOfScattered = getNumberOfScattered(job, event.getScatteredNodes());
+    int numberOfScattered = getNumberOfScattered(job, event.getNumberOfScattered());
     if (event.isEventFromLookAhead()) {
       job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
 
@@ -125,7 +136,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       variable.addValue(event.getValue());
       variableService.update(variable);
 
-      createScatteredJobs(job, event, node, numberOfScattered);
+      createScatteredJobs(job, event.getPortId(), event.getValue(), node, numberOfScattered);
       return;
     }
     
@@ -141,14 +152,13 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     }
 
     for (Object subvalue : values) {
-      InputUpdateEvent subevent = new InputUpdateEvent(event.getContextId(), job.getId(), event.getPortId(), subvalue, false, values.size());
-      createScatteredJobs(job, subevent, node, values.size());
+      createScatteredJobs(job, event.getPortId(), subvalue, node, values.size());
     }
   }
   
-  private void createScatteredJobs(JobRecord job, InputUpdateEvent event, DAGNode node, Integer numberOfScattered) throws EventHandlerException {
+  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer numberOfScattered) throws EventHandlerException {
     ScatterMapping scatterMapping = job.getScatterMapping();
-    scatterMapping.enable(event.getPortId(), event.getValue());
+    scatterMapping.enable(port, value);
     
     List<RowMapping> mappings = null;
     try {
@@ -165,43 +175,43 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       List<Event> events = new ArrayList<>();
 
       String jobNId = InternalSchemaHelper.scatterId(job.getId(), mapping.getIndex());
-      JobRecord jobN = new JobRecord(event.getContextId(), jobNId, JobHelper.generateUniqueId(), JobState.PENDING, job.isContainer(), true, false);
+      JobRecord jobN = new JobRecord(job.getContextId(), jobNId, JobHelper.generateUniqueId(), JobState.PENDING, job.isContainer(), true, false);
 
       for (DAGLinkPort inputPort : node.getInputPorts()) {
-        VariableRecord variableN = new VariableRecord(event.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null);
+        VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null);
         variableN.setNumberGlobals(numberOfScattered);
         variableService.create(variableN);
 
         if (jobN.getState().equals(JobState.PENDING)) {
           jobN.incrementPortCounter(inputPort, LinkPortType.INPUT);
         }
-        LinkRecord link = new LinkRecord(event.getContextId(), job.getId(), inputPort.getId(), LinkPortType.INPUT, jobNId, inputPort.getId(), LinkPortType.INPUT);
+        LinkRecord link = new LinkRecord(job.getContextId(), job.getId(), inputPort.getId(), LinkPortType.INPUT, jobNId, inputPort.getId(), LinkPortType.INPUT);
         linkService.create(link);
 
         if (inputPort.isScatter()) {
-          Event eventInputPort = new InputUpdateEvent(event.getContextId(), jobNId, inputPort.getId(), mapping.getValue(inputPort.getId()));
+          Event eventInputPort = new InputUpdateEvent(job.getContextId(), jobNId, inputPort.getId(), mapping.getValue(inputPort.getId()));
           events.add(eventInputPort);
         } else {
           if (job.isInputPortReady(inputPort.getId())) {
-            VariableRecord variable = variableService.find(job.getId(), inputPort.getId(), LinkPortType.INPUT, event.getContextId());
-            events.add(new InputUpdateEvent(event.getContextId(), jobNId, inputPort.getId(), variable.getValue()));
+            VariableRecord variable = variableService.find(job.getId(), inputPort.getId(), LinkPortType.INPUT, job.getContextId());
+            events.add(new InputUpdateEvent(job.getContextId(), jobNId, inputPort.getId(), variable.getValue()));
           }
         }
       }
       for (DAGLinkPort outputPort : node.getOutputPorts()) {
-        VariableRecord variableN = new VariableRecord(event.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null);
+        VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null);
         variableN.setNumberGlobals(numberOfScattered);
         variableService.create(variableN);
         jobN.incrementPortCounter(outputPort, LinkPortType.OUTPUT);
 
-        LinkRecord link = new LinkRecord(event.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, job.getId(), outputPort.getId(), LinkPortType.OUTPUT);
+        LinkRecord link = new LinkRecord(job.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, job.getId(), outputPort.getId(), LinkPortType.OUTPUT);
         linkService.create(link);
       }
 
       job.setState(JobState.RUNNING);
       job.setScatterWrapper(true);
       
-      job.resetOutputPortCounters(getNumberOfScattered(job, event.getScatteredNodes()));
+      job.resetOutputPortCounters(numberOfScattered);
       jobService.update(job);
       jobService.create(jobN);
 
