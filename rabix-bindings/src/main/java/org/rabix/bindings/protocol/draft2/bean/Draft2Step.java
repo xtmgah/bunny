@@ -33,9 +33,6 @@ public class Draft2Step {
   @JsonProperty("scatterMethod")
   private String scatterMethod;
   
-  @JsonProperty("linkMerge")
-  private String linkMerge;
-
   @JsonIgnore
   private Draft2Job job;
 
@@ -46,7 +43,6 @@ public class Draft2Step {
     this.id = id;
     this.app = app;
     this.scatter = scatter;
-    this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
     this.inputs = inputs;
     this.outputs = outputs;
@@ -71,7 +67,7 @@ public class Draft2Step {
     }
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
-    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, linkMerge, id);
+    return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, id);
   }
 
   /**

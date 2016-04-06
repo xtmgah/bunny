@@ -18,8 +18,8 @@ public class Draft2OutputPort extends Draft2Port {
   @JsonCreator
   public Draft2OutputPort(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue,
       @JsonProperty("type") Object schema, @JsonProperty("outputBinding") Object outputBinding,
-      @JsonProperty("scatter") Boolean scatter, @JsonProperty("source") Object source) {
-    super(id, defaultValue, schema, scatter);
+      @JsonProperty("scatter") Boolean scatter, @JsonProperty("source") Object source, @JsonProperty("linkMerge") String linkMerge) {
+    super(id, defaultValue, schema, scatter, linkMerge);
     this.outputBinding = outputBinding;
     this.source = source;
   }

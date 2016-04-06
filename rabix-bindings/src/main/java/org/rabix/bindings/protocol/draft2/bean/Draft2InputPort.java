@@ -38,8 +38,8 @@ public class Draft2InputPort extends Draft2Port {
 
   @JsonCreator
   public Draft2InputPort(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, 
-      @JsonProperty("inputBinding") Object inputBinding, @JsonProperty("scatter") Boolean scatter, @JsonProperty("sbg:stageInput") String stageInput) {
-    super(id, defaultValue, schema, scatter);
+      @JsonProperty("inputBinding") Object inputBinding, @JsonProperty("scatter") Boolean scatter, @JsonProperty("sbg:stageInput") String stageInput, @JsonProperty("linkMerge") String linkMerge) {
+    super(id, defaultValue, schema, scatter, linkMerge);
     this.stageInput = stageInput;
     this.inputBinding = inputBinding;
   }

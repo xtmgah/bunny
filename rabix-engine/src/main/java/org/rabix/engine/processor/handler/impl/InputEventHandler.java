@@ -66,7 +66,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       } else {
         job.resetInputPortCounters(event.getNumberOfScattered());
       }
-    } else if ((job.getInputPortIncoming(event.getPortId()) > 1) && job.isScatterPort(event.getPortId()) && !LinkMerge.isBlocking(node.getLinkMerge())) {
+    } else if ((job.getInputPortIncoming(event.getPortId()) > 1) && job.isScatterPort(event.getPortId()) && !LinkMerge.isBlocking(node.getLinkMerge(event.getPortId(), LinkPortType.INPUT))) {
       job.resetOutputPortCounters(job.getInputPortIncoming(event.getPortId()));
     }
     
@@ -76,7 +76,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     // scatter
     if (!job.isBlocking() && !job.isScattered()) {
       if (job.isScatterPort(event.getPortId())) {
-        if ((job.getInputPortIncoming(event.getPortId()) > 1) && LinkMerge.isBlocking(node.getLinkMerge())) {
+        if ((job.getInputPortIncoming(event.getPortId()) > 1) && LinkMerge.isBlocking(node.getLinkMerge(event.getPortId(), LinkPortType.INPUT))) {
           // it's blocking
           if (job.isInputPortReady(event.getPortId())) {
             scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
@@ -359,8 +359,11 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
   
   private JobRecord createJobRecord(String id, DAGNode node, boolean isScattered, String contextId) {
     boolean isBlocking = false;
-    if (LinkMerge.isBlocking(node.getLinkMerge())) {
-      isBlocking = true;
+    for (LinkMerge linkMerge : node.getLinkMergeSet(LinkPortType.INPUT)) {
+      if (LinkMerge.isBlocking(linkMerge)) {
+        isBlocking = true;
+        break;
+      }
     }
     if (ScatterMethod.isBlocking(node.getScatterMethod())) {
       isBlocking = true;

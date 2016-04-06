@@ -29,13 +29,17 @@ public abstract class Draft2Port {
   @JsonProperty("scatter")
   protected Boolean scatter;
   
+  @JsonProperty("linkMerge")
+  protected String linkMerge;
+  
   protected Map<String, Object> raw = new HashMap<>();
 
   @JsonCreator
-  public Draft2Port(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter) {
+  public Draft2Port(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter, @JsonProperty("linkMerge") String linkMerge) {
     this.id = id;
     this.schema = schema;
     this.scatter = scatter;
+    this.linkMerge = linkMerge;
     this.defaultValue = defaultValue;
   }
 
@@ -75,6 +79,14 @@ public abstract class Draft2Port {
 
   public void setDefaultValue(Object defaultValue) {
     this.defaultValue = defaultValue;
+  }
+  
+  public String getLinkMerge() {
+    return linkMerge;
+  }
+  
+  public void setLinkMerge(String linkMerge) {
+    this.linkMerge = linkMerge;
   }
   
 }
