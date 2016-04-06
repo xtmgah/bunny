@@ -85,7 +85,7 @@ public class DAGLinkPort {
 
   @Override
   public String toString() {
-    return "DAGLinkPort [id=" + id + ", nodeId=" + dagNodeId + ", type=" + type + ", scatter=" + scatter + "]";
+    return "DAGLinkPort [id=" + id + ", dagNodeId=" + dagNodeId + ", type=" + type + ", scatter=" + scatter + ", linkMerge=" + linkMerge + "]";
   }
-
+  
 }
