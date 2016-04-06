@@ -45,6 +45,37 @@ public class VariableRecord {
     return contextId;
   }
   
+  @SuppressWarnings("unchecked")
+  public void addValue(Object value, Integer position) {
+    numberOfTimesUpdated++;
+    if(this.value == null) {
+      if(position == 1) {
+        this.value = value;
+      }
+      else {
+        List<Object> valueList = new ArrayList<>();
+        expand(valueList, position);
+        valueList.set(position-1, value);
+        this.value = valueList;
+        this.isWrapped = true;
+      }
+    }
+    else {
+      if(isWrapped) {
+        expand((List<Object>) this.value, position);
+        ((List<Object>) this.value).set(position-1, value);
+      }
+      else {
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(this.value);
+        expand(valueList, position);
+        valueList.set(position-1, value);
+        this.value = valueList;
+        this.isWrapped = true;
+      }
+    }
+  }
+  
   public void addValue(Object value, LinkMerge linkMerge, Integer position) {
     numberOfTimesUpdated++;
     

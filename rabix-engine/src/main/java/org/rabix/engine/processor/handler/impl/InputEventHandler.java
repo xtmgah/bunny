@@ -68,7 +68,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       }
     } 
     
-    variable.addValue(event.getValue(), node.getLinkMerge(), event.getPosition());
+    variable.addValue(event.getValue(), event.getPosition());
     job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
     
     // scatter
