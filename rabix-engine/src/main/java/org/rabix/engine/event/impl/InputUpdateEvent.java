@@ -15,24 +15,18 @@ public class InputUpdateEvent implements Event {
 
   private final Integer position;
   private final Integer numberOfScattered;      // number of scattered nodes
-  private final boolean eventFromLookAhead;     // it's a look ahead event
+  private final boolean isLookAhead;            // it's a look ahead event
 
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object inputValue, Integer position) {
-    this.jobId = jobId;
-    this.portId = portId;
-    this.value = inputValue;
-    this.contextId = contextId;
-    this.eventFromLookAhead = false;
-    this.numberOfScattered = null;
-    this.position = position;
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, Integer position) {
+    this(contextId, jobId, portId, value, false, null, position);
   }
 
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean eventFromLookAhead, Integer scatteredNodes, Integer position) {
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean isLookAhead, Integer scatteredNodes, Integer position) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = value;
     this.contextId = contextId;
-    this.eventFromLookAhead = eventFromLookAhead;
+    this.isLookAhead = isLookAhead;
     this.numberOfScattered = scatteredNodes;
     this.position = position;
   }
@@ -53,8 +47,8 @@ public class InputUpdateEvent implements Event {
     return numberOfScattered;
   }
 
-  public boolean isEventFromLookAhead() {
-    return eventFromLookAhead;
+  public boolean isLookAhead() {
+    return isLookAhead;
   }
 
   @Override
@@ -76,7 +70,7 @@ public class InputUpdateEvent implements Event {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((contextId == null) ? 0 : contextId.hashCode());
-    result = prime * result + (eventFromLookAhead ? 1231 : 1237);
+    result = prime * result + (isLookAhead ? 1231 : 1237);
     result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
     result = prime * result + ((portId == null) ? 0 : portId.hashCode());
     result = prime * result + ((numberOfScattered == null) ? 0 : numberOfScattered.hashCode());
@@ -98,7 +92,7 @@ public class InputUpdateEvent implements Event {
         return false;
     } else if (!contextId.equals(other.contextId))
       return false;
-    if (eventFromLookAhead != other.eventFromLookAhead)
+    if (isLookAhead != other.isLookAhead)
       return false;
     if (jobId == null) {
       if (other.jobId != null)
@@ -125,7 +119,7 @@ public class InputUpdateEvent implements Event {
 
   @Override
   public String toString() {
-    return "InputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", numberOfScattered=" + numberOfScattered + ", eventFromLookAhead=" + eventFromLookAhead + "]";
+    return "InputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", numberOfScattered=" + numberOfScattered + ", isLookAhead=" + isLookAhead + "]";
   }
 
 }

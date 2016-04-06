@@ -78,7 +78,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
           case INPUT:
             destinationJob = jobService.find(destinationVariable.getJobId(), destinationVariable.getContextId());
             isDestinationPortScatterable = destinationJob.isScatterPort(destinationVariable.getPortId());
-            if (isDestinationPortScatterable && !destinationJob.isBlocking() && !destinationJob.isInputPortBlocking(event.getPortId())) {
+            if (isDestinationPortScatterable && !destinationJob.isBlocking() && !(destinationJob.getInputPortIncoming(event.getPortId()) > 1)) {
               Object value = event.getValue();
               int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
               Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
@@ -93,7 +93,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             break;
           case OUTPUT:
             destinationJob = jobService.find(destinationVariable.getJobId(), destinationVariable.getContextId());
-            if (!destinationJob.isOutputPortBlocking(event.getPortId())) {
+            if (!(destinationJob.getOutputPortIncoming(event.getPortId()) > 1)) {
               Object value = event.getValue();
               int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
               Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());

@@ -17,14 +17,8 @@ public class OutputUpdateEvent implements Event {
   private final boolean fromScatter;            // it's a scatter event
   private final Integer numberOfScattered;      // number of scattered nodes
 
-  public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue, Integer position) {
-    this.jobId = jobId;
-    this.contextId = contextId;
-    this.portId = portId;
-    this.value = outputValue;
-    this.position = position;
-    this.fromScatter = false;
-    this.numberOfScattered = null;
+  public OutputUpdateEvent(String contextId, String jobId, String portId, Object value, Integer position) {
+    this(contextId, jobId, portId, value, false, null, position);
   }
   
   public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue, boolean fromScatter, Integer numberOfScattered, Integer position) {
