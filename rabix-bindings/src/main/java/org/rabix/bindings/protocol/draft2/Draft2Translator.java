@@ -46,7 +46,7 @@ public class Draft2Translator implements ProtocolTranslator {
       } else if (batch instanceof String) {
         scatterList.add(Draft2SchemaHelper.normalizeId((String) batch));
       } else {
-        throw new RuntimeException("Failed to process bacth properties. Invalid application structure.");
+        throw new RuntimeException("Failed to process batch properties. Invalid application structure.");
       }
 
       for (String scatter : scatterList) {
@@ -71,21 +71,20 @@ public class Draft2Translator implements ProtocolTranslator {
 
   private DAGNode transformToGeneric(String globalJobId, Draft2Job job) throws BindingException {
     List<DAGLinkPort> inputPorts = new ArrayList<>();
-    LinkMerge linkMerge = job.getLinkMerge() != null? LinkMerge.valueOf(job.getLinkMerge()) : LinkMerge.merge_nested;
     
     for (Draft2Port port : job.getApp().getInputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, linkMerge, port.getScatter() != null ? port.getScatter() : false);
+      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, LinkMerge.merge_nested, port.getScatter() != null ? port.getScatter() : false);
       inputPorts.add(linkPort);
     }
     List<DAGLinkPort> outputPorts = new ArrayList<>();
     for (Draft2Port port : job.getApp().getOutputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, linkMerge, false);
+      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
       outputPorts.add(linkPort);
     }
     
     ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : ScatterMethod.dotproduct;
     if (!job.getApp().isWorkflow()) {
-      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp(), job.getInputs());
+      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, job.getApp(), job.getInputs());
     }
 
     Draft2Workflow workflow = (Draft2Workflow) job.getApp();
@@ -120,13 +119,26 @@ public class Draft2Translator implements ProtocolTranslator {
       }
       boolean isSourceFromWorkflow = !dataLink.getSource().contains(InternalSchemaHelper.SEPARATOR);
 
-      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, linkMerge, false);
-      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, linkMerge, dataLink.getScattered() != null ? dataLink.getScattered() : false);
+      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
+      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getLinkMerge(), dataLink.getScattered() != null ? dataLink.getScattered() : false);
 
       int position = dataLink.getPosition() != null ? dataLink.getPosition() : 1;
-      links.add(new DAGLink(sourceLinkPort, destinationLinkPort, position));
+      links.add(new DAGLink(sourceLinkPort, destinationLinkPort, dataLink.getLinkMerge(), position));
     }
-    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, linkMerge, links, children, job.getInputs());
+    
+    for (DAGLink dagLink : links) {
+      for (DAGLinkPort dagLinkPort : inputPorts) {
+        if (dagLinkPort.equals(dagLink.getDestination())) {
+          dagLinkPort.setLinkMerge(dagLinkPort.getLinkMerge());
+        }
+      }
+      for (DAGLinkPort dagLinkPort : outputPorts) {
+        if (dagLinkPort.equals(dagLink.getDestination())) {
+          dagLinkPort.setLinkMerge(dagLinkPort.getLinkMerge());
+        }
+      }
+    }
+    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, links, children, job.getInputs());
   }
 
 }

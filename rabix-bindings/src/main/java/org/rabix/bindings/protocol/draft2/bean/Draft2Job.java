@@ -44,10 +44,6 @@ public final class Draft2Job {
   @JsonView(BeanPropertyView.Full.class)
   private String scatterMethod;
   
-  @JsonProperty("linkMerge")
-  @JsonView(BeanPropertyView.Full.class)
-  private String linkMerge;
-
   @JsonProperty("allocatedResources")
   private Draft2Resources resources;
 
@@ -57,14 +53,13 @@ public final class Draft2Job {
       @JsonProperty("outputs") Map<String, Object> outputs,
       @JsonProperty("allocatedResources") Draft2Resources resources,
       @JsonProperty("id") String id, @JsonProperty("scatter") Object scatter, 
-      @JsonProperty("scatterMethod") String scatterMethod, @JsonProperty("linkMerge") String linkMerge) {
+      @JsonProperty("scatterMethod") String scatterMethod) {
     this.id = id;
     this.app = app;
     this.inputs = inputs;
     this.outputs = outputs;
     this.resources = resources;
     this.scatter = scatter;
-    this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
     processPortDefaults();
   }
@@ -81,13 +76,12 @@ public final class Draft2Job {
     }
   }
 
-  public Draft2Job(Draft2JobApp app, Map<String, Object> inputs, Map<String, Object> outputs, Object scatter, String scatterMethod, String linkMerge, String id) {
+  public Draft2Job(Draft2JobApp app, Map<String, Object> inputs, Map<String, Object> outputs, Object scatter, String scatterMethod, String id) {
     this.id = id;
     this.app = app;
     this.scatter = scatter;
     this.inputs = inputs;
     this.outputs = outputs;
-    this.linkMerge = linkMerge;
     this.scatterMethod = scatterMethod;
     processPortDefaults();
   }
@@ -158,10 +152,6 @@ public final class Draft2Job {
     return scatterMethod;
   }
   
-  public String getLinkMerge() {
-    return linkMerge;
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj)

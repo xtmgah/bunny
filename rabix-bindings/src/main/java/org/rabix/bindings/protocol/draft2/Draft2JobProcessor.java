@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
@@ -80,7 +81,8 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
       List<String> sources = transformSource(port.getSource());
       for (int position = 0; position < sources.size(); position++) {
         String destination = port.getId();
-        Draft2DataLink dataLink = new Draft2DataLink(sources.get(position), destination, position + 1);
+        LinkMerge linkMerge = port.getLinkMerge() != null? LinkMerge.valueOf(port.getLinkMerge()) : LinkMerge.merge_nested;
+        Draft2DataLink dataLink = new Draft2DataLink(sources.get(position), destination, linkMerge, position + 1);
         workflow.addDataLink(dataLink);
       }
     }
@@ -90,7 +92,8 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
         List<String> sources = transformSource(Draft2BindingHelper.getSource(input));
         for (int position = 0; position < sources.size(); position++) {
           String destination = Draft2BindingHelper.getId(input);
-          Draft2DataLink dataLink = new Draft2DataLink(sources.get(position), destination, position + 1);
+          LinkMerge linkMerge = Draft2BindingHelper.getLinkMerge(input) != null ? LinkMerge.valueOf(Draft2BindingHelper.getLinkMerge(input)) : LinkMerge.merge_nested;
+          Draft2DataLink dataLink = new Draft2DataLink(sources.get(position), destination, linkMerge, position + 1);
           dataLinks.add(dataLink);
         }
       }
