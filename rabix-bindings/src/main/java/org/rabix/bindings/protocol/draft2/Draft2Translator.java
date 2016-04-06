@@ -30,6 +30,7 @@ public class Draft2Translator implements ProtocolTranslator {
     Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     DAGNode dagNode = processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job));
     DAGValidationHelper.detectLoop(dagNode);
+    processPorts(dagNode);
     return dagNode;
   }
   
@@ -125,20 +126,38 @@ public class Draft2Translator implements ProtocolTranslator {
       int position = dataLink.getPosition() != null ? dataLink.getPosition() : 1;
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort, dataLink.getLinkMerge(), position));
     }
-    
-    for (DAGLink dagLink : links) {
-      for (DAGLinkPort dagLinkPort : inputPorts) {
-        if (dagLinkPort.equals(dagLink.getDestination())) {
-          dagLinkPort.setLinkMerge(dagLinkPort.getLinkMerge());
-        }
-      }
-      for (DAGLinkPort dagLinkPort : outputPorts) {
-        if (dagLinkPort.equals(dagLink.getDestination())) {
-          dagLinkPort.setLinkMerge(dagLinkPort.getLinkMerge());
+    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, links, children, job.getInputs());
+  }
+  
+  private void processPorts(DAGNode dagNode) {
+    if (dagNode instanceof DAGContainer) {
+      DAGContainer dagContainer = (DAGContainer) dagNode;
+      
+      for (DAGLink dagLink : dagContainer.getLinks()) {
+        dagLink.getDestination().setLinkMerge(dagLink.getLinkMerge());
+        processPorts(dagLink, dagNode);
+        
+        for (DAGNode childNode : dagContainer.getChildren()) {
+          processPorts(dagLink, childNode);
+          if (childNode instanceof DAGContainer) {
+            processPorts(childNode);
+          }
         }
       }
     }
-    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, links, children, job.getInputs());
+  }
+  
+  private void processPorts(DAGLink dagLink, DAGNode dagNode) {
+    for (DAGLinkPort dagLinkPort : dagNode.getInputPorts()) {
+      if (dagLinkPort.equals(dagLink.getDestination())) {
+        dagLinkPort.setLinkMerge(dagLink.getLinkMerge());
+      }
+    }
+    for (DAGLinkPort dagLinkPort : dagNode.getOutputPorts()) {
+      if (dagLinkPort.equals(dagLink.getDestination())) {
+        dagLinkPort.setLinkMerge(dagLink.getLinkMerge());
+      }
+    }
   }
 
 }
