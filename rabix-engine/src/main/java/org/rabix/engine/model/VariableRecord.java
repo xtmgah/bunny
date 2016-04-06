@@ -24,13 +24,11 @@ public class VariableRecord {
 
   private boolean isDefault;
 
-  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value,
-      LinkMerge linkMerge) {
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge) {
     this(contextId, jobId, portId, type, value, linkMerge, false);
   }
 
-  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value,
-      LinkMerge linkMerge, boolean isDefault) {
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge, boolean isDefault) {
     this.jobId = jobId;
     this.portId = portId;
     this.type = type;

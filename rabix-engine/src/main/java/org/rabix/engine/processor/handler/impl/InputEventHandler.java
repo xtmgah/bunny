@@ -156,7 +156,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       JobRecord jobN = createJobRecord(jobNId, node, true, job.getContextId());
           
       for (DAGLinkPort inputPort : node.getInputPorts()) {
-        VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null, null);
+        VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
         variableN.setNumberGlobals(numberOfScattered);
         variableService.create(variableN);
 
@@ -177,7 +177,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         }
       }
       for (DAGLinkPort outputPort : node.getOutputPorts()) {
-        VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null, null);
+        VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(outputPort.getId(), outputPort.getType()));
         variableN.setNumberGlobals(numberOfScattered);
         variableService.create(variableN);
         jobN.incrementPortCounter(outputPort, LinkPortType.OUTPUT);
@@ -297,12 +297,12 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       jobService.create(childJob);
 
       for (DAGLinkPort port : node.getInputPorts()) {
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null, null);
+        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null, node.getLinkMerge(port.getId(), port.getType()));
         variableService.create(childVariable);
       }
 
       for (DAGLinkPort port : node.getOutputPorts()) {
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.OUTPUT, null, null);
+        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(port.getId(), port.getType()));
         variableService.create(childVariable);
       }
     }
