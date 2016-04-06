@@ -1,27 +1,31 @@
 package org.rabix.bindings.model.dag;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
+import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 
 public class DAGNode {
 
-  public static enum ScatterMethod {
-    dotproduct,
-    nested_crossproduct,
-    flat_crossproduct
-  }
-  
   protected final String id;
   protected final Object app;
   protected final ScatterMethod scatterMethod;
   protected final List<DAGLinkPort> inputPorts;
   protected final List<DAGLinkPort> outputPorts;
+  
+  protected final Map<String, Object> defaults;
 
-  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, Object app) {
+  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, Object app, Map<String, Object> defaults) {
     this.id = id;
     this.app = app;
     this.inputPorts = inputPorts;
     this.outputPorts = outputPorts;
     this.scatterMethod = scatterMethod;
+    this.defaults = defaults;
   }
 
   public String getId() {
@@ -42,6 +46,52 @@ public class DAGNode {
   
   public ScatterMethod getScatterMethod() {
     return scatterMethod;
+  }
+  
+  public LinkMerge getLinkMerge(String portId, LinkPortType linkPortType) {
+    switch (linkPortType) {
+    case INPUT:
+      for (DAGLinkPort inputPort : inputPorts) {
+        if (inputPort.getId().equals(portId)) {
+          return inputPort.getLinkMerge();
+        }
+      }
+      break;
+    case OUTPUT:
+      for (DAGLinkPort inputPort : outputPorts) {
+        if (inputPort.getId().equals(portId)) {
+          return inputPort.getLinkMerge();
+        }
+      }
+      break;
+    default:
+      break;
+    }
+    return null;
+  }
+  
+  public Set<LinkMerge> getLinkMergeSet(LinkPortType linkPortType) {
+    Set<LinkMerge> linkMergeSet = new HashSet<>();
+    
+    switch (linkPortType) {
+    case INPUT:
+      for (DAGLinkPort inputPort : inputPorts) {
+        linkMergeSet.add(inputPort.getLinkMerge());
+      }
+      break;
+    case OUTPUT:
+      for (DAGLinkPort outputPort : outputPorts) {
+        linkMergeSet.add(outputPort.getLinkMerge());
+      }
+      break;
+    default:
+      break;
+    }
+    return linkMergeSet;
+  }
+  
+  public Map<String, Object> getDefaults() {
+    return defaults;
   }
 
   @Override
@@ -89,8 +139,7 @@ public class DAGNode {
 
   @Override
   public String toString() {
-    return "DAGNode [id=" + id + ", app=" + app + ", scatterMethod=" + scatterMethod + ", inputPorts=" + inputPorts
-        + ", outputPorts=" + outputPorts + "]";
+    return "DAGNode [id=" + id + ", scatterMethod=" + scatterMethod + ", inputPorts=" + inputPorts + ", outputPorts=" + outputPorts + "]";
   }
 
 }

@@ -2,13 +2,14 @@ package org.rabix.bindings.protocol.draft2;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.RequirementProvider;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.ProtocolRequirementProvider;
 import org.rabix.bindings.model.FileValue;
-import org.rabix.bindings.model.Resources;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.CPURequirement;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
@@ -27,30 +28,12 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVarRequirement.EnvironmentDef;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.expression.helper.Draft2ExpressionBeanHelper;
-import org.rabix.bindings.protocol.draft2.helper.Draft2ProtocolExecutableHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 
-public class Draft2RequirementProvider implements RequirementProvider {
+public class Draft2RequirementProvider implements ProtocolRequirementProvider {
 
-  @Override
-  public Executable populateResources(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
-    try {
-      Resources resources = new Resources(draft2Job.getCPU(), draft2Job.getMemory(), null, null);   // TODO populate
-      return Executable.cloneWithResources(executable, resources);
-    } catch (Draft2ExpressionException e) {
-      throw new BindingException(e);
-    }
-  }
-  
-  @Override
-  public DockerContainerRequirement getDockerRequirement(Executable executable) throws BindingException {
-    Draft2JobApp draft2JobApp = new Draft2ProtocolExecutableHelper().getJob(executable).getApp();
-    Draft2DockerResource draft2DockerResource = draft2JobApp.getContainerResource();
-    return getDockerRequirement(draft2DockerResource);
-  }
-  
   private DockerContainerRequirement getDockerRequirement(Draft2DockerResource draft2DockerResource) {
     if (draft2DockerResource == null) {
       return null;
@@ -58,14 +41,6 @@ public class Draft2RequirementProvider implements RequirementProvider {
     return new DockerContainerRequirement(draft2DockerResource.getDockerPull(), draft2DockerResource.getImageId());
   }
 
-  @Override
-  public EnvironmentVariableRequirement getEnvironmentVariableRequirement(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
-
-    Draft2EnvVarRequirement envVarRequirement = draft2Job.getApp().getEnvVarRequirement();
-    return getEnvironmentVariableRequirement(draft2Job, envVarRequirement);
-  }
-  
   private EnvironmentVariableRequirement getEnvironmentVariableRequirement(Draft2Job draft2Job, Draft2EnvVarRequirement envVarRequirement) throws BindingException {
     if (envVarRequirement == null) {
       return null;
@@ -73,9 +48,9 @@ public class Draft2RequirementProvider implements RequirementProvider {
 
     List<EnvironmentDef> envDefinitions = envVarRequirement.getEnvironmentDefinitions();
     if (envDefinitions == null) {
-      return new EnvironmentVariableRequirement(Collections.<String> emptyList());
+      return new EnvironmentVariableRequirement(Collections.<String, String> emptyMap());
     }
-    List<String> result = new ArrayList<>();
+    Map<String, String> result = new HashMap<>();
     for (EnvironmentDef envDef : envDefinitions) {
       String key = envDef.getName();
       Object value = envDef.getValue();
@@ -90,19 +65,11 @@ public class Draft2RequirementProvider implements RequirementProvider {
       if (value == null) {
         throw new BindingException("Environment variable for " + key + " is empty.");
       }
-      result.add(key + "=" + value);
+      result.put(key, value.toString());
     }
     return new EnvironmentVariableRequirement(result);
   }
 
-  @Override
-  public FileRequirement getFileRequirement(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
-
-    Draft2CreateFileRequirement createFileRequirement = draft2Job.getApp().getCreateFileRequirement();
-    return getFileRequirement(draft2Job, createFileRequirement);
-  }
-  
   private FileRequirement getFileRequirement(Draft2Job draft2Job, Draft2CreateFileRequirement createFileRequirement) throws BindingException {
     if (createFileRequirement == null) {
       return null;
@@ -134,21 +101,24 @@ public class Draft2RequirementProvider implements RequirementProvider {
   }
 
   @Override
-  public List<Requirement> getRequirements(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public List<Requirement> getRequirements(Job job) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
-    return convertRequirements(executable, draft2JobApp.getRequirements());
+    return convertRequirements(job, draft2JobApp.getRequirements());
   }
   
   @Override
-  public List<Requirement> getHints(Executable executable) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  public List<Requirement> getHints(Job job) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     Draft2JobApp draft2JobApp = draft2Job.getApp();
-    return convertRequirements(executable, draft2JobApp.getHints());
+    return convertRequirements(job, draft2JobApp.getHints());
   }
   
-  private List<Requirement> convertRequirements(Executable executable, List<Draft2Resource> resources) throws BindingException {
-    Draft2Job draft2Job = new Draft2ProtocolExecutableHelper().getJob(executable);
+  private List<Requirement> convertRequirements(Job job, List<Draft2Resource> resources) throws BindingException {
+    if (resources == null) {
+      return Collections.<Requirement>emptyList();
+    }
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
 
     List<Requirement> result = new ArrayList<>();
     try {

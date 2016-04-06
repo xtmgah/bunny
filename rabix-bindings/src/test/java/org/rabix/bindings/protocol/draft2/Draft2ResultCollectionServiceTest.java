@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Executable;
-import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.bindings.helper.URIHelper;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.common.helper.ResourceHelper;
 import org.rabix.common.json.BeanSerializer;
@@ -48,32 +48,32 @@ public class Draft2ResultCollectionServiceTest {
   public void testCommandLineTool() throws Exception {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "output-collection-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
-    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+    Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
-    Bindings bindings = BindingsFactory.create(executable);
-    executable = bindings.populateOutputs(executable, workingDir);
+    Bindings bindings = BindingsFactory.create(job);
+    job = bindings.postprocess(job, workingDir);
     
-    Assert.assertTrue(executable.getOutputs() instanceof Map<?,?>);
-    Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("single"));
-    Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("array"));
-    Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("record"));
+    Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
+    Assert.assertTrue((job.getOutputs()).containsKey("single"));
+    Assert.assertTrue((job.getOutputs()).containsKey("array"));
+    Assert.assertTrue((job.getOutputs()).containsKey("record"));
   }
   
   @Test
   public void testExpressionTool() throws Exception {
     String inputJson = ResourceHelper.readResource(Draft2ResultCollectionServiceTest.class, "bean/expression-job.json");
 
-    Draft2Job job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
-    DAGNode dagNode = new DAGNode("id", null, null, null, job.getApp());
-    Executable executable = new Executable("id", "id", dagNode, null, job.getInputs(), null, null);
+    Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
+    String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
+    Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
-    Bindings bindings = BindingsFactory.create(executable);
-    executable = bindings.populateOutputs(executable, workingDir);
+    Bindings bindings = BindingsFactory.create(job);
+    job = bindings.postprocess(job, workingDir);
     
-    Assert.assertTrue(executable.getOutputs() instanceof Map<?,?>);
-    Assert.assertTrue((executable.getOutputs(Map.class)).containsKey("output"));
+    Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
+    Assert.assertTrue((job.getOutputs()).containsKey("output"));
   }
 
 }

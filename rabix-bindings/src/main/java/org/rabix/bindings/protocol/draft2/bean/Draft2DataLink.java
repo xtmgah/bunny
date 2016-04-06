@@ -1,5 +1,7 @@
 package org.rabix.bindings.protocol.draft2.bean;
 
+import org.rabix.bindings.model.LinkMerge;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,15 +21,19 @@ public class Draft2DataLink {
 
   @JsonIgnore
   private Boolean scattered;
+  
+  @JsonProperty("linkMerge")
+  private LinkMerge linkMerge;
 
   @JsonCreator
-  public Draft2DataLink(@JsonProperty("source") String source, @JsonProperty("destination") String destination,
+  public Draft2DataLink(@JsonProperty("source") String source, @JsonProperty("destination") String destination, @JsonProperty("linkMerge") LinkMerge linkMerge,
       @JsonProperty("position") Integer position) {
     this.source = source;
     this.destination = destination;
     this.source = source;
     this.destination = destination;
     this.position = position;
+    this.linkMerge = linkMerge;
   }
 
   public String getSource() {
@@ -36,6 +42,14 @@ public class Draft2DataLink {
 
   public void setSource(String source) {
     this.source = source;
+  }
+  
+  public LinkMerge getLinkMerge() {
+    return linkMerge;
+  }
+  
+  public void setLinkMerge(LinkMerge linkMerge) {
+    this.linkMerge = linkMerge;
   }
 
   public String getDestination() {

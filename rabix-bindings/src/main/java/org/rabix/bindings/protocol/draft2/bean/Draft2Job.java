@@ -7,6 +7,7 @@ import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2IORequirement;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
+import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.json.BeanPropertyView;
 import org.rabix.common.json.processor.BeanProcessorClass;
 
@@ -42,7 +43,7 @@ public final class Draft2Job {
   @JsonProperty("scatterMethod")
   @JsonView(BeanPropertyView.Full.class)
   private String scatterMethod;
-
+  
   @JsonProperty("allocatedResources")
   private Draft2Resources resources;
 
@@ -60,6 +61,19 @@ public final class Draft2Job {
     this.resources = resources;
     this.scatter = scatter;
     this.scatterMethod = scatterMethod;
+    processPortDefaults();
+  }
+  
+  private void processPortDefaults() {
+    if (inputs == null) {
+      return;
+    }
+    for (Draft2InputPort inputPort : app.getInputs()) {
+      String normalizedId = Draft2SchemaHelper.normalizeId(inputPort.id);
+      if (!inputs.containsKey(normalizedId) && inputPort.defaultValue != null) {
+        inputs.put(normalizedId, inputPort.defaultValue);
+      }
+    }
   }
 
   public Draft2Job(Draft2JobApp app, Map<String, Object> inputs, Map<String, Object> outputs, Object scatter, String scatterMethod, String id) {
@@ -69,11 +83,13 @@ public final class Draft2Job {
     this.inputs = inputs;
     this.outputs = outputs;
     this.scatterMethod = scatterMethod;
+    processPortDefaults();
   }
   
   public Draft2Job(Draft2JobApp app, Map<String, Object> inputs) {
     this.app = app;
     this.inputs = inputs;
+    processPortDefaults();
   }
 
   @JsonIgnore
@@ -120,6 +136,10 @@ public final class Draft2Job {
     return outputs;
   }
 
+  public void setResources(Draft2Resources resources) {
+    this.resources = resources;
+  }
+  
   public Draft2Resources getResources() {
     return resources;
   }
@@ -131,7 +151,7 @@ public final class Draft2Job {
   public String getScatterMethod() {
     return scatterMethod;
   }
-
+  
   @Override
   public boolean equals(Object obj) {
     if (this == obj)

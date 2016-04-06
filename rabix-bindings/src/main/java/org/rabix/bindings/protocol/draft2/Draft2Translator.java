@@ -2,55 +2,38 @@ package org.rabix.bindings.protocol.draft2;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolTranslator;
+import org.rabix.bindings.helper.DAGValidationHelper;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.bindings.model.dag.DAGNode.ScatterMethod;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.common.helper.JSONHelper;
-import org.rabix.common.json.BeanSerializer;
 
 public class Draft2Translator implements ProtocolTranslator {
 
-  /**
-   * Translates from Draft2 format to generic one
-   */
   @Override
-  public DAGNode translateToDAGFromPayload(String payload) throws BindingException {
-    Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);
-    return processBatchInfo(job, transformToGeneric(job.getId(), job));
+  public DAGNode translateToDAG(Job job) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    DAGNode dagNode = processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job));
+    DAGValidationHelper.detectLoop(dagNode);
+    processPorts(dagNode);
+    return dagNode;
   }
   
-  @Override
-  public DAGNode translateToDAG(String app, String inputs) throws BindingException {
-    Map<String, Object> inputsMap = JSONHelper.readMap(inputs);
-    Draft2JobApp draft2JobApp = BeanSerializer.deserialize(app, Draft2JobApp.class);
-    Draft2Job draft2Job = new Draft2Job(draft2JobApp, inputsMap);
-    
-    Draft2JobProcessor draft2JobProcessor = new Draft2JobProcessor();
-    draft2Job = draft2JobProcessor.process(draft2Job);
-    return processBatchInfo(draft2Job, transformToGeneric(draft2Job.getId(), draft2Job));
-  }
-
-  @Override
-  public Map<String, Object> translateInputsFromPayload(String payload) {
-    Draft2Job job = BeanSerializer.deserialize(payload, Draft2Job.class);
-    return job.getInputs();
-  }
-
   @SuppressWarnings("unchecked")
   private DAGNode processBatchInfo(Draft2Job job, DAGNode node) {
     Object batch = job.getScatter();
@@ -64,7 +47,7 @@ public class Draft2Translator implements ProtocolTranslator {
       } else if (batch instanceof String) {
         scatterList.add(Draft2SchemaHelper.normalizeId((String) batch));
       } else {
-        throw new RuntimeException("Failed to process bacth properties. Invalid application structure.");
+        throw new RuntimeException("Failed to process batch properties. Invalid application structure.");
       }
 
       for (String scatter : scatterList) {
@@ -89,19 +72,20 @@ public class Draft2Translator implements ProtocolTranslator {
 
   private DAGNode transformToGeneric(String globalJobId, Draft2Job job) throws BindingException {
     List<DAGLinkPort> inputPorts = new ArrayList<>();
+    
     for (Draft2Port port : job.getApp().getInputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, port.getScatter() != null ? port.getScatter() : false);
+      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, LinkMerge.merge_nested, port.getScatter() != null ? port.getScatter() : false);
       inputPorts.add(linkPort);
     }
     List<DAGLinkPort> outputPorts = new ArrayList<>();
     for (Draft2Port port : job.getApp().getOutputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, false);
+      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
       outputPorts.add(linkPort);
     }
     
-    ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : null;
+    ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : ScatterMethod.dotproduct;
     if (!job.getApp().isWorkflow()) {
-      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, job.getApp());
+      return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, job.getApp(), job.getInputs());
     }
 
     Draft2Workflow workflow = (Draft2Workflow) job.getApp();
@@ -136,16 +120,44 @@ public class Draft2Translator implements ProtocolTranslator {
       }
       boolean isSourceFromWorkflow = !dataLink.getSource().contains(InternalSchemaHelper.SEPARATOR);
 
-      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, false);
-      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getScattered() != null ? dataLink.getScattered() : false);
-      links.add(new DAGLink(sourceLinkPort, destinationLinkPort));
-    }
-    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, links, children);
-  }
+      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
+      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getLinkMerge(), dataLink.getScattered() != null ? dataLink.getScattered() : false);
 
-  @Override
-  public Object translateInputs(String inputs) throws BindingException {
-    return JSONHelper.readMap(inputs);
+      int position = dataLink.getPosition() != null ? dataLink.getPosition() : 1;
+      links.add(new DAGLink(sourceLinkPort, destinationLinkPort, dataLink.getLinkMerge(), position));
+    }
+    return new DAGContainer(job.getId(), inputPorts, outputPorts, job.getApp(), scatterMethod, links, children, job.getInputs());
+  }
+  
+  private void processPorts(DAGNode dagNode) {
+    if (dagNode instanceof DAGContainer) {
+      DAGContainer dagContainer = (DAGContainer) dagNode;
+      
+      for (DAGLink dagLink : dagContainer.getLinks()) {
+        dagLink.getDestination().setLinkMerge(dagLink.getLinkMerge());
+        processPorts(dagLink, dagNode);
+        
+        for (DAGNode childNode : dagContainer.getChildren()) {
+          processPorts(dagLink, childNode);
+          if (childNode instanceof DAGContainer) {
+            processPorts(childNode);
+          }
+        }
+      }
+    }
+  }
+  
+  private void processPorts(DAGLink dagLink, DAGNode dagNode) {
+    for (DAGLinkPort dagLinkPort : dagNode.getInputPorts()) {
+      if (dagLinkPort.equals(dagLink.getDestination())) {
+        dagLinkPort.setLinkMerge(dagLink.getLinkMerge());
+      }
+    }
+    for (DAGLinkPort dagLinkPort : dagNode.getOutputPorts()) {
+      if (dagLinkPort.equals(dagLink.getDestination())) {
+        dagLinkPort.setLinkMerge(dagLink.getLinkMerge());
+      }
+    }
   }
 
 }

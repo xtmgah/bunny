@@ -32,13 +32,13 @@ public class Draft2Step {
   
   @JsonProperty("scatterMethod")
   private String scatterMethod;
-
+  
   @JsonIgnore
   private Draft2Job job;
 
   @JsonCreator
   public Draft2Step(@JsonProperty("id") String id, @JsonProperty("run") Draft2JobApp app,
-      @JsonProperty("scatter") Object scatter, @JsonProperty("scatterMethod") String scatterMethod,
+      @JsonProperty("scatter") Object scatter, @JsonProperty("scatterMethod") String scatterMethod, @JsonProperty("linkMerge") String linkMerge,
       @JsonProperty("inputs") List<Map<String, Object>> inputs, @JsonProperty("outputs") List<Map<String, Object>> outputs) {
     this.id = id;
     this.app = app;
@@ -54,6 +54,17 @@ public class Draft2Step {
    */
   @JsonIgnore
   private Draft2Job constructJob() {
+    if (id == null) {
+      String portId = null;
+      if (inputs != null && inputs.size() > 0) {
+        portId = (String) inputs.get(0).get(Draft2SchemaHelper.STEP_PORT_ID);
+      } else if (outputs != null && outputs.size() > 0) {
+        portId = (String) outputs.get(0).get(Draft2SchemaHelper.STEP_PORT_ID);
+      }
+      if (portId.contains(Draft2SchemaHelper.PORT_ID_SEPARATOR)) {
+        id = portId.substring(1, portId.lastIndexOf(Draft2SchemaHelper.PORT_ID_SEPARATOR));
+      }
+    }
     Map<String, Object> inputMap = constructJobPorts(inputs);
     Map<String, Object> outputMap = constructJobPorts(outputs);
     return new Draft2Job(app, inputMap, outputMap, scatter, scatterMethod, id);
@@ -71,7 +82,9 @@ public class Draft2Step {
       String id = Draft2SchemaHelper.getLastInputId(Draft2BindingHelper.getId(port));
       id = Draft2SchemaHelper.normalizeId(id);
       Object value = Draft2BindingHelper.getDefault(port);
-      portMap.put(id, value);
+      if (value != null) {
+        portMap.put(id, value);
+      }
     }
     return portMap;
   }

@@ -42,7 +42,7 @@ public class Draft2ExpressionResolver {
   public static <T> T evaluate(final String expression, final Draft2Job context, final Object self, boolean includeTemplates,
       String language) throws Draft2ExpressionException {
     if (language == null) {
-      language = Draft2ExpressionLanguage.JAVASCRIPT.getLanguages()[0]; // assume it's JavaScript
+      language = Draft2ExpressionLanguage.JAVASCRIPT.getDefault(); // assume it's JavaScript
     }
 
     Object transformedContext = transformContext(context, language);

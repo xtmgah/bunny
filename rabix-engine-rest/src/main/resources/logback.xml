@@ -1,41 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
-  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
-    <resetJUL>true</resetJUL>
-  </contextListener>
+	<contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+		<resetJUL>true</resetJUL>
+	</contextListener>
 
-  <logger name="com.sun.jersey.guice" level="WARN" />
-  <logger name="org.rabix" level="WARN" />
+	<logger name="com.sun.jersey.guice" level="WARN" />
+	<logger name="org.rabix" level="INFO" />
 
-<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-    <encoder>
-      <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
-    </encoder>
-  </appender>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n
+			</pattern>
+		</encoder>
+	</appender>
 
-  <!-- <appender name="F1" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>./log/rabix/rabix.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>/data/log/rabix/rabix-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-        <maxFileSize>100MB</maxFileSize>
-      </timeBasedFileNamingAndTriggeringPolicy>
-    </rollingPolicy>
-    <encoder>
-      <pattern>%d [%t] %p %c{1} - %m%n</pattern>
-    </encoder>
-  </appender> -->
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+	</root>
 
- <!--  <appender name="SYSLOG" class="ch.qos.logback.classic.net.SyslogAppender">
-    <syslogHost>localhost</syslogHost>
-    <facility>USER</facility>
-    <suffixPattern>rabix: %X{task.id}[%t] %p %c{1} - %m%n</suffixPattern>
-  </appender> -->
-
-  <root level="WARN">
-    <appender-ref ref="STDOUT" />
-  </root>
-  
 </configuration>

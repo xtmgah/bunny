@@ -67,6 +67,15 @@ public class InternalSchemaHelper {
     }
     return idParts[idParts.length - 1];
   }
+  
+  public static Integer getScatteredNumber(String id) {
+    String lastPart = getLastPart(id);
+    try {
+      return Integer.parseInt(lastPart);
+    } catch (Exception e) {
+      return null;
+    }
+  }
 
   /**
    * Use Jackson for transformation

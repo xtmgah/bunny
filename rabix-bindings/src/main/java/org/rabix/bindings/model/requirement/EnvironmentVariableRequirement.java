@@ -1,16 +1,16 @@
 package org.rabix.bindings.model.requirement;
 
-import java.util.List;
+import java.util.Map;
 
 public class EnvironmentVariableRequirement implements Requirement  {
 
-  private final List<String> variables;
+  private final Map<String, String> variables;
   
-  public EnvironmentVariableRequirement(List<String> variables) {
+  public EnvironmentVariableRequirement(Map<String, String> variables) {
     this.variables = variables;
   }
   
-  public List<String> getVariables() {
+  public Map<String, String> getVariables() {
     return variables;
   }
 

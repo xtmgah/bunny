@@ -11,13 +11,13 @@ public class Draft2Resources {
   @JsonProperty("high_io")
   private final boolean highIO;
   @JsonProperty("cpu")
-  private final int cpu;
-  @JsonProperty("mem_mb")
-  private final int memMB;
+  private final Integer cpu;
+  @JsonProperty("mem")
+  private final Integer memMB;
 
   @JsonCreator
-  public Draft2Resources(@JsonProperty("high_io") boolean highIO, @JsonProperty("cpu") int cpu,
-      @JsonProperty("mem_mb") int memMB) {
+  public Draft2Resources(@JsonProperty("high_io") boolean highIO, @JsonProperty("cpu") Integer cpu,
+      @JsonProperty("mem") Integer memMB) {
     this.highIO = highIO;
     this.cpu = cpu;
     this.memMB = memMB;
@@ -27,11 +27,11 @@ public class Draft2Resources {
     return highIO;
   }
 
-  public int getCpu() {
+  public Integer getCpu() {
     return cpu;
   }
 
-  public int getMemMB() {
+  public Integer getMemMB() {
     return memMB;
   }
 
@@ -39,9 +39,9 @@ public class Draft2Resources {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + cpu;
+    result = prime * result + ((cpu == null) ? 0 : cpu.hashCode());
     result = prime * result + (highIO ? 1231 : 1237);
-    result = prime * result + memMB;
+    result = prime * result + ((memMB == null) ? 0 : memMB.hashCode());
     return result;
   }
 
@@ -54,11 +54,17 @@ public class Draft2Resources {
     if (getClass() != obj.getClass())
       return false;
     Draft2Resources other = (Draft2Resources) obj;
-    if (cpu != other.cpu)
+    if (cpu == null) {
+      if (other.cpu != null)
+        return false;
+    } else if (!cpu.equals(other.cpu))
       return false;
     if (highIO != other.highIO)
       return false;
-    if (memMB != other.memMB)
+    if (memMB == null) {
+      if (other.memMB != null)
+        return false;
+    } else if (!memMB.equals(other.memMB))
       return false;
     return true;
   }

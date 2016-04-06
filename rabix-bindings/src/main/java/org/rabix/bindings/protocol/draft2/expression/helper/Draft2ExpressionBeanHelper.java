@@ -19,6 +19,9 @@ public class Draft2ExpressionBeanHelper {
     }
     if (value instanceof Map<?, ?>) {
       Map<?, ?> valueMap = (Map<?, ?>) value;
+      if (valueMap.containsKey(KEY_EXPRESSION_LANGUAGE) && valueMap.containsKey(KEY_EXPRESSION_VALUE)) {
+        return true;
+      }
       Object type = valueMap.get(Draft2SchemaHelper.KEY_JOB_TYPE);
 
       if (type != null && type.equals(Draft2SchemaHelper.TYPE_JOB_EXPRESSION)) {

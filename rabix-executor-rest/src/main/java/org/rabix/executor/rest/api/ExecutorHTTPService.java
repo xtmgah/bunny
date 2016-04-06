@@ -10,7 +10,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/v0/executor")
@@ -19,20 +19,20 @@ public interface ExecutorHTTPService {
   public static final String CONTEXT_ID = "context-id";
   
   @POST
-  @Path("/start_executable")
-  Response startExecutable(Executable executable, @Context HttpHeaders headers);
+  @Path("/start_job")
+  Response startJob(Job job, @Context HttpHeaders headers);
 
   @POST
-  @Path("/stop_executable/")
-  Response stopExecutable(@QueryParam("id") String id, @Context HttpHeaders headers);
+  @Path("/stop_job/")
+  Response stopJob(@QueryParam("id") String id, @Context HttpHeaders headers);
 
   @GET
-  @Path("/executable_status")
-  Response executableStatus(@QueryParam("id") String id, @Context HttpHeaders headers);
+  @Path("/job_status")
+  Response jobStatus(@QueryParam("id") String id, @Context HttpHeaders headers);
   
   @GET
-  @Path("/executable_result")
-  Response executableResult(@QueryParam("id") String id, @Context HttpHeaders headers);
+  @Path("/job_result")
+  Response jobResult(@QueryParam("id") String id, @Context HttpHeaders headers);
 
   @GET
   @Path("/executor_status")

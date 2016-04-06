@@ -13,8 +13,11 @@ public class LinkRecord {
   private String destinationJobId;
   private String destinationJobPort;
   private LinkPortType destinationVarType;
+
+  private Integer position;
   
-  public LinkRecord(String contextId, String sourceJobId, String sourceJobPort, LinkPortType sourceVarType, String destinationJobId, String destinationJobPort, LinkPortType destinationVarType) {
+  public LinkRecord(String contextId, String sourceJobId, String sourceJobPort, LinkPortType sourceVarType, String destinationJobId, String destinationJobPort, LinkPortType destinationVarType, Integer position) {
+    this.position = position;
     this.contextId = contextId;
     this.sourceJobId = sourceJobId;
     this.sourceJobPort = sourceJobPort;
@@ -26,6 +29,10 @@ public class LinkRecord {
 
   public String getContextId() {
     return contextId;
+  }
+  
+  public Integer getPosition() {
+    return position;
   }
   
   public String getSourceJobId() {
@@ -75,6 +82,10 @@ public class LinkRecord {
   public void setDestinationVarType(LinkPortType destinationVarType) {
     this.destinationVarType = destinationVarType;
   }
-  
+
+  @Override
+  public String toString() {
+    return "LinkRecord [contextId=" + contextId + ", sourceJobId=" + sourceJobId + ", sourceJobPort=" + sourceJobPort + ", sourceVarType=" + sourceVarType + ", destinationJobId=" + destinationJobId + ", destinationJobPort=" + destinationJobPort + ", destinationVarType=" + destinationVarType + ", position=" + position + "]";
+  }
   
 }
