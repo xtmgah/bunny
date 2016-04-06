@@ -79,7 +79,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         if ((job.getInputPortIncoming(event.getPortId()) > 1) && LinkMerge.isBlocking(node.getLinkMerge(event.getPortId(), LinkPortType.INPUT))) {
           // it's blocking
           if (job.isInputPortReady(event.getPortId())) {
-            scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
+            scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
             update(job, variable);
             return;
           }
@@ -121,8 +121,9 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     }
 
     List<Object> values = null;
+    boolean isPortReady = job.isInputPortReady(portId);
     boolean isPortBlocking = job.getInputPortIncoming(portId) > 1;
-    if (value instanceof List<?> && !isPortBlocking) {
+    if (value instanceof List<?> && (!isPortBlocking || (isPortBlocking && isPortReady))) {
       values = (List<Object>) value;
     } else {
       values = new ArrayList<>();
