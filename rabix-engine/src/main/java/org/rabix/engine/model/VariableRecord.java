@@ -16,7 +16,6 @@ public class VariableRecord {
   private LinkPortType type;
   private Object value;
   
-  private Integer position;
   private boolean isWrapped;        // is value wrapped into array?
   private int numberOfGlobals;      // number of 'global' outputs if node is scattered 
 
@@ -76,80 +75,21 @@ public class VariableRecord {
     }
   }
   
-  public void addValue(Object value, LinkMerge linkMerge, Integer position) {
-    numberOfTimesUpdated++;
-    
-    if (value == null) {
-      return;
-    }
-    if (isDefault) {
-      isDefault = false;
-      this.value = null;
-    }
+  public void linkMerge(LinkMerge linkMerge) {
     if (linkMerge == null) {
       linkMerge = LinkMerge.merge_nested;
     }
     switch (linkMerge) {
     case merge_nested:
-      addMergeNested(value, position);
       break;
     case merge_flattened:
-      addMergeFlattened(value, position);
+      this.value = mergeFlatten(this.value);
+      break;
     default:
       break;
-    }
+    }  
   }
-
-  @SuppressWarnings("unchecked")
-  private void addMergeNested(Object value, Integer position) {
-    if (this.value == null) {
-      this.value = value;
-      this.position = position;
-      return;
-    }
-    if (isWrapped) {
-      if (position != null) {
-        expand((List<Object>) this.value, position);
-        ((List<Object>) this.value).set(position - 1, value);
-      } else {
-        ((List<Object>) this.value).add(value);
-      }
-    } else {
-      if (this.position != null) {
-    	Object tmpValue = this.value;
-    	this.value = new ArrayList<>();
-    	expand((List<Object>) this.value, this.position);
-    	((List<Object>) this.value).set(this.position - 1, tmpValue);
-      
-    	expand((List<Object>) this.value, position);
-    	((List<Object>) this.value).set(position - 1, value);
-      } else {
-    	this.value = wrap(this.value, value);
-      }
-  	  this.isWrapped = true;
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void addMergeFlattened(Object value, Integer position) {
-    List<Object> flattened = flatten(value);
     
-    if (this.value == null) {
-      if (flattened.size() > 1) {
-        this.value = flattened;
-      } else {
-        this.value = flattened.get(0);
-      }
-      return;
-    }
-    if (this.value instanceof List<?>) {
-      ((List<Object>) this.value).addAll(flattened);
-    } else {
-      this.value = wrap(this.value);
-      ((List<Object>) this.value).addAll(flattened);
-    }
-  }
-  
   private <T> void expand(List<T> list, Integer position) {
     int initialSize = list.size();
     if (initialSize >= position) {
@@ -161,26 +101,17 @@ public class VariableRecord {
     return;
   }
   
-  private List<Object> flatten(Object value) {
+  private List<Object> mergeFlatten(Object value) {
     List<Object> flattenedValues = new ArrayList<>();
     
     if (value instanceof List<?>) {
       for (Object subvalue : ((List<?>) value)) {
-        flattenedValues.addAll((Collection<? extends Object>) flatten(subvalue));
+        flattenedValues.addAll((Collection<? extends Object>) mergeFlatten(subvalue));
       }
     } else {
       flattenedValues.add(value);
     }
     return flattenedValues;
-  }
-  
-  @SuppressWarnings("unchecked")
-  private <T> Collection<T> wrap(final T... objects){
-    final Collection<T> collection = new ArrayList<T>();
-    for (T t : objects) {
-      collection.add(t);
-    }
-    return collection;
   }
   
   public String getJobId() {
