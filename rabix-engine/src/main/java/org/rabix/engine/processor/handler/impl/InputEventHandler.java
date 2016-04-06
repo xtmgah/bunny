@@ -158,7 +158,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
           
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
-        variableN.setNumberGlobals(numberOfScattered);
+        variableN.setNumberGlobals(getNumberOfScattered(job, numberOfScattered));
         variableService.create(variableN);
 
         if (jobN.getState().equals(JobState.PENDING)) {
@@ -179,7 +179,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       }
       for (DAGLinkPort outputPort : node.getOutputPorts()) {
         VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(outputPort.getId(), outputPort.getType()));
-        variableN.setNumberGlobals(numberOfScattered);
+        variableN.setNumberGlobals(getNumberOfScattered(job, numberOfScattered));
         variableService.create(variableN);
         jobN.incrementPortCounter(outputPort, LinkPortType.OUTPUT);
 
@@ -190,10 +190,10 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       job.setState(JobState.RUNNING);
       job.setScatterWrapper(true);
       
-      job.resetOutputPortCounters(numberOfScattered);
+      job.resetOutputPortCounters(getNumberOfScattered(job, numberOfScattered));
       jobService.update(job);
       
-      jobN.setNumberOfGlobalOutputs(numberOfScattered);
+      jobN.setNumberOfGlobalOutputs(getNumberOfScattered(job, numberOfScattered));
       jobService.create(jobN);
 
       for (Event subevent : events) {
