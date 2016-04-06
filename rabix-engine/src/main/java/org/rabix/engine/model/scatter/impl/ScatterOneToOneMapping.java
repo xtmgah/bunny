@@ -46,11 +46,10 @@ public class ScatterOneToOneMapping implements ScatterMapping {
     List<Object> valueList = values.get(port);
     List<Boolean> indexList = indexes.get(port);
 
-    if (indexList.size() >= position) {
-      position = indexList.get(position - 1) ? indexList.size() + 1 : position;
+    if (indexList.size() < position) {
+      expand(indexList, position);
+      expand(valueList, position);
     }
-    expand(indexList, position);
-    expand(valueList, position);
 
     indexList.set(position - 1, true);
     valueList.set(position - 1, value);

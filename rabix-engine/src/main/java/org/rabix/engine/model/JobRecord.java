@@ -169,6 +169,24 @@ public class JobRecord {
     }
     return false;
   }
+  
+  public boolean isInputPortBlocking(String port) {
+    for (PortCounter pc : inputCounters) {
+      if (pc.port.equals(port)) {
+        return pc.blocking;
+      }
+    }
+    return false;
+  }
+  
+  public boolean isOutputPortBlocking(String port) {
+    for (PortCounter pc : outputCounters) {
+      if (pc.port.equals(port)) {
+        return pc.blocking;
+      }
+    }
+    return false;
+  }
 
   public boolean isOutputPortReady(String port) {
     for (PortCounter pc : outputCounters) {
@@ -245,6 +263,10 @@ public class JobRecord {
     }
   }
 
+  public void setNumberOfGlobalOutputs(int numberOfGlobalOutputs) {
+    this.numberOfGlobalOutputs = numberOfGlobalOutputs;
+  }
+  
   public void resetOutputPortCounters(int value) {
     if (numberOfGlobalOutputs == value) {
       return;
@@ -360,5 +382,5 @@ public class JobRecord {
   public String toString() {
     return "JobRecord [id=" + id + ", externalId=" + externalId + ", contextId=" + contextId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterMapping=" + scatterMapping + "]";
   }
-  
+
 }
