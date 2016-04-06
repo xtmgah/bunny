@@ -19,7 +19,7 @@ import org.rabix.engine.processor.dispatcher.EventDispatcher;
 import org.rabix.engine.processor.dispatcher.EventDispatcherFactory;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.processor.handler.HandlerFactory;
-import org.rabix.engine.service.ContextService;
+import org.rabix.engine.service.ContextRecordService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,14 +43,14 @@ public class EventProcessorImpl implements EventProcessor {
   private final HandlerFactory handlerFactory;
   private final EventDispatcher eventDispatcher;
   
-  private final ContextService contextService;
+  private final ContextRecordService contextRecordService;
   
   private final ConcurrentMap<String, Integer> iterations = new ConcurrentHashMap<>();
   
   @Inject
-  public EventProcessorImpl(HandlerFactory handlerFactory, EventDispatcherFactory eventDispatcherFactory, ContextService contextService) {
+  public EventProcessorImpl(HandlerFactory handlerFactory, EventDispatcherFactory eventDispatcherFactory, ContextRecordService contextRecordService) {
     this.handlerFactory = handlerFactory;
-    this.contextService = contextService;
+    this.contextRecordService = contextRecordService;
     this.eventDispatcher = eventDispatcherFactory.create(EventDispatcher.Type.SYNC);
   }
 
@@ -67,7 +67,7 @@ public class EventProcessorImpl implements EventProcessor {
               Thread.sleep(SLEEP);
               continue;
             }
-            ContextRecord context = contextService.find(event.getContextId());
+            ContextRecord context = contextRecordService.find(event.getContextId());
             if (context != null && context.getStatus().equals(ContextStatus.FAILED)) {
               logger.info("Skip event {}. Context {} has been invalidated.", event, context.getId());
               continue;

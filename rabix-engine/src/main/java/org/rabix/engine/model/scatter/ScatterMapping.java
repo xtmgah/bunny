@@ -6,7 +6,7 @@ import org.rabix.bindings.BindingException;
 
 public interface ScatterMapping {
 
-  void enable(String port, Object value);
+  void enable(String port, Object value, Integer position);
 
   void commit(List<RowMapping> mappings);
   

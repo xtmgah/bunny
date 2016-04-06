@@ -7,8 +7,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -17,9 +21,10 @@ import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
+import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -52,17 +57,17 @@ public class DockerContainerHandler implements ContainerHandler {
   private String containerId;
   private DockerClient dockerClient;
 
-  private final Executable executable;
+  private final Job job;
   private final DockerContainerRequirement dockerResource;
 
   private final File workingDir;
   private final Configuration configuration;
 
-  public DockerContainerHandler(Executable executable, DockerContainerRequirement dockerResource, Configuration configuration) {
-    this.executable = executable;
+  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) {
+    this.job = job;
     this.dockerResource = dockerResource;
     this.configuration = configuration;
-    this.workingDir = StorageConfig.getWorkingDir(executable, configuration);
+    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.dockerClient = createDockerClient(configuration);
   }
   
@@ -100,16 +105,20 @@ public class DockerContainerHandler implements ContainerHandler {
       HostConfig hostConfig = hostConfigBuilder.build();
       builder.hostConfig(hostConfig);
 
-      Bindings bindings = BindingsFactory.create(executable);
-      String commandLine = bindings.buildCommandLine(executable);
+      Bindings bindings = BindingsFactory.create(job);
+      String commandLine = bindings.buildCommandLine(job);
 
       File commandLineFile = new File(workingDir, COMMAND_FILE);
       FileUtils.writeStringToFile(commandLineFile, commandLine);
       builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
 
-      EnvironmentVariableRequirement environmentVariableResource = bindings.getEnvironmentVariableRequirement(executable);
+      List<Requirement> combinedRequirements = new ArrayList<>();
+      combinedRequirements.addAll(bindings.getHints(job));
+      combinedRequirements.addAll(bindings.getRequirements(job));
+      
+      EnvironmentVariableRequirement environmentVariableResource = getRequirement(combinedRequirements, EnvironmentVariableRequirement.class);
       if (environmentVariableResource != null) {
-        builder.env(environmentVariableResource.getVariables());
+        builder.env(transformEnvironmentVariables(environmentVariableResource.getVariables()));
       }
       ContainerCreation creation = null;
       try {
@@ -133,6 +142,24 @@ public class DockerContainerHandler implements ContainerHandler {
       logger.error("Failed to start container.", e);
       throw new ContainerException("Failed to start container.", e);
     }
+  }
+  
+  private List<String> transformEnvironmentVariables(Map<String, String> variables) {
+    List<String> transformed = new ArrayList<>();
+    for (Entry<String, String> variableEntry : variables.entrySet()) {
+      transformed.add(variableEntry.getKey() + "=" + variableEntry.getValue());
+    }
+    return transformed;
+  }
+  
+  @SuppressWarnings("unchecked")
+  private <T extends Requirement> T getRequirement(List<Requirement> requirements, Class<T> clazz) {
+    for (Requirement requirement : requirements) {
+      if (requirement.getClass().equals(clazz)) {
+        return (T) requirement;
+      }
+    }
+    return null;
   }
 
   @Override
@@ -192,7 +219,7 @@ public class DockerContainerHandler implements ContainerHandler {
    */
   @Override
   public void dumpContainerLogs(final File logFile) throws ContainerException {
-    logger.debug("Saving standard error files for id={}", executable.getId());
+    logger.debug("Saving standard error files for id={}", job.getId());
 
     if (logFile != null) {
       try {

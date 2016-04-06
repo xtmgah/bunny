@@ -1,15 +1,30 @@
 package org.rabix.bindings.model.dag;
 
+import org.rabix.bindings.model.LinkMerge;
+
 public class DAGLink {
 
   private final DAGLinkPort source;
   private final DAGLinkPort destination;
+  
+  private final Integer position;
+  private final LinkMerge linkMerge;
 
-  public DAGLink(DAGLinkPort source, DAGLinkPort destination) {
+  public DAGLink(DAGLinkPort source, DAGLinkPort destination, LinkMerge linkMerge, Integer position) {
     this.source = source;
+    this.position = position;
+    this.linkMerge = linkMerge;
     this.destination = destination;
   }
 
+  public LinkMerge getLinkMerge() {
+    return linkMerge;
+  }
+  
+  public Integer getPosition() {
+    return position;
+  }
+  
   public DAGLinkPort getSource() {
     return source;
   }
@@ -51,7 +66,7 @@ public class DAGLink {
 
   @Override
   public String toString() {
-    return "DAGLink [source=" + source + ", destination=" + destination + "]";
+    return "DAGLink [source=" + source + ", destination=" + destination + ", position=" + position + "]";
   }
 
 }

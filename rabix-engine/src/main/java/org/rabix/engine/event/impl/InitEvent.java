@@ -1,5 +1,7 @@
 package org.rabix.engine.event.impl;
 
+import java.util.Map;
+
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.event.Event;
@@ -10,11 +12,11 @@ import org.rabix.engine.event.Event;
 public class InitEvent implements Event {
 
   private final DAGNode node;
-  private final Object value;
+  private final Map<String, Object> value;
   
   private final Context context;
   
-  public InitEvent(Context context, DAGNode node, Object value) {
+  public InitEvent(Context context, DAGNode node, Map<String, Object> value) {
     this.node = node;
     this.value = value;
     this.context = context;
@@ -24,7 +26,7 @@ public class InitEvent implements Event {
     return node;
   }
 
-  public Object getValue() {
+  public Map<String, Object> getValue() {
     return value;
   }
   

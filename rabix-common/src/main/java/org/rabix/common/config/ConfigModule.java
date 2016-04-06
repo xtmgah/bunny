@@ -47,7 +47,8 @@ public class ConfigModule extends AbstractModule {
     try {
       Iterator<File> iterator = FileUtils.iterateFiles(configDir, new String[] { "properties" }, true);
       while (iterator.hasNext()) {
-        configuration.load(iterator.next());
+        File configFile = iterator.next();
+        configuration.load(configFile);
       }
       if (overrides != null) {
         MapConfiguration mapConfiguration = new MapConfiguration(overrides);

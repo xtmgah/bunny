@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 
 public enum Draft2ExpressionLanguage {
   
-  JAVASCRIPT(new String[] { "#cwl-js-engine", "cwl-js-engine", "node-engine.cwl", "#node-engine.cwl" }),
+  JAVASCRIPT(new String[] { "#js", "#cwl-js-engine", "cwl-js-engine", "node-engine.cwl", "#node-engine.cwl" }),
   JSON_POINTER(new String[] { "cwl:JsonPointer", "#cwl:JsonPointer" });
 
   private String[] languages;
@@ -29,6 +29,10 @@ public enum Draft2ExpressionLanguage {
     throw new Draft2ExpressionException("Language " + lang + " is not supported");
   }
 
+  public String getDefault() {
+    return "#cwl-js-engine";
+  }
+  
   public String[] getLanguages() {
     return languages;
   }

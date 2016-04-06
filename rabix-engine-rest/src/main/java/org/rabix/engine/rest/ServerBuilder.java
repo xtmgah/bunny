@@ -1,5 +1,6 @@
 package org.rabix.engine.rest;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.EnumSet;
 
@@ -16,10 +17,15 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.rabix.common.config.ConfigModule;
 import org.rabix.engine.EngineModule;
-import org.rabix.engine.rest.api.EngineHTTPService;
-import org.rabix.engine.rest.api.impl.EngineHTTPServiceImpl;
-import org.rabix.engine.rest.db.TaskDB;
+import org.rabix.engine.rest.api.JobHTTPService;
+import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
+import org.rabix.engine.rest.db.JobDB;
+import org.rabix.engine.rest.plugin.BackendPluginConfig;
+import org.rabix.engine.rest.plugin.BackendPluginRegister;
+import org.rabix.engine.rest.service.JobService;
+import org.rabix.engine.rest.service.impl.JobServiceImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -41,13 +47,21 @@ public class ServerBuilder {
   public Server build() {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
-    BootstrapUtils.newInjector(locator, Arrays.asList(new ServletModule(), new EngineModule(), new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(TaskDB.class).in(Scopes.SINGLETON);
-        bind(EngineHTTPService.class).to(EngineHTTPServiceImpl.class).in(Scopes.SINGLETON);;
-      }
-    }));
+    File configDir = new File("config");
+    BootstrapUtils.newInjector(locator, Arrays.asList(
+        new ServletModule(), 
+        new ConfigModule(configDir, null), 
+        new EngineModule(), 
+        new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(JobDB.class).in(Scopes.SINGLETON);
+            bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
+            bind(BackendPluginRegister.class).in(Scopes.SINGLETON);
+            bind(BackendPluginConfig.class).in(Scopes.SINGLETON);
+            bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
+          }
+        }));
 
     BootstrapUtils.install(locator);
 

@@ -29,7 +29,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({ 
 	@Type(value = Draft2CommandLineTool.class, name = "CommandLineTool"),
 	@Type(value = Draft2ExpressionTool.class, name = "ExpressionTool"),
-    @Type(value = Draft2Workflow.class, name = "Workflow") })
+    @Type(value = Draft2Workflow.class, name = "Workflow"),
+    @Type(value = Draft2WagnerPythonTool.class, name = "WagnerPythonTool")})
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Draft2JobApp {

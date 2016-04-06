@@ -29,6 +29,7 @@ public class Draft2BindingHelper extends Draft2BeanHelper {
   public static final String KEY_SECONDARY_FILES = "secondaryFiles";
   public static final String KEY_VALUE_FROM = "valueFrom";
   public static final String KEY_OUTPUT_EVAL = "outputEval";
+  public static final String KEY_LINK_MERGE = "linkMerge";
 
   public static Object getGlob(Object binding) {
     return getValue(KEY_GLOB, binding);
@@ -92,6 +93,10 @@ public class Draft2BindingHelper extends Draft2BeanHelper {
 
   public static Object getSource(Map<String, Object> binding) {
     return getValue(KEY_SOURCE, binding);
+  }
+  
+  public static String getLinkMerge(Map<String, Object> binding) {
+    return getValue(KEY_LINK_MERGE, binding);
   }
   
   /**

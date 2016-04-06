@@ -31,7 +31,7 @@ public class RowMapping {
 
   @Override
   public String toString() {
-    return "Mapping [row=" + row + ", portMappings=" + portMappings + "]";
+    return "RowMapping [row=" + row + ", portMappings=" + portMappings + "]";
   }
   
 }

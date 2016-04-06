@@ -29,7 +29,11 @@ public class Draft2ExpressionJSPointerResolver {
       rootMap.put(CONTEXT_NAME, JSONHelper.convertToMap(context));
     }
     if (self != null) {
-      rootMap.put(SELF_NAME, JSONHelper.convertToMap(self));
+      if (self instanceof List<?>) {
+        rootMap.put(SELF_NAME, JSONHelper.convertToList(self));  
+      } else {
+        rootMap.put(SELF_NAME, JSONHelper.convertToMap(self));        
+      }
     }
 
     Object result = rootMap;
@@ -82,7 +86,7 @@ public class Draft2ExpressionJSPointerResolver {
           if (containerList.size() < keyInt) {
             throw new Draft2ExpressionException("Failed to resolve JSONPointer expression " + expression);
           }
-          result = containerList.get(keyInt - 1);
+          result = containerList.get(keyInt);
         }
         return result;
       } catch (Exception e) {

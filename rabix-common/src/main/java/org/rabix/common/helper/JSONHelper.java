@@ -33,9 +33,15 @@ public class JSONHelper {
   public static final ObjectMapper mapper = new ObjectMapper();
 
   @SuppressWarnings("unchecked")
-  public static Map<String, Object> readMapFromYAML(String yaml) {
-    Yaml reader = new Yaml();
-    return (Map<String, Object>) reader.load(yaml);
+  public static String transformToJSON(String data) {
+    try {
+      Yaml reader = new Yaml();
+      Map<String, Object> transformed = (Map<String, Object>) reader.load(data);
+      return writeObject(transformed);
+    } catch (Exception e) {
+      // do nothing
+    }
+    return data;
   }
   
   @SuppressWarnings("unchecked")
@@ -144,10 +150,20 @@ public class JSONHelper {
 
   @SuppressWarnings("unchecked")
   public static <T> Map<String, T> convertToMap(Object value) {
-    if (value == null)
+    if (value == null) {
       return null;
+    }
     JsonNode node = JSONHelper.convertToJsonNode(value);
     return readObject(node, Map.class);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static <T> List<T> convertToList(Object value) {
+    if (value == null) {
+      return null;
+    }
+    JsonNode node = JSONHelper.convertToJsonNode(value);
+    return readObject(node, List.class);
   }
   
   /**

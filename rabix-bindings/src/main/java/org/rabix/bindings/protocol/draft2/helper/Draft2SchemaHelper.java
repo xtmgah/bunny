@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.rabix.common.helper.CloneHelper;
+
 import com.google.common.base.Preconditions;
 
 public class Draft2SchemaHelper extends Draft2BeanHelper {
@@ -15,6 +17,8 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   public static final String ID_SEPARATOR = "/";
   public static final String PORT_ID_SEPARATOR = ".";
 
+  public static final String STEP_PORT_ID = "id";
+  
   public static final String KEY_SCHEMA_TYPE = "type";
   public static final String KEY_SCHEMA_NAME = "name";
   public static final String KEY_SCHEMA_ITEMS = "items";
@@ -28,6 +32,8 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   public static final String TYPE_JOB_EXPRESSION = "Expression";
   public static final String TYPE_JOB_ARRAY = "array";
   public static final String TYPE_JOB_RECORD = "record";
+  
+  public static final String SCHEMA_NULL = "null";
   
   public static String normalizeId(String id) {
     if (id == null) {
@@ -77,6 +83,27 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
 
   public static boolean isRecordFromSchema(Object schema) {
     return isTypeFromSchema(schema, TYPE_JOB_RECORD);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static boolean isRequired(Object schema) {
+    try {
+      Object clonedSchema = CloneHelper.deepCopy(schema);
+      while (clonedSchema instanceof Map<?, ?> && ((Map<?, ?>) clonedSchema).containsKey("type")) {
+        clonedSchema = ((Map<?, ?>) clonedSchema).get("type");
+      }
+      if (clonedSchema instanceof List<?>) {
+        for (Object subschema : ((List<Object>) clonedSchema)) {
+          if (subschema == null) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return clonedSchema != null;
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to clone schema " + schema);
+    }
   }
   
   @SuppressWarnings("unchecked")

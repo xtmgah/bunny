@@ -1,5 +1,7 @@
 package org.rabix.bindings.model.dag;
 
+import org.rabix.bindings.model.LinkMerge;
+
 public class DAGLinkPort {
 
   public static enum LinkPortType {
@@ -11,11 +13,14 @@ public class DAGLinkPort {
   private final String dagNodeId;
   private final LinkPortType type;
   private boolean scatter;
+  
+  private LinkMerge linkMerge;
     
-  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, boolean scatter) {
+  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, LinkMerge linkMerge, boolean scatter) {
     this.id = id;
     this.type = type;
     this.scatter = scatter;
+    this.linkMerge = linkMerge;
     this.dagNodeId = dagNodeId;
   }
   
@@ -34,6 +39,14 @@ public class DAGLinkPort {
   public String getNodeId() {
     return dagNodeId;
   }
+
+  public LinkMerge getLinkMerge() {
+    return linkMerge;
+  }
+  
+  public void setLinkMerge(LinkMerge linkMerge) {
+    this.linkMerge = linkMerge;
+  }
   
   public LinkPortType getType() {
     return type;
@@ -45,8 +58,6 @@ public class DAGLinkPort {
     int result = 1;
     result = prime * result + ((dagNodeId == null) ? 0 : dagNodeId.hashCode());
     result = prime * result + ((id == null) ? 0 : id.hashCode());
-    result = prime * result + (scatter ? 1231 : 1237);
-    result = prime * result + ((type == null) ? 0 : type.hashCode());
     return result;
   }
 
@@ -69,16 +80,12 @@ public class DAGLinkPort {
         return false;
     } else if (!id.equals(other.id))
       return false;
-    if (scatter != other.scatter)
-      return false;
-    if (type != other.type)
-      return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "DAGLinkPort [id=" + id + ", nodeId=" + dagNodeId + ", type=" + type + ", scatter=" + scatter + "]";
+    return "DAGLinkPort [id=" + id + ", dagNodeId=" + dagNodeId + ", type=" + type + ", scatter=" + scatter + ", linkMerge=" + linkMerge + "]";
   }
-
+  
 }

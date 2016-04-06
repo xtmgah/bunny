@@ -13,25 +13,22 @@ public class OutputUpdateEvent implements Event {
   private final Object value;
   private final String portId;
   
-  private final boolean fromScatter;        // it's a scatter event
-  private final Integer scatteredNodes;     // number of scattered nodes
+  private final Integer position;
+  private final boolean fromScatter;            // it's a scatter event
+  private final Integer numberOfScattered;      // number of scattered nodes
 
-  public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue) {
-    this.jobId = jobId;
-    this.contextId = contextId;
-    this.portId = portId;
-    this.value = outputValue;
-    this.fromScatter = false;
-    this.scatteredNodes = null;
+  public OutputUpdateEvent(String contextId, String jobId, String portId, Object value, Integer position) {
+    this(contextId, jobId, portId, value, false, null, position);
   }
   
-  public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue, boolean fromScatter, Integer scatteredNodes) {
+  public OutputUpdateEvent(String contextId, String jobId, String portId, Object outputValue, boolean fromScatter, Integer numberOfScattered, Integer position) {
     this.jobId = jobId;
     this.contextId = contextId;
     this.portId = portId;
     this.value = outputValue;
+    this.position = position;
     this.fromScatter = fromScatter;
-    this.scatteredNodes = scatteredNodes;
+    this.numberOfScattered = numberOfScattered;
   }
   
   public String getJobId() {
@@ -45,13 +42,17 @@ public class OutputUpdateEvent implements Event {
   public String getPortId() {
     return portId;
   }
+  
+  public Integer getPosition() {
+    return position;
+  }
 
   public boolean isFromScatter() {
     return fromScatter;
   }
   
-  public Integer getScatteredNodes() {
-    return scatteredNodes;
+  public Integer getNumberOfScattered() {
+    return numberOfScattered;
   }
   
   @Override
@@ -72,7 +73,7 @@ public class OutputUpdateEvent implements Event {
     result = prime * result + (fromScatter ? 1231 : 1237);
     result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
     result = prime * result + ((portId == null) ? 0 : portId.hashCode());
-    result = prime * result + ((scatteredNodes == null) ? 0 : scatteredNodes.hashCode());
+    result = prime * result + ((numberOfScattered == null) ? 0 : numberOfScattered.hashCode());
     result = prime * result + ((value == null) ? 0 : value.hashCode());
     return result;
   }
@@ -103,10 +104,10 @@ public class OutputUpdateEvent implements Event {
         return false;
     } else if (!portId.equals(other.portId))
       return false;
-    if (scatteredNodes == null) {
-      if (other.scatteredNodes != null)
+    if (numberOfScattered == null) {
+      if (other.numberOfScattered != null)
         return false;
-    } else if (!scatteredNodes.equals(other.scatteredNodes))
+    } else if (!numberOfScattered.equals(other.numberOfScattered))
       return false;
     if (value == null) {
       if (other.value != null)
@@ -118,7 +119,7 @@ public class OutputUpdateEvent implements Event {
 
   @Override
   public String toString() {
-    return "OutputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", fromScatter=" + fromScatter + ", scatteredNodes=" + scatteredNodes + "]";
+    return "OutputUpdateEvent [jobId=" + jobId + ", contextId=" + contextId + ", portId=" + portId + ", value=" + value + ", fromScatter=" + fromScatter + ", numberOfScattered=" + numberOfScattered + "]";
   }
   
 }

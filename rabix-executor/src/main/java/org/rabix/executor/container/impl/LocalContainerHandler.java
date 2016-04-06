@@ -5,6 +5,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -16,7 +20,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Executable;
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
+import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -27,32 +33,43 @@ public class LocalContainerHandler implements ContainerHandler {
 
   private final static Logger logger = LoggerFactory.getLogger(LocalContainerHandler.class);
 
+  private Job job;
   private File workingDir;
-  private Executable executable;
 
   private Future<Integer> processFuture;
   private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   private Process process;
 
-  public LocalContainerHandler(Executable executable, Configuration configuration) {
-    this.executable = executable;
-    this.workingDir = StorageConfig.getWorkingDir(executable, configuration);
+  public LocalContainerHandler(Job job, Configuration configuration) {
+    this.job = job;
+    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
   }
 
   @Override
   public synchronized void start() throws ContainerException {
     try {
-      Bindings bindings = BindingsFactory.create(executable);
-      String commandLine = bindings.buildCommandLine(executable);
+      Bindings bindings = BindingsFactory.create(job);
+      String commandLine = bindings.buildCommandLine(job);
 
       File commandLineFile = new File(workingDir, "cmd.log");
       FileUtils.writeStringToFile(commandLineFile, commandLine);
 
       final ProcessBuilder processBuilder = new ProcessBuilder();
+      List<Requirement> combinedRequirements = new ArrayList<>();
+      combinedRequirements.addAll(bindings.getHints(job));
+      combinedRequirements.addAll(bindings.getRequirements(job));
+
+      EnvironmentVariableRequirement environmentVariableResource = getRequirement(combinedRequirements, EnvironmentVariableRequirement.class);
+      if (environmentVariableResource != null) {
+        Map<String, String> env = processBuilder.environment();
+        for (Entry<String, String> envVariableEntry : environmentVariableResource.getVariables().entrySet()) {
+          env.put(envVariableEntry.getKey(), envVariableEntry.getValue());
+        }
+      }
+
       processBuilder.command("/bin/sh", "-c", commandLine);
       processBuilder.directory(workingDir);
-
       processFuture = executorService.submit(new Callable<Integer>() {
         @Override
         public Integer call() throws Exception {
@@ -66,6 +83,16 @@ public class LocalContainerHandler implements ContainerHandler {
       logger.error("Failed to start application", e);
       throw new ContainerException("Failed to start application", e);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T extends Requirement> T getRequirement(List<Requirement> requirements, Class<T> clazz) {
+    for (Requirement requirement : requirements) {
+      if (requirement.getClass().equals(clazz)) {
+        return (T) requirement;
+      }
+    }
+    return null;
   }
 
   @Override

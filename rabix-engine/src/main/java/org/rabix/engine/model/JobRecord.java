@@ -6,7 +6,7 @@ import java.util.List;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.engine.model.scatter.ScatterMapping;
-import org.rabix.engine.service.JobService.JobState;
+import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobRecord {
 
@@ -14,6 +14,7 @@ public class JobRecord {
   private final String externalId;
   private final String contextId;
   private final boolean master;
+  private boolean blocking;
   
   private JobState state;
   
@@ -29,14 +30,15 @@ public class JobRecord {
   
   private ScatterMapping scatterMapping;
   
-  public JobRecord(String contextId, String id, String uniqueId, JobState state, boolean isContainer, boolean fromScatter, boolean master) {
+  public JobRecord(String contextId, String id, String uniqueId, JobState state, boolean isContainer, boolean isScattered, boolean master, boolean blocking) {
     this.id = id;
     this.externalId = uniqueId;
     this.contextId = contextId;
     this.state = state;
     this.master = master;
+    this.blocking = blocking;
     this.isContainer = isContainer;
-    this.isScattered = fromScatter;
+    this.isScattered = isScattered;
     this.inputCounters = new ArrayList<>();
     this.outputCounters = new ArrayList<>();
   }
@@ -57,6 +59,50 @@ public class JobRecord {
     return master;
   }
   
+  public boolean isBlocking() {
+    return blocking;
+  }
+  
+  public void setBlocking(boolean blocking) {
+    this.blocking = blocking;
+  }
+  
+  public void increaseInputPortIncoming(String port) {
+    for (PortCounter portCounter : inputCounters) {
+      if (portCounter.port.equals(port)) {
+        portCounter.incoming++;
+        return;
+      }
+    }
+  }
+  
+  public void increaseOutputPortIncoming(String port) {
+    for (PortCounter portCounter : outputCounters) {
+      if (portCounter.port.equals(port)) {
+        portCounter.incoming++;
+        return;
+      }
+    }
+  }
+  
+  public int getInputPortIncoming(String port) {
+    for (PortCounter pc : inputCounters) {
+      if (pc.port.equals(port)) {
+        return pc.incoming;
+      }
+    }
+    return 0;
+  }
+  
+  public int getOutputPortIncoming(String port) {
+    for (PortCounter pc : outputCounters) {
+      if (pc.port.equals(port)) {
+        return pc.incoming;
+      }
+    }
+    return 0;
+  }
+  
   public JobState getState() {
     return state;
   }
@@ -75,6 +121,24 @@ public class JobRecord {
 
   public List<PortCounter> getOutputCounters() {
     return outputCounters;
+  }
+  
+  public PortCounter getInputCounter(String port) {
+    for (PortCounter portCounter : inputCounters) {
+      if (portCounter.port.equals(port)) {
+        return portCounter;
+      }
+    }
+    return null;
+  }
+  
+  public PortCounter getOutputCounter(String port) {
+    for (PortCounter portCounter : outputCounters) {
+      if (portCounter.port.equals(port)) {
+        return portCounter;
+      }
+    }
+    return null;
   }
 
   public void setOutputCounters(List<PortCounter> outputCounters) {
@@ -123,7 +187,7 @@ public class JobRecord {
     }
     return false;
   }
-
+  
   public boolean isOutputPortReady(String port) {
     for (PortCounter pc : outputCounters) {
       if (pc.port.equals(port)) {
@@ -151,14 +215,20 @@ public class JobRecord {
   public void incrementPortCounterIfThereIsNo(DAGLinkPort port, LinkPortType type) {
     List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
 
+    boolean exists = false;
     for (PortCounter pc : counters) {
-      if (pc.port.equals(port.getId()) && pc.counter < 1) {
-        pc.counter = pc.counter + 1;
-        return;
+      if (pc.port.equals(port.getId())) {
+        exists = true;
+        if (pc.counter < 1) {
+          pc.counter = pc.counter + 1;
+          return;
+        }
       }
     }
-    PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
-    counters.add(portCounter);
+    if (!exists) {
+      PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
+      counters.add(portCounter);
+    }
   }
   
   public void decrementPortCounter(String portId, LinkPortType type) {
@@ -193,6 +263,10 @@ public class JobRecord {
     }
   }
 
+  public void setNumberOfGlobalOutputs(int numberOfGlobalOutputs) {
+    this.numberOfGlobalOutputs = numberOfGlobalOutputs;
+  }
+  
   public void resetOutputPortCounters(int value) {
     if (numberOfGlobalOutputs == value) {
       return;
@@ -262,13 +336,20 @@ public class JobRecord {
     private String port;
     private int counter;
     private boolean scatter;
+    
+    private int incoming;
 
     PortCounter(String port, int counter, boolean scatter) {
       this.port = port;
       this.counter = counter;
       this.scatter = scatter;
+      this.incoming = 0;
     }
 
+    public void increaseIncoming() {
+      this.incoming++;
+    }
+    
     public String getPort() {
       return port;
     }
@@ -292,7 +373,11 @@ public class JobRecord {
     public void setScatter(boolean scatter) {
       this.scatter = scatter;
     }
+  }
 
+  @Override
+  public String toString() {
+    return "JobRecord [id=" + id + ", externalId=" + externalId + ", contextId=" + contextId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterMapping=" + scatterMapping + "]";
   }
 
 }
