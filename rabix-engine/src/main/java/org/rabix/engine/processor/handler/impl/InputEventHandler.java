@@ -60,13 +60,16 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
 
     DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
 
-    if (event.isEventFromLookAhead()) {
-      if (job.isBlocking() || job.isInputPortBlocking(event.getPortId())) {
-        return; // guard
+    if (event.isLookAhead()) {
+      if (job.isBlocking() || (job.getInputPortIncoming(event.getPortId()) > 1)) {
+        return; // guard: should not happen
       } else {
         job.resetInputPortCounters(event.getNumberOfScattered());
       }
-    } 
+    } else if ((job.getInputPortIncoming(event.getPortId()) > 1) && job.isScatterPort(event.getPortId()) && !LinkMerge.isBlocking(node.getLinkMerge())) {
+      job.resetOutputPortCounters(job.getInputPortIncoming(event.getPortId()));
+    }
+    
     
     variable.addValue(event.getValue(), node.getLinkMerge(), event.getPosition());
     job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
@@ -74,16 +77,16 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     // scatter
     if (!job.isBlocking() && !job.isScattered()) {
       if (job.isScatterPort(event.getPortId())) {
-        if (job.isInputPortBlocking(event.getPortId())) {
+        if ((job.getInputPortIncoming(event.getPortId()) > 1) && LinkMerge.isBlocking(node.getLinkMerge())) {
           // it's blocking
           if (job.isInputPortReady(event.getPortId())) {
-            scatterPort(job, event);
+            scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
             update(job, variable);
             return;
           }
         } else {
           // it's not blocking
-          scatterPort(job, event);
+          scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
           update(job, variable);
           return;
         }
@@ -105,29 +108,30 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
    * Scatters port
    */
   @SuppressWarnings("unchecked")
-  private void scatterPort(JobRecord job, InputUpdateEvent event) throws EventHandlerException {
-    DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
+  private void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead) throws EventHandlerException {
+    DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getContextId());
 
     if (job.getScatterMapping() == null) {
       job.setScatterMapping(getScatterMapping(node));
     }
 
-    if (event.isEventFromLookAhead()) {
-      int numberOfScattered = getNumberOfScattered(job, event.getNumberOfScattered());
-      createScatteredJobs(job, event.getPortId(), event.getValue(), node, numberOfScattered, event.getPosition());
+    if (isLookAhead) {
+      int numberOfScattered = getNumberOfScattered(job, numberOfScatteredFromEvent);
+      createScatteredJobs(job, portId, value, node, numberOfScattered, position);
       return;
     }
 
     List<Object> values = null;
-    if (event.getValue() instanceof List<?>) {
-      values = (List<Object>) event.getValue();
+    boolean isPortBlocking = job.getInputPortIncoming(portId) > 1;
+    if (value instanceof List<?> && !isPortBlocking) {
+      values = (List<Object>) value;
     } else {
       values = new ArrayList<>();
-      values.add(event.getValue());
+      values.add(value);
     }
 
     for (int i = 0; i < values.size(); i++) {
-      createScatteredJobs(job, event.getPortId(), values.get(i), node, values.size(), i + 1);
+      createScatteredJobs(job, portId, values.get(i), node, values.size(), isPortBlocking? position : i + 1);
     }
   }
   
@@ -272,13 +276,12 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         Event updateEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
         eventProcessor.send(updateEvent);
       }
-    } else if (job.getScatterPorts().size() > 0 && !job.isScattered()) {  // TODO refactor
+    } else if (!job.isScattered() && job.getScatterPorts().size() > 0) {
       job.setState(JobState.RUNNING);
       
       for (String port : job.getScatterPorts()) {
         VariableRecord variable = variableService.find(job.getId(), port, LinkPortType.INPUT, event.getContextId());
-        InputUpdateEvent inputUpdateEvent = new InputUpdateEvent(event.getContextId(), job.getId(), port, variable.getValue(), 1);
-        scatterPort(job, inputUpdateEvent);
+        scatterPort(job, port, variable.getValue(), 1, null, false);
       }
     }
     
@@ -340,16 +343,17 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     if (linkPort.getType().equals(LinkPortType.INPUT)) {
       if (job.getState().equals(JobState.PENDING)) {
         job.incrementPortCounter(linkPort, LinkPortType.INPUT);
-        if (job.getInputCounter(linkPort.getId()).getCounter() > 1) {
-          job.setBlocking(true);
-          job.setInputPortBlocking(linkPort.getId(), true);
+        job.increaseInputPortIncoming(linkPort.getId());
+        
+        if (job.getInputPortIncoming(linkPort.getId()) > 1) {
+          if (LinkMerge.isBlocking(linkPort.getLinkMerge())) {
+            job.setBlocking(true);
+          }
         }
       }
     } else {
       job.incrementPortCounter(linkPort, LinkPortType.OUTPUT);
-      if (job.getOutputCounter(linkPort.getId()).getCounter() > 1) {
-        job.setOutputPortBlocking(linkPort.getId(), true);
-      }
+      job.increaseOutputPortIncoming(linkPort.getId());
     }
     jobService.update(job);
   }

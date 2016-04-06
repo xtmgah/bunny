@@ -71,17 +71,18 @@ public class Draft2Translator implements ProtocolTranslator {
 
   private DAGNode transformToGeneric(String globalJobId, Draft2Job job) throws BindingException {
     List<DAGLinkPort> inputPorts = new ArrayList<>();
+    LinkMerge linkMerge = job.getLinkMerge() != null? LinkMerge.valueOf(job.getLinkMerge()) : LinkMerge.merge_nested;
+    
     for (Draft2Port port : job.getApp().getInputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, port.getScatter() != null ? port.getScatter() : false);
+      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, linkMerge, port.getScatter() != null ? port.getScatter() : false);
       inputPorts.add(linkPort);
     }
     List<DAGLinkPort> outputPorts = new ArrayList<>();
     for (Draft2Port port : job.getApp().getOutputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, false);
+      DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, linkMerge, false);
       outputPorts.add(linkPort);
     }
     
-    LinkMerge linkMerge = job.getLinkMerge() != null? LinkMerge.valueOf(job.getLinkMerge()) : LinkMerge.merge_nested;
     ScatterMethod scatterMethod = job.getScatterMethod() != null? ScatterMethod.valueOf(job.getScatterMethod()) : ScatterMethod.dotproduct;
     if (!job.getApp().isWorkflow()) {
       return new DAGNode(job.getId(), inputPorts, outputPorts, scatterMethod, linkMerge, job.getApp(), job.getInputs());
@@ -119,8 +120,8 @@ public class Draft2Translator implements ProtocolTranslator {
       }
       boolean isSourceFromWorkflow = !dataLink.getSource().contains(InternalSchemaHelper.SEPARATOR);
 
-      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, false);
-      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getScattered() != null ? dataLink.getScattered() : false);
+      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, linkMerge, false);
+      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, linkMerge, dataLink.getScattered() != null ? dataLink.getScattered() : false);
 
       int position = dataLink.getPosition() != null ? dataLink.getPosition() : 1;
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort, position));

@@ -67,22 +67,40 @@ public class JobRecord {
     this.blocking = blocking;
   }
   
-  public void setInputPortBlocking(String port, boolean blocking) {
+  public void increaseInputPortIncoming(String port) {
     for (PortCounter portCounter : inputCounters) {
       if (portCounter.port.equals(port)) {
-        portCounter.blocking = blocking;
+        portCounter.incoming++;
         return;
       }
     }
   }
   
-  public void setOutputPortBlocking(String port, boolean blocking) {
+  public void increaseOutputPortIncoming(String port) {
     for (PortCounter portCounter : outputCounters) {
       if (portCounter.port.equals(port)) {
-        portCounter.blocking = blocking;
+        portCounter.incoming++;
         return;
       }
     }
+  }
+  
+  public int getInputPortIncoming(String port) {
+    for (PortCounter pc : inputCounters) {
+      if (pc.port.equals(port)) {
+        return pc.incoming;
+      }
+    }
+    return 0;
+  }
+  
+  public int getOutputPortIncoming(String port) {
+    for (PortCounter pc : outputCounters) {
+      if (pc.port.equals(port)) {
+        return pc.incoming;
+      }
+    }
+    return 0;
   }
   
   public JobState getState() {
@@ -170,24 +188,6 @@ public class JobRecord {
     return false;
   }
   
-  public boolean isInputPortBlocking(String port) {
-    for (PortCounter pc : inputCounters) {
-      if (pc.port.equals(port)) {
-        return pc.blocking;
-      }
-    }
-    return false;
-  }
-  
-  public boolean isOutputPortBlocking(String port) {
-    for (PortCounter pc : outputCounters) {
-      if (pc.port.equals(port)) {
-        return pc.blocking;
-      }
-    }
-    return false;
-  }
-
   public boolean isOutputPortReady(String port) {
     for (PortCounter pc : outputCounters) {
       if (pc.port.equals(port)) {
@@ -336,21 +336,18 @@ public class JobRecord {
     private String port;
     private int counter;
     private boolean scatter;
-    private boolean blocking;
+    
+    private int incoming;
 
     PortCounter(String port, int counter, boolean scatter) {
       this.port = port;
       this.counter = counter;
       this.scatter = scatter;
-      this.blocking = false;
+      this.incoming = 0;
     }
 
-    public boolean isBlocking() {
-      return blocking;
-    }
-    
-    public void setBlocking(boolean blocking) {
-      this.blocking = blocking;
+    public void increaseIncoming() {
+      this.incoming++;
     }
     
     public String getPort() {

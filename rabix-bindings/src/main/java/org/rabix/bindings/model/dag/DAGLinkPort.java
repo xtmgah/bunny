@@ -1,5 +1,7 @@
 package org.rabix.bindings.model.dag;
 
+import org.rabix.bindings.model.LinkMerge;
+
 public class DAGLinkPort {
 
   public static enum LinkPortType {
@@ -11,11 +13,14 @@ public class DAGLinkPort {
   private final String dagNodeId;
   private final LinkPortType type;
   private boolean scatter;
+  
+  private final LinkMerge linkMerge;
     
-  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, boolean scatter) {
+  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, LinkMerge linkMerge, boolean scatter) {
     this.id = id;
     this.type = type;
     this.scatter = scatter;
+    this.linkMerge = linkMerge;
     this.dagNodeId = dagNodeId;
   }
   
@@ -33,6 +38,10 @@ public class DAGLinkPort {
   
   public String getNodeId() {
     return dagNodeId;
+  }
+
+  public LinkMerge getLinkMerge() {
+    return linkMerge;
   }
   
   public LinkPortType getType() {
