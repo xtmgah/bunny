@@ -131,7 +131,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     }
 
     for (int i = 0; i < values.size(); i++) {
-      createScatteredJobs(job, portId, values.get(i), node, values.size(), isPortBlocking? position : i + 1);
+      createScatteredJobs(job, portId, values.get(i), node, values.size(), isPortBlocking && !isPortReady? position : i + 1);
     }
   }
   
