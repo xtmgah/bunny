@@ -10,86 +10,79 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 public class VariableRecord {
 
   private String contextId;
-  
+
   private String jobId;
   private String portId;
   private LinkPortType type;
   private Object value;
-  
-  private boolean isWrapped;        // is value wrapped into array?
-  private int numberOfGlobals;      // number of 'global' outputs if node is scattered 
+  private LinkMerge linkMerge;
+
+  private boolean isWrapped; // is value wrapped into array?
+  private int numberOfGlobals; // number of 'global' outputs if node is scattered
 
   private int numberOfTimesUpdated = 0;
-  
+
   private boolean isDefault;
-  
-  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value) {
-    this.jobId = jobId;
-    this.portId = portId;
-    this.type = type;
-    this.value = value;
-    this.contextId = contextId;
+
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value,
+      LinkMerge linkMerge) {
+    this(contextId, jobId, portId, type, value, linkMerge, false);
   }
-  
-  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, boolean isDefault) {
+
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value,
+      LinkMerge linkMerge, boolean isDefault) {
     this.jobId = jobId;
     this.portId = portId;
     this.type = type;
     this.value = value;
-    this.isDefault = isDefault;
     this.contextId = contextId;
+    this.linkMerge = linkMerge;
+    this.isDefault = isDefault;
   }
 
   public String getContextId() {
     return contextId;
   }
-  
+
   @SuppressWarnings("unchecked")
   public void addValue(Object value, Integer position) {
     numberOfTimesUpdated++;
-    if(this.value == null) {
-      if(position == 1) {
+    if (this.value == null) {
+      if (position == 1) {
         this.value = value;
-      }
-      else {
+      } else {
         List<Object> valueList = new ArrayList<>();
         expand(valueList, position);
-        valueList.set(position-1, value);
+        valueList.set(position - 1, value);
         this.value = valueList;
         this.isWrapped = true;
       }
-    }
-    else {
-      if(isWrapped) {
+    } else {
+      if (isWrapped) {
         expand((List<Object>) this.value, position);
-        ((List<Object>) this.value).set(position-1, value);
-      }
-      else {
+        ((List<Object>) this.value).set(position - 1, value);
+      } else {
         List<Object> valueList = new ArrayList<>();
         valueList.add(this.value);
         expand(valueList, position);
-        valueList.set(position-1, value);
+        valueList.set(position - 1, value);
         this.value = valueList;
         this.isWrapped = true;
       }
     }
   }
-  
-  public void linkMerge(LinkMerge linkMerge) {
-    if (linkMerge == null) {
-      linkMerge = LinkMerge.merge_nested;
-    }
+
+  public Object linkMerge() {
     switch (linkMerge) {
     case merge_nested:
-      break;
+      return this.value;
     case merge_flattened:
-      this.value = mergeFlatten(this.value);
-      break;
+      return mergeFlatten(this.value);
     default:
-      break;
-    }  
+      return this.value;
+    }
   }
-    
+
   private <T> void expand(List<T> list, Integer position) {
     int initialSize = list.size();
     if (initialSize >= position) {
@@ -100,10 +93,9 @@ public class VariableRecord {
     }
     return;
   }
-  
+
   private List<Object> mergeFlatten(Object value) {
     List<Object> flattenedValues = new ArrayList<>();
-    
     if (value instanceof List<?>) {
       for (Object subvalue : ((List<?>) value)) {
         flattenedValues.addAll((Collection<? extends Object>) mergeFlatten(subvalue));
@@ -113,11 +105,11 @@ public class VariableRecord {
     }
     return flattenedValues;
   }
-  
+
   public String getJobId() {
     return jobId;
   }
-  
+
   public int getNumberOfTimesUpdated() {
     return numberOfTimesUpdated;
   }
@@ -143,7 +135,10 @@ public class VariableRecord {
   }
 
   public Object getValue() {
-    return value;
+    if (linkMerge == null) {
+      return this.value;
+    }
+    return linkMerge();
   }
 
   public void setValue(Object value) {
@@ -168,7 +163,9 @@ public class VariableRecord {
 
   @Override
   public String toString() {
-    return "VariableRecord [contextId=" + contextId + ", jobId=" + jobId + ", portId=" + portId + ", type=" + type + ", value=" + value + ", isWrapped=" + isWrapped + ", numberOfGlobals=" + numberOfGlobals + ", isDefault=" + isDefault + "]";
+    return "VariableRecord [contextId=" + contextId + ", jobId=" + jobId + ", portId=" + portId + ", type=" + type
+        + ", value=" + value + ", isWrapped=" + isWrapped + ", numberOfGlobals=" + numberOfGlobals + ", isDefault="
+        + isDefault + "]";
   }
-  
+
 }
