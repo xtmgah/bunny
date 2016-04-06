@@ -85,7 +85,14 @@ public class VariableRecord {
     return;
   }
 
-  private List<Object> mergeFlatten(Object value) {
+  @SuppressWarnings("unchecked")
+  private Object mergeFlatten(Object value) {
+    if (value == null) {
+      return null;
+    }
+    if (!(value instanceof List<?>)) {
+      return value;
+    }
     List<Object> flattenedValues = new ArrayList<>();
     if (value instanceof List<?>) {
       for (Object subvalue : ((List<?>) value)) {
