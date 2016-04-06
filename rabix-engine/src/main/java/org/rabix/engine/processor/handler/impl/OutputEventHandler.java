@@ -3,9 +3,7 @@ package org.rabix.engine.processor.handler.impl;
 import java.util.List;
 
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
@@ -29,7 +27,6 @@ import com.google.inject.Inject;
  */
 public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
-  private DAGNodeDB dagNodeDB;
   private JobRecordService jobService;
   private VariableRecordService variableService;
   private LinkRecordService linkService;
@@ -37,8 +34,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
   private final EventProcessor eventProcessor;
   
   @Inject
-  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, DAGNodeDB dagNodeDB) {
-    this.dagNodeDB = dagNodeDB;
+  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService) {
     this.jobService = jobService;
     this.linkService = linkService;
     this.variableService = variableService;
@@ -46,8 +42,6 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
   }
 
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
-    DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(event.getJobId()), event.getContextId());
-    
     JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {
       sourceJob.resetOutputPortCounters(event.getNumberOfScattered());
