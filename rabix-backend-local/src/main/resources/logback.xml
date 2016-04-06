@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<Target>System.out</Target>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>INFO</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>%msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+		<Target>System.err</Target>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>INFO,WARN,ERROR</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="org.rabix">
+		<appender-ref ref="STDERR" />
+	</logger>
+
+	<logger name="org.rabix.backend.local" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	
+</configuration>
