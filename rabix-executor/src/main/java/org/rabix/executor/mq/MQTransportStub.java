@@ -13,18 +13,21 @@ import javax.jms.TextMessage;
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.rabix.common.json.BeanSerializer;
 
+import com.google.inject.Inject;
+
 public class MQTransportStub {
 
-  private String broker;
+  private MQConfig mqConfig;
   private PooledConnectionFactory connectionFactory;
 
-  public MQTransportStub(String broker) {
-    this.broker = broker;
+  @Inject
+  public MQTransportStub(MQConfig mqConfig) {
+    this.mqConfig = mqConfig;
     initializeConnectionFactory();
   }
 
   private void initializeConnectionFactory() {
-    connectionFactory = new PooledConnectionFactory(broker);
+    connectionFactory = new PooledConnectionFactory(mqConfig.getBroker());
     connectionFactory.setIdleTimeout(5000);
     connectionFactory.setMaxConnections(10);
     connectionFactory.setBlockIfSessionPoolIsFull(false);

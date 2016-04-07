@@ -39,7 +39,7 @@ public class BackendMQ {
           e.printStackTrace(); // TODO handle
         }
       }
-    }, 0, 1, TimeUnit.SECONDS);
+    }, 0, 10, TimeUnit.MILLISECONDS);
   }
   
   public void send(Job job) throws TransportPluginException {

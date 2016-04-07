@@ -1,8 +1,13 @@
 package org.rabix.executor.execution;
 
+import java.util.Map;
+
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.mq.MQTransportStub;
+import org.rabix.executor.mq.MQTransportStubException;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +27,11 @@ public abstract class JobHandlerCommand {
   }
 
   protected final JobDataService jobDataService;
+  protected final MQTransportStub mqTransportStub;
 
-  public JobHandlerCommand(JobDataService jobDataService) {
+  public JobHandlerCommand(JobDataService jobDataService, MQTransportStub mqTransportStub) {
     this.jobDataService = jobDataService;
+    this.mqTransportStub = mqTransportStub;
   }
 
   /**
@@ -62,6 +69,15 @@ public abstract class JobHandlerCommand {
    */
   protected void started(JobData jobData, String message) {
     logger.info(message);
+    
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
+    jobData.setJob(job);
+    try {
+      mqTransportStub.send("", job);
+    } catch (MQTransportStubException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -69,6 +85,15 @@ public abstract class JobHandlerCommand {
    */
   protected void failed(JobData jobData, String message, Throwable e) {
     logger.error(message, e);
+    
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
+    jobData.setJob(job);
+    try {
+      mqTransportStub.send("", job);
+    } catch (MQTransportStubException e1) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -76,13 +101,32 @@ public abstract class JobHandlerCommand {
    */
   protected void stopped(JobData jobData, String message) {
     logger.info(message);
+    
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
+    jobData.setJob(job);
+    try {
+      mqTransportStub.send("", job);
+    } catch (MQTransportStubException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   /**
    * Send notification to master about COMPLETED event 
    */
-  protected void completed(JobData jobData, String message, Object result) {
+  protected void completed(JobData jobData, String message, Map<String, Object> result) {
     logger.info(message);
+    
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
+    job = Job.cloneWithOutputs(job, result);
+    jobData.setJob(job);
+    try {
+      mqTransportStub.send("", job);
+    } catch (MQTransportStubException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   /**

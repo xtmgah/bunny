@@ -16,6 +16,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.executor.ExecutorModule;
+import org.rabix.executor.mq.MQConfig;
+import org.rabix.executor.mq.MQTransportStub;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.rest.api.impl.ExecutorHTTPServiceImpl;
 
@@ -45,7 +47,9 @@ public class ServerBuilder {
     BootstrapUtils.newInjector(locator, Arrays.asList(new ServletModule(), new ExecutorModule(configModule), new AbstractModule() {
       @Override
       protected void configure() {
-        bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);;
+        bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
+        bind(MQConfig.class).in(Scopes.SINGLETON);
+        bind(MQTransportStub.class).in(Scopes.SINGLETON);
       }
     }));
 

@@ -29,7 +29,7 @@ public class BackendDispatcher {
   }
 
   private synchronized BackendMQ nextBackend() {
-    BackendMQ backendMQ = backendStubs.get(position);
+    BackendMQ backendMQ = backendStubs.get(position % backendStubs.size());
     position = (position + 1) % backendStubs.size();
     return backendMQ;
   }

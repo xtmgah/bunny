@@ -22,9 +22,11 @@ import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.JobHTTPService;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
 import org.rabix.engine.rest.backend.BackendDispatcher;
+import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
+import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 
 import com.google.inject.AbstractModule;
@@ -56,8 +58,9 @@ public class ServerBuilder {
           @Override
           protected void configure() {
             bind(JobDB.class).in(Scopes.SINGLETON);
+            bind(BackendDB.class).in(Scopes.SINGLETON);
             bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
-            bind(BackendService.class).in(Scopes.SINGLETON);
+            bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
             bind(BackendDispatcher.class).in(Scopes.SINGLETON);
             bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
           }
@@ -101,4 +104,5 @@ public class ServerBuilder {
       packages("org.rabix.engine.rest.api");
     }
   }
+  
 }

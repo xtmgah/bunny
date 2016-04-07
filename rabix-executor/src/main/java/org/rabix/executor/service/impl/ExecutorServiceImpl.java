@@ -40,15 +40,16 @@ public class ExecutorServiceImpl implements ExecutorService {
   private final JobReceiver jobReceiver;
 
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
+  public ExecutorServiceImpl(JobDataService jobDataService, MQTransportStub mqTransportStub,
+      JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
       Provider<StartCommand> startCommandProvider, Provider<StatusCommand> statusCommandProvider) {
     this.jobDataService = jobDataService;
     this.stopCommandProvider = stopCommandProvider;
     this.startCommandProvider = startCommandProvider;
     this.statusCommandProvider = statusCommandProvider;
     this.jobHandlerCommandDispatcher = jobHandlerCommandDispatcher;
-    
-    this.jobReceiver = new JobReceiver(new MQTransportStub(""));
+
+    this.jobReceiver = new JobReceiver(mqTransportStub);
     this.jobReceiver.start();
   }
 
@@ -158,7 +159,7 @@ public class ExecutorServiceImpl implements ExecutorService {
             e.printStackTrace(); // TODO handle
           }
         }
-      }, 0, 1, TimeUnit.SECONDS);
+      }, 0, 1, TimeUnit.MILLISECONDS);
     }
   }
 
