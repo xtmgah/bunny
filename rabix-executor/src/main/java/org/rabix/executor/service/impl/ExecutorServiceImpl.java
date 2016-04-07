@@ -2,6 +2,9 @@ package org.rabix.executor.service.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.rabix.bindings.model.Job;
@@ -11,6 +14,8 @@ import org.rabix.executor.execution.command.StartCommand;
 import org.rabix.executor.execution.command.StatusCommand;
 import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.mq.MQTransportStub;
+import org.rabix.executor.mq.MQTransportStubException;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
@@ -31,6 +36,8 @@ public class ExecutorServiceImpl implements ExecutorService {
   private final Provider<StatusCommand> statusCommandProvider;
   
   private final AtomicBoolean stopped = new AtomicBoolean(false);
+  
+  private final JobReceiver jobReceiver;
 
   @Inject
   public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
@@ -40,6 +47,9 @@ public class ExecutorServiceImpl implements ExecutorService {
     this.startCommandProvider = startCommandProvider;
     this.statusCommandProvider = statusCommandProvider;
     this.jobHandlerCommandDispatcher = jobHandlerCommandDispatcher;
+    
+    this.jobReceiver = new JobReceiver(new MQTransportStub(""));
+    this.jobReceiver.start();
   }
 
   @Override
@@ -126,6 +136,30 @@ public class ExecutorServiceImpl implements ExecutorService {
   @Override
   public boolean isStopped() {
     return stopped.get();
+  }
+  
+  public class JobReceiver {
+    
+    private MQTransportStub mqTransportStub;
+    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    public JobReceiver(MQTransportStub mqTransportStub) {
+      this.mqTransportStub = mqTransportStub;
+    }
+    
+    public void start() {
+      executorService.scheduleAtFixedRate(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            Job job = mqTransportStub.receive("", Job.class);
+            ExecutorServiceImpl.this.start(job, job.getContext().getId());
+          } catch (MQTransportStubException e) {
+            e.printStackTrace(); // TODO handle
+          }
+        }
+      }, 0, 1, TimeUnit.SECONDS);
+    }
   }
 
 }

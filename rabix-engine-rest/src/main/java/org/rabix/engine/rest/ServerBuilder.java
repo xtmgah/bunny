@@ -21,9 +21,9 @@ import org.rabix.common.config.ConfigModule;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.JobHTTPService;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
+import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.JobDB;
-import org.rabix.engine.rest.plugin.BackendPluginConfig;
-import org.rabix.engine.rest.plugin.BackendPluginRegister;
+import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 
@@ -57,8 +57,8 @@ public class ServerBuilder {
           protected void configure() {
             bind(JobDB.class).in(Scopes.SINGLETON);
             bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
-            bind(BackendPluginRegister.class).in(Scopes.SINGLETON);
-            bind(BackendPluginConfig.class).in(Scopes.SINGLETON);
+            bind(BackendService.class).in(Scopes.SINGLETON);
+            bind(BackendDispatcher.class).in(Scopes.SINGLETON);
             bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
           }
         }));
