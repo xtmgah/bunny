@@ -12,11 +12,15 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.rabix.common.json.BeanSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
 public class MQTransportStub {
 
+  private final static Logger logger = LoggerFactory.getLogger(MQTransportStub.class);
+  
   private MQConfig mqConfig;
   private PooledConnectionFactory connectionFactory;
 
@@ -30,12 +34,12 @@ public class MQTransportStub {
     connectionFactory = new PooledConnectionFactory(mqConfig.getBroker());
     connectionFactory.setIdleTimeout(5000);
     connectionFactory.setMaxConnections(10);
-    connectionFactory.setBlockIfSessionPoolIsFull(false);
+    connectionFactory.setBlockIfSessionPoolIsFull(true);
     connectionFactory.setMaximumActiveSessionPerConnection(5000);
     connectionFactory.start();
   }
   
-  public <T> void send(String destinationQueue, T entity) throws MQTransportStubException {
+  public <T> ResultPair<T> send(String destinationQueue, T entity) {
     Session session = null;
     Connection connection = null;
     try {
@@ -51,8 +55,10 @@ public class MQTransportStub {
       String payload = BeanSerializer.serializeFull(entity);
       TextMessage message = session.createTextMessage(payload);
       producer.send(message);
+      return new ResultPair<T>(true, null);
     } catch (JMSException e) {
-      throw new MQTransportStubException("Failed to send " + entity + " to " + destinationQueue, e);
+      logger.error("Failed to send " + entity + " to " + destinationQueue, e);
+      return new ResultPair<T>(false, null);
     } finally {
       try {
         session.close();
@@ -63,7 +69,7 @@ public class MQTransportStub {
     }
   }
 
-  public <T> T receive(String sourceQueue, Class<T> clazz) throws MQTransportStubException {
+  public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz) {
     Session session = null;
     Connection connection = null;
     MessageConsumer consumer = null;
@@ -77,11 +83,15 @@ public class MQTransportStub {
       consumer = session.createConsumer(destination);
 
       Message message = consumer.receive(1000);
+      if (message == null) {
+        return new ResultPair<T>(false, null);
+      }
       TextMessage textMessage = (TextMessage) message;
       String text = textMessage.getText();
-      return BeanSerializer.deserialize(text, clazz);
+      return new ResultPair<T>(true, BeanSerializer.deserialize(text, clazz));
     } catch (JMSException e) {
-      throw new MQTransportStubException("Failed to receive message from " + sourceQueue, e);
+      logger.error("Failed to receiver from " + sourceQueue, e);
+      return new ResultPair<T>(false, null);
     } finally {
       try {
         consumer.close();
@@ -93,4 +103,22 @@ public class MQTransportStub {
     }
   }
 
+  public static class ResultPair<T> {
+    private boolean success;
+    private T result;
+    
+    public ResultPair(boolean success, T result) {
+      this.success = success;
+      this.result = result;
+    }
+    
+    public boolean isSuccess() {
+      return success;
+    }
+    
+    public T getResult() {
+      return result;
+    }
+  }
+  
 }

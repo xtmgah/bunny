@@ -1,5 +1,6 @@
 package org.rabix.engine.rest.api;
 
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -11,6 +12,7 @@ import org.rabix.engine.rest.model.Backend;
 @Path("/v0/engine/backends")
 public interface BackendHTTPService {
 
+  @POST
   Response create(Backend job);
 
 }

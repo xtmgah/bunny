@@ -13,7 +13,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.rest.transport.TransportPlugin;
-import org.rabix.engine.rest.transport.TransportPluginException;
 import org.rabix.engine.rest.transport.TransportPluginType;
 
 public class TransportPluginMQ implements TransportPlugin {
@@ -35,7 +34,7 @@ public class TransportPluginMQ implements TransportPlugin {
     connectionFactory.start();
   }
   
-  public <T> void send(String destinationQueue, T entity) throws TransportPluginException {
+  public <T> ResultPair<T> send(String destinationQueue, T entity) {
     Session session = null;
     Connection connection = null;
     try {
@@ -51,8 +50,9 @@ public class TransportPluginMQ implements TransportPlugin {
       String payload = BeanSerializer.serializeFull(entity);
       TextMessage message = session.createTextMessage(payload);
       producer.send(message);
+      return new ResultPair<T>(true, null);
     } catch (JMSException e) {
-      throw new TransportPluginException("Failed to send " + entity + " to " + destinationQueue, e);
+      return new ResultPair<T>(false, null);
     } finally {
       try {
         session.close();
@@ -63,7 +63,7 @@ public class TransportPluginMQ implements TransportPlugin {
     }
   }
 
-  public <T> T receive(String sourceQueue, Class<T> clazz) throws TransportPluginException {
+  public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz) {
     Session session = null;
     Connection connection = null;
     MessageConsumer consumer = null;
@@ -77,11 +77,14 @@ public class TransportPluginMQ implements TransportPlugin {
       consumer = session.createConsumer(destination);
 
       Message message = consumer.receive(1000);
+      if (message == null) {
+        return new ResultPair<T>(false, null);
+      }
       TextMessage textMessage = (TextMessage) message;
       String text = textMessage.getText();
-      return BeanSerializer.deserialize(text, clazz);
+      return new ResultPair<T>(true, BeanSerializer.deserialize(text, clazz));
     } catch (JMSException e) {
-      throw new TransportPluginException("Failed to receive message from " + sourceQueue, e);
+      return new ResultPair<T>(false, null);
     } finally {
       try {
         consumer.close();
@@ -96,6 +99,24 @@ public class TransportPluginMQ implements TransportPlugin {
   @Override
   public TransportPluginType getType() {
     return TransportPluginType.MQ;
+  }
+  
+  public static class ResultPair<T> {
+    private boolean success;
+    private T result;
+    
+    public ResultPair(boolean success, T result) {
+      this.success = success;
+      this.result = result;
+    }
+
+    public boolean isSuccess() {
+      return success;
+    }
+    
+    public T getResult() {
+      return result;
+    }
   }
 
 }

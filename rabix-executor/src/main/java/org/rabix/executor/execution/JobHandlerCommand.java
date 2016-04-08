@@ -6,8 +6,8 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.mq.MQConfig;
 import org.rabix.executor.mq.MQTransportStub;
-import org.rabix.executor.mq.MQTransportStubException;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +27,14 @@ public abstract class JobHandlerCommand {
   }
 
   protected final JobDataService jobDataService;
-  protected final MQTransportStub mqTransportStub;
 
-  public JobHandlerCommand(JobDataService jobDataService, MQTransportStub mqTransportStub) {
+  protected MQConfig mqConfig;
+  protected final MQTransportStub mqTransportStub;
+  
+  public JobHandlerCommand(JobDataService jobDataService, MQTransportStub mqTransportStub, MQConfig mqConfig) {
     this.jobDataService = jobDataService;
+    
+    this.mqConfig = mqConfig;
     this.mqTransportStub = mqTransportStub;
   }
 
@@ -69,15 +73,10 @@ public abstract class JobHandlerCommand {
    */
   protected void started(JobData jobData, String message) {
     logger.info(message);
-    
+
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
     jobData.setJob(job);
-    try {
-      mqTransportStub.send("", job);
-    } catch (MQTransportStubException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
   }
 
   /**
@@ -85,15 +84,10 @@ public abstract class JobHandlerCommand {
    */
   protected void failed(JobData jobData, String message, Throwable e) {
     logger.error(message, e);
-    
+
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
     jobData.setJob(job);
-    try {
-      mqTransportStub.send("", job);
-    } catch (MQTransportStubException e1) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
   }
 
   /**
@@ -101,15 +95,10 @@ public abstract class JobHandlerCommand {
    */
   protected void stopped(JobData jobData, String message) {
     logger.info(message);
-    
+
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
     jobData.setJob(job);
-    try {
-      mqTransportStub.send("", job);
-    } catch (MQTransportStubException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
   }
 
   /**
@@ -117,16 +106,11 @@ public abstract class JobHandlerCommand {
    */
   protected void completed(JobData jobData, String message, Map<String, Object> result) {
     logger.info(message);
-    
+
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
     jobData.setJob(job);
-    try {
-      mqTransportStub.send("", job);
-    } catch (MQTransportStubException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
   }
 
   /**

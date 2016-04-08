@@ -29,7 +29,10 @@ public class BackendServiceImpl implements BackendService {
     String id = UUID.randomUUID().toString();
     backend = Backend.cloneWithID(backend, id);
     backendDB.add(backend);
-    backendDispatcher.addBackendMQ(new BackendMQ(jobService, backend));
+    
+    BackendMQ backendMQ = new BackendMQ(jobService, backend);
+    backendMQ.startConsumer();
+    backendDispatcher.addBackendMQ(backendMQ);
     return backend;
   }
   
