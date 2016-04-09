@@ -7,6 +7,8 @@ import org.rabix.executor.ExecutorException;
 import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.mq.MQConfig;
+import org.rabix.executor.mq.MQTransportStub;
 import org.rabix.executor.service.JobDataService;
 
 /**
@@ -15,8 +17,8 @@ import org.rabix.executor.service.JobDataService;
 public class StopCommand extends JobHandlerCommand {
 
   @Inject
-  public StopCommand(JobDataService jobDataService) {
-    super(jobDataService);
+  public StopCommand(JobDataService jobDataService, MQTransportStub mqTransportStub, MQConfig mqConfig) {
+    super(jobDataService, mqTransportStub, mqConfig);
   }
 
   @Override

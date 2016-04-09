@@ -7,6 +7,8 @@ import org.rabix.bindings.model.Job.JobStatus;
 
 public interface ExecutorService {
 
+  void startReceiver();
+  
   void start(final Job job, String contextId);
 
   void stop(String id, String contextId);
@@ -20,5 +22,5 @@ public interface ExecutorService {
   boolean isStopped();
 
   JobStatus findStatus(String id, String contextId);
-  
+
 }

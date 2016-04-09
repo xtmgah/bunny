@@ -3,7 +3,6 @@ package org.rabix.bindings.model.dag;
 import java.util.List;
 import java.util.Map;
 
-import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
 
 public class DAGContainer extends DAGNode {
