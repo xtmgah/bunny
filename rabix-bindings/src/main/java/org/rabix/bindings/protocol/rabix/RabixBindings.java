@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
 import org.rabix.bindings.protocol.rabix.helper.RabixHelper;
 import org.rabix.common.helper.CloneHelper;
 
@@ -69,7 +71,11 @@ public class RabixBindings implements Bindings {
 
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
-    return job;
+    RabixJobApp app = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), job.getApp());
+    String outputFile = app.getOutputs().get(0).getId();
+    Map<String, Object> outputs = new HashMap<String, Object>();
+    outputs.put(outputFile, RabixHelper.getOutputPath(outputFile, workingDir.getPath()));
+    return Job.cloneWithOutputs(job, outputs);
   }
 
   @Override

@@ -36,7 +36,7 @@ public class RabixTranslator {
           false);
       outputPorts.add(linkPort);
     }
-    return new DAGNode(job.getId(), inputPorts, outputPorts, null, job.getApp(), job.getInputs());
+    return new DAGNode(job.getId(), inputPorts, outputPorts, null, job.getApp().getRaw(), job.getInputs());
   }
 
   public RabixJob translateToRabixJob(Job job) throws BindingException {

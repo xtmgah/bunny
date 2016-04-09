@@ -77,5 +77,9 @@ public class RabixJobApp {
   public List<RabixPort> getOutputs() {
     return outputs;
   }
+  
+  public String getRaw() {
+    return "#rabix:SimpleRabixTool" + "\n" + this.template;
+  }
 
 }

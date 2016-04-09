@@ -18,4 +18,8 @@ public class RabixHelper {
     return ((String) value).substring(FILE_PREFIX.length());
   }
   
+  public static String getOutputPath(String filename, String workingDir) {
+    return FILE_PREFIX + workingDir + "/" + filename;
+  }
+  
 }
