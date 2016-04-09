@@ -10,13 +10,15 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2OutputPort;
 public class RabixJobApp {
 
   protected String id;
+  protected String raw;
   protected String template;
   private List<RabixPort> inputs;
   private List<RabixPort> outputs;
   
-  public RabixJobApp(String id, String template, Collection<String> inputs, Collection<String> outputs) {
+  public RabixJobApp(String id, String raw, String template, Collection<String> inputs, Collection<String> outputs) {
     super();
     this.id = id;
+    this.raw = raw;
     this.template = template;
     this.inputs = new ArrayList<RabixPort>();
     for(String input: inputs) {
@@ -79,7 +81,7 @@ public class RabixJobApp {
   }
   
   public String getRaw() {
-    return "#rabix:SimpleRabixTool" + "\n" + this.template;
+    return raw;
   }
 
 }

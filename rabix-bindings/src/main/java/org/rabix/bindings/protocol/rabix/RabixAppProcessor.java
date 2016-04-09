@@ -14,7 +14,6 @@ import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.apache.velocity.runtime.visitor.BaseVisitor;
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
 
 public class RabixAppProcessor {
@@ -23,7 +22,7 @@ public class RabixAppProcessor {
     String template = getTemplate(app);
     Set<String> inputs = getInputsFromApp(appId, template);
     Set<String> outputs = getOutputsFromApp(template);
-    return new RabixJobApp(appId, template, inputs, outputs);
+    return new RabixJobApp(appId, app, template, inputs, outputs);
   }
   
   private static Set<String> getInputsFromApp(String appName, String template) {
