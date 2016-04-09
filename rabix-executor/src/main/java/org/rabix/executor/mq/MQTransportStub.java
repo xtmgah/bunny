@@ -27,7 +27,10 @@ public class MQTransportStub {
   @Inject
   public MQTransportStub(MQConfig mqConfig) {
     this.mqConfig = mqConfig;
-    initializeConnectionFactory();
+    
+    if (this.mqConfig.isMQEnabled()) {
+      initializeConnectionFactory();      
+    }
   }
 
   private void initializeConnectionFactory() {
@@ -40,6 +43,9 @@ public class MQTransportStub {
   }
   
   public <T> ResultPair<T> send(String destinationQueue, T entity) {
+    if (!mqConfig.isMQEnabled()) {
+      return null;
+    }
     Session session = null;
     Connection connection = null;
     try {
@@ -70,6 +76,9 @@ public class MQTransportStub {
   }
 
   public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz) {
+    if (!mqConfig.isMQEnabled()) {
+      return null;
+    }
     Session session = null;
     Connection connection = null;
     MessageConsumer consumer = null;
