@@ -29,7 +29,7 @@ public class BindingsFactory {
       try {
         bindings.loadAppObject(appURL);
         return bindings;
-      } catch (BindingException e) {
+      } catch (Exception e) {
         // do nothing
       }
     }
