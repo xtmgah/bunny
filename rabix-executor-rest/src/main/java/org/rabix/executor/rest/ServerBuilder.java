@@ -44,7 +44,10 @@ public class ServerBuilder {
 
   private int port = 8080;
 
-  public ServerBuilder() {
+  private File configDir;
+  
+  public ServerBuilder(File configDir) {
+    this.configDir = configDir;
   }
 
   public ServerBuilder(int port) {
@@ -53,8 +56,6 @@ public class ServerBuilder {
 
   public Server build() {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
-
-    File configDir = new File("config");
 
     ConfigModule configModule = new ConfigModule(configDir, null);
     Injector injector = BootstrapUtils.newInjector(locator,
