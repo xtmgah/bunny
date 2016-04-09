@@ -11,9 +11,12 @@ public class MQConfig {
   private final String receiveQueue;
   private final String heartbeatQueue;
   
+  private final boolean mqEnabled;
+  
   @Inject
   public MQConfig(Configuration configuration) {
     this.broker = configuration.getString("mq.broker", null);
+    this.mqEnabled = configuration.getBoolean("mq.enabled", false);
     this.sendQueue = configuration.getString("mq.sendQueue", null);
     this.receiveQueue = configuration.getString("mq.receiveQueue", null);
     this.heartbeatQueue = configuration.getString("mq.heartbeatQueue", null);
@@ -33,6 +36,10 @@ public class MQConfig {
 
   public String getHeartbeatQueue() {
     return heartbeatQueue;
+  }
+  
+  public boolean isMQEnabled() {
+    return mqEnabled;
   }
   
 }
