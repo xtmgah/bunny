@@ -2,41 +2,28 @@ package org.rabix.bindings.protocol.rabix;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.parser.ParseException;
-import org.apache.velocity.runtime.parser.node.ASTReference;
-import org.apache.velocity.runtime.parser.node.SimpleNode;
-import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
-import org.apache.velocity.runtime.resource.util.StringResourceRepository;
-import org.apache.velocity.runtime.visitor.BaseVisitor;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
-import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.filemapper.FileMapper;
+import org.rabix.bindings.filemapper.FileMappingException;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
-import org.rabix.bindings.protocol.rabix.bean.RabixJob;
-import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
-import org.rabix.common.helper.JSONHelper;
+import org.rabix.bindings.protocol.rabix.helper.RabixHelper;
+import org.rabix.common.helper.CloneHelper;
 
 public class RabixBindings implements Bindings {
 
@@ -97,42 +84,82 @@ public class RabixBindings implements Bindings {
 
   @Override
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
-    RabixJob rabixJob = rabixTranslator.translateToRabixJob(job);
-    for (Object input : rabixJob.getInputs().values()) {
-
+    Set<FileValue> files = new HashSet<>();
+    
+    for (Entry<String, Object> inputEntry : job.getInputs().entrySet()) {
+      if (inputEntry.getValue() instanceof String) {
+        if (RabixHelper.isFile(inputEntry.getValue())) {
+          String path = RabixHelper.getFilePath(inputEntry.getValue());
+          files.add(new FileValue(0L, path, null, null, null));
+        }
+      }
     }
-    return null;
+    return files;
   }
 
   @Override
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
-    RabixJob rabixJob = rabixTranslator.translateToRabixJob(job);
-    for (Object input : rabixJob.getInputs().values()) {
-
+    Set<FileValue> files = new HashSet<>();
+    
+    for (Entry<String, Object> inputEntry : job.getOutputs().entrySet()) {
+      if (inputEntry.getValue() instanceof String) {
+        if (RabixHelper.isFile(inputEntry.getValue())) {
+          String path = RabixHelper.getFilePath(inputEntry.getValue());
+          files.add(new FileValue(0L, path, null, null, null));
+        }
+      }
     }
-    return null;
+    return files;
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
-    // TODO Auto-generated method stub
-    return null;
+    Map<String, Object> newInputs = (Map<String, Object>) CloneHelper.deepCopy(job.getInputs());
+    
+    for (Entry<String, Object> inputEntry : newInputs.entrySet()) {
+      if (inputEntry.getValue() instanceof String) {
+        if (RabixHelper.isFile(inputEntry.getValue())) {
+          String path = RabixHelper.getFilePath(inputEntry.getValue());
+          try {
+            inputEntry.setValue(fileMapper.map(path));
+          } catch (FileMappingException e) {
+            throw new BindingException(e);
+          }
+        }
+      }
+    }
+    return Job.cloneWithInputs(job, newInputs);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
-    // TODO Auto-generated method stub
-    return null;
+    Map<String, Object> newOutputs = (Map<String, Object>) CloneHelper.deepCopy(job.getOutputs());
+
+    for (Entry<String, Object> inputEntry : newOutputs.entrySet()) {
+      if (inputEntry.getValue() instanceof String) {
+        if (RabixHelper.isFile(inputEntry.getValue())) {
+          String path = RabixHelper.getFilePath(inputEntry.getValue());
+          try {
+            inputEntry.setValue(fileMapper.map(path));
+          } catch (FileMappingException e) {
+            throw new BindingException(e);
+          }
+        }
+      }
+    }
+    return Job.cloneWithOutputs(job, newOutputs);
   }
 
   @Override
   public List<Requirement> getRequirements(Job job) throws BindingException {
-    return null;
+    return Collections.<Requirement>emptyList();
   }
 
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
-    return null;
+    return Collections.<Requirement>emptyList();
   }
 
   @Override
@@ -142,8 +169,7 @@ public class RabixBindings implements Bindings {
 
   @Override
   public void validate(Job job) throws BindingException {
-    // TODO Auto-generated method stub
-
+    // TODO implement
   }
 
   @Override
@@ -154,16 +180,6 @@ public class RabixBindings implements Bindings {
   static String readFile(String path, Charset encoding) throws IOException {
     byte[] encoded = Files.readAllBytes(Paths.get(path));
     return new String(encoded, encoding);
-  }
-
-  public static void main(String[] args) throws ParseException, BindingException, IOException {
-    Bindings bindings = BindingsFactory.create("file://Users/Sinisa/Desktop/Bunny-test/grep.rbx");
-    File inputsFile = new File("/Users/Sinisa/Desktop/Bunny-test/grep-inputs.json");
-    String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
-    Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
-    
-    
-    
   }
 
 }

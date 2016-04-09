@@ -2,6 +2,7 @@ package org.rabix.common.helper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -15,7 +16,7 @@ public class CloneHelper {
   private CloneHelper() {
   }
 
-  public static Object deepCopy(Object oldObj) throws Exception {
+  public static Object deepCopy(Object oldObj) {
     ObjectOutputStream oos = null;
     ObjectInputStream ois = null;
     try {
@@ -28,13 +29,21 @@ public class CloneHelper {
       return ois.readObject();
     } catch (Exception e) {
       logger.error("Failed to clone " + oldObj, e);
-      throw (e);
+      throw new RuntimeException(e);
     } finally {
       if (oos != null) {
-        oos.close();
+        try {
+          oos.close();
+        } catch (IOException e) {
+          // do nothing
+        }
       }
       if (ois != null) {
-        ois.close();
+        try {
+          ois.close();
+        } catch (IOException e) {
+          // do nothing
+        }
       }
     }
   }
