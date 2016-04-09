@@ -43,7 +43,7 @@ public class RabixAppProcessor {
       @Override
       public Object visit(ASTReference node, Object data) {
         String key = node.literal();
-        keys.add(key);
+        keys.add(normalizePortId(key));
         return super.visit(node, data);
       }
     };
@@ -58,6 +58,10 @@ public class RabixAppProcessor {
     Set<String> outputs = new HashSet<String>();
     outputs.add(stdout);
     return outputs;
+  }
+  
+  private static String normalizePortId(String portId) {
+    return portId.substring(2, portId.length()-1);
   }
   
   private static String getTemplate(String app) throws BindingException {

@@ -1,9 +1,11 @@
 package org.rabix.bindings.protocol.rabix;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort;
@@ -38,7 +40,14 @@ public class RabixTranslator {
   }
 
   public RabixJob translateToRabixJob(Job job) throws BindingException {
-    RabixJobApp rabixJobApp = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), job.getApp());
-    return new RabixJob(job.getId(), rabixJobApp, job.getInputs(), job.getOutputs());
+    String app = null;
+    try {
+      app = URIHelper.getData(job.getApp());
+    } catch (IOException e) {
+      throw new BindingException(e);
+    }
+    RabixJobApp rabixJobApp = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getApp(), app);
+    
+    return new RabixJob(rabixJobApp.getId(), rabixJobApp, job.getInputs(), job.getOutputs());
   }
 }

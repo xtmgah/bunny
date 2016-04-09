@@ -24,6 +24,7 @@ import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.apache.velocity.runtime.visitor.BaseVisitor;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
+import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.helper.URIHelper;
@@ -40,12 +41,11 @@ import org.rabix.common.helper.JSONHelper;
 public class RabixBindings implements Bindings {
 
   private ProtocolType protocolType;
-  private RabixCommandLineBuilder rabixCommandLineBuilder;
-  private RabixTranslator rabixTranslator;
+  private RabixCommandLineBuilder rabixCommandLineBuilder = new RabixCommandLineBuilder();;
+  private final RabixTranslator rabixTranslator = new RabixTranslator();;
 
   public RabixBindings() throws BindingException {
     this.protocolType = ProtocolType.RABIX;
-    RabixCommandLineBuilder rabixCommandLineBuilder = new RabixCommandLineBuilder();
   }
 
   @Override
@@ -157,9 +157,7 @@ public class RabixBindings implements Bindings {
   }
 
   public static void main(String[] args) throws ParseException, BindingException, IOException {
-    RabixBindings rabixBindings = new RabixBindings();
-    String app = rabixBindings.loadApp("file://Users/Sinisa/Desktop/Bunny-test/grep.rbx");
-    Object appObj = rabixBindings.loadAppObject("file://Users/Sinisa/Desktop/Bunny-test/grep.rbx");
+    Bindings bindings = BindingsFactory.create("file://Users/Sinisa/Desktop/Bunny-test/grep.rbx");
     File inputsFile = new File("/Users/Sinisa/Desktop/Bunny-test/grep-inputs.json");
     String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
     Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
