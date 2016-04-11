@@ -113,7 +113,7 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public String create(Job job) throws JobServiceException {
+  public Job create(Job job) throws JobServiceException {
     String contextId = Context.createUniqueID();
     
     Context context = job.getContext() != null? job.getContext() : createContext(contextId);
@@ -128,9 +128,8 @@ public class JobServiceImpl implements JobService {
 
       DAGNode node = bindings.translateToDAG(job);
       InitEvent initEvent = new InitEvent(context, node, job.getInputs());
-
       eventProcessor.send(initEvent);
-      return context.getId();
+      return job;
     } catch (BindingException e) {
       logger.error("Failed to create Bindings", e);
       throw new JobServiceException("Failed to create Bindings", e);
