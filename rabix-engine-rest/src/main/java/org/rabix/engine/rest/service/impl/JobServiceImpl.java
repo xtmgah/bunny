@@ -79,17 +79,26 @@ public class JobServiceImpl implements JobService {
       JobStatus status = job.getStatus();
       switch (status) {
       case RUNNING:
+        if (JobState.RUNNING.equals(jobRecord.getState())) {
+          return;
+        }
         JobStateValidator.checkState(jobRecord, JobState.RUNNING);
         statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.RUNNING, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
+        if (JobState.FAILED.equals(jobRecord.getState())) {
+          return;
+        }
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
         statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.FAILED, null, protocolType);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
       case COMPLETED:
+        if (JobState.COMPLETED.equals(jobRecord.getState())) {
+          return;
+        }
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
         statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.COMPLETED, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);

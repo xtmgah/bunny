@@ -3,6 +3,7 @@ package org.rabix.engine.rest.backend;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -65,18 +66,25 @@ public class BackendDispatcher {
   public boolean send(Set<Job> jobs) {
     try {
       dispatcherLock.lock();
+      freeJobs.addAll(jobs);
+      
       if (backendStubs.isEmpty()) {
-        freeJobs.addAll(jobs);
-        return true;
+        return false;
       }
-      for (Job job : jobs) {
-        if (jobBackendMapping.containsKey(job.getId())) {
+      
+      Iterator<Job> freeJobIterator = freeJobs.iterator();
+      while(freeJobIterator.hasNext()) {
+        Job freeJob = freeJobIterator.next();
+        
+        if (jobBackendMapping.containsKey(freeJob)) {
+          freeJobIterator.remove();
           continue;
         }
         BackendMQ backendMQ = nextBackend();
-        jobBackendMapping.put(job, backendMQ.getBackend().getId());
-
-        backendMQ.send(job);
+        
+        freeJobIterator.remove();
+        jobBackendMapping.put(freeJob, backendMQ.getBackend().getId());
+        backendMQ.send(freeJob);
       }
       return true;
     } finally {
