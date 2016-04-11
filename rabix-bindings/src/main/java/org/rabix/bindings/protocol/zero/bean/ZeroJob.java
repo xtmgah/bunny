@@ -1,15 +1,15 @@
-package org.rabix.bindings.protocol.rabix.bean;
+package org.rabix.bindings.protocol.zero.bean;
 
 import java.util.Map;
 
-public class RabixJob {
+public class ZeroJob {
 
   private String id;
-  private RabixJobApp app;
+  private ZeroJobApp app;
   private Map<String, Object> inputs;
   private Map<String, Object> outputs;
 
-  public RabixJob(String id, RabixJobApp app, Map<String, Object> inputs, Map<String, Object> outputs) {
+  public ZeroJob(String id, ZeroJobApp app, Map<String, Object> inputs, Map<String, Object> outputs) {
     super();
     this.id = id;
     this.app = app;
@@ -25,11 +25,11 @@ public class RabixJob {
     this.id = id;
   }
 
-  public RabixJobApp getApp() {
+  public ZeroJobApp getApp() {
     return app;
   }
 
-  public void setApp(RabixJobApp app) {
+  public void setApp(ZeroJobApp app) {
     this.app = app;
   }
 
@@ -68,7 +68,7 @@ public class RabixJob {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    RabixJob other = (RabixJob) obj;
+    ZeroJob other = (ZeroJob) obj;
     if (app == null) {
       if (other.app != null)
         return false;

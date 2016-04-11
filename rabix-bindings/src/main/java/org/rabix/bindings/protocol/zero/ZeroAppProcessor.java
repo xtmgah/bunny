@@ -1,4 +1,4 @@
-package org.rabix.bindings.protocol.rabix;
+package org.rabix.bindings.protocol.zero;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,9 +16,9 @@ import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.apache.velocity.runtime.visitor.BaseVisitor;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.helper.URIHelper;
-import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
+import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
 
-public class RabixAppProcessor {
+public class ZeroAppProcessor {
   
   
   public static String loadApp(String appURI) throws BindingException{
@@ -35,7 +35,7 @@ public class RabixAppProcessor {
     String template = getTemplate(app);
     Set<String> inputs = getInputsFromApp(appId, template);
     Set<String> outputs = getOutputsFromApp(template);
-    return new RabixJobApp(appId, app, template, inputs, outputs);
+    return new ZeroJobApp(appId, app, template, inputs, outputs);
   }
   
   private static Set<String> getInputsFromApp(String appName, String template) {

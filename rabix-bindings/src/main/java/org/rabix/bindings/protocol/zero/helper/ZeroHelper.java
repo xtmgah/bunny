@@ -1,6 +1,6 @@
-package org.rabix.bindings.protocol.rabix.helper;
+package org.rabix.bindings.protocol.zero.helper;
 
-public class RabixHelper {
+public class ZeroHelper {
 
   public final static String FILE_PREFIX = "file://";
   

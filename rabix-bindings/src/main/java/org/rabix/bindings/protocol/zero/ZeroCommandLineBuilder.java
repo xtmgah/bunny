@@ -1,4 +1,4 @@
-package org.rabix.bindings.protocol.rabix;
+package org.rabix.bindings.protocol.zero;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -12,12 +12,12 @@ import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
+import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
 
-public class RabixCommandLineBuilder {
+public class ZeroCommandLineBuilder {
 
   public String buildCommandLine(Job job, String appString) throws BindingException {
-    RabixJobApp app = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), appString);
+    ZeroJobApp app = (ZeroJobApp) ZeroAppProcessor.loadAppObject(job.getId(), appString);
     VelocityEngine ve = new VelocityEngine();
     ve.setProperty(Velocity.RESOURCE_LOADER, "string");
     ve.addProperty("string.resource.loader.class", StringResourceLoader.class.getName());
@@ -38,7 +38,7 @@ public class RabixCommandLineBuilder {
   }
   
   public List<String> buildCommandLineParts(Job job, String appString) throws BindingException {
-    RabixJobApp app = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), appString);
+    ZeroJobApp app = (ZeroJobApp) ZeroAppProcessor.loadAppObject(job.getId(), appString);
     VelocityEngine ve = new VelocityEngine();
     ve.setProperty(Velocity.RESOURCE_LOADER, "string");
     ve.addProperty("string.resource.loader.class", StringResourceLoader.class.getName());

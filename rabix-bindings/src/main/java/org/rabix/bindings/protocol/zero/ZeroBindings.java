@@ -1,10 +1,6 @@
-package org.rabix.bindings.protocol.rabix;
+package org.rabix.bindings.protocol.zero;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,29 +18,29 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
-import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
-import org.rabix.bindings.protocol.rabix.helper.RabixHelper;
+import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
+import org.rabix.bindings.protocol.zero.helper.ZeroHelper;
 import org.rabix.common.helper.CloneHelper;
 
-public class RabixBindings implements Bindings {
+public class ZeroBindings implements Bindings {
 
   private ProtocolType protocolType;
-  private RabixCommandLineBuilder rabixCommandLineBuilder = new RabixCommandLineBuilder();;
-  private final RabixTranslator rabixTranslator = new RabixTranslator();;
+  private ZeroCommandLineBuilder rabixCommandLineBuilder = new ZeroCommandLineBuilder();;
+  private final ZeroTranslator rabixTranslator = new ZeroTranslator();;
 
-  public RabixBindings() throws BindingException {
-    this.protocolType = ProtocolType.RABIX;
+  public ZeroBindings() throws BindingException {
+    this.protocolType = ProtocolType.ZERO;
   }
 
   @Override
   public String loadApp(String appURI) throws BindingException {
-    return RabixAppProcessor.loadApp(appURI);
+    return ZeroAppProcessor.loadApp(appURI);
   }
 
   @Override
   public Object loadAppObject(String appURI) throws BindingException {
     String app = loadApp(appURI);
-    return RabixAppProcessor.loadAppObject(appURI, app);
+    return ZeroAppProcessor.loadAppObject(appURI, app);
   }
 
   @Override
@@ -65,10 +61,10 @@ public class RabixBindings implements Bindings {
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
     String appString = loadApp(job.getApp());
-    RabixJobApp app = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), appString);
+    ZeroJobApp app = (ZeroJobApp) ZeroAppProcessor.loadAppObject(job.getId(), appString);
     String outputFile = app.getOutputs().get(0).getId();
     Map<String, Object> outputs = new HashMap<String, Object>();
-    outputs.put(outputFile, RabixHelper.getOutputPath(outputFile, workingDir.getPath()));
+    outputs.put(outputFile, ZeroHelper.getOutputPath(outputFile, workingDir.getPath()));
     return Job.cloneWithOutputs(job, outputs);
   }
 
@@ -87,11 +83,10 @@ public class RabixBindings implements Bindings {
   @Override
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     Set<FileValue> files = new HashSet<>();
-    
     for (Entry<String, Object> inputEntry : job.getInputs().entrySet()) {
       if (inputEntry.getValue() instanceof String) {
-        if (RabixHelper.isFile(inputEntry.getValue())) {
-          String path = RabixHelper.getFilePath(inputEntry.getValue());
+        if (ZeroHelper.isFile(inputEntry.getValue())) {
+          String path = ZeroHelper.getFilePath(inputEntry.getValue());
           files.add(new FileValue(0L, path, null, null, null));
         }
       }
@@ -102,11 +97,10 @@ public class RabixBindings implements Bindings {
   @Override
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
     Set<FileValue> files = new HashSet<>();
-    
     for (Entry<String, Object> inputEntry : job.getOutputs().entrySet()) {
       if (inputEntry.getValue() instanceof String) {
-        if (RabixHelper.isFile(inputEntry.getValue())) {
-          String path = RabixHelper.getFilePath(inputEntry.getValue());
+        if (ZeroHelper.isFile(inputEntry.getValue())) {
+          String path = ZeroHelper.getFilePath(inputEntry.getValue());
           files.add(new FileValue(0L, path, null, null, null));
         }
       }
@@ -118,11 +112,10 @@ public class RabixBindings implements Bindings {
   @SuppressWarnings("unchecked")
   public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
     Map<String, Object> newInputs = (Map<String, Object>) CloneHelper.deepCopy(job.getInputs());
-    
     for (Entry<String, Object> inputEntry : newInputs.entrySet()) {
       if (inputEntry.getValue() instanceof String) {
-        if (RabixHelper.isFile(inputEntry.getValue())) {
-          String path = RabixHelper.getFilePath(inputEntry.getValue());
+        if (ZeroHelper.isFile(inputEntry.getValue())) {
+          String path = ZeroHelper.getFilePath(inputEntry.getValue());
           try {
             inputEntry.setValue(fileMapper.map(path));
           } catch (FileMappingException e) {
@@ -138,11 +131,10 @@ public class RabixBindings implements Bindings {
   @SuppressWarnings("unchecked")
   public Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
     Map<String, Object> newOutputs = (Map<String, Object>) CloneHelper.deepCopy(job.getOutputs());
-
     for (Entry<String, Object> inputEntry : newOutputs.entrySet()) {
       if (inputEntry.getValue() instanceof String) {
-        if (RabixHelper.isFile(inputEntry.getValue())) {
-          String path = RabixHelper.getFilePath(inputEntry.getValue());
+        if (ZeroHelper.isFile(inputEntry.getValue())) {
+          String path = ZeroHelper.getFilePath(inputEntry.getValue());
           try {
             inputEntry.setValue(fileMapper.map(path));
           } catch (FileMappingException e) {
@@ -156,12 +148,12 @@ public class RabixBindings implements Bindings {
 
   @Override
   public List<Requirement> getRequirements(Job job) throws BindingException {
-    return Collections.<Requirement>emptyList();
+    return Collections.<Requirement> emptyList();
   }
 
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
-    return Collections.<Requirement>emptyList();
+    return Collections.<Requirement> emptyList();
   }
 
   @Override
@@ -171,17 +163,16 @@ public class RabixBindings implements Bindings {
 
   @Override
   public void validate(Job job) throws BindingException {
-    // TODO implement
+    String app = loadApp(job.getApp());
+    String[] lines = app.split("\\n");
+    if(lines.length < 2 || !lines[0].equals("#rabix:SimpleRabixTool")) {
+      throw new BindingException("Invalid RabixApp");
+    }
   }
 
   @Override
   public ProtocolType getProtocolType() {
     return this.protocolType;
-  }
-  
-  static String readFile(String path, Charset encoding) throws IOException {
-    byte[] encoded = Files.readAllBytes(Paths.get(path));
-    return new String(encoded, encoding);
   }
 
 }
