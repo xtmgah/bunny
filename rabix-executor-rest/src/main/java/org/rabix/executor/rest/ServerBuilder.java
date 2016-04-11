@@ -55,7 +55,7 @@ public class ServerBuilder {
     this.configDir = configDir;
   }
 
-  public Server build() {
+  public Server build() throws ExecutorException {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
 
     ConfigModule configModule = new ConfigModule(configDir, null);
@@ -96,8 +96,6 @@ public class ServerBuilder {
     
     BackendRegister backendRegister = injector.getInstance(BackendRegister.class);
     backendRegister.start();
-    
-    
     return server;
   }
 
@@ -124,15 +122,19 @@ public class ServerBuilder {
       this.configuration = configuration;
     }
     
-    public void start() {
-      final Backend backend = registerBackend();
-      
-      heartbeatService.scheduleAtFixedRate(new Runnable() {
-        @Override
-        public void run() {
-          mqTransportStub.send(mqConfig.getHeartbeatQueue(), new HeartbeatInfo(backend.id, System.currentTimeMillis()));
-        }
-      }, 0, 10, TimeUnit.SECONDS);
+    public void start() throws ExecutorException {
+      try {
+        final Backend backend = registerBackend();
+
+        heartbeatService.scheduleAtFixedRate(new Runnable() {
+          @Override
+          public void run() {
+            mqTransportStub.send(mqConfig.getHeartbeatQueue(), new HeartbeatInfo(backend.id, System.currentTimeMillis()));
+          }
+        }, 0, 10, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        throw new ExecutorException("Failed to register executor to the Engine", e);
+      }
     }
 
     private Backend registerBackend() {
