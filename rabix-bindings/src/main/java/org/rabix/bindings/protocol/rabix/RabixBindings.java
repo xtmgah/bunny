@@ -18,7 +18,6 @@ import org.rabix.bindings.Bindings;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
-import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
@@ -39,13 +38,7 @@ public class RabixBindings implements Bindings {
 
   @Override
   public String loadApp(String appURI) throws BindingException {
-    String app = null;
-    try {
-      app = URIHelper.getData(appURI);
-    } catch (IOException e) {
-      throw new BindingException(e);
-    }
-    return app;
+    return RabixAppProcessor.loadApp(appURI);
   }
 
   @Override
@@ -71,7 +64,8 @@ public class RabixBindings implements Bindings {
 
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
-    RabixJobApp app = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), job.getApp());
+    String appString = loadApp(job.getApp());
+    RabixJobApp app = (RabixJobApp) RabixAppProcessor.loadAppObject(job.getId(), appString);
     String outputFile = app.getOutputs().get(0).getId();
     Map<String, Object> outputs = new HashMap<String, Object>();
     outputs.put(outputFile, RabixHelper.getOutputPath(outputFile, workingDir.getPath()));
@@ -80,12 +74,14 @@ public class RabixBindings implements Bindings {
 
   @Override
   public String buildCommandLine(Job job) throws BindingException {
-    return rabixCommandLineBuilder.buildCommandLine(job);
+    String app = loadApp(job.getApp());
+    return rabixCommandLineBuilder.buildCommandLine(job, app);
   }
 
   @Override
   public List<String> buildCommandLineParts(Job job) throws BindingException {
-    return rabixCommandLineBuilder.buildCommandLineParts(job);
+    String app = loadApp(job.getApp());
+    return rabixCommandLineBuilder.buildCommandLineParts(job, app);
   }
 
   @Override

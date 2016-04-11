@@ -1,5 +1,6 @@
 package org.rabix.bindings.protocol.rabix;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,9 +15,21 @@ import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.apache.velocity.runtime.visitor.BaseVisitor;
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.protocol.rabix.bean.RabixJobApp;
 
 public class RabixAppProcessor {
+  
+  
+  public static String loadApp(String appURI) throws BindingException{
+    String app = null;
+    try {
+      app = URIHelper.getData(appURI);
+    } catch (IOException e) {
+      throw new BindingException(e);
+    }
+    return app;
+  }
   
   public static Object loadAppObject(String appId, String app) throws BindingException {
     String template = getTemplate(app);
