@@ -14,6 +14,9 @@ import org.rabix.engine.rest.transport.impl.TransportPluginMQ.ResultPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class BackendMQ {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendMQ.class);
@@ -34,7 +37,7 @@ public class BackendMQ {
     executorService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = transportPluginMQ.receive(backend.getReceiveQueue(), Job.class);
+        ResultPair<Job> result = receive(backend.getReceiveQueue(), Job.class);
         if (result.isSuccess() && result.getResult() != null) {
           try {
             jobService.update(result.getResult());
@@ -44,6 +47,10 @@ public class BackendMQ {
         }
       }
     }, 0, 10, TimeUnit.MILLISECONDS);
+  }
+  
+  public void stopConsumer() {
+    executorService.shutdown();
   }
   
   public void send(Job job) {
@@ -56,8 +63,40 @@ public class BackendMQ {
     }
   }
   
+  public <T> ResultPair<T> receive(String queue, Class<T> clazz) {
+    return transportPluginMQ.receive(queue, clazz);
+  }
+  
   public Backend getBackend() {
     return backend;
   }
   
+  public static class HeartbeatInfo {
+    @JsonProperty("id")
+    private String id;
+    @JsonProperty("timestamp")
+    private Long timestamp;
+    
+    @JsonCreator
+    public HeartbeatInfo(@JsonProperty("id") String id, @JsonProperty("timestamp") Long timestamp) {
+      this.id = id;
+      this.timestamp = timestamp;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    public void setId(String id) {
+      this.id = id;
+    }
+
+    public Long getTimestamp() {
+      return timestamp;
+    }
+
+    public void setTimestamp(Long timestamp) {
+      this.timestamp = timestamp;
+    }
+  }
 }

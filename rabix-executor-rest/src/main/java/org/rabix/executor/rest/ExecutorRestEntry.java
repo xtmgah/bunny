@@ -37,6 +37,7 @@ public class ExecutorRestEntry {
     } catch (ParseException e) {
       logger.error("Encountered exception while parsing using PosixParser.", e);
     } catch (Exception e) {
+      e.printStackTrace();
       logger.error("Encountered exception while reading a input file.");
     }
   }
