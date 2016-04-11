@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2Resource;
@@ -15,6 +16,7 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2ExpressionEngineRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2IORequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2SchemaDefRequirement;
+import org.rabix.common.json.BeanSerializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @Type(value = Draft2WagnerPythonTool.class, name = "WagnerPythonTool")})
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Draft2JobApp {
+public abstract class Draft2JobApp implements Application {
 
   @JsonProperty("id")
   protected String id;
@@ -258,6 +260,11 @@ public abstract class Draft2JobApp {
   @JsonIgnore
   public boolean isExpressionTool() {
     return Draft2JobAppType.EXPRESSION_TOOL.equals(getType());
+  }
+  
+  @Override
+  public String serialize() {
+    return BeanSerializer.serializeFull(this);
   }
   
   public abstract Draft2JobAppType getType();

@@ -3,6 +3,7 @@ package org.rabix.bindings.model.dag;
 import java.util.List;
 import java.util.Map;
 
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.ScatterMethod;
 
 public class DAGContainer extends DAGNode {
@@ -10,7 +11,7 @@ public class DAGContainer extends DAGNode {
   private final List<DAGLink> links;
   private final List<DAGNode> children;
 
-  public DAGContainer(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, Object app, ScatterMethod scatterMethod, List<DAGLink> links, List<DAGNode> children, Map<String, Object> defaults) {
+  public DAGContainer(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, Application app, ScatterMethod scatterMethod, List<DAGLink> links, List<DAGNode> children, Map<String, Object> defaults) {
     super(id, inputPorts, outputPorts, scatterMethod, app, defaults);
     this.links = links;
     this.children = children;

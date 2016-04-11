@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2OutputPort;
 
-public class RabixJobApp {
+public class RabixJobApp implements Application {
 
   protected String id;
   protected String raw;
@@ -81,6 +82,11 @@ public class RabixJobApp {
   }
   
   public String getRaw() {
+    return raw;
+  }
+
+  @Override
+  public String serialize() {
     return raw;
   }
 
