@@ -42,16 +42,12 @@ import com.squarespace.jersey2.guice.BootstrapUtils;
 
 public class ServerBuilder {
 
-  private int port = 8080;
-
+  private final static String EXECUTOR_PORT_KEY = "executor.port";
+  
   private File configDir;
   
   public ServerBuilder(File configDir) {
     this.configDir = configDir;
-  }
-
-  public ServerBuilder(int port) {
-    this.port = port;
   }
 
   public Server build() {
@@ -71,8 +67,11 @@ public class ServerBuilder {
 
     BootstrapUtils.install(locator);
 
-    Server server = new Server(port);
-
+    Configuration configuration = injector.getInstance(Configuration.class);
+    
+    int enginePort = configuration.getInt(EXECUTOR_PORT_KEY);
+    Server server = new Server(enginePort);
+    
     ResourceConfig config = ResourceConfig.forApplication(new Application());
 
     ServletContainer servletContainer = new ServletContainer(config);
@@ -121,7 +120,7 @@ public class ServerBuilder {
     }
 
     private void registerBackend() {
-      String engineHost = configuration.getString("engine.host");
+      String engineHost = configuration.getString("engine.url");
       Integer enginePort = configuration.getInteger("engine.port", null);
 
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));

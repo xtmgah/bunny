@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.ApplicationPath;
 
+import org.apache.commons.configuration.Configuration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -32,6 +33,7 @@ import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.ServletModule;
@@ -39,22 +41,18 @@ import com.squarespace.jersey2.guice.BootstrapUtils;
 
 public class ServerBuilder {
 
-  private int port = 8081;
-
+  private final static String ENGINE_PORT_KEY = "engine.port";
+  
   private File configDir;
   
   public ServerBuilder(File configDir) {
     this.configDir = configDir;
   }
 
-  public ServerBuilder(int port) {
-    this.port = port;
-  }
-
   public Server build() {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
-    BootstrapUtils.newInjector(locator, Arrays.asList(
+    Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(
         new ServletModule(), 
         new ConfigModule(configDir, null), 
         new EngineModule(), 
@@ -70,10 +68,12 @@ public class ServerBuilder {
             bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
           }
         }));
-
     BootstrapUtils.install(locator);
 
-    Server server = new Server(port);
+    Configuration configuration = injector.getInstance(Configuration.class);
+    
+    int enginePort = configuration.getInt(ENGINE_PORT_KEY);
+    Server server = new Server(enginePort);
 
     ResourceConfig config = ResourceConfig.forApplication(new Application());
 
