@@ -16,6 +16,7 @@ import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.apache.velocity.runtime.visitor.BaseVisitor;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.helper.URIHelper;
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
 
 public class ZeroAppProcessor {
@@ -31,7 +32,7 @@ public class ZeroAppProcessor {
     return app;
   }
   
-  public static Object loadAppObject(String appId, String app) throws BindingException {
+  public static Application loadAppObject(String appId, String app) throws BindingException {
     String template = getTemplate(app);
     Set<String> inputs = getInputsFromApp(appId, template);
     Set<String> outputs = getOutputsFromApp(template);

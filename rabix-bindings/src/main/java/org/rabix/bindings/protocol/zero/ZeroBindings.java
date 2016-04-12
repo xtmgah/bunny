@@ -14,6 +14,7 @@ import org.rabix.bindings.Bindings;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
@@ -38,7 +39,7 @@ public class ZeroBindings implements Bindings {
   }
 
   @Override
-  public Object loadAppObject(String appURI) throws BindingException {
+  public Application loadAppObject(String appURI) throws BindingException {
     String app = loadApp(appURI);
     return ZeroAppProcessor.loadAppObject(appURI, app);
   }

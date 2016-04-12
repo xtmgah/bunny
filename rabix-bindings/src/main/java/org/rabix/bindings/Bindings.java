@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.filemapper.FileMapper;
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
@@ -14,7 +15,7 @@ public interface Bindings {
 
   String loadApp(String appURI) throws BindingException;
   
-  Object loadAppObject(String uri) throws BindingException;
+  Application loadAppObject(String uri) throws BindingException;
 
   boolean canExecute(Job job) throws BindingException;
   

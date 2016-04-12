@@ -1,5 +1,7 @@
 package org.rabix.bindings.protocol.draft2.bean;
 
+import org.rabix.bindings.model.ApplicationPort;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -8,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Draft2OutputPort extends Draft2Port {
+public class Draft2OutputPort extends ApplicationPort {
 
   @JsonProperty("outputBinding")
   protected Object outputBinding;

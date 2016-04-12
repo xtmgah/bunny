@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.model.Application;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2Resource;
@@ -27,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class", defaultImpl = Draft2EmbeddedApp.class)
 @JsonSubTypes({ 
 	@Type(value = Draft2CommandLineTool.class, name = "CommandLineTool"),
 	@Type(value = Draft2ExpressionTool.class, name = "ExpressionTool"),
@@ -46,22 +47,22 @@ public abstract class Draft2JobApp implements Application {
   @JsonProperty("label")
   protected String label;
   @JsonProperty("contributor")
-  protected List<String> contributor;
+  protected List<String> contributor = new ArrayList<>();
   @JsonProperty("owner")
-  protected List<String> owner;
+  protected List<String> owner = new ArrayList<>();
 
   @JsonProperty("inputs")
-  private List<Draft2InputPort> inputs;
+  protected List<Draft2InputPort> inputs = new ArrayList<>();
   @JsonProperty("outputs")
-  private List<Draft2OutputPort> outputs;
+  protected List<Draft2OutputPort> outputs = new ArrayList<>();
 
   @JsonProperty("hints")
-  protected List<Draft2Resource> hints;
+  protected List<Draft2Resource> hints = new ArrayList<>();
   @JsonProperty("requirements")
-  protected List<Draft2Resource> requirements;
+  protected List<Draft2Resource> requirements = new ArrayList<>();
   
   @JsonProperty("successCodes")
-  protected List<Integer> successCodes;
+  protected List<Integer> successCodes = new ArrayList<>();
 
   public String getId() {
     return id;
@@ -175,7 +176,7 @@ public abstract class Draft2JobApp implements Application {
     return result;
   }
 
-  public Draft2Port getPort(String id, Class<? extends Draft2Port> clazz) {
+  public ApplicationPort getPort(String id, Class<? extends ApplicationPort> clazz) {
     if (Draft2InputPort.class.equals(clazz)) {
       return getInput(id);
     }
@@ -255,6 +256,11 @@ public abstract class Draft2JobApp implements Application {
   @JsonIgnore
   public boolean isCommandLineTool() {
     return Draft2JobAppType.COMMAND_LINE_TOOL.equals(getType());
+  }
+  
+  @JsonIgnore
+  public boolean isEmbedded() {
+    return Draft2JobAppType.EMBEDDED.equals(getType());
   }
   
   @JsonIgnore

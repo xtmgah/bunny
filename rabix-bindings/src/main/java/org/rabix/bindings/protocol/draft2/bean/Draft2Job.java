@@ -69,9 +69,9 @@ public final class Draft2Job {
       return;
     }
     for (Draft2InputPort inputPort : app.getInputs()) {
-      String normalizedId = Draft2SchemaHelper.normalizeId(inputPort.id);
-      if (!inputs.containsKey(normalizedId) && inputPort.defaultValue != null) {
-        inputs.put(normalizedId, inputPort.defaultValue);
+      String normalizedId = Draft2SchemaHelper.normalizeId(inputPort.getId());
+      if (!inputs.containsKey(normalizedId) && inputPort.getDefaultValue() != null) {
+        inputs.put(normalizedId, inputPort.getDefaultValue());
       }
     }
   }

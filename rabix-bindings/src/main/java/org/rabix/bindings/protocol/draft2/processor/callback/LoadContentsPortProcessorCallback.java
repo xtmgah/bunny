@@ -1,7 +1,7 @@
 package org.rabix.bindings.protocol.draft2.processor.callback;
 
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
@@ -12,7 +12,7 @@ import org.rabix.common.helper.CloneHelper;
 public class LoadContentsPortProcessorCallback implements Draft2PortProcessorCallback {
 
   @Override
-  public Draft2PortProcessorResult process(Object value, Draft2Port port) throws Exception {
+  public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value) && port instanceof Draft2InputPort) {
       Object clonedValue = CloneHelper.deepCopy(value);
       
