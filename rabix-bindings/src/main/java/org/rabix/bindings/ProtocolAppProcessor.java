@@ -1,5 +1,6 @@
 package org.rabix.bindings;
 
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.Job;
 
 public interface ProtocolAppProcessor {
@@ -10,6 +11,6 @@ public interface ProtocolAppProcessor {
 
   String loadApp(String uri) throws BindingException;
   
-  Object loadAppObject(String app) throws BindingException;
+  Application loadAppObject(String app) throws BindingException;
 
 }

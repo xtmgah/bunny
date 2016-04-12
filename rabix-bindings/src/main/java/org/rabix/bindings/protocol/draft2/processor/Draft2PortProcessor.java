@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2OutputPort;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class Draft2PortProcessor {
     return processValues(outputs, job.getApp().getOutputs(), Draft2OutputPort.class, portProcessor);
   }
 
-  private Map<String, Object> processValues(Map<String, Object> values, List<? extends Draft2Port> ports, Class<? extends Draft2Port> clazz, Draft2PortProcessorCallback portProcessor) throws Draft2PortProcessorException {
+  private Map<String, Object> processValues(Map<String, Object> values, List<? extends ApplicationPort> ports, Class<? extends ApplicationPort> clazz, Draft2PortProcessorCallback portProcessor) throws Draft2PortProcessorException {
     if (values == null) {
       return null;
     }
@@ -47,7 +47,7 @@ public class Draft2PortProcessor {
       String id = entry.getKey();
       Object value = entry.getValue();
 
-      Draft2Port port = job.getApp().getPort(Draft2SchemaHelper.denormalizeId(id), clazz);
+      ApplicationPort port = job.getApp().getPort(Draft2SchemaHelper.denormalizeId(id), clazz);
       if (port == null) {
         throw new Draft2PortProcessorException("Port with ID=" + Draft2SchemaHelper.denormalizeId(id) + " doesn't exist.");
       }
@@ -65,7 +65,7 @@ public class Draft2PortProcessor {
   }
 
   @SuppressWarnings("unchecked")
-  private Object processValue(Object value, Draft2Port port, Object schema, String key, Draft2PortProcessorCallback portProcessor) throws Exception {
+  private Object processValue(Object value, ApplicationPort port, Object schema, String key, Draft2PortProcessorCallback portProcessor) throws Exception {
     logger.debug("Process value {} and schema {}", value, schema);
 
     if (value == null) {

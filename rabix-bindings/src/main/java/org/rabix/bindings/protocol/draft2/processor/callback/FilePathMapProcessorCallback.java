@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.filemapper.FileMapper;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
@@ -22,7 +22,7 @@ public class FilePathMapProcessorCallback implements Draft2PortProcessorCallback
 
   @Override
   @SuppressWarnings("unchecked")
-  public Draft2PortProcessorResult process(Object value, Draft2Port port) throws Draft2PortProcessorException {
+  public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Draft2PortProcessorException {
     if (value == null) {
       return new Draft2PortProcessorResult(value, false);
     }

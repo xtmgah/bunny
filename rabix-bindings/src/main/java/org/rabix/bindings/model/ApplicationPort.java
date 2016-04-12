@@ -1,4 +1,4 @@
-package org.rabix.bindings.protocol.draft2.bean;
+package org.rabix.bindings.model;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Draft2Port {
+public abstract class ApplicationPort {
 
   public static final String KEY_SCHEMA = "type";
 
@@ -35,7 +35,7 @@ public abstract class Draft2Port {
   protected Map<String, Object> raw = new HashMap<>();
 
   @JsonCreator
-  public Draft2Port(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter, @JsonProperty("linkMerge") String linkMerge) {
+  public ApplicationPort(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter, @JsonProperty("linkMerge") String linkMerge) {
     this.id = id;
     this.schema = schema;
     this.scatter = scatter;

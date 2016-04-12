@@ -13,6 +13,7 @@ public class ZeroJobApp implements Application {
   protected String id;
   protected String raw;
   protected String template;
+  
   private List<ZeroPort> inputs;
   private List<ZeroPort> outputs;
   
