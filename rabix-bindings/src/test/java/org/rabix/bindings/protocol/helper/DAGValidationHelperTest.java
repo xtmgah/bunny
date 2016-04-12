@@ -21,7 +21,7 @@ public class DAGValidationHelperTest {
 
     Bindings bindings = BindingsFactory.create(appURI);
     
-    Job job = new Job(null, null, appURI, null, null, null, null); 
+    Job job = new Job(null, null, null, appURI, null, null, null, null); 
     DAGNode node = bindings.translateToDAG(job);
     DAGValidationHelper.detectLoop((DAGContainer) node);
   }
@@ -33,7 +33,7 @@ public class DAGValidationHelperTest {
     
     Bindings bindings = BindingsFactory.create(appURI);
     
-    Job job = new Job(null, null, appURI, null, null, null, null); 
+    Job job = new Job(null, null, null, appURI, null, null, null, null); 
     DAGNode node = bindings.translateToDAG(job);
     DAGValidationHelper.detectLoop((DAGContainer) node);
   }

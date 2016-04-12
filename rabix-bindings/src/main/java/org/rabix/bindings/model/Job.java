@@ -45,11 +45,12 @@ public class Job {
   private final Map<String, Object> outputs;
   
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, app, null, inputs, null, null);
+    this(null, null, null, app, null, inputs, null, null);
   }
   
   @JsonCreator
-  public Job(@JsonProperty("id") String id, 
+  public Job(@JsonProperty("id") String id,
+      @JsonProperty("parent_id") String parent_id,
       @JsonProperty("name") String name,
       @JsonProperty("app") String app, 
       @JsonProperty("status") JobStatus status, 
@@ -57,7 +58,7 @@ public class Job {
       @JsonProperty("outputs") Map<String, Object> otputs,
       @JsonProperty("context") Context context) {
     this.id = id;
-    this.parent_id = (name != null) ? InternalSchemaHelper.getParentId(name): null;
+    this.parent_id = parent_id;
     this.root_id = (context != null) ? context.getId(): null;
     this.name = name;
     this.app = app;
@@ -68,27 +69,27 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.parent_id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithContext(Job job, Context context) {
-    return new Job(job.id, job.name, job.app, job.status, job.inputs, job.outputs, context);
+    return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, job.outputs, context);
   }
   
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
 
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.name, job.app, status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parent_id, job.name, job.app, status, job.inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.name, job.app, job.status, inputs, job.outputs, job.context);
+    return new Job(job.id, job.parent_id, job.name, job.app, job.status, inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.name, job.app, job.status, job.inputs, outputs, job.context);
+    return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, outputs, job.context);
   }
   
   public String getId() {

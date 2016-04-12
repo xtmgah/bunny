@@ -154,7 +154,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       List<Event> events = new ArrayList<>();
 
       String jobNId = InternalSchemaHelper.scatterId(job.getId(), mapping.getIndex());
-      JobRecord jobN = createJobRecord(jobNId, node, true, job.getContextId());
+      JobRecord jobN = createJobRecord(jobNId, job.getId(), node, true, job.getContextId());
           
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
@@ -294,7 +294,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     for (DAGNode node : containerNode.getChildren()) {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
-      JobRecord childJob = createJobRecord(newJobId, node, false, contextId);
+      JobRecord childJob = createJobRecord(newJobId, job.getExternalId(), node, false, contextId);
       jobService.create(childJob);
 
       for (DAGLinkPort port : node.getInputPorts()) {
@@ -358,7 +358,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     jobService.update(job);
   }
   
-  private JobRecord createJobRecord(String id, DAGNode node, boolean isScattered, String contextId) {
+  private JobRecord createJobRecord(String id, String parentId, DAGNode node, boolean isScattered, String contextId) {
     boolean isBlocking = false;
     for (LinkMerge linkMerge : node.getLinkMergeSet(LinkPortType.INPUT)) {
       if (LinkMerge.isBlocking(linkMerge)) {
@@ -369,6 +369,6 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     if (ScatterMethod.isBlocking(node.getScatterMethod())) {
       isBlocking = true;
     }
-    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), JobState.PENDING, node instanceof DAGContainer, isScattered, false, isBlocking);
+    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node instanceof DAGContainer, isScattered, false, isBlocking);
   }
 }
