@@ -17,19 +17,15 @@ public class ZeroJobApp implements Application {
   private List<ZeroPort> inputs;
   private List<ZeroPort> outputs;
   
-  public ZeroJobApp(String id, String raw, String template, Collection<String> inputs, Collection<String> outputs) {
+  public ZeroJobApp(String id, String raw, String template, Collection<ZeroPort> inputs, Collection<ZeroPort> outputs) {
     super();
     this.id = id;
     this.raw = raw;
     this.template = template;
     this.inputs = new ArrayList<ZeroPort>();
-    for(String input: inputs) {
-      this.inputs.add(new ZeroPort(input));
-    }
+    this.inputs.addAll(inputs);
     this.outputs = new ArrayList<ZeroPort>();
-    for(String output: outputs) {
-      this.outputs.add(new ZeroPort(output));
-    }
+    this.outputs.addAll(outputs);
   }
 
   public String getId() {

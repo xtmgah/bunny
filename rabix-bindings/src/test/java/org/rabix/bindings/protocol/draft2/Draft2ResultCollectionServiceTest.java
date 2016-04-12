@@ -50,7 +50,7 @@ public class Draft2ResultCollectionServiceTest {
 
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-    Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+    Job job = new Job("id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(job);
     job = bindings.postprocess(job, workingDir);
@@ -67,7 +67,7 @@ public class Draft2ResultCollectionServiceTest {
 
     Draft2Job draft2Job = BeanSerializer.deserialize(inputJson, Draft2Job.class);
     String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-    Job job = new Job("id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+    Job job = new Job("id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
     
     Bindings bindings = BindingsFactory.create(job);
     job = bindings.postprocess(job, workingDir);
