@@ -82,13 +82,14 @@ public class ZeroBindings implements Bindings {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     Set<FileValue> files = new HashSet<>();
     for (Entry<String, Object> inputEntry : job.getInputs().entrySet()) {
-      if (inputEntry.getValue() instanceof String) {
-        if (ZeroHelper.isFile(inputEntry.getValue())) {
-          String path = ZeroHelper.getFilePath(inputEntry.getValue());
-          files.add(new FileValue(0L, path, null, null, null));
+      if (inputEntry.getValue() instanceof Map<?, ?>) {
+        Map<String, Object> map = (Map<String, Object>) inputEntry.getValue();
+        if (map.containsKey("class") && map.get("class").equals("File")) {
+          files.add(new FileValue(0L, (String) map.get("path"), null, null, null));
         }
       }
     }
@@ -96,13 +97,16 @@ public class ZeroBindings implements Bindings {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
     Set<FileValue> files = new HashSet<>();
     for (Entry<String, Object> inputEntry : job.getOutputs().entrySet()) {
       if (inputEntry.getValue() instanceof String) {
-        if (ZeroHelper.isFile(inputEntry.getValue())) {
-          String path = ZeroHelper.getFilePath(inputEntry.getValue());
-          files.add(new FileValue(0L, path, null, null, null));
+        if (inputEntry.getValue() instanceof Map<?, ?>) {
+          Map<String, Object> map = (Map<String, Object>) inputEntry.getValue();
+          if (map.containsKey("class") && map.get("class").equals("File")) {
+            files.add(new FileValue(0L, (String) map.get("path"), null, null, null));
+          }
         }
       }
     }
@@ -114,11 +118,11 @@ public class ZeroBindings implements Bindings {
   public Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
     Map<String, Object> newInputs = (Map<String, Object>) CloneHelper.deepCopy(job.getInputs());
     for (Entry<String, Object> inputEntry : newInputs.entrySet()) {
-      if (inputEntry.getValue() instanceof String) {
-        if (ZeroHelper.isFile(inputEntry.getValue())) {
-          String path = ZeroHelper.getFilePath(inputEntry.getValue());
+      if (inputEntry.getValue() instanceof Map<?, ?>) {
+        Map<String, Object> map = (Map<String, Object>) inputEntry.getValue();
+        if (map.containsKey("class") && map.get("class").equals("File")) {
           try {
-            inputEntry.setValue(fileMapper.map(path));
+            map.put("path", fileMapper.map((String) map.get("path")));
           } catch (FileMappingException e) {
             throw new BindingException(e);
           }
@@ -133,11 +137,11 @@ public class ZeroBindings implements Bindings {
   public Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException {
     Map<String, Object> newOutputs = (Map<String, Object>) CloneHelper.deepCopy(job.getOutputs());
     for (Entry<String, Object> inputEntry : newOutputs.entrySet()) {
-      if (inputEntry.getValue() instanceof String) {
-        if (ZeroHelper.isFile(inputEntry.getValue())) {
-          String path = ZeroHelper.getFilePath(inputEntry.getValue());
+      if (inputEntry.getValue() instanceof Map<?, ?>) {
+        Map<String, Object> map = (Map<String, Object>) inputEntry.getValue();
+        if (map.containsKey("class") && map.get("class").equals("File")) {
           try {
-            inputEntry.setValue(fileMapper.map(path));
+            map.put("path", fileMapper.map((String) map.get("path")));
           } catch (FileMappingException e) {
             throw new BindingException(e);
           }

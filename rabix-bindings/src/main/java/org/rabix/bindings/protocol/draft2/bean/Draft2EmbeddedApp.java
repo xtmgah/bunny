@@ -14,15 +14,12 @@ import com.google.common.collect.Lists;
 
 public class Draft2EmbeddedApp extends Draft2JobApp {
 
-  private String raw;
   private Application application;
   private List<Draft2InputPort> inputs;
   private List<Draft2OutputPort> outputs;
 
   @JsonCreator
   public Draft2EmbeddedApp(String raw) {
-    this.raw = raw;
-    
     Bindings bindings = BindingsFactory.create(raw);
     if (bindings != null) {
       try {
@@ -57,7 +54,7 @@ public class Draft2EmbeddedApp extends Draft2JobApp {
   
   @Override
   public String serialize() {
-    return raw;
+    return application.serialize();
   }
   
   @Override
