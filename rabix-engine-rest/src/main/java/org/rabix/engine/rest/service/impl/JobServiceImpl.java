@@ -107,6 +107,7 @@ public class JobServiceImpl implements JobService {
       default:
         break;
       }
+      jobDB.update(job);
     } catch (BindingException e) {
       logger.error("Cannot find Bindings", e);
       throw new JobServiceException("Cannot find Bindings", e);
