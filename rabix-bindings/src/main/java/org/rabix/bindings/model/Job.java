@@ -3,6 +3,7 @@ package org.rabix.bindings.model;
 import java.util.Map;
 
 import org.rabix.common.helper.CloneHelper;
+import org.rabix.common.helper.InternalSchemaHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -26,8 +27,12 @@ public class Job {
 
   @JsonProperty("id")
   private final String id;
-  @JsonProperty("nodeId")
-  private final String nodeId;
+  @JsonProperty("parent_id")
+  private final String parent_id;
+  @JsonProperty("root_id")
+  private final String root_id;
+  @JsonProperty("name")
+  private final String name;
   @JsonProperty("app")
   private final String app;
   @JsonProperty("status")
@@ -45,14 +50,16 @@ public class Job {
   
   @JsonCreator
   public Job(@JsonProperty("id") String id, 
-      @JsonProperty("nodeId") String nodeId,
+      @JsonProperty("name") String name,
       @JsonProperty("app") String app, 
       @JsonProperty("status") JobStatus status, 
       @JsonProperty("inputs") Map<String, Object> inputs, 
       @JsonProperty("outputs") Map<String, Object> otputs,
       @JsonProperty("context") Context context) {
     this.id = id;
-    this.nodeId = nodeId;
+    this.parent_id = (name != null) ? InternalSchemaHelper.getParentId(name): null;
+    this.root_id = (context != null) ? context.getId(): null;
+    this.name = name;
     this.app = app;
     this.status = status;
     this.inputs = inputs;
@@ -61,27 +68,27 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.nodeId, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithContext(Job job, Context context) {
-    return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, job.outputs, context);
+    return new Job(job.id, job.name, job.app, job.status, job.inputs, job.outputs, context);
   }
   
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
 
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.nodeId, job.app, status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.name, job.app, status, job.inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.nodeId, job.app, job.status, inputs, job.outputs, job.context);
+    return new Job(job.id, job.name, job.app, job.status, inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.nodeId, job.app, job.status, job.inputs, outputs, job.context);
+    return new Job(job.id, job.name, job.app, job.status, job.inputs, outputs, job.context);
   }
   
   public String getId() {
@@ -89,7 +96,7 @@ public class Job {
   }
   
   public String getNodeId() {
-    return nodeId;
+    return name;
   }
   
   public String getApp() {
@@ -127,7 +134,7 @@ public class Job {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((context == null) ? 0 : context.getId().hashCode());
-    result = prime * result + ((nodeId == null) ? 0 : nodeId.hashCode());
+    result = prime * result + ((name == null) ? 0 : name.hashCode());
     return result;
   }
 
@@ -145,16 +152,16 @@ public class Job {
         return false;
     } else if (!context.getId().equals(other.context.getId()))
       return false;
-    if (nodeId == null) {
-      if (other.nodeId != null)
+    if (name == null) {
+      if (other.name != null)
         return false;
-    } else if (!nodeId.equals(other.nodeId))
+    } else if (!name.equals(other.name))
       return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "Job [id=" + id + ", nodeId=" + nodeId + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
+    return "Job [id=" + id + ", parent_id=" + parent_id + ", root_id=" + root_id + ", name=" + name + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
   }
 }
