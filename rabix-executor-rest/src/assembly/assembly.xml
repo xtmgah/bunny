@@ -18,7 +18,6 @@
                 <exclude>**/conf/**</exclude>
                 <exclude>**/lib/**</exclude>
                  <exclude>**/.*/**</exclude>
-                <exclude>**/bin/**</exclude>
                 <exclude>**/pom.xml.versionsBackup</exclude>
                 <exclude>**/${project.build.directory}/**</exclude>
             </excludes>
@@ -27,7 +26,7 @@
             <directory>${project.build.directory}</directory>
             <outputDirectory>/lib/</outputDirectory>
             <includes>
-                <include>rabix-executor-0.0.1-SNAPSHOT.jar</include>
+                <include>rabix-executor-rest-0.0.1-SNAPSHOT.jar</include>
             </includes>
         </fileSet>
         <fileSet>

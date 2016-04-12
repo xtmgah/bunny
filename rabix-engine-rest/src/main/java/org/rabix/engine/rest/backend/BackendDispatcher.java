@@ -22,11 +22,15 @@ import org.rabix.engine.rest.backend.impl.BackendMQ;
 import org.rabix.engine.rest.backend.impl.BackendMQ.HeartbeatInfo;
 import org.rabix.engine.rest.model.Backend;
 import org.rabix.engine.rest.transport.impl.TransportPluginMQ.ResultPair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BackendDispatcher {
 
   private int position = 0;
 
+  private final static Logger logger = LoggerFactory.getLogger(BackendDispatcher.class);
+  
   private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(5);
 
   private final List<BackendMQ> backendStubs = new ArrayList<>();
@@ -85,6 +89,7 @@ public class BackendDispatcher {
         freeJobIterator.remove();
         jobBackendMapping.put(freeJob, backendMQ.getBackend().getId());
         backendMQ.send(freeJob);
+        logger.info("Job {} sent to {}.", freeJob.getId(), backendMQ.getBackend().getId());
       }
       return true;
     } finally {
