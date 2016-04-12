@@ -96,7 +96,7 @@ public class Job {
     return id;
   }
   
-  public String getNodeId() {
+  public String getName() {
     return name;
   }
   

@@ -73,7 +73,7 @@ public class JobServiceImpl implements JobService {
       Bindings bindings = BindingsFactory.create(job);
       ProtocolType protocolType = bindings.getProtocolType();
       
-      JobRecord jobRecord = jobRecordService.find(job.getNodeId(), job.getContext().getId());
+      JobRecord jobRecord = jobRecordService.find(job.getName(), job.getContext().getId());
       
       JobStatusEvent statusEvent = null;
       JobStatus status = job.getStatus();
@@ -83,7 +83,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.RUNNING);
-        statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.RUNNING, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.RUNNING, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
@@ -91,7 +91,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
-        statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.FAILED, null, protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.FAILED, null, protocolType);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -100,7 +100,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
-        statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.COMPLETED, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.COMPLETED, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;

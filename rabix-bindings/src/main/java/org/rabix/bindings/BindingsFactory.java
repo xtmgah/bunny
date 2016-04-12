@@ -33,7 +33,6 @@ public class BindingsFactory {
         }
         return binding;
       } catch (Exception e) {
-        // do nothing
       }
     }
     return null;
