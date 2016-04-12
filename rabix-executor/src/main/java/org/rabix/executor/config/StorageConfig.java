@@ -34,7 +34,7 @@ public class StorageConfig {
   }
   
   private static String[] transformLocalIDsToPath(Job job) {
-    String nodeId = job.getNodeId();
+    String nodeId = job.getName();
     return nodeId.split("\\" + InternalSchemaHelper.SEPARATOR);
   }
   

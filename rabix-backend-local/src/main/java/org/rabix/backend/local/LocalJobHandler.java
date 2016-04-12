@@ -76,7 +76,7 @@ public class LocalJobHandler implements IterationCallback {
                 Map<String, Object> results = executorService.getResult(job.getId(), contextId);
 
                 ProtocolType protocolType = bindings.getProtocolType();
-                JobStatusEvent statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.COMPLETED, results, protocolType);
+                JobStatusEvent statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.COMPLETED, results, protocolType);
                 eventProcessor.addToQueue(statusEvent);
               } else {
                 logger.error("Job {} has failed. Stop everything.", job.getId());
