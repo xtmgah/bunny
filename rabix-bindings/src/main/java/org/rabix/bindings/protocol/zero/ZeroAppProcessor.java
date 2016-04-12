@@ -2,8 +2,10 @@ package org.rabix.bindings.protocol.zero;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.velocity.Template;
@@ -18,6 +20,7 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Application;
 import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
+import org.rabix.bindings.protocol.zero.bean.ZeroPort;
 
 public class ZeroAppProcessor {
   
@@ -34,12 +37,12 @@ public class ZeroAppProcessor {
   
   public static Application loadAppObject(String appId, String app) throws BindingException {
     String template = getTemplate(app);
-    Set<String> inputs = getInputsFromApp(appId, template);
-    Set<String> outputs = getOutputsFromApp(template);
+    Set<ZeroPort> inputs = getInputsFromApp(appId, template);
+    Set<ZeroPort> outputs = getOutputsFromApp(template);
     return new ZeroJobApp(appId, app, template, inputs, outputs);
   }
   
-  private static Set<String> getInputsFromApp(String appName, String template) {
+  private static Set<ZeroPort> getInputsFromApp(String appName, String template) {
     VelocityEngine ve = new VelocityEngine();
     ve.setProperty(Velocity.RESOURCE_LOADER, "string");
     ve.addProperty("string.resource.loader.class", StringResourceLoader.class.getName());
@@ -61,15 +64,20 @@ public class ZeroAppProcessor {
       }
     };
     node.jjtAccept(myVisitor, new Object());
-    Set<String> keySet = new HashSet<String>(keys);
+    Set<ZeroPort> keySet = new HashSet<ZeroPort>();
+    for(String key: keys) {
+      keySet.add(new ZeroPort(key));
+    }
     return keySet;
   }
   
-  private static Set<String> getOutputsFromApp(String template) {
+  private static Set<ZeroPort> getOutputsFromApp(String template) {
     String[] output = template.split(">");
     String stdout = output[1].split(" ")[1];
-    Set<String> outputs = new HashSet<String>();
-    outputs.add(stdout);
+    Set<ZeroPort> outputs = new HashSet<ZeroPort>();
+    Map<String, String> schema = new HashMap<String, String>();
+    schema.put("glob", stdout);
+    outputs.add(new ZeroPort("output", schema));
     return outputs;
   }
   
@@ -79,7 +87,7 @@ public class ZeroAppProcessor {
   
   private static String getTemplate(String app) throws BindingException {
     String[] lines = app.split("\\n");
-    if(lines.length < 2 || !lines[0].equals("#rabix:SimpleRabixTool")) {
+    if(lines.length < 2 || !lines[0].equals("#zero:SimpleZeroTool")) {
       throw new BindingException("Invalid RabixApp");
     }
     String template = lines[1];

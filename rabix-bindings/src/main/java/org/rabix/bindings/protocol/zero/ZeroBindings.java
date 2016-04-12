@@ -58,14 +58,16 @@ public class ZeroBindings implements Bindings {
   public Job preprocess(Job job, File workingDir) throws BindingException {
     return job;
   }
-
+  
   @Override
+  @SuppressWarnings("unchecked")
   public Job postprocess(Job job, File workingDir) throws BindingException {
     String appString = loadApp(job.getApp());
     ZeroJobApp app = (ZeroJobApp) ZeroAppProcessor.loadAppObject(job.getId(), appString);
     String outputFile = app.getOutputs().get(0).getId();
+    String fileName = ((Map<String, String>) app.getOutputs().get(0).getSchema()).get("glob");
     Map<String, Object> outputs = new HashMap<String, Object>();
-    outputs.put(outputFile, ZeroHelper.getOutputPath(outputFile, workingDir.getPath()));
+    outputs.put(outputFile, ZeroHelper.getOutputPath(fileName, workingDir.getPath()));
     return Job.cloneWithOutputs(job, outputs);
   }
 
@@ -170,7 +172,7 @@ public class ZeroBindings implements Bindings {
   public void validate(Job job) throws BindingException {
     String app = loadApp(job.getApp());
     String[] lines = app.split("\\n");
-    if(lines.length < 2 || !lines[0].equals("#rabix:SimpleRabixTool")) {
+    if(lines.length < 2 || !lines[0].equals("#zero:SimpleZeroTool")) {
       throw new BindingException("Invalid RabixApp");
     }
   }

@@ -154,7 +154,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       List<Event> events = new ArrayList<>();
 
       String jobNId = InternalSchemaHelper.scatterId(job.getId(), mapping.getIndex());
-      JobRecord jobN = createJobRecord(jobNId, job.getId(), node, true, job.getContextId());
+      JobRecord jobN = createJobRecord(jobNId, job.getExternalId(), node, true, job.getContextId());
           
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         VariableRecord variableN = new VariableRecord(job.getContextId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null, node.getLinkMerge(inputPort.getId(), inputPort.getType()));

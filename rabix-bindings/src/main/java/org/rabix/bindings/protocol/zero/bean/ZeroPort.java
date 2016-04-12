@@ -1,5 +1,8 @@
 package org.rabix.bindings.protocol.zero.bean;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.rabix.bindings.model.ApplicationPort;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -9,6 +12,10 @@ public class ZeroPort extends ApplicationPort {
   
   public ZeroPort(String id) {
     this(id, null, null, null, null);
+  }
+  
+  public ZeroPort(String id, Map<String, String> schema) {
+    this(id, null, schema, null, null);
   }
   
   @JsonCreator
