@@ -30,7 +30,7 @@ public class Draft2EmbeddedApp extends Draft2JobApp {
             return new Draft2InputPort(port.getId(), port.getDefaultValue(), port.getSchema(), null, port.getScatter(), null, port.getLinkMerge());
           }
         });
-        outputs = Lists.transform(application.getInputs(), new Function<ApplicationPort, Draft2OutputPort>() {
+        outputs = Lists.transform(application.getOutputs(), new Function<ApplicationPort, Draft2OutputPort>() {
           @Override
           public Draft2OutputPort apply(ApplicationPort port) {
             return new Draft2OutputPort(port.getId(), port.getDefaultValue(), port.getSchema(), null, port.getScatter(), null, port.getLinkMerge());
