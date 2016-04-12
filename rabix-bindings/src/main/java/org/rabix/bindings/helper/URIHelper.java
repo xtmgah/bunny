@@ -1,15 +1,20 @@
 package org.rabix.bindings.helper;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
 import org.rabix.common.helper.EncodingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +25,7 @@ public class URIHelper {
 
   private static final String DEFAULT_ENCODING = "UTF-8";
 
+  public final static String FTP_URI_SCHEME = "ftp://";
   public final static String HTTP_URI_SCHEME = "http";
   public final static String DATA_URI_SCHEME = "data";
   public final static String FILE_URI_SCHEME = "file";
@@ -28,7 +34,16 @@ public class URIHelper {
   private final static String DATA_URI_PAYLOAD_SEPARATOR = ",";
   private final static String DATA_URI_MEDIA_TYPE_DEFAULT = "text/plain";
   
+  // TODO move to configuration
+  private final static int FTP_PORT = 2221;
+  private final static String FTP_HOST = "localhost";
+  private final static String FTP_USERNAME = "username";
+  private final static String FTP_PASSWORD = "password";
+  
   public static String getData(String uri) throws IOException {
+    if (isFTP(uri)) {
+      return fetchFromFTP(uri);
+    }
     if (isHTTP(uri)) {
       return fetchFromHTTP(uri);
     }
@@ -50,6 +65,10 @@ public class URIHelper {
     return DATA_URI_SCHEME + ":" + DATA_URI_MEDIA_TYPE_DEFAULT + ";" + DATA_URI_BASE_64 + "," + EncodingHelper.encodeBase64(payload);
   }
   
+  public static boolean isFTP(String uri) {
+    return uri.startsWith(FTP_URI_SCHEME);
+  }
+  
   public static boolean isFile(String uri) {
     return uri.startsWith(FILE_URI_SCHEME);
   }
@@ -63,6 +82,9 @@ public class URIHelper {
   }
   
   public static String getURIInfo(String uri) {
+    if (isFTP(uri)) {
+      return uri.substring(FTP_URI_SCHEME.length());
+    }
     if (isFile(uri)) {
       return uri.substring(FILE_URI_SCHEME.length() + 1);
     }
@@ -75,6 +97,36 @@ public class URIHelper {
     return null;
   }
 
+  private static String fetchFromFTP(String uri) {
+    String ftpPath = getURIInfo(uri);
+    
+    File appDirectory;
+    try {
+      appDirectory = createTempDirectory();
+      
+      File localFile = downloadFromFTP(appDirectory, ftpPath);
+      return FileUtils.readFileToString(localFile);
+    } catch (IOException e) {
+      // TODO handle
+    }
+    return null;
+  }
+  
+  public static File createTempDirectory() throws IOException {
+    final File temp;
+
+    temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
+    if (!(temp.delete())) {
+      throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+    }
+
+    if (!(temp.mkdir())) {
+      throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+    }
+
+    return (temp);
+  }
+  
   private static String fetchFromHTTP(String uri) throws IOException {
     URL website = new URL(uri);
 
@@ -118,6 +170,49 @@ public class URIHelper {
       }
     }
     return payload;
+  }
+  
+  private static File downloadFromFTP(File workingDir, String remotePath) throws IOException {
+    FTPClient ftpClient = new FTPClient();
+    try {
+      ftpClient.connect(FTP_HOST, FTP_PORT);
+      ftpClient.login(FTP_USERNAME, FTP_PASSWORD);
+      ftpClient.enterLocalPassiveMode();
+      ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+
+      File localWorkingDir = workingDir;
+      String[] parts = remotePath.split(File.separator);
+      for (int i = 0; i < parts.length - 1; i++) {
+        if (parts[i].isEmpty()) {
+          continue;
+        }
+        String remoteWorkingDir = parts[i];
+        localWorkingDir = new File(localWorkingDir, remoteWorkingDir);
+        if (!localWorkingDir.exists()) {
+          localWorkingDir.mkdirs();
+        }
+      }
+      File file = new File(localWorkingDir, parts[parts.length - 1]);
+      OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+      boolean success = ftpClient.retrieveFile(remotePath, os);
+      os.close();
+
+      if (success) {
+        logger.debug("File {} has been downloaded successfully.", remotePath);
+      }
+      return file;
+    } catch (IOException e) {
+      throw e;
+    } finally {
+      try {
+        if (ftpClient.isConnected()) {
+          ftpClient.logout();
+          ftpClient.disconnect();
+        }
+      } catch (IOException ex) {
+        // do nothing
+      }
+    }
   }
   
 }

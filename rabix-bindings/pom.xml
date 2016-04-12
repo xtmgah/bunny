@@ -46,5 +46,10 @@
 			<artifactId>velocity</artifactId>
 			<version>1.7</version>
 		</dependency>
+		<dependency>
+			<groupId>org.rabix</groupId>
+			<artifactId>rabix-ftp</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>
