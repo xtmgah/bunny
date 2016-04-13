@@ -44,6 +44,8 @@ public class BackendMQ {
           } catch (JobServiceException e) {
             logger.error("Failed to update Job " + result.getResult());
           }
+        } else {
+          logger.error(result.getMessage(), result.getException());
         }
       }
     }, 0, 10, TimeUnit.MILLISECONDS);

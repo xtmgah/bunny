@@ -135,6 +135,8 @@ public class BackendDispatcher {
           ResultPair<HeartbeatInfo> result = backendMQ.receive(backend.getHeartbeatQueue(), HeartbeatInfo.class);
           if (result.isSuccess() && result.getResult() != null) {
             heartbeatInfo.put(result.getResult().getId(), result.getResult().getTimestamp());
+          } else {
+            logger.error(result.getMessage(), result.getException());
           }
           if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
             backendMQ.stopConsumer();
