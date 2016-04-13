@@ -6,6 +6,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.engine.rest.backend.BackendStub;
+import org.rabix.engine.rest.backend.HeartbeatInfo;
 import org.rabix.engine.rest.model.Backend;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -14,10 +16,7 @@ import org.rabix.engine.rest.transport.impl.TransportPluginMQ.ResultPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public class BackendMQ {
+public class BackendMQ implements BackendStub {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendMQ.class);
   
@@ -33,7 +32,8 @@ public class BackendMQ {
     this.transportPluginMQ = new TransportPluginMQ(backend.getBroker());
   }
   
-  public void startConsumer() {
+  @Override
+  public void start() {
     executorService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
@@ -51,54 +51,36 @@ public class BackendMQ {
     }, 0, 10, TimeUnit.MILLISECONDS);
   }
   
-  public void stopConsumer() {
+  @Override
+  public void stop() {
     executorService.shutdown();
   }
   
+  @Override
   public void send(Job job) {
     this.transportPluginMQ.send(backend.getSendQueue(), job);
   }
   
+  @Override
   public void send(Set<Job> jobs) {
     for (Job job : jobs) {
       this.transportPluginMQ.send(backend.getSendQueue(), job);
     }
   }
   
+  @Override
+  public HeartbeatInfo getHeartbeat() {
+    ResultPair<HeartbeatInfo> resultPair = receive(backend.getHeartbeatQueue(), HeartbeatInfo.class);
+    return resultPair.getResult();
+  }
+  
   public <T> ResultPair<T> receive(String queue, Class<T> clazz) {
     return transportPluginMQ.receive(queue, clazz);
   }
   
+  @Override
   public Backend getBackend() {
     return backend;
   }
   
-  public static class HeartbeatInfo {
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("timestamp")
-    private Long timestamp;
-    
-    @JsonCreator
-    public HeartbeatInfo(@JsonProperty("id") String id, @JsonProperty("timestamp") Long timestamp) {
-      this.id = id;
-      this.timestamp = timestamp;
-    }
-
-    public String getId() {
-      return id;
-    }
-
-    public void setId(String id) {
-      this.id = id;
-    }
-
-    public Long getTimestamp() {
-      return timestamp;
-    }
-
-    public void setTimestamp(Long timestamp) {
-      this.timestamp = timestamp;
-    }
-  }
 }

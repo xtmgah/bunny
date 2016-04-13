@@ -3,7 +3,6 @@ package org.rabix.bindings.model;
 import java.util.Map;
 
 import org.rabix.common.helper.CloneHelper;
-import org.rabix.common.helper.InternalSchemaHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

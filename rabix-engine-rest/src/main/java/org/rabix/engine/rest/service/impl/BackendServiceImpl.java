@@ -31,8 +31,8 @@ public class BackendServiceImpl implements BackendService {
     backendDB.add(backend);
     
     BackendMQ backendMQ = new BackendMQ(jobService, backend);
-    backendMQ.startConsumer();
-    backendDispatcher.addBackendMQ(backendMQ);
+    backendMQ.start();
+    backendDispatcher.addBackendStub(backendMQ);
     return backend;
   }
   

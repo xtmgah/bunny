@@ -1,6 +1,5 @@
 package org.rabix.bindings.protocol.zero.bean;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.rabix.bindings.model.ApplicationPort;
