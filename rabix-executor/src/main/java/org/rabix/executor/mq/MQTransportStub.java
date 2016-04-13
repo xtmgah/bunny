@@ -61,10 +61,10 @@ public class MQTransportStub {
       String payload = BeanSerializer.serializeFull(entity);
       TextMessage message = session.createTextMessage(payload);
       producer.send(message);
-      return new ResultPair<T>(true, null);
+      return ResultPair.<T> success(null);
     } catch (JMSException e) {
       logger.error("Failed to send " + entity + " to " + destinationQueue, e);
-      return new ResultPair<T>(false, null);
+      return ResultPair.<T> fail(null, null);
     } finally {
       try {
         session.close();
@@ -93,14 +93,14 @@ public class MQTransportStub {
 
       Message message = consumer.receive(1000);
       if (message == null) {
-        return new ResultPair<T>(false, null);
+        return ResultPair.<T> fail(null, null);
       }
       TextMessage textMessage = (TextMessage) message;
       String text = textMessage.getText();
-      return new ResultPair<T>(true, BeanSerializer.deserialize(text, clazz));
+      return ResultPair.<T> success(BeanSerializer.deserialize(text, clazz));
     } catch (JMSException e) {
       logger.error("Failed to receiver from " + sourceQueue, e);
-      return new ResultPair<T>(false, null);
+      return ResultPair.<T> fail(null, null);
     } finally {
       try {
         consumer.close();
@@ -114,11 +114,13 @@ public class MQTransportStub {
 
   public static class ResultPair<T> {
     private boolean success;
+    
     private T result;
     
-    public ResultPair(boolean success, T result) {
-      this.success = success;
-      this.result = result;
+    private String message;
+    private Exception exception;
+    
+    public ResultPair() {
     }
     
     public boolean isSuccess() {
@@ -127,6 +129,29 @@ public class MQTransportStub {
     
     public T getResult() {
       return result;
+    }
+    
+    public String getMessage() {
+      return message;
+    }
+    
+    public Exception getException() {
+      return exception;
+    }
+    
+    public static <T> ResultPair<T> success(T result) {
+      ResultPair<T> resultPair = new ResultPair<T>();
+      resultPair.success = true;
+      resultPair.result = result;
+      return resultPair;
+    }
+    
+    public static <T> ResultPair<T> fail(Exception exception, String message) {
+      ResultPair<T> resultPair = new ResultPair<T>();
+      resultPair.success = false;
+      resultPair.message = message;
+      resultPair.exception = exception;
+      return resultPair;
     }
   }
   
