@@ -14,10 +14,8 @@
                 <exclude>**/*.log</exclude>
                 <exclude>**/pom.xml</exclude>
                 <exclude>**/src/**</exclude>
-                <exclude>**/data/**</exclude>
                 <exclude>**/conf/**</exclude>
                 <exclude>**/lib/**</exclude>
-                 <exclude>**/.*/**</exclude>
                 <exclude>**/bin/**</exclude>
                 <exclude>**/pom.xml.versionsBackup</exclude>
                 <exclude>**/${project.build.directory}/**</exclude>
