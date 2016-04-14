@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2OutputPort;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
@@ -120,8 +120,8 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
   /**
    * Process input or output ports
    */
-  private void processPorts(Draft2Job parentJob, Draft2Job job, List<? extends Draft2Port> ports) throws Draft2Exception {
-    for (Draft2Port port : ports) {
+  private void processPorts(Draft2Job parentJob, Draft2Job job, List<? extends ApplicationPort> ports) throws Draft2Exception {
+    for (ApplicationPort port : ports) {
       String prefix = job.getId().substring(job.getId().lastIndexOf(Draft2SchemaHelper.PORT_ID_SEPARATOR) + 1) + Draft2SchemaHelper.PORT_ID_SEPARATOR;
       setScatter(job, prefix, port);  // if it's a container
       if (parentJob != null) {
@@ -142,7 +142,7 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
   }
   
   @SuppressWarnings("unchecked")
-  private void setScatter(Draft2Job job, String prefix, Draft2Port port) throws Draft2Exception {
+  private void setScatter(Draft2Job job, String prefix, ApplicationPort port) throws Draft2Exception {
     Object scatterObj = job.getScatter();;
     if (scatterObj != null) {
       List<String> scatterList = new ArrayList<>();
@@ -173,7 +173,7 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
   /**
    * Process data links
    */
-  private void processDataLinks(List<Draft2DataLink> dataLinks, Draft2Port port, Draft2Job job, boolean strip) {
+  private void processDataLinks(List<Draft2DataLink> dataLinks, ApplicationPort port, Draft2Job job, boolean strip) {
     for (Draft2DataLink dataLink : dataLinks) {
       String source = dataLink.getSource();
       String destination = dataLink.getDestination();

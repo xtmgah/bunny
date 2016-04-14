@@ -53,7 +53,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     nodeDB.loadDB(event.getNode(), event.getContextId());
     
     DAGNode node = nodeDB.get(event.getNode().getId(), event.getContextId());
-    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), JobState.PENDING, node instanceof DAGContainer, false, true, false);
+    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node instanceof DAGContainer, false, true, false);
 
     for (DAGLinkPort inputPort : node.getInputPorts()) {
       if (job.getState().equals(JobState.PENDING)) {

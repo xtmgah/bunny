@@ -9,6 +9,8 @@ import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.mq.MQConfig;
+import org.rabix.executor.mq.MQTransportStub;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +25,8 @@ public class StatusCommand extends JobHandlerCommand {
   public final static long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(15);
   
   @Inject
-  public StatusCommand(JobDataService jobDataService) {
-    super(jobDataService);
+  public StatusCommand(JobDataService jobDataService, MQTransportStub mqTransportStub, MQConfig mqConfig) {
+    super(jobDataService, mqTransportStub, mqConfig);
   }
 
   @Override

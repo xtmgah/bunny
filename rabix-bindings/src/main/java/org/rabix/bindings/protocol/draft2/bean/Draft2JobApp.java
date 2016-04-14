@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.rabix.bindings.model.Application;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2Resource;
@@ -15,6 +17,7 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVar
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2ExpressionEngineRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2IORequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2SchemaDefRequirement;
+import org.rabix.common.json.BeanSerializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class", defaultImpl = Draft2EmbeddedApp.class)
 @JsonSubTypes({ 
 	@Type(value = Draft2CommandLineTool.class, name = "CommandLineTool"),
 	@Type(value = Draft2ExpressionTool.class, name = "ExpressionTool"),
@@ -33,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @Type(value = Draft2WagnerPythonTool.class, name = "WagnerPythonTool")})
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Draft2JobApp {
+public abstract class Draft2JobApp implements Application {
 
   @JsonProperty("id")
   protected String id;
@@ -44,22 +47,22 @@ public abstract class Draft2JobApp {
   @JsonProperty("label")
   protected String label;
   @JsonProperty("contributor")
-  protected List<String> contributor;
+  protected List<String> contributor = new ArrayList<>();
   @JsonProperty("owner")
-  protected List<String> owner;
+  protected List<String> owner = new ArrayList<>();
 
   @JsonProperty("inputs")
-  private List<Draft2InputPort> inputs;
+  protected List<Draft2InputPort> inputs = new ArrayList<>();
   @JsonProperty("outputs")
-  private List<Draft2OutputPort> outputs;
+  protected List<Draft2OutputPort> outputs = new ArrayList<>();
 
   @JsonProperty("hints")
-  protected List<Draft2Resource> hints;
+  protected List<Draft2Resource> hints = new ArrayList<>();
   @JsonProperty("requirements")
-  protected List<Draft2Resource> requirements;
+  protected List<Draft2Resource> requirements = new ArrayList<>();
   
   @JsonProperty("successCodes")
-  protected List<Integer> successCodes;
+  protected List<Integer> successCodes = new ArrayList<>();
 
   public String getId() {
     return id;
@@ -173,7 +176,7 @@ public abstract class Draft2JobApp {
     return result;
   }
 
-  public Draft2Port getPort(String id, Class<? extends Draft2Port> clazz) {
+  public ApplicationPort getPort(String id, Class<? extends ApplicationPort> clazz) {
     if (Draft2InputPort.class.equals(clazz)) {
       return getInput(id);
     }
@@ -256,8 +259,18 @@ public abstract class Draft2JobApp {
   }
   
   @JsonIgnore
+  public boolean isEmbedded() {
+    return Draft2JobAppType.EMBEDDED.equals(getType());
+  }
+  
+  @JsonIgnore
   public boolean isExpressionTool() {
     return Draft2JobAppType.EXPRESSION_TOOL.equals(getType());
+  }
+  
+  @Override
+  public String serialize() {
+    return BeanSerializer.serializeFull(this);
   }
   
   public abstract Draft2JobAppType getType();

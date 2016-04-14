@@ -13,7 +13,6 @@ import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.JobRecord;
@@ -39,8 +38,8 @@ public class JobHelper {
         }
         ContextRecord contextRecord = contextRecordService.find(job.getContextId());
         Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
-        String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(node.getApp()));
-        jobs.add(new Job(job.getExternalId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
+        String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
+        jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
       }
     }
     return jobs;

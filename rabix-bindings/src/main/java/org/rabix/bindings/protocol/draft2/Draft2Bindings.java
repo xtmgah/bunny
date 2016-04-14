@@ -15,6 +15,7 @@ import org.rabix.bindings.ProtocolTranslator;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.ProtocolValueProcessor;
 import org.rabix.bindings.filemapper.FileMapper;
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
@@ -51,7 +52,7 @@ public class Draft2Bindings implements Bindings {
   }
   
   @Override
-  public Object loadAppObject(String uri) throws BindingException {
+  public Application loadAppObject(String uri) throws BindingException {
     return appProcessor.loadAppObject(uri);
   }
   

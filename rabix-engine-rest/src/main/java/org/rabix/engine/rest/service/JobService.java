@@ -11,7 +11,7 @@ public interface JobService {
   
   Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException;
 
-  String create(Job job) throws JobServiceException;
+  Job create(Job job) throws JobServiceException;
   
   Set<Job> get();
   

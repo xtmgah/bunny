@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.ApplicationPath;
 
+import org.apache.commons.configuration.Configuration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -19,15 +20,20 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.engine.EngineModule;
+import org.rabix.engine.rest.api.BackendHTTPService;
 import org.rabix.engine.rest.api.JobHTTPService;
+import org.rabix.engine.rest.api.impl.BackendHTTPServiceImpl;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
+import org.rabix.engine.rest.backend.BackendDispatcher;
+import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.db.JobDB;
-import org.rabix.engine.rest.plugin.BackendPluginConfig;
-import org.rabix.engine.rest.plugin.BackendPluginRegister;
+import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
+import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.ServletModule;
@@ -35,20 +41,18 @@ import com.squarespace.jersey2.guice.BootstrapUtils;
 
 public class ServerBuilder {
 
-  private int port = 8081;
-
-  public ServerBuilder() {
-  }
-
-  public ServerBuilder(int port) {
-    this.port = port;
+  private final static String ENGINE_PORT_KEY = "engine.port";
+  
+  private File configDir;
+  
+  public ServerBuilder(File configDir) {
+    this.configDir = configDir;
   }
 
   public Server build() {
     ServiceLocator locator = BootstrapUtils.newServiceLocator();
     
-    File configDir = new File("config");
-    BootstrapUtils.newInjector(locator, Arrays.asList(
+    Injector injector = BootstrapUtils.newInjector(locator, Arrays.asList(
         new ServletModule(), 
         new ConfigModule(configDir, null), 
         new EngineModule(), 
@@ -56,16 +60,20 @@ public class ServerBuilder {
           @Override
           protected void configure() {
             bind(JobDB.class).in(Scopes.SINGLETON);
+            bind(BackendDB.class).in(Scopes.SINGLETON);
             bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
-            bind(BackendPluginRegister.class).in(Scopes.SINGLETON);
-            bind(BackendPluginConfig.class).in(Scopes.SINGLETON);
+            bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
+            bind(BackendDispatcher.class).in(Scopes.SINGLETON);
             bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
+            bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
           }
         }));
-
     BootstrapUtils.install(locator);
 
-    Server server = new Server(port);
+    Configuration configuration = injector.getInstance(Configuration.class);
+    
+    int enginePort = configuration.getInt(ENGINE_PORT_KEY);
+    Server server = new Server(enginePort);
 
     ResourceConfig config = ResourceConfig.forApplication(new Application());
 
@@ -101,4 +109,5 @@ public class ServerBuilder {
       packages("org.rabix.engine.rest.api");
     }
   }
+  
 }

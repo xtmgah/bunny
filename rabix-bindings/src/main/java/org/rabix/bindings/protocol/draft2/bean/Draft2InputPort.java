@@ -1,5 +1,7 @@
 package org.rabix.bindings.protocol.draft2.bean;
 
+import org.rabix.bindings.model.ApplicationPort;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -9,7 +11,7 @@ import com.google.common.base.Preconditions;
 
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Draft2InputPort extends Draft2Port {
+public class Draft2InputPort extends ApplicationPort {
 
   public static enum StageInput {
     COPY("copy"), LINK("link");

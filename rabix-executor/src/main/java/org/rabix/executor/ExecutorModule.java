@@ -6,11 +6,11 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.handler.JobHandlerFactory;
 import org.rabix.executor.handler.impl.JobHandlerImpl;
 import org.rabix.executor.service.DownloadFileService;
-import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.impl.DownloadServiceImpl;
-import org.rabix.executor.service.impl.JobDataServiceImpl;
 import org.rabix.executor.service.impl.ExecutorServiceImpl;
+import org.rabix.executor.service.impl.JobDataServiceImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

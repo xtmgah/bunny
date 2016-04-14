@@ -3,6 +3,7 @@ package org.rabix.engine.rest.api.impl;
 import java.util.Collections;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.api.JobHTTPService;
@@ -10,8 +11,6 @@ import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.rest.service.JobService;
 
 import com.google.inject.Inject;
-
-import ch.qos.logback.core.status.Status;
 
 public class JobHTTPServiceImpl implements JobHTTPService {
 
@@ -40,7 +39,7 @@ public class JobHTTPServiceImpl implements JobHTTPService {
   public Response get(String id) {
     Job job = jobService.get(id);
     if (job == null) {
-      return error();
+      return entityNotFound();
     }
     return ok(job);
   }
@@ -55,8 +54,12 @@ public class JobHTTPServiceImpl implements JobHTTPService {
     return ok();
   }
   
+  private Response entityNotFound() {
+    return Response.status(Status.NOT_FOUND).build();
+  }
+  
   private Response error() {
-    return Response.status(Status.ERROR).build();
+    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
   }
   
   private Response ok() {
