@@ -19,26 +19,6 @@
             "dockerPull": "rfranklin/pythondev"
           }
         ],
-        "sbg:categories": [
-          "Tutorials"
-        ],
-        "sbg:sbgMaintained": false,
-        "sbg:job": {
-          "inputs": {
-            "output_filename": "rna_test_file",
-            "input_file": {
-              "path": "/path/to/input_file.ext",
-              "size": 0,
-              "class": "File",
-              "secondaryFiles": []
-            },
-            "verbose": true
-          },
-          "allocatedResources": {
-            "mem": 1000,
-            "cpu": 1
-          }
-        },
         "description": "This project was created to demonstrate the use of argparse to create CLI tools in Python, wrap them using CWL/SDK.v2, and running them.\n\nThis tool takes a TXT file with a DNA sequence and converts to an RNA sequence.",
         "outputs": [
           {
@@ -51,17 +31,11 @@
             ]
           }
         ],
-        "sbg:latestRevision": 16,
         "temporaryFailCodes": [],
-        "sbg:validationErrors": [],
-        "sbg:contributors": [
-          "gauravCGC"
-        ],
         "baseCommand": [
           "python",
           "transcribe_argparse.py"
         ],
-        "sbg:modifiedOn": 1453392533,
         "requirements": [
           {
             "class": "CreateFileRequirement",
@@ -90,12 +64,10 @@
             "description": "Input file",
             "inputBinding": {
               "position": 3,
-              "sbg:cmdInclude": true,
               "prefix": "-d",
               "separate": true
             },
             "id": "#input_file",
-            "sbg:fileTypes": "TXT",
             "type": [
               "File"
             ]
@@ -103,7 +75,6 @@
           {
             "inputBinding": {
               "position": 4,
-              "sbg:cmdInclude": true,
               "prefix": "--verbose",
               "separate": true
             },
@@ -122,113 +93,18 @@
             ]
           }
         ],
-        "sbg:revision": 16,
-        "sbg:revisionsInfo": [
-          {
-            "sbg:revision": 1,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452782872
-          },
-          {
-            "sbg:revision": 2,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783176
-          },
-          {
-            "sbg:revision": 0,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452782707
-          },
-          {
-            "sbg:revision": 7,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452784556
-          },
-          {
-            "sbg:revision": 3,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783230
-          },
-          {
-            "sbg:revision": 4,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783261
-          },
-          {
-            "sbg:revision": 5,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783713
-          },
-          {
-            "sbg:revision": 6,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452784339
-          },
-          {
-            "sbg:revision": 8,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452784883
-          },
-          {
-            "sbg:revision": 9,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452785042
-          },
-          {
-            "sbg:revision": 10,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452785234
-          },
-          {
-            "sbg:revision": 11,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452786627
-          },
-          {
-            "sbg:revision": 12,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452876862
-          },
-          {
-            "sbg:revision": 13,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452884518
-          },
-          {
-            "sbg:revision": 14,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1453029319
-          },
-          {
-            "sbg:revision": 15,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1453390047
-          },
-          {
-            "sbg:revision": 16,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1453392533
-          }
-        ],
         "baseCmd": [
           ""
         ],
-        "sbg:createdOn": 1452782707,
         "stdout": {
           "class": "Expression",
           "script": "($job.inputs.output_filename || 'rna') + '.txt'",
           "engine": "#cwl-js-engine"
         },
         "successCodes": [],
-        "sbg:id": "gauravCGC/fog/transcribe-argparse/16",
-        "sbg:toolAuthor": "Gaurav Kaushik/Seven Bridges",
         "class": "CommandLineTool",
-        "sbg:cmdPreview": "python transcribe_argparse.py -d /path/to/input_file.ext > rna_test_file.txt",
-        "sbg:createdBy": "gauravCGC",
         "label": "Transcribe",
-        "sbg:project": "gauravCGC/fog",
-        "id": "https://cgc-api.sbgenomics.com/gauravCGC/fog/transcribe-argparse/16/raw/",
-        "sbg:modifiedBy": "gauravCGC"
+        "id": "https://cgc-api.sbgenomics.com/gauravCGC/fog/transcribe-argparse/16/raw/"
       },
       "inputs": [
         {
@@ -249,9 +125,7 @@
         {
           "id": "#Transcribe.output_file_glob"
         }
-      ],
-      "sbg:x": 303,
-      "sbg:y": 259.6007080078125
+      ]
     },
     {
       "id": "#Translate",
@@ -261,22 +135,6 @@
           "script": "($job.inputs.output_filename || 'protein') + '.txt'",
           "engine": "#cwl-js-engine"
         },
-        "sbg:sbgMaintained": false,
-        "sbg:job": {
-          "inputs": {
-            "output_filename": "output_filename",
-            "input_file": {
-              "path": "input_mRNA.txt",
-              "size": 0,
-              "class": "File",
-              "secondaryFiles": []
-            }
-          },
-          "allocatedResources": {
-            "mem": 1000,
-            "cpu": 1
-          }
-        },
         "description": "This tool allows you to take an RNA sequence and translate to a protein product based on the first detected ORF.",
         "outputs": [
           {
@@ -284,24 +142,16 @@
             "outputBinding": {
               "glob": "*.txt"
             },
-            "sbg:fileTypes": "TXT",
             "id": "#output_protein",
             "type": [
               "File"
             ]
           }
         ],
-        "sbg:latestRevision": 12,
-        "temporaryFailCodes": [],
-        "sbg:validationErrors": [],
-        "sbg:contributors": [
-          "gauravCGC"
-        ],
         "baseCommand": [
           "python",
           "translate.py"
         ],
-        "sbg:modifiedOn": 1453392588,
         "requirements": [
           {
             "class": "CreateFileRequirement",
@@ -330,12 +180,10 @@
             "description": "Input file with mRNA sequence",
             "inputBinding": {
               "position": 3,
-              "sbg:cmdInclude": true,
               "prefix": "-r",
               "separate": true
             },
             "id": "#input_file",
-            "sbg:fileTypes": "TXT",
             "type": [
               "File"
             ]
@@ -349,78 +197,9 @@
             ]
           }
         ],
-        "sbg:revision": 12,
-        "sbg:revisionsInfo": [
-          {
-            "sbg:revision": 0,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783486
-          },
-          {
-            "sbg:revision": 5,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452784433
-          },
-          {
-            "sbg:revision": 2,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783590
-          },
-          {
-            "sbg:revision": 1,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783560
-          },
-          {
-            "sbg:revision": 4,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783808
-          },
-          {
-            "sbg:revision": 3,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452783596
-          },
-          {
-            "sbg:revision": 6,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452785657
-          },
-          {
-            "sbg:revision": 7,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452877055
-          },
-          {
-            "sbg:revision": 8,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452884501
-          },
-          {
-            "sbg:revision": 9,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452903482
-          },
-          {
-            "sbg:revision": 10,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1452903558
-          },
-          {
-            "sbg:revision": 11,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1453029998
-          },
-          {
-            "sbg:revision": 12,
-            "sbg:modifiedBy": "gauravCGC",
-            "sbg:modifiedOn": 1453392588
-          }
-        ],
         "baseCmd": [
           ""
         ],
-        "sbg:createdOn": 1452783486,
         "hints": [
           {
             "class": "sbg:CPURequirement",
@@ -437,15 +216,9 @@
           }
         ],
         "successCodes": [],
-        "sbg:id": "gauravCGC/fog/translate-argparse/12",
-        "sbg:toolAuthor": "Gaurav Kaushik/Seven Bridges",
         "class": "CommandLineTool",
-        "sbg:cmdPreview": "python translate.py -r input_mRNA.txt > output_filename.txt",
-        "sbg:createdBy": "gauravCGC",
         "label": "Translate",
-        "sbg:project": "gauravCGC/fog",
-        "id": "https://cgc-api.sbgenomics.com/gauravCGC/fog/translate-argparse/12/raw/",
-        "sbg:modifiedBy": "gauravCGC"
+        "id": "https://cgc-api.sbgenomics.com/gauravCGC/fog/translate-argparse/12/raw/"
       },
       "inputs": [
         {
@@ -465,9 +238,7 @@
         {
           "id": "#Translate.output_protein"
         }
-      ],
-      "sbg:x": 564,
-      "sbg:y": 197.60069274902344
+      ]
     }
   ],
   "requirements": [],
@@ -481,20 +252,15 @@
       ]
     },
     {
-      "sbg:x": 102,
       "id": "#input_file",
       "type": [
         "File"
       ],
-      "sbg:y": 157,
       "label": "input_file"
     }
   ],
   "outputs": [
     {
-      "sbg:x": 871,
-      "sbg:includeInPorts": true,
-      "sbg:y": 173,
       "id": "#output_protein",
       "type": [
         "File"
@@ -505,31 +271,6 @@
       ]
     }
   ],
-  "sbg:revision": 0,
-  "sbg:canvas_x": 0,
-  "sbg:copyOf": "gauravCGC/fog/dna2protein/8",
-  "sbg:sbgMaintained": false,
-  "sbg:canvas_zoom": 1,
-  "sbg:validationErrors": [],
-  "sbg:contributors": [
-    "gauravCGC"
-  ],
-  "sbg:createdOn": 1453409149,
-  "sbg:id": "gauravCGC/tutorials/dna2protein/0",
-  "sbg:latestRevision": 0,
-  "sbg:revisionsInfo": [
-    {
-      "sbg:revision": 0,
-      "sbg:modifiedBy": "gauravCGC",
-      "sbg:modifiedOn": 1453409149
-    }
-  ],
-  "sbg:createdBy": "gauravCGC",
-  "sbg:modifiedOn": 1453409149,
-  "sbg:toolAuthor": "Gaurav Kaushik/Seven Bridges",
-  "sbg:project": "gauravCGC/tutorials",
-  "sbg:modifiedBy": "gauravCGC",
-  "sbg:canvas_y": 0,
   "id": "gauravCGC/tutorials/dna2protein/0",
   "label": "dna2protein",
   "description": "A workflow that converts DNA sequences into peptides.",

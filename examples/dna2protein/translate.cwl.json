@@ -29,12 +29,10 @@
       "description": "Input file with mRNA sequence",
       "inputBinding": {
         "position": 3,
-        "sbg:cmdInclude": true,
         "prefix": "-r",
         "separate": true
       },
       "id": "#input_file",
-      "sbg:fileTypes": "TXT",
       "type": [
         "File"
       ]
@@ -54,7 +52,6 @@
       "outputBinding": {
         "glob": "*.txt"
       },
-      "sbg:fileTypes": "TXT",
       "id": "#output_protein",
       "type": [
         "File"
@@ -63,16 +60,7 @@
   ],
   "hints": [
     {
-      "class": "sbg:CPURequirement",
-      "value": 1
-    },
-    {
-      "class": "sbg:MemRequirement",
-      "value": 1000
-    },
-    {
       "class": "DockerRequirement",
-      "dockerImageId": "",
       "dockerPull": "rfranklin/pythondev"
     }
   ],
@@ -80,54 +68,9 @@
     "python",
     "translate.py"
   ],
-  "stdin": "",
   "stdout": {
     "class": "Expression",
     "script": "($job.inputs.output_filename || 'protein') + '.txt'",
     "engine": "#cwl-js-engine"
-  },
-  "successCodes": [],
-  "temporaryFailCodes": [],
-  "arguments": [],
-  "sbg:copyOf": "gauravCGC/fog/translate-argparse/12",
-  "sbg:sbgMaintained": false,
-  "sbg:job": {
-    "inputs": {
-      "output_filename": "output_filename",
-      "input_file": {
-        "path": "input_mRNA.txt",
-        "size": 0,
-        "class": "File",
-        "secondaryFiles": []
-      }
-    },
-    "allocatedResources": {
-      "mem": 1000,
-      "cpu": 1
-    }
-  },
-  "sbg:revision": 0,
-  "sbg:validationErrors": [],
-  "sbg:contributors": [
-    "gauravCGC"
-  ],
-  "sbg:modifiedOn": 1453393567,
-  "sbg:project": "gauravCGC/tutorials",
-  "sbg:latestRevision": 0,
-  "sbg:id": "gauravCGC/tutorials/Translate/0",
-  "sbg:revisionsInfo": [
-    {
-      "sbg:revision": 0,
-      "sbg:modifiedBy": "gauravCGC",
-      "sbg:modifiedOn": 1453393567
-    }
-  ],
-  "baseCmd": [
-    ""
-  ],
-  "sbg:toolAuthor": "Gaurav Kaushik/Seven Bridges",
-  "sbg:cmdPreview": "python translate.py -r input_mRNA.txt > output_filename.txt",
-  "sbg:createdBy": "gauravCGC",
-  "sbg:createdOn": 1453393567,
-  "sbg:modifiedBy": "gauravCGC"
+  }
 }
