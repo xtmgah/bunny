@@ -1,7 +1,7 @@
 package org.rabix.executor.transport.impl;
 
+import org.rabix.common.VMQueues;
 import org.rabix.common.json.BeanSerializer;
-import org.rabix.executor.VMQueues;
 import org.rabix.executor.transport.TransportStub;
 
 public class TransportStubLocal implements TransportStub {

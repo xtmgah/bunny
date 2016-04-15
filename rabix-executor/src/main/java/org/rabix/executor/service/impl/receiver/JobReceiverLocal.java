@@ -5,8 +5,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.common.VMQueues;
 import org.rabix.common.json.BeanSerializer;
-import org.rabix.executor.VMQueues;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobReceiver;
 

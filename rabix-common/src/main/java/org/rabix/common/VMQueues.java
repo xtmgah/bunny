@@ -1,4 +1,4 @@
-package org.rabix.executor;
+package org.rabix.common;
 
 import java.util.HashMap;
 import java.util.Map;
