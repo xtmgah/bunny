@@ -1,18 +1,36 @@
 package org.rabix.engine.rest.transport.impl;
 
-import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.common.json.BeanSerializer;
+import org.rabix.engine.rest.backend.impl.BackendLocal;
+import org.rabix.engine.rest.transport.TransportPlugin;
+import org.rabix.engine.rest.transport.TransportPluginType;
 
-public class TransportPluginLocal {
+public class TransportPluginLocal implements TransportPlugin {
 
-  public static interface LocalExecutor {
+  private BackendLocal backendLocal;
 
-    void stop(Job job);
+  public TransportPluginLocal(BackendLocal backendLocal) {
+    this.backendLocal = backendLocal;
+  }
 
-    void start(Job job);
+  @Override
+  public <T> ResultPair<T> send(String destinationQueue, T entity) {
+    backendLocal.getQueue(destinationQueue).add(BeanSerializer.serializeFull(entity));
+    return ResultPair.<T> success(null);
+  }
 
-    JobStatus findStatus(String id);
+  @Override
+  public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz) {
+    String payload = backendLocal.getQueue(sourceQueue).poll();
+    if (payload != null) {
+      return ResultPair.<T> success(BeanSerializer.deserialize(payload, clazz));
+    }
+    return ResultPair.<T> fail(null, null);
+  }
 
+  @Override
+  public TransportPluginType getType() {
+    return TransportPluginType.LOCAL;
   }
 
 }

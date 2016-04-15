@@ -2,9 +2,6 @@ package org.rabix.executor.service.impl;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.rabix.bindings.model.Job;
@@ -14,11 +11,11 @@ import org.rabix.executor.execution.command.StartCommand;
 import org.rabix.executor.execution.command.StatusCommand;
 import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.mq.MQConfig;
-import org.rabix.executor.mq.MQTransportStub;
-import org.rabix.executor.mq.MQTransportStub.ResultPair;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobReceiver;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.impl.TransportStubMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +38,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   private final JobReceiver jobReceiver;
 
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, MQConfig mqConfig, MQTransportStub mqTransportStub, JobReceiver jobReceiver,
+  public ExecutorServiceImpl(JobDataService jobDataService, TransportQueueConfig mqConfig, TransportStubMQ mqTransportStub, JobReceiver jobReceiver,
       JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
       Provider<StartCommand> startCommandProvider, Provider<StatusCommand> statusCommandProvider) {
     this.jobReceiver = jobReceiver;
@@ -104,8 +101,7 @@ public class ExecutorServiceImpl implements ExecutorService {
       }
     }
     stopped.set(true);
-    String message = String.format("Shutdown%s executed. Worker has stopped %d %s.", stopEverything ? " now" : "",
-        abortedJobsCount, abortedJobsCount == 1 ? "job" : "jobs");
+    String message = String.format("Shutdown%s executed. Worker has stopped %d %s.", stopEverything ? " now" : "", abortedJobsCount, abortedJobsCount == 1 ? "job" : "jobs");
     logger.info(message);
   }
 
@@ -142,35 +138,6 @@ public class ExecutorServiceImpl implements ExecutorService {
   @Override
   public boolean isStopped() {
     return stopped.get();
-  }
-
-  public static class JobReceiver {
-
-    private MQConfig mqConfig;
-    private MQTransportStub mqTransportStub;
-
-    private ExecutorService executorService;
-    
-    private ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
-
-    @Inject
-    public JobReceiver(ExecutorService executorService, MQConfig mqConfig, MQTransportStub mqTransportStub) {
-      this.mqConfig = mqConfig;
-      this.mqTransportStub = mqTransportStub;
-      this.executorService = executorService;
-    }
-
-    public void start() {
-      scheduledService.scheduleAtFixedRate(new Runnable() {
-        @Override
-        public void run() {
-          ResultPair<Job> result = mqTransportStub.receive(mqConfig.getSendQueue(), Job.class);
-          if (result.isSuccess() && result.getResult() != null) {
-            executorService.start(result.getResult(), result.getResult().getContext().getId());
-          }
-        }
-      }, 0, 1, TimeUnit.SECONDS);
-    }
   }
 
 }

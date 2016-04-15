@@ -180,6 +180,7 @@ public class JobServiceImpl implements JobService {
       case COMPLETED:
         job = jobDB.get(contextId);
         job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
+        job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
         jobDB.update(job);
         break;
       case FAILED:

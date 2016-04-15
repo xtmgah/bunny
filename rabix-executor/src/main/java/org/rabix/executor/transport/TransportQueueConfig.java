@@ -1,10 +1,10 @@
-package org.rabix.executor.mq;
+package org.rabix.executor.transport;
 
 import org.apache.commons.configuration.Configuration;
 
 import com.google.inject.Inject;
 
-public class MQConfig {
+public class TransportQueueConfig {
 
   private final String broker;
   private final String sendQueue;
@@ -14,7 +14,7 @@ public class MQConfig {
   private final boolean mqEnabled;
   
   @Inject
-  public MQConfig(Configuration configuration) {
+  public TransportQueueConfig(Configuration configuration) {
     this.broker = configuration.getString("mq.broker", null);
     this.mqEnabled = configuration.getBoolean("mq.enabled", false);
     this.sendQueue = configuration.getString("mq.sendQueue", null);

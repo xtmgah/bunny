@@ -1,86 +1,123 @@
 package org.rabix.engine.rest.backend.impl;
 
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import org.rabix.engine.rest.backend.Backend;
 
-import org.rabix.bindings.model.Job;
-import org.rabix.engine.rest.backend.BackendStub;
-import org.rabix.engine.rest.backend.HeartbeatInfo;
-import org.rabix.engine.rest.model.Backend;
-import org.rabix.engine.rest.service.JobService;
-import org.rabix.engine.rest.service.JobServiceException;
-import org.rabix.engine.rest.transport.impl.TransportPluginMQ;
-import org.rabix.engine.rest.transport.impl.TransportPluginMQ.ResultPair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BackendMQ implements BackendStub {
+public class BackendMQ implements Backend {
 
-  private final static Logger logger = LoggerFactory.getLogger(BackendMQ.class);
+  @JsonProperty("id")
+  private String id;
+  @JsonProperty("broker")
+  private String broker;
+  @JsonProperty("sendQueue")
+  private String sendQueue;
+  @JsonProperty("receiveQueue")
+  private String receiveQueue;
+  @JsonProperty("heartbeatQueue")
+  private String heartbeatQueue;
   
-  private Backend backend;
-  private JobService jobService;
-  private TransportPluginMQ transportPluginMQ;
-  
-  private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-  
-  public BackendMQ(JobService jobService, Backend backend) {
-    this.backend = backend;
-    this.jobService = jobService;
-    this.transportPluginMQ = new TransportPluginMQ(backend.getBroker());
+  public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("sendQueue") String sendQueue, @JsonProperty("receiveQueue") String receiveQueue, @JsonProperty("heartbeatQueue") String heartbeatQueue) {
+    this.id = id;
+    this.broker = broker;
+    this.sendQueue = sendQueue;
+    this.receiveQueue = receiveQueue;
+    this.heartbeatQueue = heartbeatQueue;
   }
-  
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getBroker() {
+    return broker;
+  }
+
+  public void setBroker(String broker) {
+    this.broker = broker;
+  }
+
+  public String getSendQueue() {
+    return sendQueue;
+  }
+
+  public void setSendQueue(String sendQueue) {
+    this.sendQueue = sendQueue;
+  }
+
+  public String getReceiveQueue() {
+    return receiveQueue;
+  }
+
+  public void setReceiveQueue(String receiveQueue) {
+    this.receiveQueue = receiveQueue;
+  }
+
+  public String getHeartbeatQueue() {
+    return heartbeatQueue;
+  }
+
+  public void setHeartbeatQueue(String heartbeatQueue) {
+    this.heartbeatQueue = heartbeatQueue;
+  }
+
   @Override
-  public void start() {
-    executorService.scheduleAtFixedRate(new Runnable() {
-      @Override
-      public void run() {
-        ResultPair<Job> result = receive(backend.getReceiveQueue(), Job.class);
-        if (result.isSuccess() && result.getResult() != null) {
-          try {
-            jobService.update(result.getResult());
-          } catch (JobServiceException e) {
-            logger.error("Failed to update Job " + result.getResult());
-          }
-        } else {
-          logger.error(result.getMessage(), result.getException());
-        }
-      }
-    }, 0, 10, TimeUnit.MILLISECONDS);
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((heartbeatQueue == null) ? 0 : heartbeatQueue.hashCode());
+    result = prime * result + ((id == null) ? 0 : id.hashCode());
+    result = prime * result + ((receiveQueue == null) ? 0 : receiveQueue.hashCode());
+    result = prime * result + ((sendQueue == null) ? 0 : sendQueue.hashCode());
+    return result;
   }
-  
+
   @Override
-  public void stop() {
-    executorService.shutdown();
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    BackendMQ other = (BackendMQ) obj;
+    if (heartbeatQueue == null) {
+      if (other.heartbeatQueue != null)
+        return false;
+    } else if (!heartbeatQueue.equals(other.heartbeatQueue))
+      return false;
+    if (id == null) {
+      if (other.id != null)
+        return false;
+    } else if (!id.equals(other.id))
+      return false;
+    if (receiveQueue == null) {
+      if (other.receiveQueue != null)
+        return false;
+    } else if (!receiveQueue.equals(other.receiveQueue))
+      return false;
+    if (sendQueue == null) {
+      if (other.sendQueue != null)
+        return false;
+    } else if (!sendQueue.equals(other.sendQueue))
+      return false;
+    return true;
   }
-  
+
   @Override
-  public void send(Job job) {
-    this.transportPluginMQ.send(backend.getSendQueue(), job);
+  public String toString() {
+    return "BackendMQ [id=" + id + ", sendQueue=" + sendQueue + ", receiveQueue=" + receiveQueue + ", heartbeatQueue="  + heartbeatQueue + "]";
   }
-  
+
   @Override
-  public void send(Set<Job> jobs) {
-    for (Job job : jobs) {
-      this.transportPluginMQ.send(backend.getSendQueue(), job);
-    }
+  @JsonIgnore
+  public BackendType getType() {
+    return BackendType.MQ;
   }
-  
-  @Override
-  public HeartbeatInfo getHeartbeat() {
-    ResultPair<HeartbeatInfo> resultPair = receive(backend.getHeartbeatQueue(), HeartbeatInfo.class);
-    return resultPair.getResult();
-  }
-  
-  public <T> ResultPair<T> receive(String queue, Class<T> clazz) {
-    return transportPluginMQ.receive(queue, clazz);
-  }
-  
-  @Override
-  public Backend getBackend() {
-    return backend;
-  }
-  
+
 }

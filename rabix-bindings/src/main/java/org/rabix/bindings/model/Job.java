@@ -44,7 +44,7 @@ public class Job {
   private final Map<String, Object> outputs;
   
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, null, app, null, inputs, null, null);
+    this(null, null, null, app, JobStatus.READY, inputs, null, null);
   }
   
   @JsonCreator
@@ -89,6 +89,12 @@ public class Job {
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
     return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, outputs, job.context);
+  }
+  
+  public static boolean isFinished(Job job) {
+    return job.getStatus().equals(JobStatus.COMPLETED) 
+        || job.getStatus().equals(JobStatus.ABORTED)
+        || job.getStatus().equals(JobStatus.FAILED);
   }
   
   public String getId() {

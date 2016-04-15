@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.rabix.engine.rest.api.BackendHTTPService;
-import org.rabix.engine.rest.model.Backend;
+import org.rabix.engine.rest.backend.Backend;
 import org.rabix.engine.rest.service.BackendService;
 
 import com.google.inject.Inject;
@@ -21,9 +21,9 @@ public class BackendHTTPServiceImpl implements BackendHTTPService {
   }
   
   @Override
-  public Response create(Backend job) {
+  public Response create(Backend backend) {
     try {
-      return ok(backendService.create(job));
+      return ok(backendService.create(backend));
     } catch (Exception e) {
       return error();
     }

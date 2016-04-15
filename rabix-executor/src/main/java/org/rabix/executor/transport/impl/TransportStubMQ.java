@@ -1,4 +1,4 @@
-package org.rabix.executor.mq;
+package org.rabix.executor.transport.impl;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -12,20 +12,22 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.rabix.common.json.BeanSerializer;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.TransportStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-public class MQTransportStub {
+public class TransportStubMQ implements TransportStub {
 
-  private final static Logger logger = LoggerFactory.getLogger(MQTransportStub.class);
+  private final static Logger logger = LoggerFactory.getLogger(TransportStubMQ.class);
   
-  private MQConfig mqConfig;
+  private TransportQueueConfig mqConfig;
   private PooledConnectionFactory connectionFactory;
 
   @Inject
-  public MQTransportStub(MQConfig mqConfig) {
+  public TransportStubMQ(TransportQueueConfig mqConfig) {
     this.mqConfig = mqConfig;
     
     if (this.mqConfig.isMQEnabled()) {
@@ -112,47 +114,4 @@ public class MQTransportStub {
     }
   }
 
-  public static class ResultPair<T> {
-    private boolean success;
-    
-    private T result;
-    
-    private String message;
-    private Exception exception;
-    
-    public ResultPair() {
-    }
-    
-    public boolean isSuccess() {
-      return success;
-    }
-    
-    public T getResult() {
-      return result;
-    }
-    
-    public String getMessage() {
-      return message;
-    }
-    
-    public Exception getException() {
-      return exception;
-    }
-    
-    public static <T> ResultPair<T> success(T result) {
-      ResultPair<T> resultPair = new ResultPair<T>();
-      resultPair.success = true;
-      resultPair.result = result;
-      return resultPair;
-    }
-    
-    public static <T> ResultPair<T> fail(Exception exception, String message) {
-      ResultPair<T> resultPair = new ResultPair<T>();
-      resultPair.success = false;
-      resultPair.message = message;
-      resultPair.exception = exception;
-      return resultPair;
-    }
-  }
-  
 }

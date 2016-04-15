@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
-import org.rabix.engine.rest.model.Backend;
+import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,16 +126,16 @@ public class BackendDispatcher {
         dispatcherLock.lock();
         
         long currentTime = System.currentTimeMillis();
-        for (BackendStub backendMQ : backendStubs) {
-          Backend backend = backendMQ.getBackend();
+        for (BackendStub backendStub : backendStubs) {
+          Backend backend = backendStub.getBackend();
 
-          HeartbeatInfo result = backendMQ.getHeartbeat();
+          HeartbeatInfo result = backendStub.getHeartbeat();
           if (result != null) {
             heartbeatInfo.put(result.getId(), result.getTimestamp());
           }
           if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
-            backendMQ.stop();
-            backendStubs.remove(backendMQ);
+            backendStub.stop();
+            backendStubs.remove(backendStub);
             
             List<Job> jobsToRemove = new ArrayList<>();
             for (Entry<Job, String> jobBackendEntry : jobBackendMapping.entrySet()) {

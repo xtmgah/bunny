@@ -45,4 +45,15 @@ public class JobHelper {
     return jobs;
   }
   
+  public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {
+    JobRecord jobRecord = jobRecordService.findRoot(job.getContext().getId());
+    List<VariableRecord> outputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.OUTPUT, job.getContext().getId());
+    
+    Map<String, Object> outputs = new HashMap<>();
+    for (VariableRecord outputVariable : outputVariables) {
+      outputs.put(outputVariable.getPortId(), outputVariable.getValue());
+    }
+    return Job.cloneWithOutputs(job, outputs);
+  }
+  
 }

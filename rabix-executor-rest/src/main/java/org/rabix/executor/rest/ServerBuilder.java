@@ -29,11 +29,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.executor.ExecutorModule;
-import org.rabix.executor.mq.MQConfig;
-import org.rabix.executor.mq.MQTransportStub;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.rest.api.impl.ExecutorHTTPServiceImpl;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.impl.TransportStubMQ;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -64,8 +64,8 @@ public class ServerBuilder {
           @Override
           protected void configure() {
             bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
-            bind(MQConfig.class).in(Scopes.SINGLETON);
-            bind(MQTransportStub.class).in(Scopes.SINGLETON);
+            bind(TransportQueueConfig.class).in(Scopes.SINGLETON);
+            bind(TransportStubMQ.class).in(Scopes.SINGLETON);
             bind(BackendRegister.class).in(Scopes.SINGLETON);
           }
         }));
@@ -109,14 +109,14 @@ public class ServerBuilder {
 
   public static class BackendRegister {
 
-    private MQConfig mqConfig;
+    private TransportQueueConfig mqConfig;
     private Configuration configuration;
-    private MQTransportStub mqTransportStub;
+    private TransportStubMQ mqTransportStub;
 
     private ScheduledExecutorService heartbeatService = Executors.newSingleThreadScheduledExecutor();
     
     @Inject
-    public BackendRegister(Configuration configuration, MQTransportStub mqTransportStub, MQConfig mqConfig) {
+    public BackendRegister(Configuration configuration, TransportStubMQ mqTransportStub, TransportQueueConfig mqConfig) {
       this.mqConfig = mqConfig;
       this.mqTransportStub = mqTransportStub;
       this.configuration = configuration;
