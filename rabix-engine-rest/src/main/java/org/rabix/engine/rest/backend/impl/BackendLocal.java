@@ -1,9 +1,8 @@
 package org.rabix.engine.rest.backend.impl;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Queue;
 
+import org.rabix.common.VMQueues;
 import org.rabix.engine.rest.backend.Backend;
 
 public class BackendLocal implements Backend {
@@ -13,12 +12,15 @@ public class BackendLocal implements Backend {
   public final static String HEARTBEAT_QUEUE = "heartbeatQueue";
   
   private String id;
-  private Map<String, Queue<String>> queues = new HashMap<>();
   
-  public BackendLocal(Queue<String> sendQueue, Queue<String> receiveQueue, Queue<String> heartbeatQueue) {
-    queues.put(SEND_QUEUE, sendQueue);
-    queues.put(RECEIVE_QUEUE, receiveQueue);
-    queues.put(HEARTBEAT_QUEUE, heartbeatQueue);
+  private String sendQueue;
+  private String receiveQueue;
+  private String heartbeatQueue;
+  
+  public BackendLocal() {
+    this.sendQueue = SEND_QUEUE;
+    this.receiveQueue = RECEIVE_QUEUE;
+    this.heartbeatQueue = HEARTBEAT_QUEUE;
   }
   
   @Override
@@ -32,19 +34,19 @@ public class BackendLocal implements Backend {
   }
   
   public Queue<String> getQueue(String name) {
-    return queues.get(name);
+    return VMQueues.getQueue(name);
   }
   
   public Queue<String> getSendQueue() {
-    return queues.get(SEND_QUEUE);
+    return VMQueues.getQueue(sendQueue);
   }
   
   public Queue<String> getReceiveQueue() {
-    return queues.get(RECEIVE_QUEUE);
+    return VMQueues.getQueue(receiveQueue);
   }
   
   public Queue<String> getHeartbeatQueue() {
-    return queues.get(HEARTBEAT_QUEUE);
+    return VMQueues.getQueue(heartbeatQueue);
   }
 
   @Override

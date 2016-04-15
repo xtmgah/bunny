@@ -176,11 +176,7 @@ public class BackendCommandLine {
       final ExecutorService executorService = injector.getInstance(ExecutorService.class);
       executorService.startReceiver();
       
-      Queue<String> sendQueue = VMQueues.getQueue(VMQueues.SEND_QUEUE);
-      Queue<String> receiveQueue = VMQueues.getQueue(VMQueues.RECEIVE_QUEUE);
-      Queue<String> heartbeatQueue = VMQueues.getQueue(VMQueues.HEARTBEAT_QUEUE);
-      
-      BackendLocal backendLocal = new BackendLocal(sendQueue, receiveQueue, heartbeatQueue);
+      BackendLocal backendLocal = new BackendLocal();
       backendLocal = backendService.create(backendLocal);
       
       final Job job = jobService.create(new Job(appURI, inputs));
