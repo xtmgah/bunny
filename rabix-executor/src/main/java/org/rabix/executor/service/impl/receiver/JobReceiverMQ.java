@@ -15,17 +15,17 @@ import com.google.inject.Inject;
 
 public class JobReceiverMQ implements JobReceiver {
 
-  private TransportQueueConfig mqConfig;
-  private TransportStubMQ mqTransportStub;
-  private ExecutorService executorService;
+  private final TransportStubMQ mqTransportStub;
+  private final ExecutorService executorService;
+  private final TransportQueueConfig transportQueueConfig;
 
   private ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
 
   @Inject
-  public JobReceiverMQ(ExecutorService executorService, TransportQueueConfig mqConfig, TransportStubMQ mqTransportStub) {
-    this.mqConfig = mqConfig;
+  public JobReceiverMQ(ExecutorService executorService, TransportQueueConfig transportQueueConfig, TransportStubMQ mqTransportStub) {
     this.mqTransportStub = mqTransportStub;
     this.executorService = executorService;
+    this.transportQueueConfig = transportQueueConfig;
   }
 
   @Override
@@ -47,7 +47,7 @@ public class JobReceiverMQ implements JobReceiver {
 
   @Override
   public Job receive() {
-    ResultPair<Job> result = mqTransportStub.receive(mqConfig.getToBackendQueue(), Job.class);
+    ResultPair<Job> result = mqTransportStub.receive(transportQueueConfig.getToBackendQueue(), Job.class);
     if (result.isSuccess() && result.getResult() != null) {
       return result.getResult();
     }

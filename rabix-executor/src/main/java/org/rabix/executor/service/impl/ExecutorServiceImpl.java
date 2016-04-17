@@ -38,7 +38,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   private final JobReceiver jobReceiver;
 
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, TransportQueueConfig mqConfig, TransportStubMQ mqTransportStub, JobReceiver jobReceiver,
+  public ExecutorServiceImpl(JobDataService jobDataService, JobReceiver jobReceiver,
       JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
       Provider<StartCommand> startCommandProvider, Provider<StatusCommand> statusCommandProvider) {
     this.jobReceiver = jobReceiver;

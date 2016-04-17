@@ -23,20 +23,20 @@ public class TransportStubMQ implements TransportStub {
 
   private final static Logger logger = LoggerFactory.getLogger(TransportStubMQ.class);
   
-  private TransportQueueConfig mqConfig;
+  private TransportQueueConfig transportQueueConfig;
   private PooledConnectionFactory connectionFactory;
 
   @Inject
-  public TransportStubMQ(TransportQueueConfig mqConfig) {
-    this.mqConfig = mqConfig;
+  public TransportStubMQ(TransportQueueConfig transportQueueConfig) {
+    this.transportQueueConfig = transportQueueConfig;
     
-    if (this.mqConfig.isMQEnabled()) {
+    if (this.transportQueueConfig.isMQEnabled()) {
       initializeConnectionFactory();      
     }
   }
 
   private void initializeConnectionFactory() {
-    connectionFactory = new PooledConnectionFactory(mqConfig.getBroker());
+    connectionFactory = new PooledConnectionFactory(transportQueueConfig.getBroker());
     connectionFactory.setIdleTimeout(5000);
     connectionFactory.setMaxConnections(10);
     connectionFactory.setBlockIfSessionPoolIsFull(true);
@@ -45,7 +45,7 @@ public class TransportStubMQ implements TransportStub {
   }
   
   public <T> ResultPair<T> send(String destinationQueue, T entity) {
-    if (!mqConfig.isMQEnabled()) {
+    if (!transportQueueConfig.isMQEnabled()) {
       return null;
     }
     Session session = null;
@@ -78,7 +78,7 @@ public class TransportStubMQ implements TransportStub {
   }
 
   public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz) {
-    if (!mqConfig.isMQEnabled()) {
+    if (!transportQueueConfig.isMQEnabled()) {
       return null;
     }
     Session session = null;

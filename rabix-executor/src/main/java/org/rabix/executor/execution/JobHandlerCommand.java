@@ -28,13 +28,13 @@ public abstract class JobHandlerCommand {
 
   protected final JobDataService jobDataService;
 
-  protected TransportQueueConfig mqConfig;
   protected final TransportStub mqTransportStub;
+  protected final TransportQueueConfig transportQueueConfig;
   
-  public JobHandlerCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig mqConfig) {
+  public JobHandlerCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
     this.jobDataService = jobDataService;
     
-    this.mqConfig = mqConfig;
+    this.transportQueueConfig = transportQueueConfig;
     this.mqTransportStub = mqTransportStub;
   }
 
@@ -76,7 +76,7 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getFromBackendQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -87,7 +87,7 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getFromBackendQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -98,7 +98,7 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getFromBackendQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -110,7 +110,7 @@ public abstract class JobHandlerCommand {
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getFromBackendQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**

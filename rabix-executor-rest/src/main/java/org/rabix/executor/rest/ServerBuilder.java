@@ -109,15 +109,15 @@ public class ServerBuilder {
 
   public static class BackendRegister {
 
-    private TransportQueueConfig mqConfig;
     private Configuration configuration;
     private TransportStubMQ mqTransportStub;
+    private TransportQueueConfig transportQueueConfig;
 
     private ScheduledExecutorService heartbeatService = Executors.newSingleThreadScheduledExecutor();
     
     @Inject
-    public BackendRegister(Configuration configuration, TransportStubMQ mqTransportStub, TransportQueueConfig mqConfig) {
-      this.mqConfig = mqConfig;
+    public BackendRegister(Configuration configuration, TransportStubMQ mqTransportStub, TransportQueueConfig transportQueueConfig) {
+      this.transportQueueConfig = transportQueueConfig;
       this.mqTransportStub = mqTransportStub;
       this.configuration = configuration;
     }
@@ -129,7 +129,7 @@ public class ServerBuilder {
         heartbeatService.scheduleAtFixedRate(new Runnable() {
           @Override
           public void run() {
-            mqTransportStub.send(mqConfig.getFromBackendHeartbeatQueue(), new HeartbeatInfo(backend.id, System.currentTimeMillis()));
+            mqTransportStub.send(transportQueueConfig.getFromBackendHeartbeatQueue(), new HeartbeatInfo(backend.id, System.currentTimeMillis()));
           }
         }, 0, 10, TimeUnit.SECONDS);
       } catch (Exception e) {
@@ -144,7 +144,7 @@ public class ServerBuilder {
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
       WebTarget webTarget = client.target(engineHost + ":" + enginePort + "/v0/engine/backends");
 
-      BackendMQ backend = new BackendMQ(null, mqConfig.getBroker(), mqConfig.getToBackendQueue(), mqConfig.getFromBackendQueue(), mqConfig.getFromBackendHeartbeatQueue());
+      BackendMQ backend = new BackendMQ(null, transportQueueConfig.getBroker(), transportQueueConfig.getToBackendQueue(), transportQueueConfig.getFromBackendQueue(), transportQueueConfig.getFromBackendHeartbeatQueue());
       Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
       Response response = invocationBuilder.post(Entity.entity(backend, MediaType.APPLICATION_JSON));
       return response.readEntity(BackendMQ.class);

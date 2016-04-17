@@ -17,8 +17,8 @@ import org.rabix.executor.transport.impl.TransportStubMQ;
 public class StopCommand extends JobHandlerCommand {
 
   @Inject
-  public StopCommand(JobDataService jobDataService, TransportStubMQ mqTransportStub, TransportQueueConfig mqConfig) {
-    super(jobDataService, mqTransportStub, mqConfig);
+  public StopCommand(JobDataService jobDataService, TransportStubMQ mqTransportStub, TransportQueueConfig transportQueueConfig) {
+    super(jobDataService, mqTransportStub, transportQueueConfig);
   }
 
   @Override

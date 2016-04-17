@@ -25,8 +25,8 @@ public class StatusCommand extends JobHandlerCommand {
   public final static long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(15);
   
   @Inject
-  public StatusCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig mqConfig) {
-    super(jobDataService, mqTransportStub, mqConfig);
+  public StatusCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
+    super(jobDataService, mqTransportStub, transportQueueConfig);
   }
 
   @Override

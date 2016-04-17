@@ -18,8 +18,8 @@ import org.rabix.executor.transport.TransportStub;
 public class StartCommand extends JobHandlerCommand {
 
   @Inject
-  public StartCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig mqConfig) {
-    super(jobDataService, mqTransportStub, mqConfig);
+  public StartCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
+    super(jobDataService, mqTransportStub, transportQueueConfig);
   }
 
   @Override
