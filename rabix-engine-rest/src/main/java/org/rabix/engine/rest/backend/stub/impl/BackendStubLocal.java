@@ -39,7 +39,7 @@ public class BackendStubLocal implements BackendStub {
     executorService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = transportPluginLocal.receive(BackendLocal.RECEIVE_QUEUE, Job.class);
+        ResultPair<Job> result = transportPluginLocal.receive(BackendLocal.RECEIVE_FROM_BACKEND_QUEUE, Job.class);
         if (result.isSuccess()) {
           try {
             jobService.update(result.getResult());
@@ -58,7 +58,7 @@ public class BackendStubLocal implements BackendStub {
 
   @Override
   public void send(Job job) {
-    transportPluginLocal.send(BackendLocal.SEND_QUEUE, job);
+    transportPluginLocal.send(BackendLocal.SEND_TO_BACKEND_QUEUE, job);
   }
 
   @Override
@@ -70,7 +70,7 @@ public class BackendStubLocal implements BackendStub {
 
   @Override
   public HeartbeatInfo getHeartbeat() {
-    String payload = backendLocal.getReceiveQueue().poll();
+    String payload = backendLocal.getFromBackendQueue().poll();
     if (payload != null) {
       return BeanSerializer.deserialize(payload, HeartbeatInfo.class);
     }

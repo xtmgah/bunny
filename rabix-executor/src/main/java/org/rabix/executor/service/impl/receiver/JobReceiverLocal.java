@@ -42,7 +42,7 @@ public class JobReceiverLocal implements JobReceiver {
 
   @Override
   public Job receive() {
-    String payload = VMQueues.<String>getQueue(VMQueues.SEND_QUEUE).poll();
+    String payload = VMQueues.<String>getQueue(VMQueues.SEND_TO_BACKEND_QUEUE).poll();
     if (payload != null) {
       return BeanSerializer.deserialize(payload, Job.class);
     }

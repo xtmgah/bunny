@@ -7,20 +7,20 @@ import org.rabix.engine.rest.backend.Backend;
 
 public class BackendLocal implements Backend {
 
-  public final static String SEND_QUEUE = "sendQueue";
-  public final static String RECEIVE_QUEUE = "receiveQueue";
-  public final static String HEARTBEAT_QUEUE = "heartbeatQueue";
+  public final static String SEND_TO_BACKEND_QUEUE = "toBackendQueue";
+  public final static String RECEIVE_FROM_BACKEND_QUEUE = "fromBackendQueue";
+  public final static String RECEIVE_FROM_BACKEND_HEARTBEAT_QUEUE = "fromBackendHeartbeatQueue";
   
   private String id;
   
-  private String sendQueue;
-  private String receiveQueue;
-  private String heartbeatQueue;
+  private String toBackendQueue;
+  private String fromBackendQueue;
+  private String fromBackendHeartbeatQueue;
   
   public BackendLocal() {
-    this.sendQueue = SEND_QUEUE;
-    this.receiveQueue = RECEIVE_QUEUE;
-    this.heartbeatQueue = HEARTBEAT_QUEUE;
+    this.toBackendQueue = SEND_TO_BACKEND_QUEUE;
+    this.fromBackendQueue = RECEIVE_FROM_BACKEND_QUEUE;
+    this.fromBackendHeartbeatQueue = RECEIVE_FROM_BACKEND_HEARTBEAT_QUEUE;
   }
   
   @Override
@@ -37,16 +37,16 @@ public class BackendLocal implements Backend {
     return VMQueues.getQueue(name);
   }
   
-  public Queue<String> getSendQueue() {
-    return VMQueues.getQueue(sendQueue);
+  public Queue<String> getToBackendQueue() {
+    return VMQueues.getQueue(toBackendQueue);
   }
   
-  public Queue<String> getReceiveQueue() {
-    return VMQueues.getQueue(receiveQueue);
+  public Queue<String> getFromBackendQueue() {
+    return VMQueues.getQueue(fromBackendQueue);
   }
   
-  public Queue<String> getHeartbeatQueue() {
-    return VMQueues.getQueue(heartbeatQueue);
+  public Queue<String> getFromBackendHeartbeatQueue() {
+    return VMQueues.getQueue(fromBackendHeartbeatQueue);
   }
 
   @Override

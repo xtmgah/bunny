@@ -47,7 +47,7 @@ public class JobReceiverMQ implements JobReceiver {
 
   @Override
   public Job receive() {
-    ResultPair<Job> result = mqTransportStub.receive(mqConfig.getSendQueue(), Job.class);
+    ResultPair<Job> result = mqTransportStub.receive(mqConfig.getToBackendQueue(), Job.class);
     if (result.isSuccess() && result.getResult() != null) {
       return result.getResult();
     }

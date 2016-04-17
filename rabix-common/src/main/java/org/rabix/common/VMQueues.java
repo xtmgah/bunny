@@ -7,9 +7,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class VMQueues {
 
-  public final static String SEND_QUEUE = "sendQueue";
-  public final static String RECEIVE_QUEUE = "receiveQueue";
-  public final static String HEARTBEAT_QUEUE = "heartbeatQueue";
+  public final static String SEND_TO_BACKEND_QUEUE = "toBackendQueue";
+  public final static String RECEIVE_FROM_BACKEND_QUEUE = "fromBackendQueue";
+  public final static String RECEIVE_FROM_BACKEND_HEARTBEAT_QUEUE = "fromBackendHeartbeatQueue";
   
   private static Map<String, Queue<Object>> queues = new HashMap<>();
   

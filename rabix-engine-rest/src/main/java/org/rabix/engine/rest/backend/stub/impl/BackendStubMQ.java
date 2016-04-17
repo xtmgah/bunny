@@ -38,7 +38,7 @@ public class BackendStubMQ implements BackendStub {
     executorService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = receive(backend.getReceiveQueue(), Job.class);
+        ResultPair<Job> result = receive(backend.getFromBackendQueue(), Job.class);
         if (result.isSuccess() && result.getResult() != null) {
           try {
             jobService.update(result.getResult());
@@ -59,19 +59,19 @@ public class BackendStubMQ implements BackendStub {
   
   @Override
   public void send(Job job) {
-    this.transportPluginMQ.send(backend.getSendQueue(), job);
+    this.transportPluginMQ.send(backend.getToBackendQueue(), job);
   }
   
   @Override
   public void send(Set<Job> jobs) {
     for (Job job : jobs) {
-      this.transportPluginMQ.send(backend.getSendQueue(), job);
+      this.transportPluginMQ.send(backend.getToBackendQueue(), job);
     }
   }
   
   @Override
   public HeartbeatInfo getHeartbeat() {
-    ResultPair<HeartbeatInfo> resultPair = receive(backend.getHeartbeatQueue(), HeartbeatInfo.class);
+    ResultPair<HeartbeatInfo> resultPair = receive(backend.getFromBackendHeartbeatQueue(), HeartbeatInfo.class);
     return resultPair.getResult();
   }
   

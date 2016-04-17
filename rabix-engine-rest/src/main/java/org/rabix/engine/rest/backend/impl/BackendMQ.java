@@ -11,19 +11,19 @@ public class BackendMQ implements Backend {
   private String id;
   @JsonProperty("broker")
   private String broker;
-  @JsonProperty("sendQueue")
-  private String sendQueue;
-  @JsonProperty("receiveQueue")
-  private String receiveQueue;
-  @JsonProperty("heartbeatQueue")
-  private String heartbeatQueue;
+  @JsonProperty("toBackendQueue")
+  private String toBackendQueue;
+  @JsonProperty("fromBackendQueue")
+  private String fromBackendQueue;
+  @JsonProperty("fromBackendHeartbeatQueue")
+  private String fromBackendHeartbeatQueue;
   
-  public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("sendQueue") String sendQueue, @JsonProperty("receiveQueue") String receiveQueue, @JsonProperty("heartbeatQueue") String heartbeatQueue) {
+  public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
     this.id = id;
     this.broker = broker;
-    this.sendQueue = sendQueue;
-    this.receiveQueue = receiveQueue;
-    this.heartbeatQueue = heartbeatQueue;
+    this.toBackendQueue = toBackendQueue;
+    this.fromBackendQueue = fromBackendQueue;
+    this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
   }
 
   public String getId() {
@@ -42,38 +42,38 @@ public class BackendMQ implements Backend {
     this.broker = broker;
   }
 
-  public String getSendQueue() {
-    return sendQueue;
+  public String getToBackendQueue() {
+    return toBackendQueue;
   }
 
-  public void setSendQueue(String sendQueue) {
-    this.sendQueue = sendQueue;
+  public void setToBackendQueue(String toBackendQueue) {
+    this.toBackendQueue = toBackendQueue;
   }
 
-  public String getReceiveQueue() {
-    return receiveQueue;
+  public String getFromBackendQueue() {
+    return fromBackendQueue;
   }
 
-  public void setReceiveQueue(String receiveQueue) {
-    this.receiveQueue = receiveQueue;
+  public void setFromBackendQueue(String fromBackendQueue) {
+    this.fromBackendQueue = fromBackendQueue;
   }
 
-  public String getHeartbeatQueue() {
-    return heartbeatQueue;
+  public String getFromBackendHeartbeatQueue() {
+    return fromBackendHeartbeatQueue;
   }
 
-  public void setHeartbeatQueue(String heartbeatQueue) {
-    this.heartbeatQueue = heartbeatQueue;
+  public void setFromBackendHeartbeatQueue(String fromBackendHeartbeatQueue) {
+    this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((heartbeatQueue == null) ? 0 : heartbeatQueue.hashCode());
+    result = prime * result + ((fromBackendHeartbeatQueue == null) ? 0 : fromBackendHeartbeatQueue.hashCode());
     result = prime * result + ((id == null) ? 0 : id.hashCode());
-    result = prime * result + ((receiveQueue == null) ? 0 : receiveQueue.hashCode());
-    result = prime * result + ((sendQueue == null) ? 0 : sendQueue.hashCode());
+    result = prime * result + ((fromBackendQueue == null) ? 0 : fromBackendQueue.hashCode());
+    result = prime * result + ((toBackendQueue == null) ? 0 : toBackendQueue.hashCode());
     return result;
   }
 
@@ -86,32 +86,32 @@ public class BackendMQ implements Backend {
     if (getClass() != obj.getClass())
       return false;
     BackendMQ other = (BackendMQ) obj;
-    if (heartbeatQueue == null) {
-      if (other.heartbeatQueue != null)
+    if (fromBackendHeartbeatQueue == null) {
+      if (other.fromBackendHeartbeatQueue != null)
         return false;
-    } else if (!heartbeatQueue.equals(other.heartbeatQueue))
+    } else if (!fromBackendHeartbeatQueue.equals(other.fromBackendHeartbeatQueue))
       return false;
     if (id == null) {
       if (other.id != null)
         return false;
     } else if (!id.equals(other.id))
       return false;
-    if (receiveQueue == null) {
-      if (other.receiveQueue != null)
+    if (fromBackendQueue == null) {
+      if (other.fromBackendQueue != null)
         return false;
-    } else if (!receiveQueue.equals(other.receiveQueue))
+    } else if (!fromBackendQueue.equals(other.fromBackendQueue))
       return false;
-    if (sendQueue == null) {
-      if (other.sendQueue != null)
+    if (toBackendQueue == null) {
+      if (other.toBackendQueue != null)
         return false;
-    } else if (!sendQueue.equals(other.sendQueue))
+    } else if (!toBackendQueue.equals(other.toBackendQueue))
       return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "BackendMQ [id=" + id + ", sendQueue=" + sendQueue + ", receiveQueue=" + receiveQueue + ", heartbeatQueue="  + heartbeatQueue + "]";
+    return "BackendMQ [id=" + id + ", sendQueue=" + toBackendQueue + ", receiveQueue=" + fromBackendQueue + ", heartbeatQueue="  + fromBackendHeartbeatQueue + "]";
   }
 
   @Override
