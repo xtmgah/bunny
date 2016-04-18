@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +18,8 @@ import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.helper.URIHelper;
-import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.protocol.draft2.Draft2CommandLineBuilder;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
@@ -33,18 +30,18 @@ import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.EngineModule;
-import org.rabix.engine.db.DAGNodeDB;
-import org.rabix.engine.event.impl.InitEvent;
-import org.rabix.engine.model.ContextRecord;
-import org.rabix.engine.model.ContextRecord.ContextStatus;
-import org.rabix.engine.model.JobRecord;
-import org.rabix.engine.model.VariableRecord;
-import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.IterationCallback;
-import org.rabix.engine.service.ContextRecordService;
-import org.rabix.engine.service.JobRecordService;
-import org.rabix.engine.service.LinkRecordService;
-import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.rest.api.BackendHTTPService;
+import org.rabix.engine.rest.api.JobHTTPService;
+import org.rabix.engine.rest.api.impl.BackendHTTPServiceImpl;
+import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
+import org.rabix.engine.rest.backend.BackendDispatcher;
+import org.rabix.engine.rest.backend.impl.BackendLocal;
+import org.rabix.engine.rest.db.BackendDB;
+import org.rabix.engine.rest.db.JobDB;
+import org.rabix.engine.rest.service.BackendService;
+import org.rabix.engine.rest.service.JobService;
+import org.rabix.engine.rest.service.impl.BackendServiceImpl;
+import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
@@ -52,8 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 
 /**
  * Local command line executor
@@ -113,14 +112,22 @@ public class BackendCommandLine {
       }
 
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
-      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(), new ExecutorModule(configModule));
-      DAGNodeDB dagNodeDB = injector.getInstance(DAGNodeDB.class);
-      EventProcessor eventProcessor = injector.getInstance(EventProcessor.class);
-      ExecutorService executorService = injector.getInstance(ExecutorService.class);
-      JobRecordService jobRecordService = injector.getInstance(JobRecordService.class);
-      VariableRecordService variableRecordService = injector.getInstance(VariableRecordService.class);
-      LinkRecordService linkRecordService = injector.getInstance(LinkRecordService.class);
-      ContextRecordService contextRecordService = injector.getInstance(ContextRecordService.class);
+      Injector injector = Guice.createInjector(
+          new SimpleFTPModule(), 
+          new EngineModule(),
+          new ExecutorModule(configModule), 
+          new AbstractModule() {
+            @Override
+            protected void configure() {
+              bind(JobDB.class).in(Scopes.SINGLETON);
+              bind(BackendDB.class).in(Scopes.SINGLETON);
+              bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
+              bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
+              bind(BackendDispatcher.class).in(Scopes.SINGLETON);
+              bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
+              bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
+            }
+          });
 
       String appURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
 
@@ -128,7 +135,7 @@ public class BackendCommandLine {
 
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
-      
+
       if (commandLine.hasOption("t")) {
         String app = bindings.loadApp(appURI);
         Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(app, Draft2CommandLineTool.class);
@@ -160,29 +167,43 @@ public class BackendCommandLine {
         System.out.println(JSONHelper.writeObject(result));
         System.exit(0);
       }
+      final JobService jobService = injector.getInstance(JobService.class);
+      final BackendService backendService = injector.getInstance(BackendService.class);
+      final ExecutorService executorService = injector.getInstance(ExecutorService.class);
+      executorService.startReceiver();
       
-      Job job = new Job(appURI, inputs);
-      Context context = new Context(job.getRootId(), null);
-      List<IterationCallback> callbacks = new ArrayList<>();
-
-      String outputDirPath = commandLine.getOptionValue("log-iterations-dir");
-      if (outputDirPath != null) {
-        File outputDir = new File(outputDirPath);
-        if (!outputDir.exists() || !outputDir.isDirectory()) {
-          logger.info("Log iterations directory {} doesn't exist or is not a directory", outputDir.getCanonicalPath());
-          System.exit(10);
-        } else {
-          callbacks.add(new CommandLinePrinter(outputDir, context.getId(), jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB));
+      BackendLocal backendLocal = new BackendLocal();
+      backendLocal = backendService.create(backendLocal);
+      
+      final Job job = jobService.create(new Job(appURI, inputs));
+      
+      Thread checker = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          Job rootJob = jobService.get(job.getId());
+          
+          while(!Job.isFinished(rootJob)) {
+            try {
+              Thread.sleep(1000);
+              rootJob = jobService.get(job.getId());
+            } catch (InterruptedException e) {
+              logger.error("Failed to wait for root Job to finish", e);
+              throw new RuntimeException(e);
+            }
+          }
+          if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
+            try {
+              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
+            } catch (JsonProcessingException e) {
+              logger.error("Failed to write outputs to standard out", e);
+              System.exit(10);
+            }
+          }
         }
-      }
-      callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
-      callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService));
+      });
+      checker.start();
+      checker.join();
 
-      DAGNode dagNode = bindings.translateToDAG(job);
-      
-      InitEvent initEvent = new InitEvent(context, job.getRootId(), dagNode, inputs);
-      eventProcessor.send(initEvent);
-      eventProcessor.start(callbacks);
     } catch (ParseException e) {
       logger.error("Encountered exception while parsing using PosixParser.", e);
     } catch (Exception e) {
@@ -241,6 +262,7 @@ public class BackendCommandLine {
         logger.debug("Configuration directory {} doesn't exist or is not a directory.", configPath);
       }
     }
+    
     File config = new File("config");
     if (config.exists() && config.isDirectory()) {
       logger.debug("Configuration directory found localy.");
@@ -254,45 +276,6 @@ public class BackendCommandLine {
       printUsageAndExit(options);
     }
     return config;
-  }
-  
-  /**
-   * Detects end of execution per root Job
-   */
-  private static class EndRootCallback implements IterationCallback {
-
-    private JobRecordService jobRecordService;
-    private ContextRecordService contextRecordService;
-    private VariableRecordService variableRecordService;
-
-    public EndRootCallback(ContextRecordService contextRecordService, JobRecordService jobRecordService,
-        VariableRecordService variableRecordService) {
-      this.jobRecordService = jobRecordService;
-      this.contextRecordService = contextRecordService;
-      this.variableRecordService = variableRecordService;
-    }
-
-    @Override
-    public void call(EventProcessor eventProcessor, String contextId, int iteration) {
-      ContextRecord context = contextRecordService.find(contextId);
-      if (context.getStatus().equals(ContextStatus.COMPLETED)) {
-        JobRecord root = jobRecordService.findRoot(contextId);
-
-        List<VariableRecord> outputVariables = variableRecordService.find(root.getId(), LinkPortType.OUTPUT, contextId);
-
-        Map<String, Object> outputs = new HashMap<>();
-        for (VariableRecord outputVariable : outputVariables) {
-          outputs.put(outputVariable.getPortId(), outputVariable.getValue());
-        }
-        try {
-          logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(outputs));
-        } catch (JsonProcessingException e) {
-          logger.error("Failed to write outputs to standard out", e);
-          System.exit(10);
-        }
-        System.exit(0);
-      }
-    }
   }
 
 }

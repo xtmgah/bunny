@@ -6,7 +6,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.rabix.engine.rest.model.Backend;
+import org.rabix.engine.rest.backend.Backend;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/v0/engine/backends")

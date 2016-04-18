@@ -1,5 +1,5 @@
 package org.rabix.engine.rest.transport;
 
 public enum TransportPluginType {
-  MQ
+  MQ, LOCAL
 }

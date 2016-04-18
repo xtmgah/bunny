@@ -1,9 +1,9 @@
 package org.rabix.engine.rest.service;
 
-import org.rabix.engine.rest.model.Backend;
+import org.rabix.engine.rest.backend.Backend;
 
 public interface BackendService {
 
-  Backend create(Backend backend);
+  <T extends Backend> T create(T backend);
   
 }

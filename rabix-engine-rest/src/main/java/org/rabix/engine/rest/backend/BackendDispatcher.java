@@ -18,10 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
-import org.rabix.engine.rest.backend.impl.BackendMQ;
-import org.rabix.engine.rest.backend.impl.BackendMQ.HeartbeatInfo;
-import org.rabix.engine.rest.model.Backend;
-import org.rabix.engine.rest.transport.impl.TransportPluginMQ.ResultPair;
+import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +30,7 @@ public class BackendDispatcher {
   
   private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(5);
 
-  private final List<BackendMQ> backendStubs = new ArrayList<>();
+  private final List<BackendStub> backendStubs = new ArrayList<>();
   private final Map<String, Long> heartbeatInfo = new HashMap<>();
 
   private final Set<Job> freeJobs = new HashSet<>();
@@ -84,12 +81,12 @@ public class BackendDispatcher {
           freeJobIterator.remove();
           continue;
         }
-        BackendMQ backendMQ = nextBackend();
+        BackendStub backendStub = nextBackend();
         
         freeJobIterator.remove();
-        jobBackendMapping.put(freeJob, backendMQ.getBackend().getId());
-        backendMQ.send(freeJob);
-        logger.info("Job {} sent to {}.", freeJob.getId(), backendMQ.getBackend().getId());
+        jobBackendMapping.put(freeJob, backendStub.getBackend().getId());
+        backendStub.send(freeJob);
+        logger.info("Job {} sent to {}.", freeJob.getId(), backendStub.getBackend().getId());
       }
       return true;
     } finally {
@@ -97,11 +94,11 @@ public class BackendDispatcher {
     }
   }
 
-  public void addBackendMQ(BackendMQ backendMQ) {
+  public void addBackendStub(BackendStub backendStub) {
     try {
       dispatcherLock.lock();
-      this.backendStubs.add(backendMQ);
-      this.heartbeatInfo.put(backendMQ.getBackend().getId(), System.currentTimeMillis());
+      this.backendStubs.add(backendStub);
+      this.heartbeatInfo.put(backendStub.getBackend().getId(), System.currentTimeMillis());
     } finally {
       dispatcherLock.unlock();
     }
@@ -116,10 +113,10 @@ public class BackendDispatcher {
     }
   }
 
-  private BackendMQ nextBackend() {
-    BackendMQ backendMQ = backendStubs.get(position % backendStubs.size());
+  private BackendStub nextBackend() {
+    BackendStub backendStub = backendStubs.get(position % backendStubs.size());
     position = (position + 1) % backendStubs.size();
-    return backendMQ;
+    return backendStub;
   }
 
   private class HeartbeatMonitor implements Runnable {
@@ -129,18 +126,16 @@ public class BackendDispatcher {
         dispatcherLock.lock();
         
         long currentTime = System.currentTimeMillis();
-        for (BackendMQ backendMQ : backendStubs) {
-          Backend backend = backendMQ.getBackend();
+        for (BackendStub backendStub : backendStubs) {
+          Backend backend = backendStub.getBackend();
 
-          ResultPair<HeartbeatInfo> result = backendMQ.receive(backend.getHeartbeatQueue(), HeartbeatInfo.class);
-          if (result.isSuccess() && result.getResult() != null) {
-            heartbeatInfo.put(result.getResult().getId(), result.getResult().getTimestamp());
-          } else {
-            logger.error(result.getMessage(), result.getException());
+          HeartbeatInfo result = backendStub.getHeartbeat();
+          if (result != null) {
+            heartbeatInfo.put(result.getId(), result.getTimestamp());
           }
           if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
-            backendMQ.stopConsumer();
-            backendStubs.remove(backendMQ);
+            backendStub.stop();
+            backendStubs.remove(backendStub);
             
             List<Job> jobsToRemove = new ArrayList<>();
             for (Entry<Job, String> jobBackendEntry : jobBackendMapping.entrySet()) {
@@ -158,7 +153,6 @@ public class BackendDispatcher {
         dispatcherLock.unlock();
       }
     }
-
   }
 
 }

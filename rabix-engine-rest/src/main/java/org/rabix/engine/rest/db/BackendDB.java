@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.rabix.engine.rest.model.Backend;
+import org.rabix.engine.rest.backend.Backend;
 
 public class BackendDB {
 

@@ -1,104 +1,123 @@
 package org.rabix.engine.rest.backend.impl;
 
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import org.rabix.engine.rest.backend.Backend;
 
-import org.rabix.bindings.model.Job;
-import org.rabix.engine.rest.model.Backend;
-import org.rabix.engine.rest.service.JobService;
-import org.rabix.engine.rest.service.JobServiceException;
-import org.rabix.engine.rest.transport.impl.TransportPluginMQ;
-import org.rabix.engine.rest.transport.impl.TransportPluginMQ.ResultPair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BackendMQ {
+public class BackendMQ implements Backend {
 
-  private final static Logger logger = LoggerFactory.getLogger(BackendMQ.class);
+  @JsonProperty("id")
+  private String id;
+  @JsonProperty("broker")
+  private String broker;
+  @JsonProperty("toBackendQueue")
+  private String toBackendQueue;
+  @JsonProperty("fromBackendQueue")
+  private String fromBackendQueue;
+  @JsonProperty("fromBackendHeartbeatQueue")
+  private String fromBackendHeartbeatQueue;
   
-  private Backend backend;
-  private JobService jobService;
-  private TransportPluginMQ transportPluginMQ;
-  
-  private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-  
-  public BackendMQ(JobService jobService, Backend backend) {
-    this.backend = backend;
-    this.jobService = jobService;
-    this.transportPluginMQ = new TransportPluginMQ(backend.getBroker());
+  public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
+    this.id = id;
+    this.broker = broker;
+    this.toBackendQueue = toBackendQueue;
+    this.fromBackendQueue = fromBackendQueue;
+    this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
   }
-  
-  public void startConsumer() {
-    executorService.scheduleAtFixedRate(new Runnable() {
-      @Override
-      public void run() {
-        ResultPair<Job> result = receive(backend.getReceiveQueue(), Job.class);
-        if (result.isSuccess() && result.getResult() != null) {
-          try {
-            jobService.update(result.getResult());
-          } catch (JobServiceException e) {
-            logger.error("Failed to update Job " + result.getResult());
-          }
-        } else {
-          logger.error(result.getMessage(), result.getException());
-        }
-      }
-    }, 0, 10, TimeUnit.MILLISECONDS);
-  }
-  
-  public void stopConsumer() {
-    executorService.shutdown();
-  }
-  
-  public void send(Job job) {
-    this.transportPluginMQ.send(backend.getSendQueue(), job);
-  }
-  
-  public void send(Set<Job> jobs) {
-    for (Job job : jobs) {
-      this.transportPluginMQ.send(backend.getSendQueue(), job);
-    }
-  }
-  
-  public <T> ResultPair<T> receive(String queue, Class<T> clazz) {
-    return transportPluginMQ.receive(queue, clazz);
-  }
-  
-  public Backend getBackend() {
-    return backend;
-  }
-  
-  public static class HeartbeatInfo {
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("timestamp")
-    private Long timestamp;
-    
-    @JsonCreator
-    public HeartbeatInfo(@JsonProperty("id") String id, @JsonProperty("timestamp") Long timestamp) {
-      this.id = id;
-      this.timestamp = timestamp;
-    }
 
-    public String getId() {
-      return id;
-    }
-
-    public void setId(String id) {
-      this.id = id;
-    }
-
-    public Long getTimestamp() {
-      return timestamp;
-    }
-
-    public void setTimestamp(Long timestamp) {
-      this.timestamp = timestamp;
-    }
+  public String getId() {
+    return id;
   }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getBroker() {
+    return broker;
+  }
+
+  public void setBroker(String broker) {
+    this.broker = broker;
+  }
+
+  public String getToBackendQueue() {
+    return toBackendQueue;
+  }
+
+  public void setToBackendQueue(String toBackendQueue) {
+    this.toBackendQueue = toBackendQueue;
+  }
+
+  public String getFromBackendQueue() {
+    return fromBackendQueue;
+  }
+
+  public void setFromBackendQueue(String fromBackendQueue) {
+    this.fromBackendQueue = fromBackendQueue;
+  }
+
+  public String getFromBackendHeartbeatQueue() {
+    return fromBackendHeartbeatQueue;
+  }
+
+  public void setFromBackendHeartbeatQueue(String fromBackendHeartbeatQueue) {
+    this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((fromBackendHeartbeatQueue == null) ? 0 : fromBackendHeartbeatQueue.hashCode());
+    result = prime * result + ((id == null) ? 0 : id.hashCode());
+    result = prime * result + ((fromBackendQueue == null) ? 0 : fromBackendQueue.hashCode());
+    result = prime * result + ((toBackendQueue == null) ? 0 : toBackendQueue.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    BackendMQ other = (BackendMQ) obj;
+    if (fromBackendHeartbeatQueue == null) {
+      if (other.fromBackendHeartbeatQueue != null)
+        return false;
+    } else if (!fromBackendHeartbeatQueue.equals(other.fromBackendHeartbeatQueue))
+      return false;
+    if (id == null) {
+      if (other.id != null)
+        return false;
+    } else if (!id.equals(other.id))
+      return false;
+    if (fromBackendQueue == null) {
+      if (other.fromBackendQueue != null)
+        return false;
+    } else if (!fromBackendQueue.equals(other.fromBackendQueue))
+      return false;
+    if (toBackendQueue == null) {
+      if (other.toBackendQueue != null)
+        return false;
+    } else if (!toBackendQueue.equals(other.toBackendQueue))
+      return false;
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "BackendMQ [id=" + id + ", sendQueue=" + toBackendQueue + ", receiveQueue=" + fromBackendQueue + ", heartbeatQueue="  + fromBackendHeartbeatQueue + "]";
+  }
+
+  @Override
+  @JsonIgnore
+  public BackendType getType() {
+    return BackendType.MQ;
+  }
+
 }

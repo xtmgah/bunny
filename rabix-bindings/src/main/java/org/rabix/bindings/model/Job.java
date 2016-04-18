@@ -93,6 +93,12 @@ public class Job {
     return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context);
   }
   
+  public static boolean isFinished(Job job) {
+    return job.getStatus().equals(JobStatus.COMPLETED) 
+        || job.getStatus().equals(JobStatus.ABORTED)
+        || job.getStatus().equals(JobStatus.FAILED);
+  }
+  
   public String getId() {
     return id;
   }

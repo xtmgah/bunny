@@ -6,9 +6,9 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.mq.MQConfig;
-import org.rabix.executor.mq.MQTransportStub;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.TransportStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +28,13 @@ public abstract class JobHandlerCommand {
 
   protected final JobDataService jobDataService;
 
-  protected MQConfig mqConfig;
-  protected final MQTransportStub mqTransportStub;
+  protected final TransportStub mqTransportStub;
+  protected final TransportQueueConfig transportQueueConfig;
   
-  public JobHandlerCommand(JobDataService jobDataService, MQTransportStub mqTransportStub, MQConfig mqConfig) {
+  public JobHandlerCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
     this.jobDataService = jobDataService;
     
-    this.mqConfig = mqConfig;
+    this.transportQueueConfig = transportQueueConfig;
     this.mqTransportStub = mqTransportStub;
   }
 
@@ -76,7 +76,7 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -87,7 +87,7 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -98,7 +98,7 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -110,7 +110,7 @@ public abstract class JobHandlerCommand {
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
     jobData.setJob(job);
-    mqTransportStub.send(mqConfig.getReceiveQueue(), job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**

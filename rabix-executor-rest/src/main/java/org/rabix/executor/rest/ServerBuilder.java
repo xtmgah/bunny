@@ -29,11 +29,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.executor.ExecutorModule;
-import org.rabix.executor.mq.MQConfig;
-import org.rabix.executor.mq.MQTransportStub;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.rest.api.impl.ExecutorHTTPServiceImpl;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.impl.TransportStubMQ;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -64,8 +64,8 @@ public class ServerBuilder {
           @Override
           protected void configure() {
             bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
-            bind(MQConfig.class).in(Scopes.SINGLETON);
-            bind(MQTransportStub.class).in(Scopes.SINGLETON);
+            bind(TransportQueueConfig.class).in(Scopes.SINGLETON);
+            bind(TransportStubMQ.class).in(Scopes.SINGLETON);
             bind(BackendRegister.class).in(Scopes.SINGLETON);
           }
         }));
@@ -109,27 +109,27 @@ public class ServerBuilder {
 
   public static class BackendRegister {
 
-    private MQConfig mqConfig;
     private Configuration configuration;
-    private MQTransportStub mqTransportStub;
+    private TransportStubMQ mqTransportStub;
+    private TransportQueueConfig transportQueueConfig;
 
     private ScheduledExecutorService heartbeatService = Executors.newSingleThreadScheduledExecutor();
     
     @Inject
-    public BackendRegister(Configuration configuration, MQTransportStub mqTransportStub, MQConfig mqConfig) {
-      this.mqConfig = mqConfig;
+    public BackendRegister(Configuration configuration, TransportStubMQ mqTransportStub, TransportQueueConfig transportQueueConfig) {
+      this.transportQueueConfig = transportQueueConfig;
       this.mqTransportStub = mqTransportStub;
       this.configuration = configuration;
     }
     
     public void start() throws ExecutorException {
       try {
-        final Backend backend = registerBackend();
+        final BackendMQ backend = registerBackend();
 
         heartbeatService.scheduleAtFixedRate(new Runnable() {
           @Override
           public void run() {
-            mqTransportStub.send(mqConfig.getHeartbeatQueue(), new HeartbeatInfo(backend.id, System.currentTimeMillis()));
+            mqTransportStub.send(transportQueueConfig.getFromBackendHeartbeatQueue(), new HeartbeatInfo(backend.id, System.currentTimeMillis()));
           }
         }, 0, 10, TimeUnit.SECONDS);
       } catch (Exception e) {
@@ -137,17 +137,17 @@ public class ServerBuilder {
       }
     }
 
-    private Backend registerBackend() {
+    private BackendMQ registerBackend() {
       String engineHost = configuration.getString("engine.url");
       Integer enginePort = configuration.getInteger("engine.port", null);
 
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
       WebTarget webTarget = client.target(engineHost + ":" + enginePort + "/v0/engine/backends");
 
-      Backend backend = new Backend(null, mqConfig.getBroker(), mqConfig.getSendQueue(), mqConfig.getReceiveQueue(), mqConfig.getHeartbeatQueue());
+      BackendMQ backend = new BackendMQ(null, transportQueueConfig.getBroker(), transportQueueConfig.getToBackendQueue(), transportQueueConfig.getFromBackendQueue(), transportQueueConfig.getFromBackendHeartbeatQueue());
       Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
       Response response = invocationBuilder.post(Entity.entity(backend, MediaType.APPLICATION_JSON));
-      return response.readEntity(Backend.class);
+      return response.readEntity(BackendMQ.class);
     }
     
     public static class HeartbeatInfo {
@@ -164,27 +164,25 @@ public class ServerBuilder {
       }
     }
     
-    public static class Backend {
-      
+    public static class BackendMQ {
       @JsonProperty("id")
       private final String id;
       @JsonProperty("broker")
       private final String broker;
-      @JsonProperty("sendQueue")
-      private final String sendQueue;
-      @JsonProperty("receiveQueue")
-      private final String receiveQueue;
-      @JsonProperty("heartbeatQueue")
-      private final String heartbeatQueue;
+      @JsonProperty("toBackendQueue")
+      private String toBackendQueue;
+      @JsonProperty("fromBackendQueue")
+      private String fromBackendQueue;
+      @JsonProperty("fromBackendHeartbeatQueue")
+      private String fromBackendHeartbeatQueue;
 
-      public Backend(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("sendQueue") String sendQueue, @JsonProperty("receiveQueue") String receiveQueue, @JsonProperty("heartbeatQueue") String heartbeatQueue) {
+      public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
         this.id = id;
         this.broker = broker;
-        this.sendQueue = sendQueue;
-        this.receiveQueue = receiveQueue;
-        this.heartbeatQueue = heartbeatQueue;
+        this.toBackendQueue = toBackendQueue;
+        this.fromBackendQueue = fromBackendQueue;
+        this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
       }
-
     }
 
   }

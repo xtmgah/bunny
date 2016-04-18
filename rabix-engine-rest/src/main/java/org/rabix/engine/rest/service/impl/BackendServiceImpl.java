@@ -2,10 +2,11 @@ package org.rabix.engine.rest.service.impl;
 
 import java.util.UUID;
 
+import org.rabix.engine.rest.backend.Backend;
 import org.rabix.engine.rest.backend.BackendDispatcher;
-import org.rabix.engine.rest.backend.impl.BackendMQ;
+import org.rabix.engine.rest.backend.stub.BackendStub;
+import org.rabix.engine.rest.backend.stub.BackendStubFactory;
 import org.rabix.engine.rest.db.BackendDB;
-import org.rabix.engine.rest.model.Backend;
 import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
 
@@ -25,14 +26,13 @@ public class BackendServiceImpl implements BackendService {
   }
   
   @Override
-  public Backend create(Backend backend) {
-    String id = UUID.randomUUID().toString();
-    backend = Backend.cloneWithID(backend, id);
+  public <T extends Backend> T create(T backend) {
+    backend.setId(UUID.randomUUID().toString());
     backendDB.add(backend);
     
-    BackendMQ backendMQ = new BackendMQ(jobService, backend);
-    backendMQ.startConsumer();
-    backendDispatcher.addBackendMQ(backendMQ);
+    BackendStub backendStub = BackendStubFactory.createStub(jobService, backend);
+    backendStub.start();
+    backendDispatcher.addBackendStub(backendStub);
     return backend;
   }
   
