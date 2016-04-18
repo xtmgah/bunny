@@ -6,7 +6,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
@@ -15,20 +14,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.rabix.bindings.Bindings;
-import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
-import org.rabix.bindings.protocol.draft2.Draft2CommandLineBuilder;
-import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Resources;
-import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
-import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
-import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.BackendHTTPService;
 import org.rabix.engine.rest.api.JobHTTPService;
@@ -133,42 +123,9 @@ public class BackendCommandLine {
 
       String appURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
 
-      Bindings bindings = BindingsFactory.create(appURI);
-
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
 
-      if (commandLine.hasOption("t")) {
-        String app = bindings.loadApp(appURI);
-        Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(app, Draft2CommandLineTool.class);
-        Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
-        Map<String, Object> inputsMap = (Map<String, Object>) inputs;
-        Map<String, Object> allocatedResources = (Map<String, Object>) inputsMap.get("allocatedResources");
-        Integer cpu = allocatedResources != null ? (Integer) allocatedResources.get("cpu") : null;
-        Integer mem = allocatedResources != null ? (Integer) allocatedResources.get("mem") : null;
-        draft2Job.setResources(new Draft2Resources(false, cpu, mem));
-
-        Draft2CommandLineBuilder draft2CommandLineBuilder = new Draft2CommandLineBuilder();
-        List<Object> commandLineParts = draft2CommandLineBuilder.buildCommandLineParts(draft2Job);
-        String stdin = draft2CommandLineTool.getStdin(draft2Job);
-        String stdout = draft2CommandLineTool.getStdout(draft2Job);
-
-        Draft2CreateFileRequirement draft2CreateFileRequirement = draft2CommandLineTool.getCreateFileRequirement();
-        Map<Object, Object> createdFiles = new HashMap<>();
-        if (draft2CreateFileRequirement != null) {
-          for (Draft2FileRequirement fileRequirement : draft2CreateFileRequirement.getFileRequirements()) {
-            createdFiles.put(fileRequirement.getFilename(draft2Job), fileRequirement.getContent(draft2Job));
-          }
-        }
-        Map<String, Object> result = new HashMap<>();
-        result.put("args", commandLineParts);
-        result.put("stdin", stdin);
-        result.put("stdout", stdout);
-        result.put("createfiles", createdFiles);
-
-        System.out.println(JSONHelper.writeObject(result));
-        System.exit(0);
-      }
       final JobService jobService = injector.getInstance(JobService.class);
       final BackendService backendService = injector.getInstance(BackendService.class);
       final ExecutorService executorService = injector.getInstance(ExecutorService.class);
