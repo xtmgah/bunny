@@ -158,6 +158,8 @@ public class BackendCommandLine {
               logger.error("Failed to write outputs to standard out", e);
               System.exit(10);
             }
+          } else {
+            System.exit(10);
           }
         }
       });
