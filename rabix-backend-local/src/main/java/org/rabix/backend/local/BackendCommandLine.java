@@ -43,6 +43,7 @@ import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
+import org.rabix.executor.ExecutorTransportModuleLocal;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
 import org.slf4j.Logger;
@@ -115,6 +116,7 @@ public class BackendCommandLine {
       Injector injector = Guice.createInjector(
           new SimpleFTPModule(), 
           new EngineModule(),
+          new ExecutorTransportModuleLocal(),
           new ExecutorModule(configModule), 
           new AbstractModule() {
             @Override

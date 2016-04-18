@@ -29,6 +29,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.executor.ExecutorModule;
+import org.rabix.executor.ExecutorTransportModuleMQ;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.rest.api.impl.ExecutorHTTPServiceImpl;
 import org.rabix.executor.service.ExecutorService;
@@ -60,14 +61,18 @@ public class ServerBuilder {
 
     ConfigModule configModule = new ConfigModule(configDir, null);
     Injector injector = BootstrapUtils.newInjector(locator,
-        Arrays.asList(new ServletModule(), new ExecutorModule(configModule), new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
-            bind(TransportQueueConfig.class).in(Scopes.SINGLETON);
-            bind(TransportStubMQ.class).in(Scopes.SINGLETON);
-            bind(BackendRegister.class).in(Scopes.SINGLETON);
-          }
+        Arrays.asList(
+            new ServletModule(), 
+            new ExecutorTransportModuleMQ(),
+            new ExecutorModule(configModule), 
+            new AbstractModule() {
+              @Override
+              protected void configure() {
+                bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
+                bind(TransportQueueConfig.class).in(Scopes.SINGLETON);
+                bind(TransportStubMQ.class).in(Scopes.SINGLETON);
+                bind(BackendRegister.class).in(Scopes.SINGLETON);
+              }
         }));
 
     BootstrapUtils.install(locator);

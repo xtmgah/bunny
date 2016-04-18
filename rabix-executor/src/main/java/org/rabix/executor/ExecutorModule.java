@@ -8,13 +8,9 @@ import org.rabix.executor.handler.impl.JobHandlerImpl;
 import org.rabix.executor.service.DownloadFileService;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.service.JobReceiver;
 import org.rabix.executor.service.impl.DownloadServiceImpl;
 import org.rabix.executor.service.impl.ExecutorServiceImpl;
 import org.rabix.executor.service.impl.JobDataServiceImpl;
-import org.rabix.executor.service.impl.receiver.JobReceiverLocal;
-import org.rabix.executor.transport.TransportStub;
-import org.rabix.executor.transport.impl.TransportStubLocal;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -38,8 +34,6 @@ public class ExecutorModule extends AbstractModule {
     bind(JobDataService.class).to(JobDataServiceImpl.class).in(Scopes.SINGLETON);
     bind(JobHandlerCommandDispatcher.class).in(Scopes.SINGLETON);
 
-    bind(TransportStub.class).to(TransportStubLocal.class);
-    bind(JobReceiver.class).to(JobReceiverLocal.class).in(Scopes.SINGLETON);
     bind(ExecutorService.class).to(ExecutorServiceImpl.class).in(Scopes.SINGLETON);
   }
 
