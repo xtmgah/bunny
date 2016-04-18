@@ -13,12 +13,13 @@ public class InitEvent implements Event {
 
   private final DAGNode node;
   private final Map<String, Object> value;
-  
+  private final String rootId;
   private final Context context;
   
-  public InitEvent(Context context, DAGNode node, Map<String, Object> value) {
+  public InitEvent(Context context, String rootId, DAGNode node, Map<String, Object> value) {
     this.node = node;
     this.value = value;
+    this.rootId = rootId;
     this.context = context;
   }
 
@@ -28,6 +29,10 @@ public class InitEvent implements Event {
 
   public Map<String, Object> getValue() {
     return value;
+  }
+  
+  public String getRootId() {
+    return rootId;
   }
   
   @Override

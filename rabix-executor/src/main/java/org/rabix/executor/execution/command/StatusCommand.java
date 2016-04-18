@@ -41,7 +41,7 @@ public class StatusCommand extends JobHandlerCommand {
     try {
       Job job = jobData.getJob();
       if (jobHandler.isRunning()) {
-        logger.info("Command line tool {} for context {} is still running.", job.getId(), job.getContext().getId());
+        logger.info("Command line tool {} for context {} is still running.", job.getId(), job.getRootId());
         return new Result(false);
       }
       

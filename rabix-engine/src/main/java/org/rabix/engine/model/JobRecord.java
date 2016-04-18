@@ -12,7 +12,7 @@ public class JobRecord {
 
   private final String id;
   private final String externalId;
-  private final String contextId;
+  private final String rootId;
   private final String parentId;
   private final boolean master;
   private boolean blocking;
@@ -31,10 +31,10 @@ public class JobRecord {
   
   private ScatterMapping scatterMapping;
   
-  public JobRecord(String contextId, String id, String uniqueId, String parentId, JobState state, boolean isContainer, boolean isScattered, boolean master, boolean blocking) {
+  public JobRecord(String rootId, String id, String uniqueId, String parentId, JobState state, boolean isContainer, boolean isScattered, boolean master, boolean blocking) {
     this.id = id;
     this.externalId = uniqueId;
-    this.contextId = contextId;
+    this.rootId = rootId;
     this.parentId = parentId;
     this.state = state;
     this.master = master;
@@ -53,8 +53,8 @@ public class JobRecord {
     return externalId;
   }
 
-  public String getContextId() {
-    return contextId;
+  public String getRootId() {
+    return rootId;
   }
   
   public String getParentId() {
@@ -383,7 +383,7 @@ public class JobRecord {
 
   @Override
   public String toString() {
-    return "JobRecord [id=" + id + ", externalId=" + externalId + ", contextId=" + contextId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterMapping=" + scatterMapping + "]";
+    return "JobRecord [id=" + id + ", externalId=" + externalId + ", rootId=" + rootId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterMapping=" + scatterMapping + "]";
   }
 
 }

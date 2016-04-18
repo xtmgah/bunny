@@ -16,7 +16,7 @@ public class StorageConfig {
   
   public static File getWorkingDir(Job job, Configuration configuration) {
     File baseDir = new File(getLocalExecutionDirectory(configuration));
-    File contextDir = new File(baseDir, job.getContext().getId());
+    File contextDir = new File(baseDir, job.getRootId());
     if (!contextDir.exists()) {
       contextDir.mkdirs();
     }

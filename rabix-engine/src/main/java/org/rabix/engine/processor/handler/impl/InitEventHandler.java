@@ -47,7 +47,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
   }
 
   public void handle(final InitEvent event) throws EventHandlerException {
-    ContextRecord context = new ContextRecord(event.getContext().getId(), event.getContext().getConfig(), ContextStatus.RUNNING);
+    ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
     
     contextRecordService.create(context);
     nodeDB.loadDB(event.getNode(), event.getContextId());

@@ -73,7 +73,7 @@ public class JobServiceImpl implements JobService {
       Bindings bindings = BindingsFactory.create(job);
       ProtocolType protocolType = bindings.getProtocolType();
       
-      JobRecord jobRecord = jobRecordService.find(job.getName(), job.getContext().getId());
+      JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
       
       JobStatusEvent statusEvent = null;
       JobStatus status = job.getStatus();
@@ -83,7 +83,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.RUNNING);
-        statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.RUNNING, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.RUNNING, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
@@ -91,7 +91,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
-        statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.FAILED, null, protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null, protocolType);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -100,7 +100,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
-        statusEvent = new JobStatusEvent(job.getName(), job.getContext().getId(), JobState.COMPLETED, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -124,11 +124,10 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Job create(Job job) throws JobServiceException {
-    String contextId = Context.createUniqueID();
     
-    Context context = job.getContext() != null? job.getContext() : createContext(contextId);
-    job = Job.cloneWithId(job, contextId);
-    context.setId(contextId);
+    Context context = job.getContext() != null? job.getContext() : createContext(job.getRootId());
+    job = Job.cloneWithId(job, job.getRootId());
+    context.setId(job.getRootId());
     job = Job.cloneWithContext(job, context);
     jobDB.add(job);
 
@@ -137,7 +136,7 @@ public class JobServiceImpl implements JobService {
       bindings = BindingsFactory.create(job);
 
       DAGNode node = bindings.translateToDAG(job);
-      InitEvent initEvent = new InitEvent(context, node, job.getInputs());
+      InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
       eventProcessor.send(initEvent);
       return job;
     } catch (BindingException e) {

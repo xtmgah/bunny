@@ -56,12 +56,12 @@ public class JobHandlerCommandDispatcher {
    */
   public void dispatch(JobData jobData, JobHandlerCommand command) {
     synchronized (jobHandlerRunnables) {
-      String contextId = jobData.getJob().getContext().getId();
+      String contextId = jobData.getJob().getRootId();
       JobHandlerRunnable jobHandlerRunnable = getJobs(contextId).get(jobData.getJob().getId());
 
       if (jobHandlerRunnable == null) {
         Job job = jobData.getJob();
-        jobHandlerRunnable = new JobHandlerRunnable(job.getId(), job.getContext().getId(), jobHandlerFactory.createHandler(job));
+        jobHandlerRunnable = new JobHandlerRunnable(job.getId(), job.getRootId(), jobHandlerFactory.createHandler(job));
         getJobs(contextId).put(job.getId(), jobHandlerRunnable);
         jobHandlerThreadExecutor.execute(jobHandlerRunnable);
         logger.info("JobHandlerRunnable created for {}.", job.getId());

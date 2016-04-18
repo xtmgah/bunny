@@ -1,9 +1,9 @@
 package org.rabix.bindings.model;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.rabix.common.helper.CloneHelper;
-import org.rabix.common.helper.InternalSchemaHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -27,10 +27,10 @@ public class Job {
 
   @JsonProperty("id")
   private final String id;
-  @JsonProperty("parent_id")
-  private final String parent_id;
-  @JsonProperty("root_id")
-  private final String root_id;
+  @JsonProperty("parentId")
+  private final String parentId;
+  @JsonProperty("rootId")
+  private final String rootId;
   @JsonProperty("name")
   private final String name;
   @JsonProperty("app")
@@ -45,12 +45,13 @@ public class Job {
   private final Map<String, Object> outputs;
   
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, null, app, null, inputs, null, null);
+    this(null, null, UUID.randomUUID().toString(), null, app, null, inputs, null, null);
   }
   
   @JsonCreator
   public Job(@JsonProperty("id") String id,
-      @JsonProperty("parent_id") String parent_id,
+      @JsonProperty("parentId") String parentId,
+      @JsonProperty("rootId") String rootId,
       @JsonProperty("name") String name,
       @JsonProperty("app") String app, 
       @JsonProperty("status") JobStatus status, 
@@ -58,8 +59,8 @@ public class Job {
       @JsonProperty("outputs") Map<String, Object> otputs,
       @JsonProperty("context") Context context) {
     this.id = id;
-    this.parent_id = parent_id;
-    this.root_id = (context != null) ? context.getId(): null;
+    this.parentId = parentId;
+    this.rootId = rootId;
     this.name = name;
     this.app = app;
     this.status = status;
@@ -69,31 +70,39 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.parent_id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithContext(Job job, Context context) {
-    return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, job.outputs, context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context);
   }
   
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
 
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.parent_id, job.name, job.app, status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.parent_id, job.name, job.app, job.status, inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.context);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.parent_id, job.name, job.app, job.status, job.inputs, outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context);
   }
   
   public String getId() {
     return id;
+  }
+  
+  public String getParentId() {
+    return parentId;
+  }
+  
+  public String getRootId() {
+    return rootId;
   }
   
   public String getName() {
@@ -163,6 +172,6 @@ public class Job {
 
   @Override
   public String toString() {
-    return "Job [id=" + id + ", parent_id=" + parent_id + ", root_id=" + root_id + ", name=" + name + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
+    return "Job [id=" + id + ", parentId=" + parentId + ", rootId=" + rootId + ", name=" + name + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
   }
 }

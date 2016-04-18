@@ -166,7 +166,7 @@ public class ExecutorServiceImpl implements ExecutorService {
         public void run() {
           ResultPair<Job> result = mqTransportStub.receive(mqConfig.getSendQueue(), Job.class);
           if (result.isSuccess() && result.getResult() != null) {
-            executorService.start(result.getResult(), result.getResult().getContext().getId());
+            executorService.start(result.getResult(), result.getResult().getRootId());
           }
         }
       }, 0, 1, TimeUnit.SECONDS);

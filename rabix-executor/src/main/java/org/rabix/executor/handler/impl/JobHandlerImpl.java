@@ -181,9 +181,9 @@ public class JobHandlerImpl implements JobHandler {
       job = bindings.mapOutputFilePaths(job, new OutputFileMapper());
       upload(workingDir);
 
-      JobData jobData = jobDataService.find(job.getId(), job.getContext().getId());
+      JobData jobData = jobDataService.find(job.getId(), job.getRootId());
       jobData.setResult(job.getOutputs());
-      jobDataService.save(jobData, job.getContext().getId());
+      jobDataService.save(jobData, job.getRootId());
 
       logger.debug("Command line tool {} returned result {}.", job.getId(), job.getOutputs());
       return job;

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
@@ -36,10 +37,10 @@ public class JobHelper {
         for (VariableRecord inputVariable : inputVariables) {
           inputs.put(inputVariable.getPortId(), inputVariable.getValue());
         }
-        ContextRecord contextRecord = contextRecordService.find(job.getContextId());
-        Context context = new Context(contextRecord.getId(), contextRecord.getConfig());
+        ContextRecord contextRecord = contextRecordService.find(job.getRootId());
+        Context context = new Context(job.getRootId(), contextRecord.getConfig());
         String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-        jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
+        jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
       }
     }
     return jobs;

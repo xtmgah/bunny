@@ -160,8 +160,9 @@ public class BackendCommandLine {
         System.out.println(JSONHelper.writeObject(result));
         System.exit(0);
       }
-
-      Context context = new Context(Context.createUniqueID(), null);
+      
+      Job job = new Job(appURI, inputs);
+      Context context = new Context(job.getRootId(), null);
       List<IterationCallback> callbacks = new ArrayList<>();
 
       String outputDirPath = commandLine.getOptionValue("log-iterations-dir");
@@ -177,10 +178,9 @@ public class BackendCommandLine {
       callbacks.add(new LocalJobHandler(executorService, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
       callbacks.add(new EndRootCallback(contextRecordService, jobRecordService, variableRecordService));
 
-      Job job = new Job(appURI, inputs); 
       DAGNode dagNode = bindings.translateToDAG(job);
       
-      InitEvent initEvent = new InitEvent(context, dagNode, inputs);
+      InitEvent initEvent = new InitEvent(context, job.getRootId(), dagNode, inputs);
       eventProcessor.send(initEvent);
       eventProcessor.start(callbacks);
     } catch (ParseException e) {
@@ -255,7 +255,7 @@ public class BackendCommandLine {
     }
     return config;
   }
-
+  
   /**
    * Detects end of execution per root Job
    */
