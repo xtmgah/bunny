@@ -194,6 +194,7 @@ public class BackendCommandLine {
           if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
             try {
               logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
+              System.exit(0);
             } catch (JsonProcessingException e) {
               logger.error("Failed to write outputs to standard out", e);
               System.exit(10);

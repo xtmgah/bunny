@@ -24,6 +24,10 @@ import org.rabix.engine.service.VariableRecordService;
 
 public class JobHelper {
 
+  public static String generateId() {
+    return UUID.randomUUID().toString();
+  }
+  
   public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB, String contextId) {
     Set<Job> jobs = new HashSet<>();
     List<JobRecord> jobRecords = jobRecordService.findReady(contextId);

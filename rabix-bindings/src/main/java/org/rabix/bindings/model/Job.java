@@ -45,7 +45,7 @@ public class Job {
   private final Map<String, Object> outputs;
   
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, UUID.randomUUID().toString(), null, app, null, inputs, null, null);
+    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null);
   }
   
   @JsonCreator
@@ -67,6 +67,10 @@ public class Job {
     this.inputs = inputs;
     this.outputs = otputs;
     this.context = context;
+  }
+  
+  public static String generateId() {
+    return UUID.randomUUID().toString();
   }
   
   public static Job cloneWithId(Job job, String id) {
