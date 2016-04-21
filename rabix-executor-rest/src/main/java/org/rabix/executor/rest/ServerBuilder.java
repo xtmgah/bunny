@@ -169,6 +169,10 @@ public class ServerBuilder {
       }
     }
     
+    private static enum BackendType {
+      MQ
+    }
+    
     public static class BackendMQ {
       @JsonProperty("id")
       private final String id;
@@ -180,9 +184,12 @@ public class ServerBuilder {
       private String fromBackendQueue;
       @JsonProperty("fromBackendHeartbeatQueue")
       private String fromBackendHeartbeatQueue;
+      @JsonProperty("type")
+      private BackendType type;
 
       public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
         this.id = id;
+        this.type = BackendType.MQ;
         this.broker = broker;
         this.toBackendQueue = toBackendQueue;
         this.fromBackendQueue = fromBackendQueue;
