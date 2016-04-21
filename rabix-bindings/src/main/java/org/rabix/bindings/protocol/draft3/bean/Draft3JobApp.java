@@ -12,8 +12,9 @@ import org.rabix.bindings.protocol.draft3.bean.resource.Draft3ResourceType;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3DockerResource;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement;
-import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ExpressionEngineRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3SchemaDefRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ShellCommandRequirement;
 import org.rabix.common.json.BeanSerializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -97,8 +98,13 @@ public abstract class Draft3JobApp implements Application {
   }
 
   @JsonIgnore
-  public List<Draft3ExpressionEngineRequirement> getExpressionEngineRequirements() {
-    return lookForResources(Draft3ResourceType.EXPRESSION_ENGINE_REQUIREMENT, Draft3ExpressionEngineRequirement.class);
+  public Draft3InlineJavascriptRequirement getInlineJavascriptRequirement() {
+    return lookForResource(Draft3ResourceType.INLINE_JAVASCRIPT_REQUIREMENT, Draft3InlineJavascriptRequirement.class);
+  }
+  
+  @JsonIgnore
+  public Draft3ShellCommandRequirement getShellCommandRequirement() {
+    return lookForResource(Draft3ResourceType.SHELL_COMMAND_REQUIREMENT, Draft3ShellCommandRequirement.class);
   }
   
   @JsonIgnore
