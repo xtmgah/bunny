@@ -1,6 +1,5 @@
 package org.rabix.bindings.protocol.draft3.expression.javascript;
 
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
@@ -35,13 +34,16 @@ public class Draft3ExpressionJavascriptResolver {
   /**
    * Evaluate JS script (function or statement)
    */
-  public static Object evaluate(Object context, Object self, String expr, List<String> engineConfigs, boolean includeTemplates) throws Draft3ExpressionException {
+  public static Object evaluate(Object context, Object self, String expr, List<String> engineConfigs) throws Draft3ExpressionException {
     String trimmedExpr = StringUtils.trim(expr);
-
-    String function = expr;
+    if (trimmedExpr.startsWith("$")) {
+      trimmedExpr = trimmedExpr.substring(1);
+    }
+    
+    String function = trimmedExpr;
     if (trimmedExpr.startsWith("{")) {
       function = "(function()%expr)()";
-      function = function.replace("%expr", expr);
+      function = function.replace("%expr", trimmedExpr);
     }
 
     Context cx = Context.enter();
@@ -51,12 +53,6 @@ public class Draft3ExpressionJavascriptResolver {
 
     try {
       Scriptable globalScope = cx.initStandardObjects();
-
-      if (includeTemplates) {
-        Reader templateLibReader = new InputStreamReader(
-            Draft3ExpressionJavascriptResolver.class.getResourceAsStream("underscore-min.js"));
-        cx.evaluateReader(globalScope, templateLibReader, "underscore-min.js", 1, null);
-      }
 
       if (engineConfigs != null) {
         for (int i = 0; i < engineConfigs.size(); i++) {

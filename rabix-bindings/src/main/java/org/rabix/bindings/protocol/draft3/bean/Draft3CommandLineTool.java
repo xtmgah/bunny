@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
-import org.rabix.bindings.protocol.draft3.expression.helper.Draft3ExpressionBeanHelper;
+import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,25 +52,17 @@ public class Draft3CommandLineTool extends Draft3JobApp {
   }
   
   private Object transformBaseCommand(Draft3Job job, Object baseCommand) throws Draft3ExpressionException {
-    if (Draft3ExpressionBeanHelper.isExpression(baseCommand)) {
-      return Draft3ExpressionBeanHelper.evaluate(job, baseCommand);
-    } else {
-      return baseCommand;
-    }
+    return Draft3ExpressionResolver.evaluate(baseCommand, job, null, null);
   }
 
   public String getStdin(Draft3Job job) throws Draft3ExpressionException {
-    if (Draft3ExpressionBeanHelper.isExpression(stdin)) {
-      return Draft3ExpressionBeanHelper.evaluate(job, stdin);
-    }
-    return stdin != null ? stdin.toString() : "";
+    String evaluatedStdin = Draft3ExpressionResolver.evaluate(stdin, job, null, null);
+    return evaluatedStdin != null ? evaluatedStdin.toString() : "";
   }
 
   public String getStdout(Draft3Job job) throws Draft3ExpressionException {
-    if (Draft3ExpressionBeanHelper.isExpression(stdout)) {
-      return Draft3ExpressionBeanHelper.evaluate(job, stdout);
-    }
-    return stdout != null ? stdout.toString() : "";
+    String evaluatedStdout = Draft3ExpressionResolver.evaluate(stdout, job, null, null);
+    return evaluatedStdout != null ? evaluatedStdout.toString() : "";
   }
 
   public String getStderr(Draft3Job job) throws Draft3ExpressionException {
@@ -94,10 +86,7 @@ public class Draft3CommandLineTool extends Draft3JobApp {
       if (value == null) {
         return null;
       }
-      if (Draft3ExpressionBeanHelper.isExpression(value)) {
-        return Draft3ExpressionBeanHelper.evaluate(job, value);
-      }
-      return value;
+      return Draft3ExpressionResolver.evaluate(value, job, null, null);
     }
     return null;
   }

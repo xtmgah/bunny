@@ -8,7 +8,7 @@ import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.resource.Draft3Resource;
 import org.rabix.bindings.protocol.draft3.bean.resource.Draft3ResourceType;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
-import org.rabix.bindings.protocol.draft3.expression.helper.Draft3ExpressionBeanHelper;
+import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
@@ -62,22 +62,16 @@ public class Draft3CreateFileRequirement extends Draft3Resource {
     }
 
     public Object getContent(Draft3Job job) throws Draft3ExpressionException {
-      if (Draft3ExpressionBeanHelper.isExpression(content)) {
-        return Draft3ExpressionBeanHelper.evaluate(job, content);
-      }
-      return content;
+      return Draft3ExpressionResolver.evaluate(content, job, null, null);
     }
 
     public Object getFilename(Draft3Job job) throws Draft3ExpressionException {
-      if (Draft3ExpressionBeanHelper.isExpression(filename)) {
-        return Draft3ExpressionBeanHelper.evaluate(job, filename);
-      }
-      return filename;
+      return Draft3ExpressionResolver.evaluate(filename, job, null, null);
     }
 
     @Override
     public String toString() {
-      return "FileRequirement [filename=" + filename + ", content=" + content + "]";
+      return "Draft3FileRequirement [filename=" + filename + ", content=" + content + "]";
     }
 
   }
@@ -90,6 +84,6 @@ public class Draft3CreateFileRequirement extends Draft3Resource {
 
   @Override
   public String toString() {
-    return "CreateFileRequirement [" + raw + "]";
+    return "Draft3CreateFileRequirement [" + raw + "]";
   }
 }

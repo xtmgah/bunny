@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
-import org.rabix.bindings.protocol.draft3.expression.helper.Draft3ExpressionBeanHelper;
+import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
 
 public class Draft3BindingHelper extends Draft3BeanHelper {
 
@@ -104,14 +104,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
    */
   public static Object evaluateOutputEval(Draft3Job job, Object output, Object binding) throws Draft3ExpressionException {
     Object outputEval = getOutputEval(binding);
-    if (Draft3ExpressionBeanHelper.isExpression(outputEval)) {
-      try {
-        return Draft3ExpressionBeanHelper.evaluate(job, output, outputEval);
-      } catch (Draft3ExpressionException e) {
-        throw new Draft3ExpressionException("Failed to evaluate outputEval.", e);
-      }
-    }
-    return output;
+    return Draft3ExpressionResolver.evaluate(outputEval, job, output, null);
   }
   
 }
