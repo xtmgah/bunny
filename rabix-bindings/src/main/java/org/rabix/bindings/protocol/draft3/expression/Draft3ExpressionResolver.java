@@ -95,9 +95,8 @@ public class Draft3ExpressionResolver {
         }
         return ex.substring(0, m.start(0)) + leafStr + paramInterpolate(ex.substring(m.end(0)), obj, false);
       }
-    } else {
-      throw new Draft3ExpressionException("Failed to evaluate expression " + ex);
     }
+    return ex;
   }
 
 
