@@ -62,11 +62,11 @@ public class Draft3CreateFileRequirement extends Draft3Resource {
     }
 
     public Object getContent(Draft3Job job) throws Draft3ExpressionException {
-      return Draft3ExpressionResolver.evaluate(content, job, null, null);
+      return Draft3ExpressionResolver.evaluate(content, job, null);
     }
 
     public Object getFilename(Draft3Job job) throws Draft3ExpressionException {
-      return Draft3ExpressionResolver.evaluate(filename, job, null, null);
+      return Draft3ExpressionResolver.evaluate(filename, job, null);
     }
 
     @Override

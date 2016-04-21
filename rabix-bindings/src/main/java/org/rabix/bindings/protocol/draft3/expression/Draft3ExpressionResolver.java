@@ -31,7 +31,7 @@ public class Draft3ExpressionResolver {
   private static Pattern pattern = Pattern.compile(paramRe);
   
   @SuppressWarnings({ "unchecked" })
-  public static <T> T evaluate(final Object expression, final Draft3Job job, final Object self, String language) throws Draft3ExpressionException {
+  public static <T> T evaluate(final Object expression, final Draft3Job job, final Object self) throws Draft3ExpressionException {
     if (expression == null) {
       return null;
     }

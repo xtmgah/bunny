@@ -104,7 +104,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
    */
   public static Object evaluateOutputEval(Draft3Job job, Object output, Object binding) throws Draft3ExpressionException {
     Object outputEval = getOutputEval(binding);
-    return Draft3ExpressionResolver.evaluate(outputEval, job, output, null);
+    return Draft3ExpressionResolver.evaluate(outputEval, job, output);
   }
   
 }

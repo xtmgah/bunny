@@ -62,7 +62,7 @@ public class Draft3ResourceRequirement extends Draft3Resource {
   @JsonIgnore
   public <T> T getValue(Draft3Job job, String key, Class<T> clazz) throws Draft3ExpressionException {
     Object value = getValue(key);
-    value = Draft3ExpressionResolver.evaluate(null, null, null, null); // TODO
+    value = Draft3ExpressionResolver.evaluate(value, job, null);
     if (!clazz.isInstance(value)) {
       throw new Draft3ExpressionException(value + " couldn't be cast to " + clazz.getName());
     }
