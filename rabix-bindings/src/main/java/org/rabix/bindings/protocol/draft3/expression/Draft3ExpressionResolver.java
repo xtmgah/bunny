@@ -74,8 +74,16 @@ public class Draft3ExpressionResolver {
           key = key.replace("\\\"", "\"");
           return nextSegment(remaining.substring(m.end(0)), ((Map<?, ?>) vars).get(key));
         } else {
-          String key = m.group(0).substring(1, m.group(0).length() - 1);
-          return nextSegment(remaining.substring(m.end(0)), ((Map<?, ?>) vars).get(Integer.parseInt(key)));
+          String key = m.group(0).substring(1, m.group(0).length());
+          Integer keyInt = Integer.parseInt(key);
+          
+          Object remainingVars = null;
+          if (vars instanceof List<?>) {
+            remainingVars = ((List<?>) vars).get(keyInt);
+          } else if (vars instanceof Map<?,?>) {
+            remainingVars = ((Map<?,?>) vars).get(keyInt);
+          }
+          return nextSegment(remaining.substring(m.end(0)), remainingVars);
         }
       }
     }

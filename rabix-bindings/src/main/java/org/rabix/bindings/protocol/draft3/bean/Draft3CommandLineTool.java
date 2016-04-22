@@ -83,12 +83,11 @@ public class Draft3CommandLineTool extends Draft3JobApp {
   public Object getArgument(Draft3Job job, Object binding) throws Draft3ExpressionException {
     if (binding instanceof Map<?, ?>) {
       Object value = ((Map<?, ?>) binding).get(KEY_ARGUMENT_VALUE);
-      if (value == null) {
-        return null;
+      if (value != null) {
+        return Draft3ExpressionResolver.evaluate(value, job, null);
       }
-      return Draft3ExpressionResolver.evaluate(value, job, null);
     }
-    return null;
+    return Draft3ExpressionResolver.evaluate(binding, job, null);
   }
 
   /**
