@@ -11,6 +11,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
 
   public static final String DEFAULT_SEPARATOR = "\u0020";
   public static final boolean IS_SEPARATED_BY_DEFAULT = true;
+  public static final boolean IS_SHELL_QUOTE_BY_DEFAULT = true;
   public static final boolean LOAD_CONTENTS_BY_DEFAULT = false;
   
   public static final String KEY_ID = "id";
@@ -18,6 +19,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
   public static final String KEY_DEFAULT = "default";
   public static final String KEY_PREFIX = "prefix";
   public static final String KEY_POSITION = "position";
+  public static final String KEY_SHELL_QUOTE = "shellQuote";
   public static final String KEY_GLOB = "glob";
   public static final String KEY_SEPARATE = "separate";
   public static final String KEY_ITEM_SEPARATOR = "itemSeparator";
@@ -45,6 +47,10 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
 
   public static boolean isSeparated(Object binding) {
     return getValue(KEY_SEPARATE, binding, IS_SEPARATED_BY_DEFAULT);
+  }
+  
+  public static boolean shellQuote(Object binding) {
+    return getValue(KEY_SHELL_QUOTE, binding, IS_SHELL_QUOTE_BY_DEFAULT);
   }
   
   public static boolean loadContents(Object binding) {

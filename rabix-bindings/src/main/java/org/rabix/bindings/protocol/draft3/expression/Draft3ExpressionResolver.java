@@ -57,7 +57,7 @@ public class Draft3ExpressionResolver {
     return (T) expression;
   }
   
-  private static boolean isExpressionObject(Object expression) {
+  public static boolean isExpressionObject(Object expression) {
     return expression instanceof Map<?,?>  && ((Map<?,?>) expression).containsKey(KEY_EXPRESSION_VALUE)  && ((Map<?,?>) expression).containsKey(KEY_EXPRESSION_LANGUAGE);
   }
   
