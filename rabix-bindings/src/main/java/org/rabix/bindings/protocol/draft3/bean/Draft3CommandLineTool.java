@@ -52,16 +52,16 @@ public class Draft3CommandLineTool extends Draft3JobApp {
   }
   
   private Object transformBaseCommand(Draft3Job job, Object baseCommand) throws Draft3ExpressionException {
-    return Draft3ExpressionResolver.evaluate(baseCommand, job, null);
+    return Draft3ExpressionResolver.resolve(baseCommand, job, null);
   }
 
   public String getStdin(Draft3Job job) throws Draft3ExpressionException {
-    String evaluatedStdin = Draft3ExpressionResolver.evaluate(stdin, job, null);
+    String evaluatedStdin = Draft3ExpressionResolver.resolve(stdin, job, null);
     return evaluatedStdin != null ? evaluatedStdin.toString() : "";
   }
 
   public String getStdout(Draft3Job job) throws Draft3ExpressionException {
-    String evaluatedStdout = Draft3ExpressionResolver.evaluate(stdout, job, null);
+    String evaluatedStdout = Draft3ExpressionResolver.resolve(stdout, job, null);
     return evaluatedStdout != null ? evaluatedStdout.toString() : "";
   }
 
@@ -84,10 +84,10 @@ public class Draft3CommandLineTool extends Draft3JobApp {
     if (binding instanceof Map<?, ?>) {
       Object value = ((Map<?, ?>) binding).get(KEY_ARGUMENT_VALUE);
       if (value != null) {
-        return Draft3ExpressionResolver.evaluate(value, job, null);
+        return Draft3ExpressionResolver.resolve(value, job, null);
       }
     }
-    return Draft3ExpressionResolver.evaluate(binding, job, null);
+    return Draft3ExpressionResolver.resolve(binding, job, null);
   }
 
   /**

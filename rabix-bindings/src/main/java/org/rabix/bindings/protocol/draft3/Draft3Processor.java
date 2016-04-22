@@ -100,7 +100,7 @@ public class Draft3Processor implements ProtocolProcessor {
       if (draft2Job.getApp().isExpressionTool()) {
         Draft3ExpressionTool expressionTool = (Draft3ExpressionTool) draft2Job.getApp();
         try {
-          outputs = Draft3ExpressionResolver.evaluate(expressionTool.getScript(), draft2Job, null);
+          outputs = Draft3ExpressionResolver.resolve(expressionTool.getScript(), draft2Job, null);
         } catch (Draft3ExpressionException e) {
           throw new BindingException("Failed to populate outputs", e);
         }
@@ -294,7 +294,7 @@ public class Draft3Processor implements ProtocolProcessor {
       String secondaryFilePath = fileName.toString();
 
       if (Draft3ExpressionResolver.isExpressionObject(suffix)) {
-        secondaryFilePath = Draft3ExpressionResolver.evaluate(suffix, job, fileValue);
+        secondaryFilePath = Draft3ExpressionResolver.resolve(suffix, job, fileValue);
       } else {
         while (suffix.startsWith("^")) {
           int extensionIndex = secondaryFilePath.lastIndexOf(".");

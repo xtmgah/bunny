@@ -35,7 +35,7 @@ public class Draft3GlobServiceImpl implements Draft3GlobService {
     Preconditions.checkNotNull(workingDir);
     
     try {
-      glob = Draft3ExpressionResolver.evaluate(glob, job, null);
+      glob = Draft3ExpressionResolver.resolve(glob, job, null);
     } catch (Draft3ExpressionException e) {
       logger.error("Failed to evaluate glob " + glob, e);
       throw new Draft3GlobException("Failed to evaluate glob " + glob, e);

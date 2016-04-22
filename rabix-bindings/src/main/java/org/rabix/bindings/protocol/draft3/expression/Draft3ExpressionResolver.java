@@ -31,7 +31,7 @@ public class Draft3ExpressionResolver {
   private static Pattern pattern = Pattern.compile(paramRe);
   
   @SuppressWarnings({ "unchecked" })
-  public static <T> T evaluate(final Object expression, final Draft3Job job, final Object self) throws Draft3ExpressionException {
+  public static <T> T resolve(final Object expression, final Draft3Job job, final Object self) throws Draft3ExpressionException {
     if (expression == null) {
       return null;
     }
@@ -61,7 +61,7 @@ public class Draft3ExpressionResolver {
     return expression instanceof Map<?,?>  && ((Map<?,?>) expression).containsKey(KEY_EXPRESSION_VALUE)  && ((Map<?,?>) expression).containsKey(KEY_EXPRESSION_LANGUAGE);
   }
   
-  private static Object nextSegment(String remaining, Object vars) {
+  private static Object nextSegment(String remaining, Object vars) throws Draft3ExpressionException {
     if (!StringUtils.isEmpty(remaining)) {
       Matcher m = segPattern.matcher(remaining);
       if (m.find()) {
@@ -79,6 +79,9 @@ public class Draft3ExpressionResolver {
           
           Object remainingVars = null;
           if (vars instanceof List<?>) {
+            if (((List<?>) vars).size() <= keyInt) {
+              throw new Draft3ExpressionException("Could not get value from " + vars + " at position " + keyInt);
+            }
             remainingVars = ((List<?>) vars).get(keyInt);
           } else if (vars instanceof Map<?,?>) {
             remainingVars = ((Map<?,?>) vars).get(keyInt);
