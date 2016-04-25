@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
 import org.rabix.bindings.protocol.draft3.expression.javascript.Draft3ExpressionJavascriptResolver;
-import org.rabix.common.helper.JSONHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
