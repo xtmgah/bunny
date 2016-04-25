@@ -3,6 +3,7 @@ package org.rabix.bindings.protocol.draft3;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -282,31 +283,34 @@ public class Draft3Processor implements ProtocolProcessor {
   /**
    * Gets secondary files (absolute paths)
    */
+  @SuppressWarnings("unchecked")
   private List<Map<String, Object>> getSecondaryFiles(Draft3Job job, HashAlgorithm hashAlgorithm, Map<String, Object> fileValue, String fileName, Object binding) throws Draft3ExpressionException {
-    List<String> secondaryFileSufixes = Draft3BindingHelper.getSecondaryFiles(binding);
+    Object secondaryFilesObj = Draft3BindingHelper.getSecondaryFiles(binding);
 
-    if (secondaryFileSufixes == null) {
+    if (secondaryFilesObj == null) {
       return null;
     }
 
+    List<Object> secondaryFilesList = new ArrayList<>();
+    if (secondaryFilesObj instanceof List<?>) {
+      secondaryFilesList.addAll((Collection<? extends Object>) secondaryFilesObj);
+    }
+    
     List<Map<String, Object>> secondaryFileMaps = new ArrayList<>();
-    for (String suffix : secondaryFileSufixes) {
+    for (Object suffixObj : secondaryFilesList) {
+      String suffix = Draft3ExpressionResolver.resolve(suffixObj, job, fileValue);
       String secondaryFilePath = fileName.toString();
 
-      if (Draft3ExpressionResolver.isExpressionObject(suffix)) {
-        secondaryFilePath = Draft3ExpressionResolver.resolve(suffix, job, fileValue);
-      } else {
-        while (suffix.startsWith("^")) {
-          int extensionIndex = secondaryFilePath.lastIndexOf(".");
-          if (extensionIndex != -1) {
-            secondaryFilePath = secondaryFilePath.substring(0, extensionIndex);
-            suffix = suffix.substring(1);
-          } else {
-            break;
-          }
+      while (suffix.startsWith("^")) {
+        int extensionIndex = secondaryFilePath.lastIndexOf(".");
+        if (extensionIndex != -1) {
+          secondaryFilePath = secondaryFilePath.substring(0, extensionIndex);
+          suffixObj = suffix.substring(1);
+        } else {
+          break;
         }
-        secondaryFilePath += suffix.startsWith(".") ? suffix : "." + suffix;
       }
+      secondaryFilePath += suffix.startsWith(".") ? suffixObj : "." + suffixObj;
       File secondaryFile = new File(secondaryFilePath);
       if (secondaryFile.exists()) {
         Map<String, Object> secondaryFileMap = new HashMap<>();

@@ -124,10 +124,8 @@ public class Draft3MetadataServiceImpl implements Draft3MetadataService {
     if (metadata == null) {
       return null;
     }
-    Object result = metadata;
-    if (Draft3ExpressionResolver.isExpressionObject(metadata)) {
-      result = Draft3ExpressionResolver.resolve(metadata, job, self);
-    } else if (metadata instanceof Map<?, ?>) {
+    Object result = Draft3ExpressionResolver.resolve(metadata, job, self);
+    if (metadata instanceof Map<?, ?>) {
       result = new HashMap<>();
       for (Entry<String, Object> outputEntry : ((Map<String, Object>) metadata).entrySet()) {
         Object resolved = evaluateMetadataExpressions(job, self, outputEntry.getValue());

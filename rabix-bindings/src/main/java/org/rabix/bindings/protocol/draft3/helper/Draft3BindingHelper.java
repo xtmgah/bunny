@@ -1,6 +1,5 @@
 package org.rabix.bindings.protocol.draft3.helper;
 
-import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
@@ -81,7 +80,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
     return getValue(KEY_INHERIT_METADATA_FROM, binding);
   }
   
-  public static List<String> getSecondaryFiles(Object binding) {
+  public static Object getSecondaryFiles(Object binding) {
     return getValue(KEY_SECONDARY_FILES, binding);
   }
   
