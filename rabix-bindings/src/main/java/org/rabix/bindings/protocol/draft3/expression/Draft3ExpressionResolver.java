@@ -67,7 +67,9 @@ public class Draft3ExpressionResolver {
         vars.put("context", self);
         
         Draft3ResourceRequirement resourceRequirement = job.getApp().getResourceRequirement();
-        vars.put("runtime", resourceRequirement.build(job).toMap());
+        if (resourceRequirement != null) {
+          vars.put("runtime", resourceRequirement.build(job).toMap());
+        }
         return (T) paramInterpolate((String) expression, vars, true);
       }
     }
