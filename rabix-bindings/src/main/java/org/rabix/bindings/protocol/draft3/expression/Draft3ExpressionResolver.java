@@ -12,9 +12,17 @@ import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
 import org.rabix.bindings.protocol.draft3.expression.javascript.Draft3ExpressionJavascriptResolver;
 import org.rabix.common.helper.JSONHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class Draft3ExpressionResolver {
 
+  private static Logger logger = LoggerFactory.getLogger(Draft3ExpressionResolver.class);
+  
   public static String KEY_EXPRESSION_VALUE = "script";
   public static String KEY_EXPRESSION_LANGUAGE = "engine";
   
@@ -29,6 +37,12 @@ public class Draft3ExpressionResolver {
 
   private static Pattern segPattern = Pattern.compile(segments);
   private static Pattern pattern = Pattern.compile(paramRe);
+  
+  public static final ObjectMapper sortMapper = new ObjectMapper();
+  
+  static {
+    sortMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+  }
   
   @SuppressWarnings({ "unchecked" })
   public static <T> T resolve(final Object expression, final Draft3Job job, final Object self) throws Draft3ExpressionException {
@@ -62,6 +76,9 @@ public class Draft3ExpressionResolver {
   }
   
   private static Object nextSegment(String remaining, Object vars) throws Draft3ExpressionException {
+    if (vars == null) {
+      return null;
+    }
     if (!StringUtils.isEmpty(remaining)) {
       Matcher m = segPattern.matcher(remaining);
       if (m.find()) {
@@ -100,11 +117,16 @@ public class Draft3ExpressionResolver {
       if (strip && ex.trim().length() == m.group(0).length()) {
         return leaf;
       } else {
-        String leafStr = JSONHelper.writeObject(leaf);
-        if (leafStr.startsWith("\"")) {
-          leafStr.substring(1, leafStr.length() - 1);
+        try {
+          String leafStr = sortMapper.writeValueAsString(leaf);
+          if (leafStr.startsWith("\"")) {
+            leafStr.substring(1, leafStr.length() - 1);
+          }
+          return ex.substring(0, m.start(0)) + leafStr + paramInterpolate(ex.substring(m.end(0)), obj, false);
+        } catch (JsonProcessingException e) {
+          logger.error("Failed to serialize {} to JSON.", leaf);
+          throw new Draft3ExpressionException(e);
         }
-        return ex.substring(0, m.start(0)) + leafStr + paramInterpolate(ex.substring(m.end(0)), obj, false);
       }
     }
     return ex;
