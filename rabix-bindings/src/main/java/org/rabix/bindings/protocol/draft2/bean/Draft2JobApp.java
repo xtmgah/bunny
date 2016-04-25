@@ -42,6 +42,8 @@ public abstract class Draft2JobApp implements Application {
   protected String id;
   @JsonProperty("@context")
   protected String context;
+  @JsonProperty("cwlVersion")
+  protected String cwlVersion;
   @JsonProperty("description")
   protected String description;
   @JsonProperty("label")

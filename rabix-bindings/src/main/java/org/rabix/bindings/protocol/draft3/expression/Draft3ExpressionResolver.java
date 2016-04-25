@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
 import org.rabix.bindings.protocol.draft3.expression.javascript.Draft3ExpressionJavascriptResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,9 @@ public class Draft3ExpressionResolver {
         Map<String, Object> vars = new HashMap<>();
         vars.put("inputs", job.getInputs());
         vars.put("context", self);
+        
+        Draft3ResourceRequirement resourceRequirement = job.getApp().getResourceRequirement();
+        vars.put("runtime", resourceRequirement.build(job).toMap());
         return (T) paramInterpolate((String) expression, vars, true);
       }
     }

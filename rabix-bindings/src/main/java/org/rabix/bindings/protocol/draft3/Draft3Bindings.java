@@ -42,8 +42,8 @@ public class Draft3Bindings implements Bindings {
     this.commandLineBuilder = new Draft3CommandLineBuilder();
     this.valueProcessor = new Draft3ValueProcessor();
     this.translator = new Draft3Translator();
-    this.requirementProvider = null;
-    this.appProcessor = null;
+    this.requirementProvider = new Draft3RequirementProvider();
+    this.appProcessor = new Draft3AppProcessor();
   }
   
   @Override

@@ -13,6 +13,7 @@ import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3Create
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3DockerResource;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3SchemaDefRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ShellCommandRequirement;
 import org.rabix.common.json.BeanSerializer;
@@ -97,6 +98,11 @@ public abstract class Draft3JobApp implements Application {
     }
   }
 
+  @JsonIgnore
+  public Draft3ResourceRequirement getResourceRequirement() {
+    return lookForResource(Draft3ResourceType.RESOURCE_REQUIREMENT, Draft3ResourceRequirement.class);
+  }
+  
   @JsonIgnore
   public Draft3InlineJavascriptRequirement getInlineJavascriptRequirement() {
     return lookForResource(Draft3ResourceType.INLINE_JAVASCRIPT_REQUIREMENT, Draft3InlineJavascriptRequirement.class);

@@ -43,11 +43,6 @@ public class Draft3CommandLineBuilder implements ProtocolCommandLineBuilder {
       SHELL_ESCAPE = builder.build();
   }
   
-  public static void main(String[] args) {
-    String a = "asd' asdw222";
-    System.out.println(SHELL_ESCAPE.escape(a));
-  }
-  
   @Override
   public String buildCommandLine(Job job) throws BindingException {
     Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
