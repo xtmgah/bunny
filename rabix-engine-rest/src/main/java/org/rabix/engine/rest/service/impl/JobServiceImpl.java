@@ -124,7 +124,6 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Job create(Job job) throws JobServiceException {
-    
     Context context = job.getContext() != null? job.getContext() : createContext(job.getRootId());
     job = Job.cloneWithId(job, job.getRootId());
     context.setId(job.getRootId());

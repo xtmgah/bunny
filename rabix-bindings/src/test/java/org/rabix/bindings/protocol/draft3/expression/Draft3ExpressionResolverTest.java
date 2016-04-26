@@ -14,9 +14,8 @@ public class Draft3ExpressionResolverTest {
 
   @Test
   public void test() {
-    String inputJson;
     try {
-      inputJson = ResourceHelper.readResource(this.getClass(), "draft3-bwa-mem-job.json");
+      String inputJson = ResourceHelper.readResource(this.getClass(), "draft3-bwa-mem-job.json");
       Draft3Job job = BeanSerializer.deserialize(inputJson, Draft3Job.class);
 
       Assert.assertEquals(Draft3ExpressionResolver.resolve(1, job, null), 1);
@@ -25,6 +24,7 @@ public class Draft3ExpressionResolverTest {
       Assert.assertEquals(Draft3ExpressionResolver.resolve(Draft3ExpressionResolver.resolve("${ return inputs.reference.path + '.tmp' }", job, null), job, null),"${ return inputs.reference.path + '.tmp' }");
       job.getApp().getRequirements().add(new Draft3InlineJavascriptRequirement());
       Assert.assertEquals(Draft3ExpressionResolver.resolve("${ return inputs.reference.path + '.tmp' }", job, null),"rabix/tests/test-files/chr20.fa.tmp");
+      Assert.assertEquals(Draft3ExpressionResolver.resolve("abc$(inputs['min_std_max_min'])efg", job, null), "abc[1,2,3,4]efg");
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     } catch (Draft3ExpressionException e) {

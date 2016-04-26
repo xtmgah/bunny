@@ -34,34 +34,32 @@ public class Draft3CommandLineTool extends Draft3JobApp {
   @SuppressWarnings("unchecked")
   public List<Object> getBaseCmd(Draft3Job job) throws Draft3ExpressionException {
     List<Object> result = new LinkedList<>();
-
     if (baseCommand instanceof List<?>) {
-      for (Object baseCmd : ((List<Object>) baseCommand)) {
-        Object transformed = transformBaseCommand(job, baseCmd);
-        if (transformed != null) {
-          result.add(transformed);
-        }
-      }
+      result = (List<Object>) baseCommand;
     } else if (baseCommand instanceof String) {
-      Object transformed = transformBaseCommand(job, baseCommand);
-      if (transformed != null) {
-        result.add(transformed);
-      }
+      result = new LinkedList<>();
+      result.add(baseCommand);
     }
     return result;
   }
   
-  private Object transformBaseCommand(Draft3Job job, Object baseCommand) throws Draft3ExpressionException {
-    return Draft3ExpressionResolver.resolve(baseCommand, job, null);
-  }
-
   public String getStdin(Draft3Job job) throws Draft3ExpressionException {
-    String evaluatedStdin = Draft3ExpressionResolver.resolve(stdin, job, null);
+    String evaluatedStdin = null;
+    if (Draft3ExpressionResolver.isExpressionObject(stdin)) {
+      evaluatedStdin = Draft3ExpressionResolver.resolve(stdin, job, null);
+    } else {
+      evaluatedStdin = (String) stdin;
+    }
     return evaluatedStdin != null ? evaluatedStdin.toString() : "";
   }
 
   public String getStdout(Draft3Job job) throws Draft3ExpressionException {
-    String evaluatedStdout = Draft3ExpressionResolver.resolve(stdout, job, null);
+    String evaluatedStdout = null;
+    if (Draft3ExpressionResolver.isExpressionObject(stdout)) {
+      evaluatedStdout = Draft3ExpressionResolver.resolve(stdout, job, null);
+    } else {
+      evaluatedStdout = (String) stdout;
+    }
     return evaluatedStdout != null ? evaluatedStdout.toString() : "";
   }
 

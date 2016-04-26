@@ -5,17 +5,16 @@ import org.rabix.bindings.protocol.draft3.Draft3Bindings;
 import org.rabix.bindings.protocol.zero.ZeroBindings;
 
 public enum ProtocolType {
-  DRAFT2(Draft2Bindings.class),
-  DRAFT3(Draft3Bindings.class),
-  ZERO(ZeroBindings.class);
+  DRAFT2(Draft2Bindings.class, 2),
+  DRAFT3(Draft3Bindings.class, 1),
+  ZERO(ZeroBindings.class, 0);
 
-  private Class<? extends Bindings> bindingsClass;
+  public final int order;
+  public final Class<? extends Bindings> bindingsClass;
 
-  private ProtocolType(Class<? extends Bindings> bindingsClass) {
+  private ProtocolType(Class<? extends Bindings> bindingsClass, int order) {
+    this.order = order;
     this.bindingsClass = bindingsClass;
   }
 
-  public Class<? extends Bindings> getBindingsClass() {
-    return bindingsClass;
-  }
 }

@@ -60,6 +60,24 @@ public class Draft3ExpressionResolver {
         if (inlineJavascriptRequirement != null) {
           expressionLibs = inlineJavascriptRequirement.getExpressionLib();
         }
+        Matcher m = pattern.matcher((CharSequence) expression);
+        if (m.find()) {
+          Object leaf = Draft3ExpressionJavascriptResolver.evaluate(job.getInputs(), self, m.group(0), expressionLibs);
+          if (((String)expression).trim().length() == m.group(0).length()) {
+            return (T) leaf;
+          } else {
+            try {
+              String leafStr = sortMapper.writeValueAsString(leaf);
+              if (leafStr.startsWith("\"")) {
+                leafStr.substring(1, leafStr.length() - 1);
+              }
+              return (T) (((String)expression).substring(0, m.start(0)) + leafStr + ((String)expression).substring(m.end(0)));
+            } catch (JsonProcessingException e) {
+              logger.error("Failed to serialize {} to JSON.", leaf);
+              throw new Draft3ExpressionException(e);
+            }
+          }
+        }
         return (T) Draft3ExpressionJavascriptResolver.evaluate(job.getInputs(), self, (String) expression, expressionLibs);
       } else {
         Map<String, Object> vars = new HashMap<>();
