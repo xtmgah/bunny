@@ -20,6 +20,7 @@ import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
 import org.rabix.bindings.protocol.draft3.bean.Draft3OutputPort;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
+import org.rabix.bindings.protocol.draft3.expression.javascript.Draft3ExpressionJavascriptResolver;
 import org.rabix.bindings.protocol.draft3.helper.Draft3BindingHelper;
 import org.rabix.bindings.protocol.draft3.helper.Draft3FileValueHelper;
 import org.rabix.bindings.protocol.draft3.helper.Draft3JobHelper;
@@ -93,6 +94,7 @@ public class Draft3Processor implements ProtocolProcessor {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Job postprocess(Job job, File workingDir) throws BindingException {
     Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
     try {
@@ -101,7 +103,7 @@ public class Draft3Processor implements ProtocolProcessor {
       if (draft2Job.getApp().isExpressionTool()) {
         Draft3ExpressionTool expressionTool = (Draft3ExpressionTool) draft2Job.getApp();
         try {
-          outputs = Draft3ExpressionResolver.resolve(expressionTool.getScript(), draft2Job, null);
+          outputs = (Map<String, Object>) Draft3ExpressionJavascriptResolver.evaluate(draft2Job.getInputs(), null, (String) expressionTool.getScript(), null);
         } catch (Draft3ExpressionException e) {
           throw new BindingException("Failed to populate outputs", e);
         }
