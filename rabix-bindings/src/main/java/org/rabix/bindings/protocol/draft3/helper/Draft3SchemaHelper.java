@@ -42,6 +42,13 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
     return id.startsWith(ID_START) ? id.substring(1) : id;
   }
   
+  public static String denormalizeId(String id) {
+    if (id == null) {
+      return null;
+    }
+    return id.startsWith(ID_START) ? id : ID_START + id;
+  }
+  
   public static Object getFields(Object raw) {
     return getValue(KEY_SCHEMA_FIELDS, raw);
   }
@@ -268,4 +275,5 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
     }
     return id;
   }
+
 }

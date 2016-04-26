@@ -39,7 +39,7 @@ public class JSONHelper {
       Map<String, Object> transformed = (Map<String, Object>) reader.load(data);
       return writeObject(transformed);
     } catch (Exception e) {
-      // do nothing
+      // it's not YAML (or it's not valid)
     }
     return data;
   }

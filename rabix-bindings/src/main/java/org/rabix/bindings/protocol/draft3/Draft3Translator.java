@@ -100,25 +100,25 @@ public class Draft3Translator implements ProtocolTranslator {
       String source = dataLink.getSource();
       String sourceNodeId = null;
       String sourcePortId = null;
-      if (!source.contains(InternalSchemaHelper.SEPARATOR)) {
+      if (!source.contains(InternalSchemaHelper.SLASH_SEPARATOR)) {
         sourceNodeId = job.getId();
-        sourcePortId = source.substring(1);
+        sourcePortId = source.substring(0);
       } else {
-        sourceNodeId = job.getId() + InternalSchemaHelper.SEPARATOR + source.substring(1, source.indexOf(InternalSchemaHelper.SEPARATOR));
-        sourcePortId = source.substring(source.indexOf(InternalSchemaHelper.SEPARATOR) + 1);
+        sourceNodeId = job.getId() + InternalSchemaHelper.SEPARATOR + source.substring(0, source.indexOf(InternalSchemaHelper.SLASH_SEPARATOR));
+        sourcePortId = source.substring(source.indexOf(InternalSchemaHelper.SLASH_SEPARATOR) + 1);
       }
 
       String destination = dataLink.getDestination();
       String destinationPortId = null;
       String destinationNodeId = null;
-      if (!destination.contains(InternalSchemaHelper.SEPARATOR)) {
+      if (!destination.contains(InternalSchemaHelper.SLASH_SEPARATOR)) {
         destinationNodeId = job.getId();
-        destinationPortId = destination.substring(1);
+        destinationPortId = destination.substring(0);
       } else {
-        destinationNodeId = job.getId() + InternalSchemaHelper.SEPARATOR + destination.substring(1, destination.indexOf(InternalSchemaHelper.SEPARATOR));
-        destinationPortId = destination.substring(destination.indexOf(InternalSchemaHelper.SEPARATOR) + 1);
+        destinationNodeId = job.getId() + InternalSchemaHelper.SEPARATOR + destination.substring(0, destination.indexOf(InternalSchemaHelper.SLASH_SEPARATOR));
+        destinationPortId = destination.substring(destination.indexOf(InternalSchemaHelper.SLASH_SEPARATOR) + 1);
       }
-      boolean isSourceFromWorkflow = !dataLink.getSource().contains(InternalSchemaHelper.SEPARATOR);
+      boolean isSourceFromWorkflow = !dataLink.getSource().contains(InternalSchemaHelper.SLASH_SEPARATOR);
 
       DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
       DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getLinkMerge(), dataLink.getScattered() != null ? dataLink.getScattered() : false);
