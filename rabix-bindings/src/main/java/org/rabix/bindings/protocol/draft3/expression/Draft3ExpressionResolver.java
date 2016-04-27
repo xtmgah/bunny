@@ -80,7 +80,7 @@ public class Draft3ExpressionResolver {
             }
           }
         }
-        return (T) Draft3ExpressionJavascriptResolver.evaluate(job.getInputs(), self, (String) expression, expressionLibs);
+        return (T) expression;
       } else {
         Map<String, Object> vars = new HashMap<>();
         vars.put("inputs", job.getInputs());
