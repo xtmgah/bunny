@@ -33,10 +33,12 @@ public class Draft3ExpressionResolver {
 
   private static String segments = String.format("(.%s|%s|%s|%s)", segSymbol, segSingle, segDouble, segIndex);
 
+  private static String javascriptRe = "(\\$\\(.+\\)|\\$\\{.+\\})";
   private static String paramRe = String.format("\\$\\((%s)%s*\\)", segSymbol, segments);
-
+    
   private static Pattern segPattern = Pattern.compile(segments);
   private static Pattern pattern = Pattern.compile(paramRe);
+  private static Pattern javascriptPattern = Pattern.compile(javascriptRe);
   
   public static final ObjectMapper sortMapper = new ObjectMapper();
   
@@ -60,7 +62,7 @@ public class Draft3ExpressionResolver {
         if (inlineJavascriptRequirement != null) {
           expressionLibs = inlineJavascriptRequirement.getExpressionLib();
         }
-        Matcher m = pattern.matcher((CharSequence) expression);
+        Matcher m = javascriptPattern.matcher((CharSequence) expression);
         if (m.find()) {
           Object leaf = Draft3ExpressionJavascriptResolver.evaluate(job.getInputs(), self, m.group(0), expressionLibs);
           if (((String)expression).trim().length() == m.group(0).length()) {
