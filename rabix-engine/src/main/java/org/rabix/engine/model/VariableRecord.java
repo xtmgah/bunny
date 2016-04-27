@@ -96,7 +96,12 @@ public class VariableRecord {
     List<Object> flattenedValues = new ArrayList<>();
     if (value instanceof List<?>) {
       for (Object subvalue : ((List<?>) value)) {
-        flattenedValues.addAll((Collection<? extends Object>) mergeFlatten(subvalue));
+        Object flattenedSubvalue = mergeFlatten(subvalue);
+        if (flattenedSubvalue instanceof List<?>) {
+          flattenedValues.addAll((Collection<? extends Object>) flattenedSubvalue);
+        } else {
+          flattenedValues.add(flattenedSubvalue);
+        }
       }
     } else {
       flattenedValues.add(value);
