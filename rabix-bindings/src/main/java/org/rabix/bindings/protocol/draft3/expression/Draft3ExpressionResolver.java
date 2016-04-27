@@ -33,7 +33,7 @@ public class Draft3ExpressionResolver {
 
   private static String segments = String.format("(.%s|%s|%s|%s)", segSymbol, segSingle, segDouble, segIndex);
 
-  private static String javascriptRe = "(\\$\\(.+\\)|\\$\\{.+\\})";
+  private static String javascriptRe = "(\\$\\((.|\\r\\n|\\n|\\r)*\\)|\\$\\{(.|\\r\\n|\\n|\\r)*\\})";
   private static String paramRe = String.format("\\$\\((%s)%s*\\)", segSymbol, segments);
     
   private static Pattern segPattern = Pattern.compile(segments);
@@ -84,7 +84,7 @@ public class Draft3ExpressionResolver {
       } else {
         Map<String, Object> vars = new HashMap<>();
         vars.put("inputs", job.getInputs());
-        vars.put("context", self);
+        vars.put("self", self);
         
         Draft3ResourceRequirement resourceRequirement = job.getApp().getResourceRequirement();
         if (resourceRequirement != null) {
