@@ -112,7 +112,7 @@ public class JobServiceImpl implements JobService {
       logger.error("Cannot find Bindings", e);
       throw new JobServiceException("Cannot find Bindings", e);
     } catch (JobStateValidationException e) {
-      logger.error("Failed to update Job state");
+      logger.error("Failed to update Job state", e);
       throw new JobServiceException("Failed to update Job state", e);
     }
   }

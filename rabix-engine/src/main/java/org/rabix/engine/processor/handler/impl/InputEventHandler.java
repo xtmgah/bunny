@@ -76,7 +76,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     // scatter
     if (!job.isBlocking() && !job.isScattered()) {
       if (job.isScatterPort(event.getPortId())) {
-        if ((job.getInputPortIncoming(event.getPortId()) > 1) && LinkMerge.isBlocking(node.getLinkMerge(event.getPortId(), LinkPortType.INPUT))) {
+        if ((job.isInputPortBlocking(node, event.getPortId()))) {
           // it's blocking
           if (job.isInputPortReady(event.getPortId())) {
             scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
@@ -122,16 +122,19 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
 
     List<Object> values = null;
     boolean isPortReady = job.isInputPortReady(portId);
-    boolean isPortBlocking = job.getInputPortIncoming(portId) > 1;
+    boolean isPortBlocking = job.isInputPortBlocking(node, portId);
+    
+    boolean usePositionFromEvent = false;
     if (value instanceof List<?> && (!isPortBlocking || (isPortBlocking && isPortReady))) {
       values = (List<Object>) value;
     } else {
+      usePositionFromEvent = true;
       values = new ArrayList<>();
       values.add(value);
     }
 
     for (int i = 0; i < values.size(); i++) {
-      createScatteredJobs(job, portId, values.get(i), node, values.size(), isPortBlocking && !isPortReady? position : i + 1);
+      createScatteredJobs(job, portId, values.get(i), node, values.size(), usePositionFromEvent? position : i + 1);
     }
   }
   
