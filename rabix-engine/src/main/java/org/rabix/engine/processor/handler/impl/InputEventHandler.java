@@ -79,13 +79,13 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         if ((job.isInputPortBlocking(node, event.getPortId()))) {
           // it's blocking
           if (job.isInputPortReady(event.getPortId())) {
-            scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
+            scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), false);
             update(job, variable);
             return;
           }
         } else {
           // it's not blocking
-          scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead());
+          scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), true);
           update(job, variable);
           return;
         }
@@ -107,7 +107,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
    * Scatters port
    */
   @SuppressWarnings("unchecked")
-  private void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead) throws EventHandlerException {
+  private void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
     DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
     if (job.getScatterMapping() == null) {
@@ -121,20 +121,22 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     }
 
     List<Object> values = null;
-    boolean isPortReady = job.isInputPortReady(portId);
-    boolean isPortBlocking = job.isInputPortBlocking(node, portId);
-    
-    boolean usePositionFromEvent = false;
-    if (value instanceof List<?> && (!isPortBlocking || (isPortBlocking && isPortReady))) {
-      values = (List<Object>) value;
+    boolean usePositionFromEvent = true;
+    if (isFromEvent || !(value instanceof List<?>)) {
+      if (job.getInputPortIncoming(portId) == 1) {
+        usePositionFromEvent = false;
+        values = (List<Object>) value;
+      } else {
+        values = new ArrayList<>();
+        values.add(value);
+      }
     } else {
-      usePositionFromEvent = true;
-      values = new ArrayList<>();
-      values.add(value);
+      usePositionFromEvent = false;
+      values = (List<Object>) value;
     }
-
+    
     for (int i = 0; i < values.size(); i++) {
-      createScatteredJobs(job, portId, values.get(i), node, values.size(), usePositionFromEvent? position : i + 1);
+      createScatteredJobs(job, portId, values.get(i), node, values.size(), usePositionFromEvent ? position : i + 1);
     }
   }
   
@@ -160,7 +162,8 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       JobRecord jobN = createJobRecord(jobNId, job.getExternalId(), node, true, job.getRootId());
           
       for (DAGLinkPort inputPort : node.getInputPorts()) {
-        VariableRecord variableN = new VariableRecord(job.getRootId(), jobNId, inputPort.getId(), LinkPortType.INPUT, null, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
+        Object defaultValue = node.getDefaults().get(inputPort.getId());
+        VariableRecord variableN = new VariableRecord(job.getRootId(), jobNId, inputPort.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
         variableN.setNumberGlobals(getNumberOfScattered(job, numberOfScattered));
         variableService.create(variableN);
 
@@ -284,10 +287,9 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       
       for (String port : job.getScatterPorts()) {
         VariableRecord variable = variableService.find(job.getId(), port, LinkPortType.INPUT, event.getContextId());
-        scatterPort(job, port, variable.getValue(), 1, null, false);
+        scatterPort(job, port, variable.getValue(), 1, null, false, false);
       }
     }
-    
   }
   
   /**
@@ -301,7 +303,8 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       jobService.create(childJob);
 
       for (DAGLinkPort port : node.getInputPorts()) {
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, null, node.getLinkMerge(port.getId(), port.getType()));
+        Object defaultValue = node.getDefaults().get(port.getId());
+        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(port.getId(), port.getType()));
         variableService.create(childVariable);
       }
 

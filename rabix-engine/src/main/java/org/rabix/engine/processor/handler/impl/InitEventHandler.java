@@ -59,8 +59,8 @@ public class InitEventHandler implements EventHandler<InitEvent> {
       if (job.getState().equals(JobState.PENDING)) {
         job.incrementPortCounter(inputPort, LinkPortType.INPUT);
       }
-
-      VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), inputPort.getId(), LinkPortType.INPUT, null, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
+      Object defaultValue = node.getDefaults().get(inputPort.getId());
+      VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), inputPort.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
       variableRecordService.create(variable);
     }
 
@@ -88,7 +88,6 @@ public class InitEventHandler implements EventHandler<InitEvent> {
       if (inputs == null) {
         return mixedInputs;
       }
-
       for (Entry<String, Object> inputEntry : inputs.entrySet()) {
         mixedInputs.put(inputEntry.getKey(), inputEntry.getValue());
       }

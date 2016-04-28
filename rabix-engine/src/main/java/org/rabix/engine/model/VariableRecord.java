@@ -21,6 +21,8 @@ public class VariableRecord {
   private int numberOfGlobals; // number of 'global' outputs if node is scattered
 
   private int numberOfTimesUpdated = 0;
+  
+  private boolean isDefault = true;
 
   public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge) {
     this.jobId = jobId;
@@ -38,6 +40,10 @@ public class VariableRecord {
   @SuppressWarnings("unchecked")
   public void addValue(Object value, Integer position) {
     numberOfTimesUpdated++;
+    if (isDefault) {
+      value = null;
+      isDefault = false;
+    }
     if (this.value == null) {
       if (position == 1) {
         this.value = value;
