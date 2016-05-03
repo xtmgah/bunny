@@ -32,12 +32,10 @@ public class JSONHelper {
 
   public static final ObjectMapper mapper = new ObjectMapper();
 
-  @SuppressWarnings("unchecked")
   public static String transformToJSON(String data) {
     try {
       Yaml reader = new Yaml();
-      Map<String, Object> transformed = (Map<String, Object>) reader.load(data);
-      return writeObject(transformed);
+      return writeObject(reader.load(data));
     } catch (Exception e) {
       // it's not YAML (or it's not valid)
     }

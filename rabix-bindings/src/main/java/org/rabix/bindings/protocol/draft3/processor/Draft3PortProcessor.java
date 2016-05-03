@@ -77,6 +77,10 @@ public class Draft3PortProcessor {
       return portProcessorResult.getValue();
     }
     
+    if (Draft3SchemaHelper.isAnyFromSchema(schema)) {
+      return value;
+    }
+    
     if (Draft3SchemaHelper.isFileFromValue(value)) {
       return value;
     }

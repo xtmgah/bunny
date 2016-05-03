@@ -41,7 +41,7 @@ public class VariableRecord {
   public void addValue(Object value, Integer position) {
     numberOfTimesUpdated++;
     if (isDefault) {
-      value = null;
+      this.value = null;
       isDefault = false;
     }
     if (this.value == null) {
