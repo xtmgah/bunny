@@ -27,6 +27,7 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.processor.handler.impl.helper.ScatterHelper;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
@@ -37,7 +38,7 @@ import com.google.inject.Inject;
 public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
   private final DAGNodeDB dagNodeDB;
-  private final ScatterService scatterService;
+  private final ScatterHelper scatterHelper;
   private final EventProcessor eventProcessor;
   
   private final JobRecordService jobRecordService;
@@ -45,9 +46,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private final VariableRecordService variableRecordService;
 
   @Inject
-  public JobStatusEventHandler(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterService) {
+  public JobStatusEventHandler(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterHelper scatterHelper) {
     this.dagNodeDB = dagNodeDB;
-    this.scatterService = scatterService;
+    this.scatterHelper = scatterHelper;
     this.eventProcessor = eventProcessor;
     
     this.jobRecordService = jobRecordService;
@@ -104,7 +105,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       if (containerLinks.isEmpty()) {
         Set<String> immediateReadyNodeIds = findImmediateReadyNodes(containerNode);
         for (String readyNodeId : immediateReadyNodeIds) {
-          JobRecord childJobRecord = jobRecordService.find(job.getId() + "." + readyNodeId, contextId);
+          JobRecord childJobRecord = jobRecordService.find(readyNodeId, contextId);
           ready(childJobRecord, contextId);
         }
       } else {
@@ -121,7 +122,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       
       for (String port : job.getScatterPorts()) {
         VariableRecord variable = variableRecordService.find(job.getId(), port, LinkPortType.INPUT, contextId);
-        scatterService.scatterPort(job, port, variable.getValue(), 1, null, false, false);
+        scatterHelper.scatterPort(job, port, variable.getValue(), 1, null, false, false);
       }
     }
   }

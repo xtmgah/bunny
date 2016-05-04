@@ -17,6 +17,7 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.processor.handler.impl.helper.ScatterHelper;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
@@ -34,18 +35,18 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
   private final LinkRecordService linkService;
   private final VariableRecordService variableService;
   
+  private final ScatterHelper scatterHelper;
   private final EventProcessor eventProcessor;
-  private final ScatterService scatterService;
 
   @Inject
-  public InputEventHandler(EventProcessor eventProcessor, ScatterService scatterService, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, DAGNodeDB nodeDB) {
+  public InputEventHandler(EventProcessor eventProcessor, ScatterHelper scatterHelper, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, DAGNodeDB nodeDB) {
     this.nodeDB = nodeDB;
     this.jobService = jobService;
     this.linkService = linkService;
     this.variableService = variableService;
     
+    this.scatterHelper = scatterHelper;
     this.eventProcessor = eventProcessor;
-    this.scatterService = scatterService;
   }
   
   @Override
@@ -74,13 +75,13 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         if ((job.isInputPortBlocking(node, event.getPortId()))) {
           // it's blocking
           if (job.isInputPortReady(event.getPortId())) {
-            scatterService.scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), false);
+            scatterHelper.scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), false);
             update(job, variable);
             return;
           }
         } else {
           // it's not blocking
-          scatterService.scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), true);
+          scatterHelper.scatterPort(job, event.getPortId(), event.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), true);
           update(job, variable);
           return;
         }

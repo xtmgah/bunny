@@ -1,4 +1,4 @@
-package org.rabix.engine.processor.handler.impl;
+package org.rabix.engine.processor.handler.impl.helper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import org.rabix.engine.service.JobRecordService.JobState;
 
 import com.google.inject.Inject;
 
-public class ScatterService {
+public class ScatterHelper {
 
   private final DAGNodeDB dagNodeDB;
   private final EventProcessor eventProcessor;
@@ -40,7 +40,7 @@ public class ScatterService {
   private final VariableRecordService variableRecordService;
   
   @Inject
-  public ScatterService(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor) {
+  public ScatterHelper(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor) {
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;

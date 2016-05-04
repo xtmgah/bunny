@@ -9,9 +9,9 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.CloneHelper;
 import org.rabix.engine.db.DAGNodeDB;
-import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
+import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.ContextRecord.ContextStatus;
 import org.rabix.engine.model.JobRecord;
@@ -72,11 +72,16 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     }
     jobRecordService.create(job);
 
+    if (node.getInputPorts().isEmpty()) {
+      // the node is ready
+      eventProcessor.send(new JobStatusEvent(job.getId(), event.getContextId(), JobState.READY, null));
+      return;
+    }
+    
     Map<String, Object> mixedInputs = mixInputs(node, event.getValue());
     for (DAGLinkPort inputPort : node.getInputPorts()) {
       Object value = mixedInputs.get(inputPort.getId());
-      Event updateInputEvent = new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, 1);
-      eventProcessor.send(updateInputEvent);
+      eventProcessor.send(new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, 1));
     }
   }
   
