@@ -1,7 +1,10 @@
 package org.rabix.engine.processor.handler.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.model.LinkMerge;
@@ -97,7 +100,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     }
     
     if (job.isReady()) {
-      ready(job, event);
+      ready(job, event.getContextId());
     }
     
     update(job, variable);
@@ -260,7 +263,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
   /**
    * Job is ready
    */
-  private void ready(JobRecord job, InputUpdateEvent event) throws EventHandlerException {
+  private void ready(JobRecord job, String contextId) throws EventHandlerException {
     job.setState(JobState.READY);
     
     if (job.isContainer()) {
@@ -268,28 +271,53 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
 
       DAGContainer containerNode;
       if (job.isScattered()) {
-        containerNode = (DAGContainer) nodeDB.get(InternalSchemaHelper.getJobIdFromScatteredId(job.getId()), event.getContextId());
+        containerNode = (DAGContainer) nodeDB.get(InternalSchemaHelper.getJobIdFromScatteredId(job.getId()), contextId);
       } else {
-        containerNode = (DAGContainer) nodeDB.get(job.getId(), event.getContextId());
+        containerNode = (DAGContainer) nodeDB.get(job.getId(), contextId);
       }
-      rollOutContainer(job, containerNode, event.getContextId());
+      rollOutContainer(job, containerNode, contextId);
 
-      List<LinkRecord> containerLinks = linkService.findBySourceAndSourceType(event.getJobId(), LinkPortType.INPUT, event.getContextId());
-      for (LinkRecord link : containerLinks) {
-        VariableRecord sourceVariable = variableService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, event.getContextId());
-        VariableRecord destinationVariable = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, event.getContextId());
+      List<LinkRecord> containerLinks = linkService.findBySourceAndSourceType(job.getId(), LinkPortType.INPUT, contextId);
+      if (containerLinks.isEmpty()) {
+        Set<String> immediateReadyNodeIds = findImmediateReadyNodes(containerNode);
+        for (String readyNodeId : immediateReadyNodeIds) {
+          JobRecord childJobRecord = jobService.find(job.getId() + "." + readyNodeId, contextId);
+          ready(childJobRecord, contextId);
+        }
+      } else {
+        for (LinkRecord link : containerLinks) {
+          VariableRecord sourceVariable = variableService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, contextId);
+          VariableRecord destinationVariable = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, contextId);
 
-        Event updateEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
-        eventProcessor.send(updateEvent);
+          Event updateEvent = new InputUpdateEvent(contextId, destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
+          eventProcessor.send(updateEvent);
+        }
       }
     } else if (!job.isScattered() && job.getScatterPorts().size() > 0) {
       job.setState(JobState.RUNNING);
       
       for (String port : job.getScatterPorts()) {
-        VariableRecord variable = variableService.find(job.getId(), port, LinkPortType.INPUT, event.getContextId());
+        VariableRecord variable = variableService.find(job.getId(), port, LinkPortType.INPUT, contextId);
         scatterPort(job, port, variable.getValue(), 1, null, false, false);
       }
     }
+  }
+  
+  private Set<String> findImmediateReadyNodes(DAGNode node) {
+    if (node instanceof DAGContainer) {
+      List<DAGLink> links = new ArrayList<>();
+      
+      Set<String> nodesWithoutDestination = new HashSet<>();
+      for (DAGNode child : ((DAGContainer) node).getChildren()) {
+        nodesWithoutDestination.add(child.getId());
+      }
+      
+      for (DAGLink link : ((DAGContainer) node).getLinks()) {
+        nodesWithoutDestination.remove(link.getDestination().getNodeId());
+      }
+      return nodesWithoutDestination;
+    }
+    return Collections.<String>emptySet();
   }
   
   /**
