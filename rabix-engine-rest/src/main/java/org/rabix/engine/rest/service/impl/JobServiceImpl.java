@@ -7,7 +7,6 @@ import java.util.Set;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
@@ -64,15 +63,13 @@ public class JobServiceImpl implements JobService {
     List<IterationCallback> callbacks = new ArrayList<>();
     callbacks.add(new EndJobCallback());
     callbacks.add(new SendJobsCallback());
+    
     this.eventProcessor.start(callbacks);
   }
   
   @Override
   public void update(Job job) throws JobServiceException {
     try {
-      Bindings bindings = BindingsFactory.create(job);
-      ProtocolType protocolType = bindings.getProtocolType();
-      
       JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
       
       JobStatusEvent statusEvent = null;
@@ -83,7 +80,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.RUNNING);
-        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.RUNNING, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.RUNNING, job.getOutputs());
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
@@ -91,7 +88,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
-        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null, protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -100,7 +97,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
-        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs());
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -108,9 +105,6 @@ public class JobServiceImpl implements JobService {
         break;
       }
       jobDB.update(job);
-    } catch (BindingException e) {
-      logger.error("Cannot find Bindings", e);
-      throw new JobServiceException("Cannot find Bindings", e);
     } catch (JobStateValidationException e) {
       logger.error("Failed to update Job state", e);
       throw new JobServiceException("Failed to update Job state", e);

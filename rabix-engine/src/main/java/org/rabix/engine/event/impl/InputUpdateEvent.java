@@ -16,7 +16,7 @@ public class InputUpdateEvent implements Event {
   private final Integer position;
   private final Integer numberOfScattered;      // number of scattered nodes
   private final boolean isLookAhead;            // it's a look ahead event
-
+  
   public InputUpdateEvent(String contextId, String jobId, String portId, Object value, Integer position) {
     this(contextId, jobId, portId, value, false, null, position);
   }
