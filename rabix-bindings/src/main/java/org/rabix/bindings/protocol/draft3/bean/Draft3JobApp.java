@@ -37,10 +37,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Draft3JobApp implements Application {
 
+  public static final String DRAFT_3_VERSION = "cwlVersion";
+  
   @JsonProperty("id")
   protected String id;
   @JsonProperty("@context")
   protected String context;
+  @JsonProperty("cwlVersion")
+  protected String cwlVersion;
   @JsonProperty("description")
   protected String description;
   @JsonProperty("label")
@@ -65,6 +69,10 @@ public abstract class Draft3JobApp implements Application {
 
   public String getId() {
     return id;
+  }
+  
+  public String getCwlVersion() {
+    return cwlVersion;
   }
   
   public List<Integer> getSuccessCodes() {

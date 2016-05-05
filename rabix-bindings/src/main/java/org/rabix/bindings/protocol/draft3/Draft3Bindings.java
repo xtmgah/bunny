@@ -20,6 +20,7 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
 
 public class Draft3Bindings implements Bindings {
 
@@ -53,7 +54,11 @@ public class Draft3Bindings implements Bindings {
   
   @Override
   public Application loadAppObject(String uri) throws BindingException {
-    return appProcessor.loadAppObject(uri);
+    Draft3JobApp application = (Draft3JobApp) appProcessor.loadAppObject(uri);
+    if (!Draft3JobApp.DRAFT_3_VERSION.equals(application.getCwlVersion())) {
+      throw new BindingException(uri + " is not an CWL Draft-3 application");
+    }
+    return application;
   }
   
   @Override
