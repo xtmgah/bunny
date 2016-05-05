@@ -27,8 +27,8 @@ public class Draft3ExpressionResolver {
   public static String KEY_EXPRESSION_LANGUAGE = "engine";
   
   private static String segSymbol = "\\w+";
-  private static String segSingle = "\\['([^']|\\\')+'\\]";
-  private static String segDouble = "\\[\"([^']|\\\")+\"\\]";
+  private static String segSingle = "\\['([^']|\\\\')+'\\]";
+  private static String segDouble = "\\[\"([^\"]|\\\\\")+\"\\]";
   private static String segIndex = "\\[[0-9]+\\]";
 
   private static String segments = String.format("(.%s|%s|%s|%s)", segSymbol, segSingle, segDouble, segIndex);
@@ -145,7 +145,7 @@ public class Draft3ExpressionResolver {
         try {
           String leafStr = sortMapper.writeValueAsString(leaf);
           if (leafStr.startsWith("\"")) {
-            leafStr.substring(1, leafStr.length() - 1);
+            leafStr = leafStr.substring(1, leafStr.length() - 1);
           }
           return ex.substring(0, m.start(0)) + leafStr + paramInterpolate(ex.substring(m.end(0)), obj, false);
         } catch (JsonProcessingException e) {
