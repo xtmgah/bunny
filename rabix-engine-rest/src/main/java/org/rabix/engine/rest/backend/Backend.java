@@ -3,8 +3,9 @@ package org.rabix.engine.rest.backend;
 public interface Backend {
 
   public static enum BackendType {
-    MQ,
-    LOCAL
+    LOCAL,
+    ACTIVE_MQ,
+    RABBIT_MQ
   }
 
   String getId();
