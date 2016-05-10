@@ -77,6 +77,10 @@ public class Job {
     return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
   
+  public static Job cloneWithRootId(Job job, String rootId) {
+    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+  }
+  
   public static Job cloneWithContext(Job job, Context context) {
     return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context);
   }
@@ -184,4 +188,5 @@ public class Job {
   public String toString() {
     return "Job [id=" + id + ", parentId=" + parentId + ", rootId=" + rootId + ", name=" + name + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
   }
+
 }

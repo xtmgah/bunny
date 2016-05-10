@@ -9,6 +9,8 @@ import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.transport.backend.Backend;
+import org.rabix.transport.backend.impl.BackendRabbitMQ;
+import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 
 import com.google.inject.Inject;
 
@@ -27,12 +29,25 @@ public class BackendServiceImpl implements BackendService {
   
   @Override
   public <T extends Backend> T create(T backend) {
-    backend.setId(UUID.randomUUID().toString());
+    backend = populate(backend);
     backendDB.add(backend);
     
     BackendStub backendStub = BackendStubFactory.createStub(jobService, backend);
     backendStub.start();
     backendDispatcher.addBackendStub(backendStub);
+    return backend;
+  }
+  
+  private <T extends Backend> T populate(T backend) {
+    backend.setId(UUID.randomUUID().toString());
+    switch (backend.getType()) {
+    case RABBIT_MQ:
+      BackendConfiguration backendConfiguration = new BackendConfiguration("backend_exchange", "direct", "backend_receive_routing_key");
+      ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
+      break;
+    default:
+      break;
+    }
     return backend;
   }
   

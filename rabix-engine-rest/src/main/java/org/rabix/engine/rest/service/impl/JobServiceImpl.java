@@ -3,6 +3,7 @@ package org.rabix.engine.rest.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
@@ -118,8 +119,9 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Job create(Job job) throws JobServiceException {
-    Context context = job.getContext() != null? job.getContext() : createContext(job.getRootId());
-    job = Job.cloneWithId(job, job.getRootId());
+    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
+    job = Job.cloneWithId(job, context.getId());
+    job = Job.cloneWithRootId(job, context.getId());
     context.setId(job.getRootId());
     job = Job.cloneWithContext(job, context);
     jobDB.add(job);

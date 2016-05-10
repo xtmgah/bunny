@@ -67,7 +67,7 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
     try {
       connection = factory.newConnection();
       channel = connection.createChannel();
-
+      
       channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
       String queueName = channel.queueDeclare().getQueue();
       channel.queueBind(queueName, queue.getExchange(), queue.getRoutingKey());

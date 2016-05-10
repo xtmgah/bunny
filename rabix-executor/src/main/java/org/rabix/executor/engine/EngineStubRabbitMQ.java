@@ -52,7 +52,7 @@ public class EngineStubRabbitMQ implements EngineStub {
           executorService.start(job, job.getContext().getId());
         }
       }
-    }, 0, 1, TimeUnit.SECONDS);
+    }, 0, 30, TimeUnit.SECONDS);
     
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override

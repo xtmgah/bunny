@@ -10,7 +10,6 @@ public class BackendRabbitMQ extends Backend {
 
   @JsonProperty("host")
   private String host;
-  
   @JsonProperty("engineConfiguration")
   private EngineConfiguration engineConfiguration;
   @JsonProperty("backendConfiguration")
@@ -27,13 +26,25 @@ public class BackendRabbitMQ extends Backend {
   public String getHost() {
     return host;
   }
-  
+
+  public void setHost(String host) {
+    this.host = host;
+  }
+
   public EngineConfiguration getEngineConfiguration() {
     return engineConfiguration;
   }
-  
+
+  public void setEngineConfiguration(EngineConfiguration engineConfiguration) {
+    this.engineConfiguration = engineConfiguration;
+  }
+
   public BackendConfiguration getBackendConfiguration() {
     return backendConfiguration;
+  }
+
+  public void setBackendConfiguration(BackendConfiguration backendConfiguration) {
+    this.backendConfiguration = backendConfiguration;
   }
 
   public static class EngineConfiguration {
@@ -69,7 +80,6 @@ public class BackendRabbitMQ extends Backend {
     public String getHeartbeatRoutingKey() {
       return heartbeatRoutingKey;
     }
-    
   }
   
   public static class BackendConfiguration {
@@ -98,7 +108,6 @@ public class BackendRabbitMQ extends Backend {
     public String getReceiveRoutingKey() {
       return receiveRoutingKey;
     }
-    
   }
   
   @Override

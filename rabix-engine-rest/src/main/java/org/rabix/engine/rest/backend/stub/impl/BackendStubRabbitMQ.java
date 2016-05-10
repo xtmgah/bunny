@@ -61,7 +61,7 @@ public class BackendStubRabbitMQ implements BackendStub {
           }
         }
       }
-    }, 0, 10, TimeUnit.MILLISECONDS);
+    }, 0, 10, TimeUnit.SECONDS);
   }
 
   @Override

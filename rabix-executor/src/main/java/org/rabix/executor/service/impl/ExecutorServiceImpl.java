@@ -7,7 +7,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.engine.EngineStub;
+import org.rabix.executor.engine.EngineStubActiveMQ;
 import org.rabix.executor.engine.EngineStubLocal;
+import org.rabix.executor.engine.EngineStubRabbitMQ;
 import org.rabix.executor.execution.JobHandlerCommandDispatcher;
 import org.rabix.executor.execution.command.StartCommand;
 import org.rabix.executor.execution.command.StatusCommand;
@@ -16,7 +18,9 @@ import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.transport.backend.Backend;
+import org.rabix.transport.backend.impl.BackendActiveMQ;
 import org.rabix.transport.backend.impl.BackendLocal;
+import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +59,11 @@ public class ExecutorServiceImpl implements ExecutorService {
     case LOCAL:
       this.engineStub = new EngineStubLocal((BackendLocal) backend, this);
       break;
+    case RABBIT_MQ:
+      this.engineStub = new EngineStubRabbitMQ((BackendRabbitMQ) backend, this);
+      break;
+    case ACTIVE_MQ:
+      this.engineStub = new EngineStubActiveMQ((BackendActiveMQ) backend, this);
     default:
       break;
     }
