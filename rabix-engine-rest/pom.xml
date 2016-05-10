@@ -76,6 +76,11 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>org.rabix</groupId>
+			<artifactId>rabix-transport</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-core</artifactId>
 			<version>5.7.0</version>

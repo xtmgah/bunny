@@ -1,4 +1,4 @@
-package org.rabix.engine.rest.transport.impl;
+package org.rabix.transport.mechanism.impl;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -12,15 +12,16 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.rabix.common.json.BeanSerializer;
-import org.rabix.engine.rest.transport.TransportPlugin;
-import org.rabix.engine.rest.transport.TransportPluginType;
+import org.rabix.transport.mechanism.TransportPlugin;
+import org.rabix.transport.mechanism.TransportPluginType;
+import org.rabix.transport.mechanism.TransportQueueActiveMQ;
 
-public class TransportPluginMQ implements TransportPlugin {
+public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueActiveMQ> {
 
   private String broker;
   private PooledConnectionFactory connectionFactory;
 
-  public TransportPluginMQ(String broker) {
+  public TransportPluginActiveMQ(String broker) {
     this.broker = broker;
     initializeConnectionFactory();
   }
@@ -34,7 +35,7 @@ public class TransportPluginMQ implements TransportPlugin {
     connectionFactory.start();
   }
   
-  public <T> ResultPair<T> send(String destinationQueue, T entity) {
+  public <T> ResultPair<T> send(TransportQueueActiveMQ destinationQueue, T entity) {
     Session session = null;
     Connection connection = null;
     try {
@@ -42,7 +43,7 @@ public class TransportPluginMQ implements TransportPlugin {
       connection.start();
 
       session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      Destination destination = session.createQueue(destinationQueue);
+      Destination destination = session.createQueue(destinationQueue.getQueue());
 
       MessageProducer producer = session.createProducer(destination);
       producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -63,7 +64,7 @@ public class TransportPluginMQ implements TransportPlugin {
     }
   }
 
-  public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz) {
+  public <T> ResultPair<T> receive(TransportQueueActiveMQ sourceQueue, Class<T> clazz) {
     Session session = null;
     Connection connection = null;
     MessageConsumer consumer = null;
@@ -73,7 +74,7 @@ public class TransportPluginMQ implements TransportPlugin {
       connection.start();
 
       session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      Destination destination = session.createQueue(sourceQueue);
+      Destination destination = session.createQueue(sourceQueue.getQueue());
       consumer = session.createConsumer(destination);
 
       Message message = consumer.receive(1000);
@@ -98,7 +99,7 @@ public class TransportPluginMQ implements TransportPlugin {
 
   @Override
   public TransportPluginType getType() {
-    return TransportPluginType.MQ;
+    return TransportPluginType.ACTIVE_MQ;
   }
   
 }

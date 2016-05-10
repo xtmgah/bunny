@@ -6,15 +6,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.rabix.bindings.model.Job;
-import org.rabix.common.json.BeanSerializer;
-import org.rabix.engine.rest.backend.Backend;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
-import org.rabix.engine.rest.backend.impl.BackendLocal;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
-import org.rabix.engine.rest.transport.TransportPlugin.ResultPair;
-import org.rabix.engine.rest.transport.impl.TransportPluginLocal;
+import org.rabix.transport.backend.Backend;
+import org.rabix.transport.backend.impl.BackendLocal;
+import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
+import org.rabix.transport.mechanism.TransportQueueLocal;
+import org.rabix.transport.mechanism.impl.TransportPluginLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +28,18 @@ public class BackendStubLocal implements BackendStub {
   
   private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
   
+  private TransportQueueLocal sendToBackendQueue;
+  private TransportQueueLocal receiveFromBackendQueue;
+  private TransportQueueLocal receiveFromBackendHeartbeatQueue;
+  
   public BackendStubLocal(JobService jobService, BackendLocal backendLocal) {
     this.jobService = jobService;
     this.backendLocal = backendLocal;
-    this.transportPluginLocal = new TransportPluginLocal(backendLocal);
+    this.transportPluginLocal = new TransportPluginLocal();
+    
+    this.sendToBackendQueue = new TransportQueueLocal(backendLocal.getToBackendQueue());
+    this.receiveFromBackendQueue = new TransportQueueLocal(backendLocal.getFromBackendQueue());
+    this.receiveFromBackendHeartbeatQueue = new TransportQueueLocal(backendLocal.getFromBackendHeartbeatQueue());
   }
   
   @Override
@@ -39,7 +47,7 @@ public class BackendStubLocal implements BackendStub {
     executorService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = transportPluginLocal.receive(BackendLocal.RECEIVE_FROM_BACKEND_QUEUE, Job.class);
+        ResultPair<Job> result = transportPluginLocal.receive(receiveFromBackendQueue, Job.class);
         if (result.isSuccess()) {
           try {
             jobService.update(result.getResult());
@@ -58,7 +66,7 @@ public class BackendStubLocal implements BackendStub {
 
   @Override
   public void send(Job job) {
-    transportPluginLocal.send(BackendLocal.SEND_TO_BACKEND_QUEUE, job);
+    transportPluginLocal.send(sendToBackendQueue, job);
   }
 
   @Override
@@ -70,9 +78,9 @@ public class BackendStubLocal implements BackendStub {
 
   @Override
   public HeartbeatInfo getHeartbeat() {
-    String payload = backendLocal.getFromBackendQueue().poll();
-    if (payload != null) {
-      return BeanSerializer.deserialize(payload, HeartbeatInfo.class);
+    ResultPair<HeartbeatInfo> result = transportPluginLocal.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class);
+    if (result.isSuccess()) {
+      return result.getResult();
     }
     return null;
   }

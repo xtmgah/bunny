@@ -11,13 +11,10 @@ public class TransportQueueConfig {
   private final String fromBackendQueue;
   private final String fromBackendHeartbeatQueue;
   
-  private final boolean mqEnabled;
-  
   @Inject
   public TransportQueueConfig(Configuration configuration) {
     this.broker = configuration.getString("mq.broker", null);
-    this.mqEnabled = configuration.getBoolean("mq.enabled", false);
-    
+
     this.toBackendQueue = configuration.getString("queue.toBackendQueue", null);
     this.fromBackendQueue = configuration.getString("queue.fromBackendQueue", null);
     this.fromBackendHeartbeatQueue = configuration.getString("queue.fromBackendHeartbeatQueue", null);
@@ -39,8 +36,4 @@ public class TransportQueueConfig {
     return fromBackendHeartbeatQueue;
   }
 
-  public boolean isMQEnabled() {
-    return mqEnabled;
-  }
-  
 }

@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.engine.rest.backend.stub.BackendStub;
+import org.rabix.transport.backend.Backend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

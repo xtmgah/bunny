@@ -9,8 +9,6 @@ import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.transport.TransportQueueConfig;
-import org.rabix.executor.transport.TransportStub;
 
 /**
  * Command that starts {@link JobHandler}
@@ -18,8 +16,8 @@ import org.rabix.executor.transport.TransportStub;
 public class StartCommand extends JobHandlerCommand {
 
   @Inject
-  public StartCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
-    super(jobDataService, mqTransportStub, transportQueueConfig);
+  public StartCommand(JobDataService jobDataService) {
+    super(jobDataService);
   }
 
   @Override
@@ -28,11 +26,11 @@ public class StartCommand extends JobHandlerCommand {
     try {
       handler.start();
       jobDataService.save(data, "Job " + job.getId() + " started successfully.", JobStatus.STARTED, contextId);
-      started(data, "Job " + job.getId() + " started successfully.");
+      started(data, "Job " + job.getId() + " started successfully.", handler.getEngineStub());
     } catch (ExecutorException e) {
       String message = String.format("Failed to start %s. %s", job.getId(), e.toString());
       jobDataService.save(data, message, JobStatus.FAILED, contextId);
-      failed(data, message, e);
+      failed(data, message, handler.getEngineStub(), e);
       return new Result(true);
     }
     return new Result(false);

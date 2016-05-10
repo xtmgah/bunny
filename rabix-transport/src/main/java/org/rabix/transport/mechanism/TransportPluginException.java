@@ -1,4 +1,4 @@
-package org.rabix.engine.rest.transport;
+package org.rabix.transport.mechanism;
 
 public class TransportPluginException extends Exception {
 

@@ -1,11 +1,11 @@
-package org.rabix.engine.rest.backend.impl;
+package org.rabix.transport.backend.impl;
 
-import org.rabix.engine.rest.backend.Backend;
+import org.rabix.transport.backend.Backend;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BackendMQ implements Backend {
+public class BackendActiveMQ implements Backend {
 
   @JsonProperty("id")
   private String id;
@@ -18,7 +18,7 @@ public class BackendMQ implements Backend {
   @JsonProperty("fromBackendHeartbeatQueue")
   private String fromBackendHeartbeatQueue;
   
-  public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
+  public BackendActiveMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
     this.id = id;
     this.broker = broker;
     this.toBackendQueue = toBackendQueue;
@@ -85,7 +85,7 @@ public class BackendMQ implements Backend {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    BackendMQ other = (BackendMQ) obj;
+    BackendActiveMQ other = (BackendActiveMQ) obj;
     if (fromBackendHeartbeatQueue == null) {
       if (other.fromBackendHeartbeatQueue != null)
         return false;
@@ -117,7 +117,7 @@ public class BackendMQ implements Backend {
   @Override
   @JsonIgnore
   public BackendType getType() {
-    return BackendType.MQ;
+    return BackendType.ACTIVE_MQ;
   }
 
 }

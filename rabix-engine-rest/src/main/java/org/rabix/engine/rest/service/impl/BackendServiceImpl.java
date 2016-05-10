@@ -2,13 +2,13 @@ package org.rabix.engine.rest.service.impl;
 
 import java.util.UUID;
 
-import org.rabix.engine.rest.backend.Backend;
 import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.backend.stub.BackendStubFactory;
 import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
+import org.rabix.transport.backend.Backend;
 
 import com.google.inject.Inject;
 

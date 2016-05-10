@@ -1,6 +1,6 @@
 package org.rabix.engine.rest.service;
 
-import org.rabix.engine.rest.backend.Backend;
+import org.rabix.transport.backend.Backend;
 
 public interface BackendService {
 

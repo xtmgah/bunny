@@ -1,9 +1,6 @@
-package org.rabix.engine.rest.backend.impl;
+package org.rabix.transport.backend.impl;
 
-import java.util.Queue;
-
-import org.rabix.common.VMQueues;
-import org.rabix.engine.rest.backend.Backend;
+import org.rabix.transport.backend.Backend;
 
 public class BackendLocal implements Backend {
 
@@ -33,20 +30,28 @@ public class BackendLocal implements Backend {
     this.id = id;
   }
   
-  public Queue<String> getQueue(String name) {
-    return VMQueues.getQueue(name);
+  public String getToBackendQueue() {
+    return toBackendQueue;
   }
-  
-  public Queue<String> getToBackendQueue() {
-    return VMQueues.getQueue(toBackendQueue);
+
+  public void setToBackendQueue(String toBackendQueue) {
+    this.toBackendQueue = toBackendQueue;
   }
-  
-  public Queue<String> getFromBackendQueue() {
-    return VMQueues.getQueue(fromBackendQueue);
+
+  public String getFromBackendQueue() {
+    return fromBackendQueue;
   }
-  
-  public Queue<String> getFromBackendHeartbeatQueue() {
-    return VMQueues.getQueue(fromBackendHeartbeatQueue);
+
+  public void setFromBackendQueue(String fromBackendQueue) {
+    this.fromBackendQueue = fromBackendQueue;
+  }
+
+  public String getFromBackendHeartbeatQueue() {
+    return fromBackendHeartbeatQueue;
+  }
+
+  public void setFromBackendHeartbeatQueue(String fromBackendHeartbeatQueue) {
+    this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
   }
 
   @Override

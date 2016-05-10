@@ -25,7 +25,6 @@ import org.rabix.engine.rest.api.JobHTTPService;
 import org.rabix.engine.rest.api.impl.BackendHTTPServiceImpl;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
 import org.rabix.engine.rest.backend.BackendDispatcher;
-import org.rabix.engine.rest.backend.impl.BackendLocal;
 import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.service.BackendService;
@@ -33,9 +32,9 @@ import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
-import org.rabix.executor.ExecutorTransportModuleLocal;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
+import org.rabix.transport.backend.impl.BackendLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +105,6 @@ public class BackendCommandLine {
       Injector injector = Guice.createInjector(
           new SimpleFTPModule(), 
           new EngineModule(),
-          new ExecutorTransportModuleLocal(),
           new ExecutorModule(configModule), 
           new AbstractModule() {
             @Override
@@ -129,10 +127,10 @@ public class BackendCommandLine {
       final JobService jobService = injector.getInstance(JobService.class);
       final BackendService backendService = injector.getInstance(BackendService.class);
       final ExecutorService executorService = injector.getInstance(ExecutorService.class);
-      executorService.startReceiver();
       
       BackendLocal backendLocal = new BackendLocal();
       backendLocal = backendService.create(backendLocal);
+      executorService.initialize(backendLocal);
       
       final Job job = jobService.create(new Job(appURI, inputs));
       

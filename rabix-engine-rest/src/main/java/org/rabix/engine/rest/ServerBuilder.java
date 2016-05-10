@@ -88,7 +88,6 @@ public class ServerBuilder {
 
     context.addServlet(sh, "/*");
     
-    
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setDirectoriesListed(true);
     resourceHandler.setWelcomeFiles(new String[]{ "index.html" });

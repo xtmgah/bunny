@@ -1,10 +1,10 @@
-package org.rabix.engine.rest.transport;
+package org.rabix.transport.mechanism;
 
-public interface TransportPlugin {
+public interface TransportPlugin<Q extends TransportQueue> {
 
-  public <T> ResultPair<T> send(String destinationQueue, T entity);
+  public <T> ResultPair<T> send(Q destinationQueue, T entity);
 
-  public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz);
+  public <T> ResultPair<T> receive(Q sourceQueue, Class<T> clazz);
   
   TransportPluginType getType();
   
