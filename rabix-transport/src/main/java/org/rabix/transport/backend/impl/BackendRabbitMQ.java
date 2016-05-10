@@ -6,10 +6,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BackendRabbitMQ implements Backend {
+public class BackendRabbitMQ extends Backend {
 
-  @JsonProperty("id")
-  private String id;
   @JsonProperty("host")
   private String host;
   
@@ -24,16 +22,6 @@ public class BackendRabbitMQ implements Backend {
     this.host = host;
     this.engineConfiguration = engineConfiguration;
     this.backendConfiguration = backendConfiguration;
-  }
-  
-  @Override
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public void setId(String id) {
-    this.id = id;
   }
   
   public String getHost() {

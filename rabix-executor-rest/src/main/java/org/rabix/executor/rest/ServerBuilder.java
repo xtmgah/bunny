@@ -29,9 +29,9 @@ import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.rest.api.impl.ExecutorHTTPServiceImpl;
 import org.rabix.executor.service.ExecutorService;
-import org.rabix.executor.transport.TransportQueueConfig;
 import org.rabix.transport.backend.Backend;
-import org.rabix.transport.backend.impl.BackendActiveMQ;
+import org.rabix.transport.backend.impl.BackendRabbitMQ;
+import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -63,7 +63,6 @@ public class ServerBuilder {
               @Override
               protected void configure() {
                 bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
-                bind(TransportQueueConfig.class).in(Scopes.SINGLETON);
                 bind(BackendRegister.class).in(Scopes.SINGLETON);
               }
         }));
@@ -108,11 +107,9 @@ public class ServerBuilder {
   public static class BackendRegister {
 
     private Configuration configuration;
-    private TransportQueueConfig transportQueueConfig;
 
     @Inject
-    public BackendRegister(Configuration configuration, TransportQueueConfig transportQueueConfig) {
-      this.transportQueueConfig = transportQueueConfig;
+    public BackendRegister(Configuration configuration) {
       this.configuration = configuration;
     }
     
@@ -124,17 +121,25 @@ public class ServerBuilder {
       }
     }
 
-    private BackendActiveMQ registerBackend() {
+    private BackendRabbitMQ registerBackend() {
       String engineHost = configuration.getString("engine.url");
       Integer enginePort = configuration.getInteger("engine.port", null);
 
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
       WebTarget webTarget = client.target(engineHost + ":" + enginePort + "/v0/engine/backends");
 
-      BackendActiveMQ backend = new BackendActiveMQ(null, transportQueueConfig.getBroker(), transportQueueConfig.getToBackendQueue(), transportQueueConfig.getFromBackendQueue(), transportQueueConfig.getFromBackendHeartbeatQueue());
+      String rabbitHost = configuration.getString("rabbit.host");
+      String rabbitEngineExchange = configuration.getString("rabbit.engine.exchange");
+      String rabbitEngineExchangeType = configuration.getString("rabbit.engine.exchangeType");
+      String rabbitEngineReceiveRoutingKey = configuration.getString("rabbit.engine.receiveRoutingKey");
+      String rabbitEngineHeartbeatRoutingKey = configuration.getString("rabbit.engine.heartbeatRoutingKey");
+      
+      EngineConfiguration engineConfiguration = new EngineConfiguration(rabbitEngineExchange, rabbitEngineExchangeType, rabbitEngineReceiveRoutingKey, rabbitEngineHeartbeatRoutingKey);
+      BackendRabbitMQ backendRabbitMQ = new BackendRabbitMQ(null, rabbitHost, engineConfiguration, null);
+      
       Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
-      Response response = invocationBuilder.post(Entity.entity(backend, MediaType.APPLICATION_JSON));
-      return response.readEntity(BackendActiveMQ.class);
+      Response response = invocationBuilder.post(Entity.entity(backendRabbitMQ, MediaType.APPLICATION_JSON));
+      return response.readEntity(BackendRabbitMQ.class);
     }
     
   }

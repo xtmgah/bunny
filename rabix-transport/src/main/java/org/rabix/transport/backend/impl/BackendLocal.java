@@ -2,32 +2,25 @@ package org.rabix.transport.backend.impl;
 
 import org.rabix.transport.backend.Backend;
 
-public class BackendLocal implements Backend {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class BackendLocal extends Backend {
 
   public final static String SEND_TO_BACKEND_QUEUE = "toBackendQueue";
   public final static String RECEIVE_FROM_BACKEND_QUEUE = "fromBackendQueue";
   public final static String RECEIVE_FROM_BACKEND_HEARTBEAT_QUEUE = "fromBackendHeartbeatQueue";
   
-  private String id;
-  
+  @JsonProperty("to_backend_queue")
   private String toBackendQueue;
+  @JsonProperty("from_backend_queue")
   private String fromBackendQueue;
+  @JsonProperty("from_backend_heartbeat_queue")
   private String fromBackendHeartbeatQueue;
   
   public BackendLocal() {
     this.toBackendQueue = SEND_TO_BACKEND_QUEUE;
     this.fromBackendQueue = RECEIVE_FROM_BACKEND_QUEUE;
     this.fromBackendHeartbeatQueue = RECEIVE_FROM_BACKEND_HEARTBEAT_QUEUE;
-  }
-  
-  @Override
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public void setId(String id) {
-    this.id = id;
   }
   
   public String getToBackendQueue() {
