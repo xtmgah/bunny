@@ -6,6 +6,7 @@ public interface TransportStub {
 
   public <T> ResultPair<T> receive(String sourceQueue, Class<T> clazz);
   
+  
   public static class ResultPair<T> {
     private boolean success;
 

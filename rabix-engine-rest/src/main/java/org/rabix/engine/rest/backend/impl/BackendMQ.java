@@ -5,7 +5,7 @@ import org.rabix.engine.rest.backend.Backend;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BackendActiveMQ implements Backend {
+public class BackendMQ implements Backend {
 
   @JsonProperty("id")
   private String id;
@@ -18,7 +18,7 @@ public class BackendActiveMQ implements Backend {
   @JsonProperty("fromBackendHeartbeatQueue")
   private String fromBackendHeartbeatQueue;
   
-  public BackendActiveMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
+  public BackendMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
     this.id = id;
     this.broker = broker;
     this.toBackendQueue = toBackendQueue;
@@ -85,7 +85,7 @@ public class BackendActiveMQ implements Backend {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    BackendActiveMQ other = (BackendActiveMQ) obj;
+    BackendMQ other = (BackendMQ) obj;
     if (fromBackendHeartbeatQueue == null) {
       if (other.fromBackendHeartbeatQueue != null)
         return false;
@@ -111,13 +111,13 @@ public class BackendActiveMQ implements Backend {
 
   @Override
   public String toString() {
-    return "BackendActiveMQ [id=" + id + ", sendQueue=" + toBackendQueue + ", receiveQueue=" + fromBackendQueue + ", heartbeatQueue="  + fromBackendHeartbeatQueue + "]";
+    return "BackendMQ [id=" + id + ", sendQueue=" + toBackendQueue + ", receiveQueue=" + fromBackendQueue + ", heartbeatQueue="  + fromBackendHeartbeatQueue + "]";
   }
 
   @Override
   @JsonIgnore
   public BackendType getType() {
-    return BackendType.ACTIVE_MQ;
+    return BackendType.MQ;
   }
 
 }

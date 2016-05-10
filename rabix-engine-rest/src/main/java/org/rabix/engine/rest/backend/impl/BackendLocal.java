@@ -5,8 +5,6 @@ import java.util.Queue;
 import org.rabix.common.VMQueues;
 import org.rabix.engine.rest.backend.Backend;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class BackendLocal implements Backend {
 
   public final static String SEND_TO_BACKEND_QUEUE = "toBackendQueue";
@@ -52,7 +50,6 @@ public class BackendLocal implements Backend {
   }
 
   @Override
-  @JsonIgnore
   public BackendType getType() {
     return BackendType.LOCAL;
   }

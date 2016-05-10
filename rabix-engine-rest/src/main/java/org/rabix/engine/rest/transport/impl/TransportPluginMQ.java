@@ -15,12 +15,12 @@ import org.rabix.common.json.BeanSerializer;
 import org.rabix.engine.rest.transport.TransportPlugin;
 import org.rabix.engine.rest.transport.TransportPluginType;
 
-public class TransportPluginActiveMQ implements TransportPlugin {
+public class TransportPluginMQ implements TransportPlugin {
 
   private String broker;
   private PooledConnectionFactory connectionFactory;
 
-  public TransportPluginActiveMQ(String broker) {
+  public TransportPluginMQ(String broker) {
     this.broker = broker;
     initializeConnectionFactory();
   }

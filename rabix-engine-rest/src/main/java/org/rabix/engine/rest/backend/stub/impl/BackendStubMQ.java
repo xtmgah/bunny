@@ -8,12 +8,12 @@ import java.util.concurrent.TimeUnit;
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.backend.Backend;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
-import org.rabix.engine.rest.backend.impl.BackendActiveMQ;
+import org.rabix.engine.rest.backend.impl.BackendMQ;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.rest.transport.TransportPlugin.ResultPair;
-import org.rabix.engine.rest.transport.impl.TransportPluginActiveMQ;
+import org.rabix.engine.rest.transport.impl.TransportPluginMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,16 +21,16 @@ public class BackendStubMQ implements BackendStub {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendStubMQ.class);
   
-  private BackendActiveMQ backend;
+  private BackendMQ backend;
   private JobService jobService;
-  private TransportPluginActiveMQ transportPluginMQ;
+  private TransportPluginMQ transportPluginMQ;
   
   private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
   
-  public BackendStubMQ(JobService jobService, BackendActiveMQ backend) {
+  public BackendStubMQ(JobService jobService, BackendMQ backend) {
     this.backend = backend;
     this.jobService = jobService;
-    this.transportPluginMQ = new TransportPluginActiveMQ(backend.getBroker());
+    this.transportPluginMQ = new TransportPluginMQ(backend.getBroker());
   }
   
   @Override

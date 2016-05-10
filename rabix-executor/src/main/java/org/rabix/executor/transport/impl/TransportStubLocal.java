@@ -1,4 +1,4 @@
-package org.rabix.executor.transport.impl.local;
+package org.rabix.executor.transport.impl;
 
 import org.rabix.common.VMQueues;
 import org.rabix.common.json.BeanSerializer;
