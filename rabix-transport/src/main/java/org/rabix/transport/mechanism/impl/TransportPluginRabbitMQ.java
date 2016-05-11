@@ -15,10 +15,8 @@ import com.rabbitmq.client.QueueingConsumer;
 
 public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRabbitMQ> {
 
-  public static final long DEFAULT_TIMEOUT = 10;
   public static final String DEFAULT_ENCODING = "UTF-8";
 
-  
   private String host;
   private ConnectionFactory factory;
   
@@ -75,7 +73,7 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
       QueueingConsumer consumer = new QueueingConsumer(channel);
       channel.basicConsume(queueName, true, consumer);
 
-      QueueingConsumer.Delivery delivery = consumer.nextDelivery(DEFAULT_TIMEOUT);
+      QueueingConsumer.Delivery delivery = consumer.nextDelivery();
       String message = new String(delivery.getBody());
       return ResultPair.success(BeanSerializer.deserialize(message, clazz));
     } catch (Exception e) {

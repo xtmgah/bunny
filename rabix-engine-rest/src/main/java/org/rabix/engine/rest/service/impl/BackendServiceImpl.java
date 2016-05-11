@@ -42,7 +42,7 @@ public class BackendServiceImpl implements BackendService {
     backend.setId(UUID.randomUUID().toString());
     switch (backend.getType()) {
     case RABBIT_MQ:
-      BackendConfiguration backendConfiguration = new BackendConfiguration("backend_exchange", "direct", "backend_receive_routing_key");
+      BackendConfiguration backendConfiguration = new BackendConfiguration("backend_exchange_10", "direct", "receive_routing_key");
       ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
       break;
     default:

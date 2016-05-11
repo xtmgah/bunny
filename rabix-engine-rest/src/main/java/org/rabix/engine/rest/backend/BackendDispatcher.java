@@ -60,9 +60,9 @@ public class BackendDispatcher {
           dispatcherLock.unlock();
         }
       }
-    }, 0, 1, TimeUnit.SECONDS);
+    }, 0, 10, TimeUnit.SECONDS);
 
-    heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, 15, TimeUnit.SECONDS);
+    heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, 20, TimeUnit.SECONDS);
   }
 
   public boolean send(Set<Job> jobs) {

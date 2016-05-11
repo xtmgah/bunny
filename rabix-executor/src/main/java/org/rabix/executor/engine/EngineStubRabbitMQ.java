@@ -59,7 +59,7 @@ public class EngineStubRabbitMQ implements EngineStub {
       public void run() {
         transportPlugin.send(receiveFromBackendHeartbeatQueue, new HeartbeatInfo(backendRabbitMQ.getId(), System.currentTimeMillis()));
       }
-    }, 0, 1, TimeUnit.SECONDS);
+    }, 0, 10, TimeUnit.SECONDS);
   }
 
   @Override
