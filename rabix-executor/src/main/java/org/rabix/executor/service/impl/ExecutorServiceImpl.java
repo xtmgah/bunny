@@ -13,6 +13,7 @@ import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,17 +30,26 @@ public class ExecutorServiceImpl implements ExecutorService {
   private final Provider<StopCommand> stopCommandProvider;
   private final Provider<StartCommand> startCommandProvider;
   private final Provider<StatusCommand> statusCommandProvider;
-  
+
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
+  private final JobReceiver jobReceiver;
+
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
+  public ExecutorServiceImpl(JobDataService jobDataService, JobReceiver jobReceiver,
+      JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
       Provider<StartCommand> startCommandProvider, Provider<StatusCommand> statusCommandProvider) {
+    this.jobReceiver = jobReceiver;
     this.jobDataService = jobDataService;
     this.stopCommandProvider = stopCommandProvider;
     this.startCommandProvider = startCommandProvider;
     this.statusCommandProvider = statusCommandProvider;
     this.jobHandlerCommandDispatcher = jobHandlerCommandDispatcher;
+  }
+
+  @Override
+  public void startReceiver() {
+    this.jobReceiver.start();
   }
 
   @Override
@@ -89,7 +99,8 @@ public class ExecutorServiceImpl implements ExecutorService {
       }
     }
     stopped.set(true);
-    String message = String.format("Shutdown%s executed. Worker has stopped %d %s.", stopEverything ? " now" : "", abortedJobsCount, abortedJobsCount == 1 ? "job" : "jobs");
+    String message = String.format("Shutdown%s executed. Worker has stopped %d %s.", stopEverything ? " now" : "",
+        abortedJobsCount, abortedJobsCount == 1 ? "job" : "jobs");
     logger.info(message);
   }
 
@@ -98,7 +109,7 @@ public class ExecutorServiceImpl implements ExecutorService {
     JobData jobData = jobDataService.find(id, contextId);
     return jobData.getResult();
   }
-  
+
   @Override
   public boolean isRunning(String id, String contextId) {
     logger.debug("isRunning(id={})", id);
@@ -126,6 +137,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   @Override
   public boolean isStopped() {
     return stopped.get();
+
   }
 
 }

@@ -25,11 +25,11 @@ public class JobRecordService {
   }
   
   public synchronized void create(JobRecord jobRecord) {
-    getJobRecords(jobRecord.getContextId()).add(jobRecord);
+    getJobRecords(jobRecord.getRootId()).add(jobRecord);
   }
 
   public synchronized void update(JobRecord jobRecord) {
-    for (JobRecord jr : getJobRecords(jobRecord.getContextId())) {
+    for (JobRecord jr : getJobRecords(jobRecord.getRootId())) {
       if (jr.getId().equals(jobRecord.getId())) {
         jr.setState(jobRecord.getState());
         jr.setContainer(jobRecord.isContainer());
@@ -51,7 +51,7 @@ public class JobRecordService {
     List<JobRecord> result = new ArrayList<>();
     
     for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.getState().equals(JobState.READY) && jr.getContextId().equals(contextId)) {
+      if (jr.getState().equals(JobState.READY) && jr.getRootId().equals(contextId)) {
         result.add(jr);
       }
     }
@@ -60,7 +60,7 @@ public class JobRecordService {
   
   public synchronized JobRecord find(String id, String contextId) {
     for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.getId().equals(id) && jr.getContextId().equals(contextId)) {
+      if (jr.getId().equals(id) && jr.getRootId().equals(contextId)) {
         return jr;
       }
     }
@@ -69,7 +69,7 @@ public class JobRecordService {
   
   public synchronized JobRecord findRoot(String contextId) {
     for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.isMaster() && jr.getContextId().equals(contextId)) {
+      if (jr.isMaster() && jr.getRootId().equals(contextId)) {
         return jr;
       }
     }

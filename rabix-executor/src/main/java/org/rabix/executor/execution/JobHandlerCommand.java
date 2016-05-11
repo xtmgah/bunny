@@ -1,9 +1,14 @@
 package org.rabix.executor.execution;
 
+import java.util.Map;
+
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.TransportStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +28,14 @@ public abstract class JobHandlerCommand {
 
   protected final JobDataService jobDataService;
 
-  public JobHandlerCommand(JobDataService jobDataService) {
+  protected final TransportStub mqTransportStub;
+  protected final TransportQueueConfig transportQueueConfig;
+  
+  public JobHandlerCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
     this.jobDataService = jobDataService;
+    
+    this.transportQueueConfig = transportQueueConfig;
+    this.mqTransportStub = mqTransportStub;
   }
 
   /**
@@ -62,6 +73,10 @@ public abstract class JobHandlerCommand {
    */
   protected void started(JobData jobData, String message) {
     logger.info(message);
+
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
+    jobData.setJob(job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -69,6 +84,10 @@ public abstract class JobHandlerCommand {
    */
   protected void failed(JobData jobData, String message, Throwable e) {
     logger.error(message, e);
+
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
+    jobData.setJob(job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
@@ -76,13 +95,22 @@ public abstract class JobHandlerCommand {
    */
   protected void stopped(JobData jobData, String message) {
     logger.info(message);
+
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
+    jobData.setJob(job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**
    * Send notification to master about COMPLETED event 
    */
-  protected void completed(JobData jobData, String message, Object result) {
+  protected void completed(JobData jobData, String message, Map<String, Object> result) {
     logger.info(message);
+
+    Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
+    job = Job.cloneWithOutputs(job, result);
+    jobData.setJob(job);
+    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
   }
 
   /**

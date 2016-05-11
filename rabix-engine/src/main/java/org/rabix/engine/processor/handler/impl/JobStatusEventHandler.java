@@ -37,7 +37,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     case COMPLETED:
       for (PortCounter portCounter : jobRecord.getOutputCounters()) {
         Object output = event.getResult().get(portCounter.getPort());
-        eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getContextId(), jobRecord.getId(), portCounter.getPort(), output, 1));
+        eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
       }
       break;
     case FAILED:

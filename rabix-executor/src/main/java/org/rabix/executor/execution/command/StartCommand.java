@@ -9,6 +9,8 @@ import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.TransportStub;
 
 /**
  * Command that starts {@link JobHandler}
@@ -16,8 +18,8 @@ import org.rabix.executor.service.JobDataService;
 public class StartCommand extends JobHandlerCommand {
 
   @Inject
-  public StartCommand(JobDataService jobDataService) {
-    super(jobDataService);
+  public StartCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
+    super(jobDataService, mqTransportStub, transportQueueConfig);
   }
 
   @Override

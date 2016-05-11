@@ -37,6 +37,15 @@ public class InternalSchemaHelper {
   public static String getJobIdFromScatteredId(String id) {
     return id.substring(0, id.lastIndexOf(SEPARATOR));
   }
+  
+  public static String getParentId(String id) {
+    String result = null;
+    String[] idParts = id.split("\\" + SEPARATOR);
+    if (idParts.length == 1) {
+      return result;
+    }
+    return id.substring(0, id.lastIndexOf(SEPARATOR));
+  }
 
   public static String normalizeId(String id) {
     String result = id;

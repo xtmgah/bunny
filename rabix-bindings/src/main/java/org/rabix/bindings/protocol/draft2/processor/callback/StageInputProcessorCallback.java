@@ -10,9 +10,9 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort.StageInput;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
@@ -31,7 +31,7 @@ public class StageInputProcessorCallback implements Draft2PortProcessorCallback 
   }
 
   @Override
-  public Draft2PortProcessorResult process(Object value, Draft2Port port) throws Exception {
+  public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (!(port instanceof Draft2InputPort)) {
       throw new RuntimeException("Inputs only can be staged!");
     }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
@@ -12,14 +13,14 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 public class DAGNode {
 
   protected final String id;
-  protected final Object app;
+  protected final Application app;
   protected final ScatterMethod scatterMethod;
   protected final List<DAGLinkPort> inputPorts;
   protected final List<DAGLinkPort> outputPorts;
   
   protected final Map<String, Object> defaults;
 
-  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, Object app, Map<String, Object> defaults) {
+  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, Application app, Map<String, Object> defaults) {
     this.id = id;
     this.app = app;
     this.inputPorts = inputPorts;
@@ -32,7 +33,7 @@ public class DAGNode {
     return id;
   }
 
-  public Object getApp() {
+  public Application getApp() {
     return app;
   }
 

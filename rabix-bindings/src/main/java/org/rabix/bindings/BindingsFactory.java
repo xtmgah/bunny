@@ -25,12 +25,14 @@ public class BindingsFactory {
   }
 
   public static Bindings create(String appURL) {
-    for (Bindings bindings : bindings.values()) {
+    for (Bindings binding : bindings.values()) {
       try {
-        bindings.loadAppObject(appURL);
-        return bindings;
-      } catch (BindingException e) {
-        // do nothing
+        Object app = binding.loadAppObject(appURL);
+        if (app == null) {
+          continue;
+        }
+        return binding;
+      } catch (Exception e) {
       }
     }
     return null;

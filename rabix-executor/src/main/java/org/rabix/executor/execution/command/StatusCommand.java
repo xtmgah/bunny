@@ -10,6 +10,8 @@ import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.transport.TransportQueueConfig;
+import org.rabix.executor.transport.TransportStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +25,8 @@ public class StatusCommand extends JobHandlerCommand {
   public final static long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(15);
   
   @Inject
-  public StatusCommand(JobDataService jobDataService) {
-    super(jobDataService);
+  public StatusCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
+    super(jobDataService, mqTransportStub, transportQueueConfig);
   }
 
   @Override
@@ -39,7 +41,7 @@ public class StatusCommand extends JobHandlerCommand {
     try {
       Job job = jobData.getJob();
       if (jobHandler.isRunning()) {
-        logger.info("Command line tool {} for context {} is still running.", job.getId(), job.getContext().getId());
+        logger.info("Command line tool {} for context {} is still running.", job.getId(), job.getRootId());
         return new Result(false);
       }
       

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
@@ -21,7 +21,7 @@ public class FileDataFlattenProcessorCallback implements Draft2PortProcessorCall
 
   @Override
   @SuppressWarnings("unchecked")
-  public Draft2PortProcessorResult process(Object value, Draft2Port port) throws Exception {
+  public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
       flattenedFileData.add((Map<String, Object>) value);
 

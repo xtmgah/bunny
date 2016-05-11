@@ -3,8 +3,8 @@ package org.rabix.bindings.protocol.draft2.processor.callback;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.FileValue;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
@@ -19,7 +19,7 @@ public class Draft2FileValueFlattenProcessorCallback implements Draft2PortProces
   }
 
   @Override
-  public Draft2PortProcessorResult process(Object value, Draft2Port port) throws Exception {
+  public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
       fileValues.add(Draft2FileValueHelper.createFileValue(value));
       return new Draft2PortProcessorResult(value, true);

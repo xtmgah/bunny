@@ -10,7 +10,7 @@ import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobStateValidator {
-
+  
   private static Map<JobState, List<JobState>> transitions = new HashMap<JobState, List<JobState>>();
 
   static {

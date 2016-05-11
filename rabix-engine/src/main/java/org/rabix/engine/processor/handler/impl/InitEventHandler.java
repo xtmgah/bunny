@@ -47,13 +47,13 @@ public class InitEventHandler implements EventHandler<InitEvent> {
   }
 
   public void handle(final InitEvent event) throws EventHandlerException {
-    ContextRecord context = new ContextRecord(event.getContext().getId(), event.getContext().getConfig(), ContextStatus.RUNNING);
+    ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
     
     contextRecordService.create(context);
     nodeDB.loadDB(event.getNode(), event.getContextId());
     
     DAGNode node = nodeDB.get(event.getNode().getId(), event.getContextId());
-    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), JobState.PENDING, node instanceof DAGContainer, false, true, false);
+    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node instanceof DAGContainer, false, true, false);
 
     for (DAGLinkPort inputPort : node.getInputPorts()) {
       if (job.getState().equals(JobState.PENDING)) {

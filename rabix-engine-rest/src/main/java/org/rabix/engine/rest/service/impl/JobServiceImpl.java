@@ -1,9 +1,7 @@
 package org.rabix.engine.rest.service.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.BindingException;
@@ -23,9 +21,8 @@ import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.EventProcessor.IterationCallback;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.JobDB;
-import org.rabix.engine.rest.plugin.BackendPluginDispatcher;
-import org.rabix.engine.rest.plugin.BackendPluginType;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.service.ContextRecordService;
@@ -51,10 +48,10 @@ public class JobServiceImpl implements JobService {
   private final DAGNodeDB dagNodeDB;
   
   private final EventProcessor eventProcessor;
-  private final BackendPluginDispatcher backendPluginDispatcher;
+  private final BackendDispatcher backendDispatcher;
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendPluginDispatcher backendPluginDispatcher, DAGNodeDB dagNodeDB, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeDB dagNodeDB, JobDB jobDB) {
     this.jobDB = jobDB;
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
@@ -62,7 +59,7 @@ public class JobServiceImpl implements JobService {
     this.jobRecordService = jobRecordService;
     this.variableRecordService = variableRecordService;
     this.contextRecordService = contextRecordService;
-    this.backendPluginDispatcher = backendPluginDispatcher;
+    this.backendDispatcher = backendDispatcher;
 
     List<IterationCallback> callbacks = new ArrayList<>();
     callbacks.add(new EndJobCallback());
@@ -76,29 +73,41 @@ public class JobServiceImpl implements JobService {
       Bindings bindings = BindingsFactory.create(job);
       ProtocolType protocolType = bindings.getProtocolType();
       
-      JobRecord jobRecord = jobRecordService.find(job.getNodeId(), job.getContext().getId());
+      JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
       
       JobStatusEvent statusEvent = null;
       JobStatus status = job.getStatus();
       switch (status) {
       case RUNNING:
+        if (JobState.RUNNING.equals(jobRecord.getState())) {
+          return;
+        }
         JobStateValidator.checkState(jobRecord, JobState.RUNNING);
-        statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.RUNNING, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.RUNNING, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
+        if (JobState.FAILED.equals(jobRecord.getState())) {
+          return;
+        }
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
-        statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.FAILED, null, protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null, protocolType);
         eventProcessor.addToQueue(statusEvent);
+        backendDispatcher.remove(job);
         break;
       case COMPLETED:
+        if (JobState.COMPLETED.equals(jobRecord.getState())) {
+          return;
+        }
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
-        statusEvent = new JobStatusEvent(job.getNodeId(), job.getContext().getId(), JobState.COMPLETED, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs(), protocolType);
         eventProcessor.addToQueue(statusEvent);
+        backendDispatcher.remove(job);
         break;
       default:
         break;
       }
+      jobDB.update(job);
     } catch (BindingException e) {
       logger.error("Cannot find Bindings", e);
       throw new JobServiceException("Cannot find Bindings", e);
@@ -114,12 +123,11 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public String create(Job job) throws JobServiceException {
-    String contextId = Context.createUniqueID();
+  public Job create(Job job) throws JobServiceException {
     
-    Context context = job.getContext() != null? job.getContext() : createContext(contextId);
-    job = Job.cloneWithId(job, contextId);
-    context.setId(contextId);
+    Context context = job.getContext() != null? job.getContext() : createContext(job.getRootId());
+    job = Job.cloneWithId(job, job.getRootId());
+    context.setId(job.getRootId());
     job = Job.cloneWithContext(job, context);
     jobDB.add(job);
 
@@ -128,10 +136,9 @@ public class JobServiceImpl implements JobService {
       bindings = BindingsFactory.create(job);
 
       DAGNode node = bindings.translateToDAG(job);
-      InitEvent initEvent = new InitEvent(context, node, job.getInputs());
-
+      InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
       eventProcessor.send(initEvent);
-      return context.getId();
+      return job;
     } catch (BindingException e) {
       logger.error("Failed to create Bindings", e);
       throw new JobServiceException("Failed to create Bindings", e);
@@ -151,16 +158,14 @@ public class JobServiceImpl implements JobService {
   }
 
   private Context createContext(String contextId) {
-    Map<String, String> contextConfig = new HashMap<String, String>();
-    contextConfig.put("backend.type", BackendPluginType.WAGNER.name());
-    return new Context(contextId, contextConfig);
+    return new Context(contextId, null);
   }
   
   private class SendJobsCallback implements IterationCallback {
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
       Set<Job> jobs = getReady(eventProcessor, contextId);
-      backendPluginDispatcher.send(jobs);
+      backendDispatcher.send(jobs);
     }
   }
 
@@ -174,6 +179,7 @@ public class JobServiceImpl implements JobService {
       case COMPLETED:
         job = jobDB.get(contextId);
         job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
+        job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
         jobDB.update(job);
         break;
       case FAILED:

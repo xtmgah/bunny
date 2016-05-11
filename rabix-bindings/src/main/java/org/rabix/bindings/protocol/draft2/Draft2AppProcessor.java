@@ -2,6 +2,7 @@ package org.rabix.bindings.protocol.draft2;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolAppProcessor;
+import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
@@ -26,7 +27,7 @@ public class Draft2AppProcessor implements ProtocolAppProcessor {
   }
   
   @Override
-  public Object loadAppObject(String app) throws BindingException {
+  public Application loadAppObject(String app) throws BindingException {
     return BeanSerializer.deserialize(loadApp(app), Draft2JobApp.class);
   }
 

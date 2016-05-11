@@ -6,6 +6,7 @@ import java.util.List;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolTranslator;
 import org.rabix.bindings.helper.DAGValidationHelper;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
@@ -16,7 +17,6 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.protocol.draft2.bean.Draft2DataLink;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
-import org.rabix.bindings.protocol.draft2.bean.Draft2Port;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
 import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
@@ -73,12 +73,12 @@ public class Draft2Translator implements ProtocolTranslator {
   private DAGNode transformToGeneric(String globalJobId, Draft2Job job) throws BindingException {
     List<DAGLinkPort> inputPorts = new ArrayList<>();
     
-    for (Draft2Port port : job.getApp().getInputs()) {
+    for (ApplicationPort port : job.getApp().getInputs()) {
       DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.INPUT, LinkMerge.merge_nested, port.getScatter() != null ? port.getScatter() : false);
       inputPorts.add(linkPort);
     }
     List<DAGLinkPort> outputPorts = new ArrayList<>();
-    for (Draft2Port port : job.getApp().getOutputs()) {
+    for (ApplicationPort port : job.getApp().getOutputs()) {
       DAGLinkPort linkPort = new DAGLinkPort(Draft2SchemaHelper.normalizeId(port.getId()), job.getId(), LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
       outputPorts.add(linkPort);
     }

@@ -11,19 +11,19 @@ public class JobDB {
 
   private Map<String, Job> jobs = new HashMap<>();
   
-  public void add(Job job) {
+  public synchronized void add(Job job) {
     jobs.put(job.getId(), job);
   }
   
-  public void update(Job job) {
+  public synchronized void update(Job job) {
     jobs.put(job.getId(), job);
   }
   
-  public Job get(String id) {
+  public synchronized Job get(String id) {
     return jobs.get(id);
   }
   
-  public Set<Job> getJobs() {
+  public synchronized Set<Job> getJobs() {
     Set<Job> jobSet = new HashSet<>();
     for (Job job : jobs.values()) {
       jobSet.add(job);

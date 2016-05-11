@@ -1,7 +1,6 @@
 package org.rabix.bindings.model;
 
 import java.util.Map;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,10 +16,6 @@ public class Context {
   public Context(@JsonProperty("id") String id, @JsonProperty("config") Map<String, String> config) {
     this.id = id;
     this.config = config;
-  }
-
-  public static String createUniqueID() {
-    return UUID.randomUUID().toString();
   }
   
   public void setId(String id) {
