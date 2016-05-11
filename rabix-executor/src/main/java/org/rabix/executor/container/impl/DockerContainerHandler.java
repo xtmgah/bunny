@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
@@ -33,11 +34,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerCertificateException;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerClient.LogsParam;
 import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.LogMessage;
 import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.ProgressHandler;
+import com.spotify.docker.client.messages.AuthConfig;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ContainerInfo;
@@ -68,17 +72,47 @@ public class DockerContainerHandler implements ContainerHandler {
     this.dockerResource = dockerResource;
     this.configuration = configuration;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
-    this.dockerClient = createDockerClient(configuration);
+    this.dockerClient = createDockerClient();
   }
   
-  private DockerClient createDockerClient(Configuration configuration) {
-    String dockerURI = StorageConfig.getDockerURI(configuration);
-    
-    return DefaultDockerClient.builder()
-        .uri(URI.create(dockerURI.replaceAll("^unix:///", "unix://localhost/")))
-        .connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
-        .readTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
-        .build();
+  private DockerClient createDockerClient() {
+    DockerClient docker = null;
+    try {
+      docker = DefaultDockerClient.fromEnv().connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1)).readTimeoutMillis(TimeUnit.MINUTES.toMillis(1)).build();
+    } catch (DockerCertificateException e) {
+      e.printStackTrace();
+    }
+    return docker;
+  }
+  
+  private String extractServerName(String image) {
+    if(StringUtils.countMatches(image, "/") <= 1) {
+      return "https://index.docker.io/v1/";
+    }
+    else {
+      return image.substring(0, image.indexOf("/"));
+    }
+  }
+  
+  private void pull(String image) throws ContainerException {
+    logger.debug("Pulling docker image");
+    AuthConfig authConfig = null;
+    try {
+      String serverAddress = extractServerName(image);
+      authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
+    } catch (IOException e) {
+      logger.debug("Can't find docker config file");
+      try {
+        this.dockerClient.pull(image);
+      } catch (DockerException | InterruptedException e1) {
+        throw new ContainerException("Failed to pull " + image, e1);
+      }
+    }
+    try {
+      this.dockerClient.pull(image, authConfig);
+    } catch (DockerException | InterruptedException e) {
+      throw new ContainerException("Failed to pull " + image, e);
+    }
   }
 
   @Override
@@ -86,12 +120,7 @@ public class DockerContainerHandler implements ContainerHandler {
     String dockerPull = dockerResource.getDockerPull();
 
     try {
-      try {
-        dockerClient.pull(dockerPull);
-      } catch (Exception e) {
-        logger.error("Failed to pull " + dockerPull, e);
-        throw new ContainerException("Failed to pull " + dockerPull, e);
-      }
+      pull(dockerPull);
 
       Set<String> volumes = new HashSet<>();
       String physicalPath = StorageConfig.getLocalExecutionDirectory(configuration);
@@ -278,5 +307,4 @@ public class DockerContainerHandler implements ContainerHandler {
       }
     }
   }
-
 }

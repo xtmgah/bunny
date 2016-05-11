@@ -96,7 +96,7 @@ public class JobHandlerImpl implements JobHandler {
         containerHandler = new CompletedContainerHandler();
       } else {
         Requirement containerRequirement = getRequirement(combinedRequirements, DockerContainerRequirement.class);
-        if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
+        if (containerRequirement == null) {
           containerRequirement = new LocalContainerRequirement();
         }
         containerHandler = ContainerHandlerFactory.create(job, containerRequirement, configuration);
