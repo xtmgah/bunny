@@ -22,7 +22,7 @@ public class BackendStubFactory {
     this.configuration = configuration;
   }
 
-  public <T extends Backend> BackendStub createStub(JobService jobService, T backend) {
+  public <T extends Backend> BackendStub create(JobService jobService, T backend) {
     try {
       switch (backend.getType()) {
       case ACTIVE_MQ:

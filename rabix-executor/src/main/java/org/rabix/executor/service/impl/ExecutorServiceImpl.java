@@ -49,6 +49,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher,
       Provider<StopCommand> stopCommandProvider, Provider<StartCommand> startCommandProvider,
       Provider<StatusCommand> statusCommandProvider, Configuration configuration) {
+    this.configuration = configuration;
     this.jobDataService = jobDataService;
     this.stopCommandProvider = stopCommandProvider;
     this.startCommandProvider = startCommandProvider;

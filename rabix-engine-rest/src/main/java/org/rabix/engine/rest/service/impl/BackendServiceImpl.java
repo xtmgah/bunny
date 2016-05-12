@@ -39,7 +39,7 @@ public class BackendServiceImpl implements BackendService {
     backend = populate(backend);
     backendDB.add(backend);
     
-    BackendStub backendStub = backendStubFactory.createStub(jobService, backend);
+    BackendStub backendStub = backendStubFactory.create(jobService, backend);
     backendDispatcher.addBackendStub(backendStub);
     return backend;
   }

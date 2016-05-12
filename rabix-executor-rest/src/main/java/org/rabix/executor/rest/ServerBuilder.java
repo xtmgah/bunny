@@ -128,11 +128,11 @@ public class ServerBuilder {
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
       WebTarget webTarget = client.target(engineHost + ":" + enginePort + "/v0/engine/backends");
 
-      String rabbitHost = configuration.getString("rabbit.host");
-      String rabbitEngineExchange = configuration.getString("rabbit.engine.exchange");
-      String rabbitEngineExchangeType = configuration.getString("rabbit.engine.exchangeType");
-      String rabbitEngineReceiveRoutingKey = configuration.getString("rabbit.engine.receiveRoutingKey");
-      String rabbitEngineHeartbeatRoutingKey = configuration.getString("rabbit.engine.heartbeatRoutingKey");
+      String rabbitHost = configuration.getString("rabbitmq.host");
+      String rabbitEngineExchange = configuration.getString("rabbitmq.engine.exchange");
+      String rabbitEngineExchangeType = configuration.getString("rabbitmq.engine.exchangeType");
+      String rabbitEngineReceiveRoutingKey = configuration.getString("rabbitmq.engine.receiveRoutingKey");
+      String rabbitEngineHeartbeatRoutingKey = configuration.getString("rabbitmq.engine.heartbeatRoutingKey");
       
       EngineConfiguration engineConfiguration = new EngineConfiguration(rabbitEngineExchange, rabbitEngineExchangeType, rabbitEngineReceiveRoutingKey, rabbitEngineHeartbeatRoutingKey);
       BackendRabbitMQ backendRabbitMQ = new BackendRabbitMQ(null, rabbitHost, engineConfiguration, null);
