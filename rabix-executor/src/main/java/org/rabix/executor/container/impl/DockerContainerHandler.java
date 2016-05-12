@@ -52,12 +52,14 @@ import com.spotify.docker.client.messages.HostConfig;
 public class DockerContainerHandler implements ContainerHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(DockerContainerHandler.class);
-
+  private static final String dockerHubServer = "https://index.docker.io/v1/";
+  
   public static final String DIRECTORY_MAP_MODE = "rw";
   public static final String COMMAND_FILE = "cmd.log";
-
+  
   private String containerId;
   private DockerClient dockerClient;
+  
 
   private final Job job;
   private final DockerContainerRequirement dockerResource;
@@ -85,8 +87,7 @@ public class DockerContainerHandler implements ContainerHandler {
   
   private String extractServerName(String image) {
     if(StringUtils.countMatches(image, "/") <= 1) {
-      
-      return "https://index.docker.io/v1/";
+      return dockerHubServer;
     }
     else {
       return image.substring(0, image.indexOf("/"));
