@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -40,7 +39,6 @@ import com.spotify.docker.client.DockerClient.LogsParam;
 import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.LogMessage;
 import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.ProgressHandler;
 import com.spotify.docker.client.messages.AuthConfig;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
@@ -87,6 +85,7 @@ public class DockerContainerHandler implements ContainerHandler {
   
   private String extractServerName(String image) {
     if(StringUtils.countMatches(image, "/") <= 1) {
+      
       return "https://index.docker.io/v1/";
     }
     else {
@@ -100,7 +99,7 @@ public class DockerContainerHandler implements ContainerHandler {
     try {
       String serverAddress = extractServerName(image);
       authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       logger.debug("Can't find docker config file");
       try {
         this.dockerClient.pull(image);
