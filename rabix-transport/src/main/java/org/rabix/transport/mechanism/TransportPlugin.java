@@ -4,9 +4,13 @@ public interface TransportPlugin<Q extends TransportQueue> {
 
   public <T> ResultPair<T> send(Q destinationQueue, T entity);
 
-  public <T> ResultPair<T> receive(Q sourceQueue, Class<T> clazz);
+  public <T> ResultPair<T> receive(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback);
   
   TransportPluginType getType();
+  
+  public static interface ReceiveCallback<T> {
+    void handleReceive(T entity);
+  }
   
   public static class ResultPair<T> {
     private boolean success;

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.engine.EngineStub;
@@ -21,6 +22,7 @@ import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.impl.BackendActiveMQ;
 import org.rabix.transport.backend.impl.BackendLocal;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
+import org.rabix.transport.mechanism.TransportPluginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +43,12 @@ public class ExecutorServiceImpl implements ExecutorService {
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   private EngineStub engineStub;
+  private Configuration configuration;
 
   @Inject
   public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher,
       Provider<StopCommand> stopCommandProvider, Provider<StartCommand> startCommandProvider,
-      Provider<StatusCommand> statusCommandProvider) {
+      Provider<StatusCommand> statusCommandProvider, Configuration configuration) {
     this.jobDataService = jobDataService;
     this.stopCommandProvider = stopCommandProvider;
     this.startCommandProvider = startCommandProvider;
@@ -55,19 +58,24 @@ public class ExecutorServiceImpl implements ExecutorService {
 
   @Override
   public void initialize(Backend backend) {
-    switch (backend.getType()) {
-    case LOCAL:
-      this.engineStub = new EngineStubLocal((BackendLocal) backend, this);
-      break;
-    case RABBIT_MQ:
-      this.engineStub = new EngineStubRabbitMQ((BackendRabbitMQ) backend, this);
-      break;
-    case ACTIVE_MQ:
-      this.engineStub = new EngineStubActiveMQ((BackendActiveMQ) backend, this);
-    default:
-      break;
+    try {
+      switch (backend.getType()) {
+      case LOCAL:
+        engineStub = new EngineStubLocal((BackendLocal) backend, this, configuration);
+        break;
+      case RABBIT_MQ:
+        engineStub = new EngineStubRabbitMQ((BackendRabbitMQ) backend, this, configuration);
+        break;
+      case ACTIVE_MQ:
+        engineStub = new EngineStubActiveMQ((BackendActiveMQ) backend, this, configuration);
+      default:
+        break;
+      }
+      engineStub.start();
+    } catch (TransportPluginException e) {
+      logger.error("Failed to initialize Executor", e);
+      throw new RuntimeException("Failed to initialize Executor", e);
     }
-    engineStub.start();
   }
 
   @Override

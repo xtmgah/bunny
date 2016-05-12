@@ -1,4 +1,4 @@
-package org.rabix.transport.mechanism.impl;
+package org.rabix.transport.mechanism.impl.activemq;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -11,23 +11,18 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.commons.configuration.Configuration;
 import org.rabix.common.json.BeanSerializer;
 import org.rabix.transport.mechanism.TransportPlugin;
+import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.TransportPluginType;
-import org.rabix.transport.mechanism.TransportQueueActiveMQ;
 
 public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueActiveMQ> {
 
-  private String broker;
   private PooledConnectionFactory connectionFactory;
-
-  public TransportPluginActiveMQ(String broker) {
-    this.broker = broker;
-    initializeConnectionFactory();
-  }
-
-  private void initializeConnectionFactory() {
-    connectionFactory = new PooledConnectionFactory(broker);
+  
+  public TransportPluginActiveMQ(Configuration configuration) throws TransportPluginException {
+    connectionFactory = new PooledConnectionFactory(""); // TODO
     connectionFactory.setIdleTimeout(5000);
     connectionFactory.setMaxConnections(10);
     connectionFactory.setBlockIfSessionPoolIsFull(false);
@@ -35,6 +30,7 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
     connectionFactory.start();
   }
   
+  @Override
   public <T> ResultPair<T> send(TransportQueueActiveMQ destinationQueue, T entity) {
     Session session = null;
     Connection connection = null;
@@ -58,13 +54,12 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
       try {
         session.close();
         connection.close();
-      } catch (JMSException e) {
-        // do nothing
+      } catch (JMSException ignore) {
       }
     }
   }
 
-  public <T> ResultPair<T> receive(TransportQueueActiveMQ sourceQueue, Class<T> clazz) {
+  public <T> ResultPair<T> receive(TransportQueueActiveMQ sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
     Session session = null;
     Connection connection = null;
     MessageConsumer consumer = null;
@@ -77,22 +72,19 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
       Destination destination = session.createQueue(sourceQueue.getQueue());
       consumer = session.createConsumer(destination);
 
-      Message message = consumer.receive(1000);
-      if (message == null) {
-        return ResultPair.<T> fail(null, null);
-      }
+      Message message = consumer.receive();
       TextMessage textMessage = (TextMessage) message;
       String text = textMessage.getText();
-      return ResultPair.<T>success(BeanSerializer.deserialize(text, clazz));
+      receiveCallback.handleReceive(BeanSerializer.deserialize(text, clazz));
+      return ResultPair.<T>success(null);
     } catch (JMSException e) {
-      return ResultPair.<T> fail(null, null);
+      return ResultPair.<T> fail(e, "");
     } finally {
       try {
         consumer.close();
         session.close();
         connection.close();
-      } catch (JMSException e) {
-        // do nothing
+      } catch (JMSException ignore) {
       }
     }
   }
@@ -101,5 +93,5 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
   public TransportPluginType getType() {
     return TransportPluginType.ACTIVE_MQ;
   }
-  
+
 }

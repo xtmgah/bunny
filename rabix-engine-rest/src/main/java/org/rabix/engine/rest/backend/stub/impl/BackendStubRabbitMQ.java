@@ -1,10 +1,9 @@
 package org.rabix.engine.rest.backend.stub.impl;
 
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
 import org.rabix.engine.rest.backend.stub.BackendStub;
@@ -14,9 +13,10 @@ import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
-import org.rabix.transport.mechanism.TransportQueueRabbitMQ;
-import org.rabix.transport.mechanism.impl.TransportPluginRabbitMQ;
+import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
+import org.rabix.transport.mechanism.TransportPluginException;
+import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
+import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,45 +28,60 @@ public class BackendStubRabbitMQ implements BackendStub {
   private BackendRabbitMQ backendRabbitMQ;
   private TransportPluginRabbitMQ transportPluginMQ;
 
-  private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-
   private TransportQueueRabbitMQ sendToBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendHeartbeatQueue;
 
-  public BackendStubRabbitMQ(JobService jobService, BackendRabbitMQ backend) {
-    this.backendRabbitMQ = backend;
+  public BackendStubRabbitMQ(JobService jobService, BackendRabbitMQ backend, Configuration configuration) throws TransportPluginException {
     this.jobService = jobService;
-    this.transportPluginMQ = new TransportPluginRabbitMQ(backend.getHost());
-    
+    this.backendRabbitMQ = backend;
+
+    this.transportPluginMQ = new TransportPluginRabbitMQ(configuration);
+
     BackendConfiguration backendConfiguration = backend.getBackendConfiguration();
     this.sendToBackendQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
-    
+
     EngineConfiguration engineConfiguration = backend.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getHeartbeatRoutingKey());
   }
 
   @Override
-  public void start() {
-    executorService.scheduleAtFixedRate(new Runnable() {
+  public void start(final Map<String, Long> heartbeatInfo) {
+    new Thread(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = receive(receiveFromBackendQueue, Job.class);
-        if (result.isSuccess()) {
-          try {
-            jobService.update(result.getResult());
-          } catch (JobServiceException e) {
-            logger.error("Failed to update Job " + result.getResult());
-          }
+        while (true) {
+          transportPluginMQ.receive(receiveFromBackendQueue, Job.class, new ReceiveCallback<Job>() {
+            @Override
+            public void handleReceive(Job job) {
+              try {
+                jobService.update(job);
+              } catch (JobServiceException e) {
+                logger.error("Failed to update Job " + job, e);
+              }
+            }
+          });
         }
       }
-    }, 0, 10, TimeUnit.SECONDS);
+    }).start();
+
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        transportPluginMQ.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class,
+            new ReceiveCallback<HeartbeatInfo>() {
+          @Override
+          public void handleReceive(HeartbeatInfo entity) {
+            heartbeatInfo.put(entity.getId(), entity.getTimestamp());
+          }
+        });
+      }
+    }).start();
   }
 
   @Override
   public void stop() {
-    executorService.shutdown();
   }
 
   @Override
@@ -79,16 +94,6 @@ public class BackendStubRabbitMQ implements BackendStub {
     for (Job job : jobs) {
       send(job);
     }
-  }
-
-  @Override
-  public HeartbeatInfo getHeartbeat() {
-    ResultPair<HeartbeatInfo> resultPair = receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class);
-    return resultPair.getResult();
-  }
-
-  public <T> ResultPair<T> receive(TransportQueueRabbitMQ queue, Class<T> clazz) {
-    return transportPluginMQ.receive(queue, clazz);
   }
 
   @Override

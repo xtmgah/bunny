@@ -1,4 +1,6 @@
-package org.rabix.transport.mechanism;
+package org.rabix.transport.mechanism.impl.local;
+
+import org.rabix.transport.mechanism.TransportQueue;
 
 public class TransportQueueLocal implements TransportQueue {
 

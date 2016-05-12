@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
@@ -11,9 +12,10 @@ import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
 import org.rabix.transport.mechanism.TransportPlugin;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
-import org.rabix.transport.mechanism.TransportQueueRabbitMQ;
-import org.rabix.transport.mechanism.impl.TransportPluginRabbitMQ;
+import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
+import org.rabix.transport.mechanism.TransportPluginException;
+import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
+import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
 
 public class EngineStubRabbitMQ implements EngineStub {
 
@@ -28,10 +30,10 @@ public class EngineStubRabbitMQ implements EngineStub {
   private TransportQueueRabbitMQ receiveFromBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendHeartbeatQueue;
   
-  public EngineStubRabbitMQ(BackendRabbitMQ backendRabbitMQ, ExecutorService executorService) {
+  public EngineStubRabbitMQ(BackendRabbitMQ backendRabbitMQ, ExecutorService executorService, Configuration configuration) throws TransportPluginException {
     this.backendRabbitMQ = backendRabbitMQ;
     this.executorService = executorService;
-    this.transportPlugin = new TransportPluginRabbitMQ(backendRabbitMQ.getHost());
+    this.transportPlugin = new TransportPluginRabbitMQ(configuration);
     
     BackendConfiguration backendConfiguration = backendRabbitMQ.getBackendConfiguration();
     this.sendToBackendQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
@@ -43,16 +45,19 @@ public class EngineStubRabbitMQ implements EngineStub {
   
   @Override
   public void start() {
-    scheduledService.scheduleAtFixedRate(new Runnable() {
+    new Thread(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = transportPlugin.receive(sendToBackendQueue, Job.class);
-        if (result.isSuccess()) {
-          Job job = result.getResult();
-          executorService.start(job, job.getContext().getId());
+        while(true) {
+          transportPlugin.receive(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
+            @Override
+            public void handleReceive(Job job) {
+              executorService.start(job, job.getContext().getId());
+            }
+          });
         }
       }
-    }, 0, 30, TimeUnit.SECONDS);
+    }).start();
     
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override

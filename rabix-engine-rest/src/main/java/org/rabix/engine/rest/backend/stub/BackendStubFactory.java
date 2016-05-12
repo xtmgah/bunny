@@ -1,26 +1,42 @@
 package org.rabix.engine.rest.backend.stub;
 
+import org.apache.commons.configuration.Configuration;
+import org.rabix.engine.rest.backend.stub.impl.BackendStubActiveMQ;
 import org.rabix.engine.rest.backend.stub.impl.BackendStubLocal;
 import org.rabix.engine.rest.backend.stub.impl.BackendStubRabbitMQ;
-import org.rabix.engine.rest.backend.stub.impl.BackendStubActiveMQ;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.transport.backend.Backend;
+import org.rabix.transport.backend.impl.BackendActiveMQ;
 import org.rabix.transport.backend.impl.BackendLocal;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
-import org.rabix.transport.backend.impl.BackendActiveMQ;
+import org.rabix.transport.mechanism.TransportPluginException;
+
+import com.google.inject.Inject;
 
 public class BackendStubFactory {
 
-  public static <T extends Backend> BackendStub createStub(JobService jobService, T backend) {
-    switch (backend.getType()) {
-    case ACTIVE_MQ:
-      return new BackendStubActiveMQ(jobService, (BackendActiveMQ) backend);
-    case LOCAL:
-      return new BackendStubLocal(jobService, (BackendLocal) backend);
-    case RABBIT_MQ:
-      return new BackendStubRabbitMQ(jobService, (BackendRabbitMQ) backend);
-    default:
-      break;
+  private Configuration configuration;
+
+  @Inject
+  public BackendStubFactory(Configuration configuration) {
+    this.configuration = configuration;
+  }
+
+  public <T extends Backend> BackendStub createStub(JobService jobService, T backend) {
+    try {
+      switch (backend.getType()) {
+      case ACTIVE_MQ:
+        return new BackendStubActiveMQ(jobService, configuration, (BackendActiveMQ) backend);
+      case LOCAL:
+        return new BackendStubLocal(jobService, configuration, (BackendLocal) backend);
+      case RABBIT_MQ:
+        return new BackendStubRabbitMQ(jobService, (BackendRabbitMQ) backend, configuration);
+      default:
+        break;
+      }
+    } catch (TransportPluginException e) {
+      // TODO handle
+      return null;
     }
     return null;
   }

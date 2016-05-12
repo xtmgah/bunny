@@ -1,4 +1,6 @@
-package org.rabix.transport.mechanism;
+package org.rabix.transport.mechanism.impl.activemq;
+
+import org.rabix.transport.mechanism.TransportQueue;
 
 public class TransportQueueActiveMQ implements TransportQueue {
 

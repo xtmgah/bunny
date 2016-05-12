@@ -98,6 +98,7 @@ public class BackendDispatcher {
   public void addBackendStub(BackendStub backendStub) {
     try {
       dispatcherLock.lock();
+      backendStub.start(heartbeatInfo);
       this.backendStubs.add(backendStub);
       this.heartbeatInfo.put(backendStub.getBackend().getId(), System.currentTimeMillis());
     } finally {
@@ -130,10 +131,6 @@ public class BackendDispatcher {
         for (BackendStub backendStub : backendStubs) {
           Backend backend = backendStub.getBackend();
 
-          HeartbeatInfo result = backendStub.getHeartbeat();
-          if (result != null) {
-            heartbeatInfo.put(result.getId(), result.getTimestamp());
-          }
           if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
             backendStub.stop();
             backendStubs.remove(backendStub);

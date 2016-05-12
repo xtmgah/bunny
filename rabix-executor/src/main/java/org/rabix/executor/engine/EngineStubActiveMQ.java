@@ -4,14 +4,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendActiveMQ;
 import org.rabix.transport.mechanism.TransportPlugin;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
-import org.rabix.transport.mechanism.TransportQueueActiveMQ;
-import org.rabix.transport.mechanism.impl.TransportPluginActiveMQ;
+import org.rabix.transport.mechanism.TransportPluginException;
+import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
+import org.rabix.transport.mechanism.impl.activemq.TransportPluginActiveMQ;
+import org.rabix.transport.mechanism.impl.activemq.TransportQueueActiveMQ;
 
 public class EngineStubActiveMQ implements EngineStub {
 
@@ -19,17 +21,16 @@ public class EngineStubActiveMQ implements EngineStub {
   private ExecutorService executorService;
   private TransportPlugin<TransportQueueActiveMQ> transportPlugin;
 
-  private ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
   private ScheduledExecutorService scheduledHeartbeatService = Executors.newSingleThreadScheduledExecutor();
 
   private TransportQueueActiveMQ sendToBackendQueue;
   private TransportQueueActiveMQ receiveFromBackendQueue;
   private TransportQueueActiveMQ receiveFromBackendHeartbeatQueue;
   
-  public EngineStubActiveMQ(BackendActiveMQ backendActiveMQ, ExecutorService executorService) {
+  public EngineStubActiveMQ(BackendActiveMQ backendActiveMQ, ExecutorService executorService, Configuration configuration) throws TransportPluginException {
     this.backendActiveMQ = backendActiveMQ;
     this.executorService = executorService;
-    this.transportPlugin = new TransportPluginActiveMQ(backendActiveMQ.getBroker());
+    this.transportPlugin = new TransportPluginActiveMQ(configuration);
     
     this.sendToBackendQueue = new TransportQueueActiveMQ(backendActiveMQ.getToBackendQueue());
     this.receiveFromBackendQueue = new TransportQueueActiveMQ(backendActiveMQ.getFromBackendQueue());
@@ -38,16 +39,19 @@ public class EngineStubActiveMQ implements EngineStub {
   
   @Override
   public void start() {
-    scheduledService.scheduleAtFixedRate(new Runnable() {
+    new Thread(new Runnable() {
       @Override
       public void run() {
-        ResultPair<Job> result = transportPlugin.receive(sendToBackendQueue, Job.class);
-        if (result.isSuccess()) {
-          Job job = result.getResult();
-          executorService.start(job, job.getContext().getId());
+        while(true) {
+          transportPlugin.receive(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
+            @Override
+            public void handleReceive(Job job) {
+              executorService.start(job, job.getContext().getId());
+            }
+          });
         }
       }
-    }, 0, 1, TimeUnit.SECONDS);
+    }).start();
     
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override
@@ -59,7 +63,6 @@ public class EngineStubActiveMQ implements EngineStub {
 
   @Override
   public void stop() {
-    scheduledService.shutdown();
     scheduledHeartbeatService.shutdown();
   }
 
