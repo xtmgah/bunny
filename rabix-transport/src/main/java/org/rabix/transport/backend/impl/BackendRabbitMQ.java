@@ -3,7 +3,6 @@ package org.rabix.transport.backend.impl;
 import org.rabix.transport.backend.Backend;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BackendRabbitMQ extends Backend {
@@ -111,7 +110,6 @@ public class BackendRabbitMQ extends Backend {
   }
   
   @Override
-  @JsonIgnore
   public BackendType getType() {
     return BackendType.RABBIT_MQ;
   }

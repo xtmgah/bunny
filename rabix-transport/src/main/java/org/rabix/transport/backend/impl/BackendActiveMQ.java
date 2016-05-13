@@ -105,7 +105,6 @@ public class BackendActiveMQ extends Backend {
   }
 
   @Override
-  @JsonIgnore
   public BackendType getType() {
     return BackendType.ACTIVE_MQ;
   }

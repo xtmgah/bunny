@@ -41,11 +41,6 @@
 			<version>${commons-cli.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>dnl.utils</groupId>
-			<artifactId>j-text-utils</artifactId>
-			<version>${j-text-utils.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<scope>runtime</scope>

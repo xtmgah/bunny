@@ -7,9 +7,12 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.common.json.BeanSerializer;
+import org.rabix.common.json.processor.BeanProcessorException;
 import org.rabix.transport.mechanism.TransportPlugin;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.TransportPluginType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -20,6 +23,8 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
 
   public static final String DEFAULT_ENCODING = "UTF-8";
 
+  private static final Logger logger = LoggerFactory.getLogger(TransportPluginRabbitMQ.class);
+  
   private ConnectionFactory factory;
   
   public TransportPluginRabbitMQ(Configuration configuration) throws TransportPluginException {
@@ -37,6 +42,7 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
         try {
           factory.useSslProtocol();
         } catch (KeyManagementException | NoSuchAlgorithmException e) {
+          logger.error("Failed to initialize TransportPluginRabbitMQ", e);
           throw new TransportPluginException("Failed to initialize TransportPluginRabbitMQ", e);
         }
       }
@@ -54,10 +60,10 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
       channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
       String payload = BeanSerializer.serializeFull(entity);
       channel.basicPublish(queue.getExchange(), queue.getRoutingKey(), null, payload.getBytes(DEFAULT_ENCODING));
-      return ResultPair.success(null);
+      return ResultPair.success();
     } catch (IOException | TimeoutException e) {
-      e.printStackTrace();
-      return ResultPair.fail(e, "Failed to send a message to " + queue);
+      logger.error("Failed to send a message to " + queue, e);
+      return ResultPair.fail("Failed to send a message to " + queue, e);
     } finally {
       if (channel != null) {
         try {
@@ -90,9 +96,16 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
       QueueingConsumer.Delivery delivery = consumer.nextDelivery();
       String message = new String(delivery.getBody());
       receiveCallback.handleReceive(BeanSerializer.deserialize(message, clazz));
-      return ResultPair.<T>success(null);
+      return ResultPair.<T>success();
+    } catch (BeanProcessorException e) {
+      logger.error("Failed to deserialize message payload", e);
+      return ResultPair.<T> fail("Failed to deserialize message payload", e);
+    } catch (TransportPluginException e) {
+      logger.error("Failed to handle receive", e);
+      return ResultPair.<T> fail("Failed to handle receive", e);
     } catch (Exception e) {
-      return ResultPair.<T>fail(e, "Failed to receive a message from " + queue);
+      logger.error("Failed to receive a message from " + queue, e);
+      return ResultPair.<T> fail("Failed to receive a message from " + queue, e);
     } finally {
       if (channel != null) {
         try {

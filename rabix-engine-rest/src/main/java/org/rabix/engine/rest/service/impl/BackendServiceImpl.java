@@ -13,6 +13,7 @@ import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.Backend.BackendType;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
+import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportConfigRabbitMQ;
 
 import com.google.inject.Inject;
@@ -35,7 +36,7 @@ public class BackendServiceImpl implements BackendService {
   }
   
   @Override
-  public <T extends Backend> T create(T backend) {
+  public <T extends Backend> T create(T backend) throws TransportPluginException {
     backend = populate(backend);
     backendDB.add(backend);
     

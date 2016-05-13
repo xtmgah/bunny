@@ -3,34 +3,46 @@ package org.rabix.transport.mechanism.impl.local;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.common.VMQueues;
 import org.rabix.common.json.BeanSerializer;
+import org.rabix.common.json.processor.BeanProcessorException;
 import org.rabix.transport.mechanism.TransportPlugin;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.TransportPluginType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TransportPluginLocal implements TransportPlugin<TransportQueueLocal> {
 
+  private static final Logger logger = LoggerFactory.getLogger(TransportPluginLocal.class);
+  
   public TransportPluginLocal(Configuration configuration) throws TransportPluginException {
   }
 
   @Override
-  public <T> ResultPair<T> send(TransportQueueLocal destinationQueue, T entity) {
+  public <T> ResultPair<T> send(TransportQueueLocal queue, T entity) {
     try {
-      VMQueues.getQueue(destinationQueue.getQueue()).put(BeanSerializer.serializeFull(entity));
-      return ResultPair.<T> success(null);
+      VMQueues.getQueue(queue.getQueue()).put(BeanSerializer.serializeFull(entity));
+      return ResultPair.<T> success();
     } catch (InterruptedException e) {
-      return ResultPair.<T>fail(e, "Failed to put to queue " + destinationQueue);
+      logger.error("Failed to send a message to " + queue, e);
+      return ResultPair.<T>fail("Failed to put to queue " + queue, e);
     }
   }
 
   @Override
-  public <T> ResultPair<T> receive(TransportQueueLocal sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
-    String payload;
+  public <T> ResultPair<T> receive(TransportQueueLocal queue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
     try {
-      payload = VMQueues.<String>getQueue(sourceQueue.getQueue()).take();
+      String payload = VMQueues.<String> getQueue(queue.getQueue()).take();
       receiveCallback.handleReceive(BeanSerializer.deserialize(payload, clazz));
-      return ResultPair.success(null);
+      return ResultPair.success();
     } catch (InterruptedException e) {
-      return ResultPair.<T>fail(e, "Failed to receive a message from " + sourceQueue);
+      logger.error("Failed to receive a message from " + queue, e);
+      return ResultPair.<T> fail("Failed to receive a message from " + queue, e);
+    } catch (BeanProcessorException e) {
+      logger.error("Failed to deserialize message payload", e);
+      return ResultPair.<T> fail("Failed to deserialize message payload", e);
+    } catch (TransportPluginException e) {
+      logger.error("Failed to handle receive", e);
+      return ResultPair.<T> fail("Failed to handle receive", e);
     }
   }
 
