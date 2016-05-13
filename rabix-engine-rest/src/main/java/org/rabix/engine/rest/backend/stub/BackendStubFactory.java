@@ -10,8 +10,6 @@ import org.rabix.transport.backend.impl.BackendActiveMQ;
 import org.rabix.transport.backend.impl.BackendLocal;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.mechanism.TransportPluginException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -35,7 +33,7 @@ public class BackendStubFactory {
     default:
       break;
     }
-    return null;
+    throw new TransportPluginException("There is no Backend stub for " + backend);
   }
 
 }

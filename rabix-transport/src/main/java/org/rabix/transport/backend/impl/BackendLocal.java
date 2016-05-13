@@ -54,4 +54,9 @@ public class BackendLocal extends Backend {
     return BackendType.LOCAL;
   }
 
+  @Override
+  public String toString() {
+    return "BackendLocal [toBackendQueue=" + toBackendQueue + ", fromBackendQueue=" + fromBackendQueue + ", fromBackendHeartbeatQueue=" + fromBackendHeartbeatQueue + ", id=" + id + "]";
+  }
+
 }

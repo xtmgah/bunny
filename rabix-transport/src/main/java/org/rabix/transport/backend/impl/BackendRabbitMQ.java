@@ -80,6 +80,55 @@ public class BackendRabbitMQ extends Backend {
     public String getHeartbeatRoutingKey() {
       return heartbeatRoutingKey;
     }
+    
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((exchange == null) ? 0 : exchange.hashCode());
+      result = prime * result + ((exchangeType == null) ? 0 : exchangeType.hashCode());
+      result = prime * result + ((heartbeatRoutingKey == null) ? 0 : heartbeatRoutingKey.hashCode());
+      result = prime * result + ((receiveRoutingKey == null) ? 0 : receiveRoutingKey.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      EngineConfiguration other = (EngineConfiguration) obj;
+      if (exchange == null) {
+        if (other.exchange != null)
+          return false;
+      } else if (!exchange.equals(other.exchange))
+        return false;
+      if (exchangeType == null) {
+        if (other.exchangeType != null)
+          return false;
+      } else if (!exchangeType.equals(other.exchangeType))
+        return false;
+      if (heartbeatRoutingKey == null) {
+        if (other.heartbeatRoutingKey != null)
+          return false;
+      } else if (!heartbeatRoutingKey.equals(other.heartbeatRoutingKey))
+        return false;
+      if (receiveRoutingKey == null) {
+        if (other.receiveRoutingKey != null)
+          return false;
+      } else if (!receiveRoutingKey.equals(other.receiveRoutingKey))
+        return false;
+      return true;
+    }
+
+    @Override
+    public String toString() {
+      return "EngineConfiguration [exchange=" + exchange + ", exchangeType=" + exchangeType + ", receiveRoutingKey=" + receiveRoutingKey + ", heartbeatRoutingKey=" + heartbeatRoutingKey + "]";
+    }
+    
   }
   
   public static class BackendConfiguration {
@@ -108,12 +157,97 @@ public class BackendRabbitMQ extends Backend {
     public String getReceiveRoutingKey() {
       return receiveRoutingKey;
     }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((exchange == null) ? 0 : exchange.hashCode());
+      result = prime * result + ((exchangeType == null) ? 0 : exchangeType.hashCode());
+      result = prime * result + ((receiveRoutingKey == null) ? 0 : receiveRoutingKey.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      BackendConfiguration other = (BackendConfiguration) obj;
+      if (exchange == null) {
+        if (other.exchange != null)
+          return false;
+      } else if (!exchange.equals(other.exchange))
+        return false;
+      if (exchangeType == null) {
+        if (other.exchangeType != null)
+          return false;
+      } else if (!exchangeType.equals(other.exchangeType))
+        return false;
+      if (receiveRoutingKey == null) {
+        if (other.receiveRoutingKey != null)
+          return false;
+      } else if (!receiveRoutingKey.equals(other.receiveRoutingKey))
+        return false;
+      return true;
+    }
+
+    @Override
+    public String toString() {
+      return "BackendConfiguration [exchange=" + exchange + ", exchangeType=" + exchangeType + ", receiveRoutingKey=" + receiveRoutingKey + "]";
+    }
+    
   }
   
   @Override
   @JsonIgnore
   public BackendType getType() {
     return BackendType.RABBIT_MQ;
+  }
+  
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + ((backendConfiguration == null) ? 0 : backendConfiguration.hashCode());
+    result = prime * result + ((engineConfiguration == null) ? 0 : engineConfiguration.hashCode());
+    result = prime * result + ((host == null) ? 0 : host.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (!super.equals(obj))
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    BackendRabbitMQ other = (BackendRabbitMQ) obj;
+    if (backendConfiguration == null) {
+      if (other.backendConfiguration != null)
+        return false;
+    } else if (!backendConfiguration.equals(other.backendConfiguration))
+      return false;
+    if (engineConfiguration == null) {
+      if (other.engineConfiguration != null)
+        return false;
+    } else if (!engineConfiguration.equals(other.engineConfiguration))
+      return false;
+    if (host == null) {
+      if (other.host != null)
+        return false;
+    } else if (!host.equals(other.host))
+      return false;
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "BackendRabbitMQ [host=" + host + ", engineConfiguration=" + engineConfiguration + ", backendConfiguration=" + backendConfiguration + ", id=" + id + "]";
   }
 
 }

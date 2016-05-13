@@ -2,6 +2,7 @@ package org.rabix.transport.backend.impl;
 
 import org.rabix.transport.backend.Backend;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BackendActiveMQ extends Backend {
@@ -58,9 +59,9 @@ public class BackendActiveMQ extends Backend {
   @Override
   public int hashCode() {
     final int prime = 31;
-    int result = 1;
+    int result = super.hashCode();
+    result = prime * result + ((broker == null) ? 0 : broker.hashCode());
     result = prime * result + ((fromBackendHeartbeatQueue == null) ? 0 : fromBackendHeartbeatQueue.hashCode());
-    result = prime * result + ((id == null) ? 0 : id.hashCode());
     result = prime * result + ((fromBackendQueue == null) ? 0 : fromBackendQueue.hashCode());
     result = prime * result + ((toBackendQueue == null) ? 0 : toBackendQueue.hashCode());
     return result;
@@ -70,20 +71,20 @@ public class BackendActiveMQ extends Backend {
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
-    if (obj == null)
+    if (!super.equals(obj))
       return false;
     if (getClass() != obj.getClass())
       return false;
     BackendActiveMQ other = (BackendActiveMQ) obj;
+    if (broker == null) {
+      if (other.broker != null)
+        return false;
+    } else if (!broker.equals(other.broker))
+      return false;
     if (fromBackendHeartbeatQueue == null) {
       if (other.fromBackendHeartbeatQueue != null)
         return false;
     } else if (!fromBackendHeartbeatQueue.equals(other.fromBackendHeartbeatQueue))
-      return false;
-    if (id == null) {
-      if (other.id != null)
-        return false;
-    } else if (!id.equals(other.id))
       return false;
     if (fromBackendQueue == null) {
       if (other.fromBackendQueue != null)
@@ -99,13 +100,14 @@ public class BackendActiveMQ extends Backend {
   }
 
   @Override
-  public String toString() {
-    return "BackendMQ [id=" + id + ", sendQueue=" + toBackendQueue + ", receiveQueue=" + fromBackendQueue + ", heartbeatQueue="  + fromBackendHeartbeatQueue + "]";
+  @JsonIgnore
+  public BackendType getType() {
+    return BackendType.ACTIVE_MQ;
   }
 
   @Override
-  public BackendType getType() {
-    return BackendType.ACTIVE_MQ;
+  public String toString() {
+    return "BackendActiveMQ [broker=" + broker + ", toBackendQueue=" + toBackendQueue + ", fromBackendQueue=" + fromBackendQueue + ", fromBackendHeartbeatQueue=" + fromBackendHeartbeatQueue + ", id=" + id + "]";
   }
 
 }

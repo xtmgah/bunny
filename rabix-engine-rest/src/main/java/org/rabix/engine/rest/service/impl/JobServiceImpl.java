@@ -64,7 +64,6 @@ public class JobServiceImpl implements JobService {
     List<IterationCallback> callbacks = new ArrayList<>();
     callbacks.add(new EndJobCallback());
     callbacks.add(new SendJobsCallback());
-    
     this.eventProcessor.start(callbacks);
   }
   
@@ -120,17 +119,18 @@ public class JobServiceImpl implements JobService {
   @Override
   public Job create(Job job) throws JobServiceException {
     Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
-    job = Job.cloneWithId(job, context.getId());
-    job = Job.cloneWithRootId(job, context.getId());
-    context.setId(job.getRootId());
+    job = Job.cloneWithIds(job, context.getId(), context.getId());
     job = Job.cloneWithContext(job, context);
-    jobDB.add(job);
 
     Bindings bindings = null;
     try {
       bindings = BindingsFactory.create(job);
 
       DAGNode node = bindings.translateToDAG(job);
+      
+      job = Job.cloneWithStatus(job, JobStatus.RUNNING);
+      jobDB.add(job);
+
       InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
       eventProcessor.send(initEvent);
       return job;
@@ -160,6 +160,9 @@ public class JobServiceImpl implements JobService {
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
       Set<Job> jobs = getReady(eventProcessor, contextId);
+      for (Job job : jobs) {
+        jobDB.update(job);
+      }
       backendDispatcher.send(jobs);
     }
   }

@@ -76,6 +76,10 @@ public class Job {
   public static Job cloneWithId(Job job, String id) {
     return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
   }
+
+  public static Job cloneWithIds(Job job, String id, String rootId) {
+    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+  }
   
   public static Job cloneWithRootId(Job job, String rootId) {
     return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);

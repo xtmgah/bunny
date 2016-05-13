@@ -81,6 +81,7 @@ public class BackendStubActiveMQ implements BackendStub {
 
   @Override
   public void stop() {
+    executorService.shutdown();
   }
 
   @Override
