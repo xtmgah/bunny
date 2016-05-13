@@ -9,7 +9,7 @@ public interface TransportPlugin<Q extends TransportQueue> {
   TransportPluginType getType();
   
   public static interface ReceiveCallback<T> {
-    void handleReceive(T entity);
+    void handleReceive(T entity) throws TransportPluginException;
   }
   
   public static class ResultPair<T> {
@@ -39,14 +39,13 @@ public interface TransportPlugin<Q extends TransportQueue> {
       return exception;
     }
     
-    public static <T> ResultPair<T> success(T result) {
+    public static <T> ResultPair<T> success() {
       ResultPair<T> resultPair = new ResultPair<T>();
       resultPair.success = true;
-      resultPair.result = result;
       return resultPair;
     }
     
-    public static <T> ResultPair<T> fail(Exception exception, String message) {
+    public static <T> ResultPair<T> fail(String message, Exception exception) {
       ResultPair<T> resultPair = new ResultPair<T>();
       resultPair.success = false;
       resultPair.message = message;

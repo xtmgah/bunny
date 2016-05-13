@@ -10,6 +10,8 @@ import org.rabix.transport.backend.impl.BackendActiveMQ;
 import org.rabix.transport.backend.impl.BackendLocal;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.mechanism.TransportPluginException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -22,21 +24,16 @@ public class BackendStubFactory {
     this.configuration = configuration;
   }
 
-  public <T extends Backend> BackendStub create(JobService jobService, T backend) {
-    try {
-      switch (backend.getType()) {
-      case ACTIVE_MQ:
-        return new BackendStubActiveMQ(jobService, configuration, (BackendActiveMQ) backend);
-      case LOCAL:
-        return new BackendStubLocal(jobService, configuration, (BackendLocal) backend);
-      case RABBIT_MQ:
-        return new BackendStubRabbitMQ(jobService, (BackendRabbitMQ) backend, configuration);
-      default:
-        break;
-      }
-    } catch (TransportPluginException e) {
-      // TODO handle
-      return null;
+  public <T extends Backend> BackendStub create(JobService jobService, T backend) throws TransportPluginException {
+    switch (backend.getType()) {
+    case ACTIVE_MQ:
+      return new BackendStubActiveMQ(jobService, configuration, (BackendActiveMQ) backend);
+    case LOCAL:
+      return new BackendStubLocal(jobService, configuration, (BackendLocal) backend);
+    case RABBIT_MQ:
+      return new BackendStubRabbitMQ(jobService, (BackendRabbitMQ) backend, configuration);
+    default:
+      break;
     }
     return null;
   }
