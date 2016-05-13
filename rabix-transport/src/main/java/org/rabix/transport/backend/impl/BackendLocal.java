@@ -2,6 +2,7 @@ package org.rabix.transport.backend.impl;
 
 import org.rabix.transport.backend.Backend;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BackendLocal extends Backend {
@@ -48,6 +49,7 @@ public class BackendLocal extends Backend {
   }
 
   @Override
+  @JsonIgnore
   public BackendType getType() {
     return BackendType.LOCAL;
   }

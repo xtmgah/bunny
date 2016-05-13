@@ -13,12 +13,17 @@ import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
 import org.rabix.transport.mechanism.TransportPlugin;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
+import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EngineStubRabbitMQ implements EngineStub {
 
+  private static final Logger logger = LoggerFactory.getLogger(EngineStubRabbitMQ.class);
+  
   private BackendRabbitMQ backendRabbitMQ;
   private ExecutorService executorService;
   private TransportPlugin<TransportQueueRabbitMQ> transportPlugin;
@@ -49,12 +54,15 @@ public class EngineStubRabbitMQ implements EngineStub {
       @Override
       public void run() {
         while(true) {
-          transportPlugin.receive(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
+          ResultPair<Job> result = transportPlugin.receive(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
             @Override
-            public void handleReceive(Job job) {
+            public void handleReceive(Job job) throws TransportPluginException {
               executorService.start(job, job.getContext().getId());
             }
           });
+          if (!result.isSuccess()) {
+            logger.error(result.getMessage(), result.getException());
+          }
         }
       }
     }).start();

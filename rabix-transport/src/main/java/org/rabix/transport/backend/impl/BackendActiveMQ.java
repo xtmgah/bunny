@@ -2,7 +2,6 @@ package org.rabix.transport.backend.impl;
 
 import org.rabix.transport.backend.Backend;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BackendActiveMQ extends Backend {
