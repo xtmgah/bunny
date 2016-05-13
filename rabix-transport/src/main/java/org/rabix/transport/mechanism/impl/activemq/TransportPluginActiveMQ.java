@@ -22,7 +22,7 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
   private PooledConnectionFactory connectionFactory;
   
   public TransportPluginActiveMQ(Configuration configuration) throws TransportPluginException {
-    connectionFactory = new PooledConnectionFactory(""); // TODO
+    connectionFactory = new PooledConnectionFactory(TransportConfigActiveMQ.getBroker(configuration));
     connectionFactory.setIdleTimeout(5000);
     connectionFactory.setMaxConnections(10);
     connectionFactory.setBlockIfSessionPoolIsFull(false);

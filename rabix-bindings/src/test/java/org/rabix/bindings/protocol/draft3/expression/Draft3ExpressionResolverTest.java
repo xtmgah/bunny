@@ -25,9 +25,7 @@ public class Draft3ExpressionResolverTest {
       job.getApp().getRequirements().add(new Draft3InlineJavascriptRequirement());
       Assert.assertEquals(Draft3ExpressionResolver.resolve("${ return inputs.reference.path + '.tmp' }", job, null),"rabix/tests/test-files/chr20.fa.tmp");
       Assert.assertEquals(Draft3ExpressionResolver.resolve("abc$(inputs['min_std_max_min'])efg", job, null), "abc[1,2,3,4]efg");
-    } catch (IOException e) {
-      Assert.fail(e.getMessage());
-    } catch (Draft3ExpressionException e) {
+    } catch (Exception e) {
       Assert.fail(e.getMessage());
     }
   }
