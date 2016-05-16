@@ -333,10 +333,18 @@ public class JobHandlerImpl implements JobHandler {
       switch (backendStore) {
       case FTP:
         logger.info("Map FTP path {} to physical path.", filePath);
-        return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
+        try {
+          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+        } catch (IOException e) {
+          throw new FileMappingException(e);
+        }
       case LOCAL:
         if (!filePath.startsWith(File.separator)) {
-          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
+          try {
+            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+          } catch (IOException e) {
+            throw new FileMappingException(e);
+          }
         }
         return filePath;
       default:
