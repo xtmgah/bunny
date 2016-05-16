@@ -9,6 +9,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.protocol.draft3.bean.Draft3DataLink;
+import org.rabix.bindings.protocol.draft3.bean.Draft3InputPort;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
 import org.rabix.bindings.protocol.draft3.bean.Draft3OutputPort;
@@ -68,6 +69,12 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
    */
   private void processElements(Draft3Job parentJob, Draft3Job job) throws Draft3Exception {
     Draft3JobApp app = job.getApp();
+    for (Draft3InputPort port : app.getInputs()) {
+      port.setId(Draft2ToDraft3Converter.convertPortID(port.getId()));
+    }
+    for (Draft3OutputPort port : app.getOutputs()) {
+      port.setId(Draft2ToDraft3Converter.convertPortID(port.getId()));
+    }
     if (app.isWorkflow()) {
       Draft3Workflow workflow = (Draft3Workflow) app;
       if (CollectionUtils.isEmpty(workflow.getDataLinks())) {
@@ -106,11 +113,12 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
         List<String> sources = transformSource(Draft3BindingHelper.getSource(input));
         for (int position = 0; position < sources.size(); position++) {
           String destination = Draft3BindingHelper.getId(input);
+          destination = Draft2ToDraft3Converter.convertDestinationId(destination);
           destination = step.getId() + SLASH_SEPARATOR + destination;
           LinkMerge linkMerge = Draft3BindingHelper.getLinkMerge(input) != null ? LinkMerge.valueOf(Draft3BindingHelper.getLinkMerge(input)) : LinkMerge.merge_nested;
           
           String source = sources.get(position);
-          Draft2ToDraft3Converter.convertSource(source);
+          source = Draft2ToDraft3Converter.convertSource(source);
           
           source = Draft3SchemaHelper.normalizeId(source);
           Draft3DataLink dataLink = new Draft3DataLink(source, destination, linkMerge, position + 1);
