@@ -51,6 +51,8 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
     if (job.getApp().isWorkflow()) {
       Draft3Workflow workflow = (Draft3Workflow) job.getApp();
       for (Draft3Step step : workflow.getSteps()) {
+        step.setId(Draft2ToDraft3Converter.convertStepID(step.getId()));
+        
         Draft3Job stepJob = step.getJob();
         String stepId = job.getId() + DOT_SEPARATOR + Draft3SchemaHelper.normalizeId(step.getId());
         stepJob.setId(stepId);
@@ -81,18 +83,23 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
    */
   private void createDataLinks(Draft3Workflow workflow) throws Draft3Exception {
     for (Draft3OutputPort port : workflow.getOutputs()) {
+      port.setId(Draft2ToDraft3Converter.convertPortID(port.getId()));
+      
       List<String> sources = transformSource(port.getSource());
       for (int position = 0; position < sources.size(); position++) {
         String destination = port.getId();
         LinkMerge linkMerge = port.getLinkMerge() != null? LinkMerge.valueOf(port.getLinkMerge()) : LinkMerge.merge_nested;
         
         String source = sources.get(position);
+        source = Draft2ToDraft3Converter.convertSource(source);
         source = Draft3SchemaHelper.normalizeId(source);
         Draft3DataLink dataLink = new Draft3DataLink(source, destination, linkMerge, position + 1);
         workflow.addDataLink(dataLink);
       }
     }
     for (Draft3Step step : workflow.getSteps()) {
+      step.setId(Draft2ToDraft3Converter.convertStepID(step.getId()));
+      
       List<Draft3DataLink> dataLinks = new ArrayList<>();
       for (Map<String, Object> input : step.getInputs()) {
         
@@ -103,6 +110,8 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
           LinkMerge linkMerge = Draft3BindingHelper.getLinkMerge(input) != null ? LinkMerge.valueOf(Draft3BindingHelper.getLinkMerge(input)) : LinkMerge.merge_nested;
           
           String source = sources.get(position);
+          Draft2ToDraft3Converter.convertSource(source);
+          
           source = Draft3SchemaHelper.normalizeId(source);
           Draft3DataLink dataLink = new Draft3DataLink(source, destination, linkMerge, position + 1);
           dataLinks.add(dataLink);
