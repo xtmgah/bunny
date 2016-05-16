@@ -68,7 +68,7 @@ public class VariableRecordService {
     return getVariableRecords(contextId);
   }
   
-  private synchronized List<VariableRecord> getVariableRecords(String contextId) {
+  public synchronized List<VariableRecord> getVariableRecords(String contextId) {
     List<VariableRecord> variableList = variableRecordsPerContext.get(contextId);
     if (variableList == null) {
       variableList = new ArrayList<>();

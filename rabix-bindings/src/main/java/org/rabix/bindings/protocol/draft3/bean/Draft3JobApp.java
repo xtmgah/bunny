@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Draft3JobApp implements Application {
 
-  public static final String DRAFT_3_VERSION = "cwlVersion";
+  public static final String DRAFT_3_VERSION = "cwl:draft-3";
   
   @JsonProperty("id")
   protected String id;
