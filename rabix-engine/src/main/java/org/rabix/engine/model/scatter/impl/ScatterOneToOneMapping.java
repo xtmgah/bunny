@@ -40,7 +40,6 @@ public class ScatterOneToOneMapping implements ScatterMapping {
   
   public void enable(String port, Object value, Integer position) {
     Preconditions.checkNotNull(port);
-    Preconditions.checkNotNull(value);
     Preconditions.checkNotNull(position);
     
     List<Object> valueList = values.get(port);
