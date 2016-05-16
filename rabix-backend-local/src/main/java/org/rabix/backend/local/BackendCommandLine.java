@@ -99,7 +99,13 @@ public class BackendCommandLine {
           configOverrides.put("backend.execution.directory", executionDir.getCanonicalPath());
         }
       } else {
-        configOverrides.put("backend.execution.directory", inputsFile.getParentFile().getCanonicalPath());
+        String workingDir = null;
+        try {
+          workingDir = inputsFile.getParentFile().getCanonicalPath();
+        } catch (Exception e) {
+          workingDir = new File(".").getCanonicalPath();
+        }
+        configOverrides.put("backend.execution.directory", workingDir);
       }
 
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
