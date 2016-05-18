@@ -20,13 +20,13 @@ import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StageInputProcessorCallback implements Draft2PortProcessorCallback {
+public class Draft2StageInputProcessorCallback implements Draft2PortProcessorCallback {
 
-  private static final Logger logger = LoggerFactory.getLogger(StageInputProcessorCallback.class);
+  private static final Logger logger = LoggerFactory.getLogger(Draft2StageInputProcessorCallback.class);
 
   private final File workingDir;
 
-  public StageInputProcessorCallback(File workingDir) {
+  public Draft2StageInputProcessorCallback(File workingDir) {
     this.workingDir = workingDir;
   }
 

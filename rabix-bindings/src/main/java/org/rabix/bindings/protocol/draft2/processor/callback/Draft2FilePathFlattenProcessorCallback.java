@@ -11,24 +11,25 @@ import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorResult;
 
-public class FileDataFlattenProcessorCallback implements Draft2PortProcessorCallback {
+class Draft2FilePathFlattenProcessorCallback implements Draft2PortProcessorCallback {
 
-  private final Set<Map<String, Object>> flattenedFileData;
+  private Set<String> flattenedPaths;
 
-  protected FileDataFlattenProcessorCallback() {
-    this.flattenedFileData = new HashSet<>();
+  protected Draft2FilePathFlattenProcessorCallback() {
+    this.flattenedPaths = new HashSet<>();
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
-      flattenedFileData.add((Map<String, Object>) value);
+      Map<String, Object> valueMap = (Map<String, Object>) value;
+      flattenedPaths.add(Draft2FileValueHelper.getPath(valueMap).trim());
 
-      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(value);
+      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(valueMap);
       if (secondaryFiles != null) {
         for (Map<String, Object> secondaryFileValue : secondaryFiles) {
-          flattenedFileData.add(secondaryFileValue);
+          flattenedPaths.add(Draft2FileValueHelper.getPath(secondaryFileValue).trim());
         }
       }
       return new Draft2PortProcessorResult(value, true);
@@ -36,8 +37,7 @@ public class FileDataFlattenProcessorCallback implements Draft2PortProcessorCall
     return new Draft2PortProcessorResult(value, false);
   }
 
-  public Set<Map<String, Object>> getFlattenedFileData() {
-    return flattenedFileData;
+  public Set<String> getFlattenedPaths() {
+    return flattenedPaths;
   }
-
 }

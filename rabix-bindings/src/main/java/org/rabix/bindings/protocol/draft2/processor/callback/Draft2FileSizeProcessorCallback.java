@@ -1,43 +1,36 @@
 package org.rabix.bindings.protocol.draft2.processor.callback;
 
-import java.util.HashSet;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorResult;
+import org.rabix.common.helper.CloneHelper;
 
-class FilePathFlattenProcessorCallback implements Draft2PortProcessorCallback {
-
-  private Set<String> flattenedPaths;
-
-  protected FilePathFlattenProcessorCallback() {
-    this.flattenedPaths = new HashSet<>();
-  }
+public class Draft2FileSizeProcessorCallback implements Draft2PortProcessorCallback {
 
   @Override
-  @SuppressWarnings("unchecked")
   public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
-      Map<String, Object> valueMap = (Map<String, Object>) value;
-      flattenedPaths.add(Draft2FileValueHelper.getPath(valueMap).trim());
+      Object clonedValue = CloneHelper.deepCopy(value);
 
-      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(valueMap);
+      String path = Draft2FileValueHelper.getPath(clonedValue);
+      Draft2FileValueHelper.setSize(new File(path).length(), clonedValue);
+
+      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(clonedValue);
       if (secondaryFiles != null) {
         for (Map<String, Object> secondaryFileValue : secondaryFiles) {
-          flattenedPaths.add(Draft2FileValueHelper.getPath(secondaryFileValue).trim());
+          String secondaryFilePath = Draft2FileValueHelper.getPath(secondaryFileValue);
+          Draft2FileValueHelper.setSize(new File(secondaryFilePath).length(), secondaryFileValue);
         }
       }
-      return new Draft2PortProcessorResult(value, true);
+      return new Draft2PortProcessorResult(clonedValue, true);
     }
     return new Draft2PortProcessorResult(value, false);
   }
 
-  public Set<String> getFlattenedPaths() {
-    return flattenedPaths;
-  }
 }

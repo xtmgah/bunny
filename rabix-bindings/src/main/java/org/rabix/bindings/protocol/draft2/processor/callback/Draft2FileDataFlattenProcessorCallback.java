@@ -1,36 +1,43 @@
 package org.rabix.bindings.protocol.draft2.processor.callback;
 
-import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorResult;
-import org.rabix.common.helper.CloneHelper;
 
-public class FileSizeProcessorCallback implements Draft2PortProcessorCallback {
+public class Draft2FileDataFlattenProcessorCallback implements Draft2PortProcessorCallback {
+
+  private final Set<Map<String, Object>> flattenedFileData;
+
+  protected Draft2FileDataFlattenProcessorCallback() {
+    this.flattenedFileData = new HashSet<>();
+  }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
-      Object clonedValue = CloneHelper.deepCopy(value);
+      flattenedFileData.add((Map<String, Object>) value);
 
-      String path = Draft2FileValueHelper.getPath(clonedValue);
-      Draft2FileValueHelper.setSize(new File(path).length(), clonedValue);
-
-      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(clonedValue);
+      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(value);
       if (secondaryFiles != null) {
         for (Map<String, Object> secondaryFileValue : secondaryFiles) {
-          String secondaryFilePath = Draft2FileValueHelper.getPath(secondaryFileValue);
-          Draft2FileValueHelper.setSize(new File(secondaryFilePath).length(), secondaryFileValue);
+          flattenedFileData.add(secondaryFileValue);
         }
       }
-      return new Draft2PortProcessorResult(clonedValue, true);
+      return new Draft2PortProcessorResult(value, true);
     }
     return new Draft2PortProcessorResult(value, false);
+  }
+
+  public Set<Map<String, Object>> getFlattenedFileData() {
+    return flattenedFileData;
   }
 
 }

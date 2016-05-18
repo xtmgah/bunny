@@ -12,11 +12,11 @@ import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorException
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorResult;
 import org.rabix.common.helper.CloneHelper;
 
-public class FilePathMapProcessorCallback implements Draft2PortProcessorCallback {
+public class Draft2FilePathMapProcessorCallback implements Draft2PortProcessorCallback {
 
   private final FileMapper filePathMapper;
 
-  public FilePathMapProcessorCallback(FileMapper filePathMapper) {
+  public Draft2FilePathMapProcessorCallback(FileMapper filePathMapper) {
     this.filePathMapper = filePathMapper;
   }
 

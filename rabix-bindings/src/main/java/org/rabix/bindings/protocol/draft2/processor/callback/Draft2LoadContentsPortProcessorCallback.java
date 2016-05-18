@@ -9,7 +9,7 @@ import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorCallback;
 import org.rabix.bindings.protocol.draft2.processor.Draft2PortProcessorResult;
 import org.rabix.common.helper.CloneHelper;
 
-public class LoadContentsPortProcessorCallback implements Draft2PortProcessorCallback {
+public class Draft2LoadContentsPortProcessorCallback implements Draft2PortProcessorCallback {
 
   @Override
   public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
