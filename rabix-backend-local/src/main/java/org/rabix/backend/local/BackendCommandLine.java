@@ -16,6 +16,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.Bindings;
+import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
@@ -147,12 +149,13 @@ public class BackendCommandLine {
             }
           });
 
-      String appURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
+      String appUrl = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
       
       if (commandLine.hasOption("t")) {
-        System.out.println(JSONHelper.writeObject(createConformanceTestResults(appURI, inputs, ProtocolType.DRAFT2)));
+        Bindings bindings = BindingsFactory.create(appUrl);
+        System.out.println(JSONHelper.writeObject(createConformanceTestResults(appUrl, inputs, bindings.getProtocolType())));
         System.exit(0);
       }
 
@@ -164,7 +167,7 @@ public class BackendCommandLine {
       backendLocal = backendService.create(backendLocal);
       executorService.initialize(backendLocal);
       
-      final Job job = jobService.create(new Job(appURI, inputs));
+      final Job job = jobService.create(new Job(appUrl, inputs));
       
       Thread checker = new Thread(new Runnable() {
         @Override
