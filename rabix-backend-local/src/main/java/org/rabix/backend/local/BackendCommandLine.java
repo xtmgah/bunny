@@ -29,6 +29,15 @@ import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2Create
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
 import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
+import org.rabix.bindings.protocol.draft3.Draft3CommandLineBuilder;
+import org.rabix.bindings.protocol.draft3.bean.Draft3CommandLineTool;
+import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
+import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
+import org.rabix.bindings.protocol.draft3.bean.Draft3Resources;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement.Draft3FileRequirement;
+import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
+import org.rabix.bindings.protocol.draft3.resolver.Draft3DocumentResolver;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
@@ -52,7 +61,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -199,44 +207,85 @@ public class BackendCommandLine {
   private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs, ProtocolType protocolType) throws BindingException {
     switch (protocolType) {
     case DRAFT2:
-      Draft2DocumentResolver documentResolver = new Draft2DocumentResolver();
+      Draft2DocumentResolver draft2DocumentResolver = new Draft2DocumentResolver();
       
-      String resolvedApp = documentResolver.resolve(appURI);
-      Draft2JobApp app = BeanSerializer.deserialize(resolvedApp, Draft2JobApp.class);
+      String draft2ResolvedApp = draft2DocumentResolver.resolve(appURI);
+      Draft2JobApp draft2App = BeanSerializer.deserialize(draft2ResolvedApp, Draft2JobApp.class);
       
-      if (!app.isCommandLineTool()) {
-        logger.error("The application is not a valid command Line tool.");
+      if (!draft2App.isCommandLineTool()) {
+        logger.error("The application is not a valid command line tool.");
         System.exit(10);
       }
       
-      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(resolvedApp, Draft2CommandLineTool.class);
+      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp, Draft2CommandLineTool.class);
       Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
-      Map<String, Object> allocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
-      Integer cpu = allocatedResources != null ? (Integer) allocatedResources.get("cpu") : null;
-      Integer mem = allocatedResources != null ? (Integer) allocatedResources.get("mem") : null;
-      draft2Job.setResources(new Draft2Resources(false, cpu, mem));
+      Map<String, Object> draft2AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
+      Integer draft2Cpu = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("cpu") : null;
+      Integer draft2Mem = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("mem") : null;
+      draft2Job.setResources(new Draft2Resources(false, draft2Cpu, draft2Mem));
 
       Draft2CommandLineBuilder draft2CommandLineBuilder = new Draft2CommandLineBuilder();
-      List<Object> commandLineParts = draft2CommandLineBuilder.buildCommandLineParts(draft2Job);
-      String stdin;
+      List<Object> draft2CommandLineParts = draft2CommandLineBuilder.buildCommandLineParts(draft2Job);
+      String draft2Stdin;
       try {
-        stdin = draft2CommandLineTool.getStdin(draft2Job);
-        String stdout = draft2CommandLineTool.getStdout(draft2Job);
+        draft2Stdin = draft2CommandLineTool.getStdin(draft2Job);
+        String draft2Stdout = draft2CommandLineTool.getStdout(draft2Job);
 
         Draft2CreateFileRequirement draft2CreateFileRequirement = draft2CommandLineTool.getCreateFileRequirement();
-        Map<Object, Object> createdFiles = new HashMap<>();
+        Map<Object, Object> draft2CreatedFiles = new HashMap<>();
         if (draft2CreateFileRequirement != null) {
-          for (Draft2FileRequirement fileRequirement : draft2CreateFileRequirement.getFileRequirements()) {
-            createdFiles.put(fileRequirement.getFilename(draft2Job), fileRequirement.getContent(draft2Job));
+          for (Draft2FileRequirement draft2FileRequirement : draft2CreateFileRequirement.getFileRequirements()) {
+            draft2CreatedFiles.put(draft2FileRequirement.getFilename(draft2Job), draft2FileRequirement.getContent(draft2Job));
+          }
+        }
+        Map<String, Object> draft2Result = new HashMap<>();
+        draft2Result.put("args", draft2CommandLineParts);
+        draft2Result.put("stdin", draft2Stdin);
+        draft2Result.put("stdout", draft2Stdout);
+        draft2Result.put("createfiles", draft2CreatedFiles);
+        return draft2Result;
+      } catch (Draft2ExpressionException e) {
+        throw new BindingException(e);
+      }
+    case DRAFT3:
+      Draft3DocumentResolver draft3DocumentResolver = new Draft3DocumentResolver();
+
+      String draft3ResolvedApp = draft3DocumentResolver.resolve(appURI);
+      Draft3JobApp draft3App = BeanSerializer.deserialize(draft3ResolvedApp, Draft3JobApp.class);
+
+      if (!draft3App.isCommandLineTool()) {
+        logger.error("The application is not a valid command line tool.");
+        System.exit(10);
+      }
+
+      Draft3CommandLineTool draft3CommandLineTool = BeanSerializer.deserialize(draft3ResolvedApp, Draft3CommandLineTool.class);
+      Draft3Job draft3Job = new Draft3Job(draft3CommandLineTool, (Map<String, Object>) inputs);
+      Map<String, Object> draft3AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
+      Integer draft3Cpu = draft3AllocatedResources != null ? (Integer) draft3AllocatedResources.get("cpu") : null;
+      Integer draft3Mem = draft3AllocatedResources != null ? (Integer) draft3AllocatedResources.get("mem") : null;
+      draft3Job.setResources(new Draft3Resources(false, draft3Cpu, draft3Mem));
+
+      Draft3CommandLineBuilder draft3CommandLineBuilder = new Draft3CommandLineBuilder();
+      List<Object> draft3CommandLineParts = draft3CommandLineBuilder.buildCommandLineParts(draft3Job);
+      String draft3Stdin;
+      try {
+        draft3Stdin = draft3CommandLineTool.getStdin(draft3Job);
+        String draft3Stdout = draft3CommandLineTool.getStdout(draft3Job);
+
+        Draft3CreateFileRequirement draft3CreateFileRequirement = draft3CommandLineTool.getCreateFileRequirement();
+        Map<Object, Object> draft3CreatedFiles = new HashMap<>();
+        if (draft3CreateFileRequirement != null) {
+          for (Draft3FileRequirement draft3FileRequirement : draft3CreateFileRequirement.getFileRequirements()) {
+            draft3CreatedFiles.put(draft3FileRequirement.getFilename(draft3Job), draft3FileRequirement.getContent(draft3Job));
           }
         }
         Map<String, Object> result = new HashMap<>();
-        result.put("args", commandLineParts);
-        result.put("stdin", stdin);
-        result.put("stdout", stdout);
-        result.put("createfiles", createdFiles);
+        result.put("args", draft3CommandLineParts);
+        result.put("stdin", draft3Stdin);
+        result.put("stdout", draft3Stdout);
+        result.put("createfiles", draft3CreatedFiles);
         return result;
-      } catch (Draft2ExpressionException e) {
+      } catch (Draft3ExpressionException e) {
         throw new BindingException(e);
       }
     default:
