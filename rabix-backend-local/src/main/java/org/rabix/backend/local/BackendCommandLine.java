@@ -23,6 +23,7 @@ import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.protocol.draft2.Draft2CommandLineBuilder;
 import org.rabix.bindings.protocol.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
+import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Resources;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -199,8 +201,15 @@ public class BackendCommandLine {
     case DRAFT2:
       Draft2DocumentResolver documentResolver = new Draft2DocumentResolver();
       
-      String app = documentResolver.resolve(appURI);
-      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(app, Draft2CommandLineTool.class);
+      String resolvedApp = documentResolver.resolve(appURI);
+      Draft2JobApp app = BeanSerializer.deserialize(resolvedApp, Draft2JobApp.class);
+      
+      if (!app.isCommandLineTool()) {
+        logger.error("The application is not a valid command Line tool.");
+        System.exit(10);
+      }
+      
+      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(resolvedApp, Draft2CommandLineTool.class);
       Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
       Map<String, Object> allocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
       Integer cpu = allocatedResources != null ? (Integer) allocatedResources.get("cpu") : null;
