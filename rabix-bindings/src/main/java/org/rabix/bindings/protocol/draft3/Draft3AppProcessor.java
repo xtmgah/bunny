@@ -15,15 +15,9 @@ import org.rabix.common.json.BeanSerializer;
 
 public class Draft3AppProcessor implements ProtocolAppProcessor {
 
-  private final Draft3DocumentResolver documentResolver;
-  
-  public Draft3AppProcessor() {
-    documentResolver = new Draft3DocumentResolver();
-  }
-  
   @Override
   public String loadApp(String uri) throws BindingException {
-    return documentResolver.resolve(uri);
+    return new Draft3DocumentResolver().resolve(uri);
   }
   
   @Override

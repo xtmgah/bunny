@@ -11,10 +11,8 @@ import org.rabix.common.json.BeanSerializer;
 
 public class Draft3JobHelper {
 
-  private final static Draft3DocumentResolver documentResolver = new Draft3DocumentResolver();
-  
   public static Draft3Job getDraft3Job(Job job) throws BindingException {
-    String resolvedAppStr = documentResolver.resolve(job.getApp());
+    String resolvedAppStr = new Draft3DocumentResolver().resolve(job.getApp());
     Draft3JobApp app = BeanSerializer.deserialize(JSONHelper.transformToJSON(resolvedAppStr), Draft3JobApp.class);
     return new Draft3JobProcessor().process(new Draft3Job(app, job.getInputs()));
   }
