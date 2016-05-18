@@ -315,13 +315,12 @@ public class BackendCommandLine {
     Options options = new Options();
     options.addOption("v", "verbose", false, "verbose");
     options.addOption("b", "basedir", true, "execution directory");
-    options.addOption("l", "log-iterations-dir", true, "log engine tables directory");
     options.addOption("c", "configuration-dir", true, "configuration directory");
     options.addOption("t", "conformance-test", false, "conformance test");
-    options.addOption("", "no-container",  false, "don't use containers");
-    options.addOption("", "tmpdir-prefix", true, "doesn't do anything");
-    options.addOption("", "tmp-outdir-prefix", true, "doesn't do anything");
-    options.addOption("", "quiet", false, "quiet");
+    options.addOption(null, "no-container",  false, "don't use containers");
+    options.addOption(null, "tmpdir-prefix", true, "doesn't do anything");
+    options.addOption(null, "tmp-outdir-prefix", true, "doesn't do anything");
+    options.addOption(null, "quiet", false, "quiet");
     options.addOption("h", "help", false, "help");
     return options;
   }
