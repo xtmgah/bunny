@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
@@ -26,10 +25,6 @@ public class Draft3ExpressionJavascriptResolver {
 
   public final static int OPTIMIZATION_LEVEL = -1;
   public final static int MAX_STACK_DEPTH = 10;
-
-  static {
-    ContextFactory.initGlobal(new Draft3ExpressionContextFactory(TIMEOUT_IN_SECONDS));
-  }
 
   /**
    * Evaluate JS script (function or statement)
