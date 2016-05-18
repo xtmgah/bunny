@@ -50,3 +50,5 @@ vcs.xml
 
 # sbteclipse plugin
 .target
+
+target
