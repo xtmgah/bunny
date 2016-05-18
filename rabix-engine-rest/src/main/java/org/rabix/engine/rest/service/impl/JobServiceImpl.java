@@ -3,11 +3,11 @@ package org.rabix.engine.rest.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
@@ -70,9 +70,6 @@ public class JobServiceImpl implements JobService {
   @Override
   public void update(Job job) throws JobServiceException {
     try {
-      Bindings bindings = BindingsFactory.create(job);
-      ProtocolType protocolType = bindings.getProtocolType();
-      
       JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
       
       JobStatusEvent statusEvent = null;
@@ -83,7 +80,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.RUNNING);
-        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.RUNNING, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.RUNNING, job.getOutputs());
         eventProcessor.addToQueue(statusEvent);
         break;
       case FAILED:
@@ -91,7 +88,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
-        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null, protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null);
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -100,7 +97,7 @@ public class JobServiceImpl implements JobService {
           return;
         }
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
-        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs(), protocolType);
+        statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs());
         eventProcessor.addToQueue(statusEvent);
         backendDispatcher.remove(job);
         break;
@@ -108,11 +105,8 @@ public class JobServiceImpl implements JobService {
         break;
       }
       jobDB.update(job);
-    } catch (BindingException e) {
-      logger.error("Cannot find Bindings", e);
-      throw new JobServiceException("Cannot find Bindings", e);
     } catch (JobStateValidationException e) {
-      logger.error("Failed to update Job state");
+      logger.error("Failed to update Job state", e);
       throw new JobServiceException("Failed to update Job state", e);
     }
   }
@@ -124,18 +118,19 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Job create(Job job) throws JobServiceException {
-    
-    Context context = job.getContext() != null? job.getContext() : createContext(job.getRootId());
-    job = Job.cloneWithId(job, job.getRootId());
-    context.setId(job.getRootId());
+    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
+    job = Job.cloneWithIds(job, context.getId(), context.getId());
     job = Job.cloneWithContext(job, context);
-    jobDB.add(job);
 
     Bindings bindings = null;
     try {
       bindings = BindingsFactory.create(job);
 
       DAGNode node = bindings.translateToDAG(job);
+      
+      job = Job.cloneWithStatus(job, JobStatus.RUNNING);
+      jobDB.add(job);
+
       InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
       eventProcessor.send(initEvent);
       return job;
@@ -165,6 +160,9 @@ public class JobServiceImpl implements JobService {
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
       Set<Job> jobs = getReady(eventProcessor, contextId);
+      for (Job job : jobs) {
+        jobDB.update(job);
+      }
       backendDispatcher.send(jobs);
     }
   }

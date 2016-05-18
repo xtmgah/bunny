@@ -1,22 +1,17 @@
 package org.rabix.engine.rest.backend.stub;
 
-import java.util.Set;
+import java.util.Map;
 
 import org.rabix.bindings.model.Job;
-import org.rabix.engine.rest.backend.Backend;
-import org.rabix.engine.rest.backend.HeartbeatInfo;
+import org.rabix.transport.backend.Backend;
 
 public interface BackendStub {
 
-  void start();
+  void start(final Map<String, Long> heartbeatInfo);
   
   void stop();
 
   void send(Job job);
-  
-  void send(Set<Job> jobs);
-  
-  HeartbeatInfo getHeartbeat();
   
   Backend getBackend();
 

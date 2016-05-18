@@ -4,8 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.executor.engine.EngineStub;
+import org.rabix.executor.engine.EngineStubActiveMQ;
+import org.rabix.executor.engine.EngineStubLocal;
+import org.rabix.executor.engine.EngineStubRabbitMQ;
 import org.rabix.executor.execution.JobHandlerCommandDispatcher;
 import org.rabix.executor.execution.command.StartCommand;
 import org.rabix.executor.execution.command.StatusCommand;
@@ -13,7 +18,11 @@ import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.service.JobReceiver;
+import org.rabix.transport.backend.Backend;
+import org.rabix.transport.backend.impl.BackendActiveMQ;
+import org.rabix.transport.backend.impl.BackendLocal;
+import org.rabix.transport.backend.impl.BackendRabbitMQ;
+import org.rabix.transport.mechanism.TransportPluginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +42,14 @@ public class ExecutorServiceImpl implements ExecutorService {
 
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
-  private final JobReceiver jobReceiver;
+  private EngineStub engineStub;
+  private Configuration configuration;
 
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, JobReceiver jobReceiver,
-      JobHandlerCommandDispatcher jobHandlerCommandDispatcher, Provider<StopCommand> stopCommandProvider,
-      Provider<StartCommand> startCommandProvider, Provider<StatusCommand> statusCommandProvider) {
-    this.jobReceiver = jobReceiver;
+  public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher,
+      Provider<StopCommand> stopCommandProvider, Provider<StartCommand> startCommandProvider,
+      Provider<StatusCommand> statusCommandProvider, Configuration configuration) {
+    this.configuration = configuration;
     this.jobDataService = jobDataService;
     this.stopCommandProvider = stopCommandProvider;
     this.startCommandProvider = startCommandProvider;
@@ -48,8 +58,25 @@ public class ExecutorServiceImpl implements ExecutorService {
   }
 
   @Override
-  public void startReceiver() {
-    this.jobReceiver.start();
+  public void initialize(Backend backend) {
+    try {
+      switch (backend.getType()) {
+      case LOCAL:
+        engineStub = new EngineStubLocal((BackendLocal) backend, this, configuration);
+        break;
+      case RABBIT_MQ:
+        engineStub = new EngineStubRabbitMQ((BackendRabbitMQ) backend, this, configuration);
+        break;
+      case ACTIVE_MQ:
+        engineStub = new EngineStubActiveMQ((BackendActiveMQ) backend, this, configuration);
+      default:
+        break;
+      }
+      engineStub.start();
+    } catch (TransportPluginException e) {
+      logger.error("Failed to initialize Executor", e);
+      throw new RuntimeException("Failed to initialize Executor", e);
+    }
   }
 
   @Override
@@ -59,8 +86,8 @@ public class ExecutorServiceImpl implements ExecutorService {
     final JobData jobData = new JobData(job, JobStatus.READY, false, false);
     jobDataService.save(jobData, contextId);
 
-    jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get());
-    jobHandlerCommandDispatcher.dispatch(jobData, statusCommandProvider.get());
+    jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
+    jobHandlerCommandDispatcher.dispatch(jobData, statusCommandProvider.get(), engineStub);
   }
 
   @Override
@@ -68,7 +95,7 @@ public class ExecutorServiceImpl implements ExecutorService {
     logger.debug("stop(id={})", jobId);
 
     final JobData jobData = jobDataService.find(jobId, contextId);
-    jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get());
+    jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get(), engineStub);
   }
 
   @Override
@@ -94,7 +121,7 @@ public class ExecutorServiceImpl implements ExecutorService {
         if (!stopEverything && jobData.isImportant()) {
           continue;
         }
-        jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get());
+        jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get(), engineStub);
         abortedJobsCount++;
       }
     }

@@ -12,8 +12,10 @@ import org.rabix.bindings.protocol.draft3.bean.resource.Draft3ResourceType;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3DockerResource;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement;
-import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ExpressionEngineRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3SchemaDefRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ShellCommandRequirement;
 import org.rabix.common.json.BeanSerializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,10 +37,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Draft3JobApp implements Application {
 
+  public static final String DRAFT_3_VERSION = "cwl:draft-3";
+  
   @JsonProperty("id")
   protected String id;
   @JsonProperty("@context")
   protected String context;
+  @JsonProperty("cwlVersion")
+  protected String cwlVersion;
   @JsonProperty("description")
   protected String description;
   @JsonProperty("label")
@@ -63,6 +69,10 @@ public abstract class Draft3JobApp implements Application {
 
   public String getId() {
     return id;
+  }
+  
+  public String getCwlVersion() {
+    return cwlVersion;
   }
   
   public List<Integer> getSuccessCodes() {
@@ -97,8 +107,18 @@ public abstract class Draft3JobApp implements Application {
   }
 
   @JsonIgnore
-  public List<Draft3ExpressionEngineRequirement> getExpressionEngineRequirements() {
-    return lookForResources(Draft3ResourceType.EXPRESSION_ENGINE_REQUIREMENT, Draft3ExpressionEngineRequirement.class);
+  public Draft3ResourceRequirement getResourceRequirement() {
+    return lookForResource(Draft3ResourceType.RESOURCE_REQUIREMENT, Draft3ResourceRequirement.class);
+  }
+  
+  @JsonIgnore
+  public Draft3InlineJavascriptRequirement getInlineJavascriptRequirement() {
+    return lookForResource(Draft3ResourceType.INLINE_JAVASCRIPT_REQUIREMENT, Draft3InlineJavascriptRequirement.class);
+  }
+  
+  @JsonIgnore
+  public Draft3ShellCommandRequirement getShellCommandRequirement() {
+    return lookForResource(Draft3ResourceType.SHELL_COMMAND_REQUIREMENT, Draft3ShellCommandRequirement.class);
   }
   
   @JsonIgnore

@@ -87,6 +87,14 @@ public final class Draft3Job {
     processPortDefaults();
   }
 
+  public boolean isInlineJavascriptEnabled() {
+    return app.getInlineJavascriptRequirement() != null;
+  }
+  
+  public boolean isShellCommandEscapeEnabled() {
+    return app.getShellCommandRequirement() != null;
+  }
+  
   public String getId() {
     return id;
   }

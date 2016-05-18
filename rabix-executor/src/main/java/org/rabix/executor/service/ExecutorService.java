@@ -4,10 +4,11 @@ import java.util.Map;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.transport.backend.Backend;
 
 public interface ExecutorService {
 
-  void startReceiver();
+  void initialize(Backend backend);
   
   void start(final Job job, String contextId);
 

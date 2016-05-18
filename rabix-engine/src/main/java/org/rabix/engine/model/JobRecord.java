@@ -3,8 +3,10 @@ package org.rabix.engine.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.model.scatter.ScatterMapping;
 import org.rabix.engine.service.JobRecordService.JobState;
 
@@ -98,6 +100,10 @@ public class JobRecord {
       }
     }
     return 0;
+  }
+  
+  public boolean isInputPortBlocking(DAGNode node, String port) {
+    return getInputPortIncoming(port) > 1 && LinkMerge.isBlocking(node.getLinkMerge(port, LinkPortType.INPUT));
   }
   
   public int getOutputPortIncoming(String port) {

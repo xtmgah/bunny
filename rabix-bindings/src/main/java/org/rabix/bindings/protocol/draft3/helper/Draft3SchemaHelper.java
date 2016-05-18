@@ -32,6 +32,7 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
   public static final String TYPE_JOB_EXPRESSION = "Expression";
   public static final String TYPE_JOB_ARRAY = "array";
   public static final String TYPE_JOB_RECORD = "record";
+  public static final String TYPE_JOB_ANY = "Any";
   
   public static final String SCHEMA_NULL = "null";
   
@@ -79,6 +80,10 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
 
   public static boolean isArrayFromSchema(Object schema) {
     return isTypeFromSchema(schema, TYPE_JOB_ARRAY);
+  }
+  
+  public static boolean isAnyFromSchema(Object schema) {
+    return isTypeFromSchema(schema, TYPE_JOB_ANY);
   }
 
   public static boolean isRecordFromSchema(Object schema) {
@@ -275,4 +280,5 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
     }
     return id;
   }
+
 }

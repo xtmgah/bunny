@@ -53,8 +53,7 @@ public class URIHelper {
     if (isData(uri)) {
       return loadData(uri);
     }
-    return null;
-    
+    return uri;
   }
   
   public static String createURI(String scheme, String payload) {

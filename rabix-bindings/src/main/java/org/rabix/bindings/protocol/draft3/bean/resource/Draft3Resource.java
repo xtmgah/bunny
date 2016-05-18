@@ -6,8 +6,10 @@ import java.util.Map;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3DockerResource;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement;
-import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ExpressionEngineRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3SchemaDefRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ShellCommandRequirement;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -20,7 +22,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class", defaultImpl = Draft3Resource.class)
 @JsonSubTypes({ @Type(value = Draft3DockerResource.class, name = "DockerRequirement"),
-    @Type(value = Draft3ExpressionEngineRequirement.class, name = "ExpressionEngineRequirement"),
+    @Type(value = Draft3InlineJavascriptRequirement.class, name = "InlineJavascriptRequirement"),
+    @Type(value = Draft3ShellCommandRequirement.class, name = "ShellCommandRequirement"),
+    @Type(value = Draft3ResourceRequirement.class, name = "ResourceRequirement"),
     @Type(value = Draft3SchemaDefRequirement.class, name = "SchemaDefRequirement"),
     @Type(value = Draft3CreateFileRequirement.class, name = "CreateFileRequirement"),
     @Type(value = Draft3EnvVarRequirement.class, name = "EnvVarRequirement") })

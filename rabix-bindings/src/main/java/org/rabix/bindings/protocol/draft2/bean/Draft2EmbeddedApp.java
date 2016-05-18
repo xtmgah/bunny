@@ -20,25 +20,26 @@ public class Draft2EmbeddedApp extends Draft2JobApp {
 
   @JsonCreator
   public Draft2EmbeddedApp(String raw) {
-    Bindings bindings = BindingsFactory.create(raw);
-    if (bindings != null) {
-      try {
-        application = bindings.loadAppObject(raw);
-        inputs = Lists.transform(application.getInputs(), new Function<ApplicationPort, Draft2InputPort>() {
-          @Override
-          public Draft2InputPort apply(ApplicationPort port) {
-            return new Draft2InputPort(port.getId(), port.getDefaultValue(), port.getSchema(), null, port.getScatter(), null, port.getLinkMerge());
-          }
-        });
-        outputs = Lists.transform(application.getOutputs(), new Function<ApplicationPort, Draft2OutputPort>() {
-          @Override
-          public Draft2OutputPort apply(ApplicationPort port) {
-            return new Draft2OutputPort(port.getId(), port.getDefaultValue(), port.getSchema(), null, port.getScatter(), null, port.getLinkMerge());
-          }
-        });
-      } catch (BindingException e) {
-        // TODO implement
-      }
+    try {
+      Bindings bindings = BindingsFactory.create(raw);
+
+      application = bindings.loadAppObject(raw);
+      inputs = Lists.transform(application.getInputs(), new Function<ApplicationPort, Draft2InputPort>() {
+        @Override
+        public Draft2InputPort apply(ApplicationPort port) {
+          return new Draft2InputPort(port.getId(), port.getDefaultValue(), port.getSchema(), null, port.getScatter(),
+              null, port.getLinkMerge());
+        }
+      });
+      outputs = Lists.transform(application.getOutputs(), new Function<ApplicationPort, Draft2OutputPort>() {
+        @Override
+        public Draft2OutputPort apply(ApplicationPort port) {
+          return new Draft2OutputPort(port.getId(), port.getDefaultValue(), port.getSchema(), null, port.getScatter(),
+              null, port.getLinkMerge());
+        }
+      });
+    } catch (BindingException e1) {
+      // TOOD implement
     }
   }
   

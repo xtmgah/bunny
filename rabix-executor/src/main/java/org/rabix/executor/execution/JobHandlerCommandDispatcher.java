@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandlerFactory;
 import org.rabix.executor.model.JobData;
 import org.slf4j.Logger;
@@ -54,14 +55,14 @@ public class JobHandlerCommandDispatcher {
   /**
    * Dispatch commands to appropriate runnable threads
    */
-  public void dispatch(JobData jobData, JobHandlerCommand command) {
+  public void dispatch(JobData jobData, JobHandlerCommand command, EngineStub engineStub) {
     synchronized (jobHandlerRunnables) {
       String contextId = jobData.getJob().getRootId();
       JobHandlerRunnable jobHandlerRunnable = getJobs(contextId).get(jobData.getJob().getId());
 
       if (jobHandlerRunnable == null) {
         Job job = jobData.getJob();
-        jobHandlerRunnable = new JobHandlerRunnable(job.getId(), job.getRootId(), jobHandlerFactory.createHandler(job));
+        jobHandlerRunnable = new JobHandlerRunnable(job.getId(), job.getRootId(), jobHandlerFactory.createHandler(job, engineStub));
         getJobs(contextId).put(job.getId(), jobHandlerRunnable);
         jobHandlerThreadExecutor.execute(jobHandlerRunnable);
         logger.info("JobHandlerRunnable created for {}.", job.getId());

@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.engine.rest.backend.stub.BackendStub;
+import org.rabix.transport.backend.Backend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,9 +60,9 @@ public class BackendDispatcher {
           dispatcherLock.unlock();
         }
       }
-    }, 0, 1, TimeUnit.SECONDS);
+    }, 0, 10, TimeUnit.SECONDS);
 
-    heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, 15, TimeUnit.SECONDS);
+    heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, 20, TimeUnit.SECONDS);
   }
 
   public boolean send(Set<Job> jobs) {
@@ -97,6 +98,7 @@ public class BackendDispatcher {
   public void addBackendStub(BackendStub backendStub) {
     try {
       dispatcherLock.lock();
+      backendStub.start(heartbeatInfo);
       this.backendStubs.add(backendStub);
       this.heartbeatInfo.put(backendStub.getBackend().getId(), System.currentTimeMillis());
     } finally {
@@ -129,10 +131,6 @@ public class BackendDispatcher {
         for (BackendStub backendStub : backendStubs) {
           Backend backend = backendStub.getBackend();
 
-          HeartbeatInfo result = backendStub.getHeartbeat();
-          if (result != null) {
-            heartbeatInfo.put(result.getId(), result.getTimestamp());
-          }
           if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
             backendStub.stop();
             backendStubs.remove(backendStub);

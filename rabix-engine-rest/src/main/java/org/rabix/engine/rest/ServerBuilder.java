@@ -25,6 +25,7 @@ import org.rabix.engine.rest.api.JobHTTPService;
 import org.rabix.engine.rest.api.impl.BackendHTTPServiceImpl;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
 import org.rabix.engine.rest.backend.BackendDispatcher;
+import org.rabix.engine.rest.backend.stub.BackendStubFactory;
 import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.service.BackendService;
@@ -63,6 +64,7 @@ public class ServerBuilder {
             bind(BackendDB.class).in(Scopes.SINGLETON);
             bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
             bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
+            bind(BackendStubFactory.class).in(Scopes.SINGLETON);
             bind(BackendDispatcher.class).in(Scopes.SINGLETON);
             bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
             bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
@@ -87,7 +89,6 @@ public class ServerBuilder {
     context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
 
     context.addServlet(sh, "/*");
-    
     
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setDirectoriesListed(true);

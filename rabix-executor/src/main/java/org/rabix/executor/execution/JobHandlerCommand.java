@@ -4,11 +4,10 @@ import java.util.Map;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.transport.TransportQueueConfig;
-import org.rabix.executor.transport.TransportStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,14 +27,8 @@ public abstract class JobHandlerCommand {
 
   protected final JobDataService jobDataService;
 
-  protected final TransportStub mqTransportStub;
-  protected final TransportQueueConfig transportQueueConfig;
-  
-  public JobHandlerCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
+  public JobHandlerCommand(JobDataService jobDataService) {
     this.jobDataService = jobDataService;
-    
-    this.transportQueueConfig = transportQueueConfig;
-    this.mqTransportStub = mqTransportStub;
   }
 
   /**
@@ -50,7 +43,7 @@ public abstract class JobHandlerCommand {
       }
       return run(data, handler, contextId);
     } catch (Exception e) {
-      failed(data, "Executor faced a runtime exception.", e);
+      failed(data, "Executor faced a runtime exception.", handler.getEngineStub(), e);
       jobDataService.save(data, "Executor faced a runtime exception.", JobStatus.FAILED, contextId);
       throw e;
     }
@@ -71,46 +64,46 @@ public abstract class JobHandlerCommand {
   /**
    * Send notification to master about STARTED event 
    */
-  protected void started(JobData jobData, String message) {
+  protected void started(JobData jobData, String message, EngineStub engineStub) {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
     jobData.setJob(job);
-    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
+    engineStub.send(job);
   }
 
   /**
    * Send notification to master about FAILED event 
    */
-  protected void failed(JobData jobData, String message, Throwable e) {
+  protected void failed(JobData jobData, String message, EngineStub engineStub, Throwable e) {
     logger.error(message, e);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
     jobData.setJob(job);
-    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
+    engineStub.send(job);
   }
 
   /**
    * Send notification to master about STOPPED event 
    */
-  protected void stopped(JobData jobData, String message) {
+  protected void stopped(JobData jobData, String message, EngineStub engineStub) {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
     jobData.setJob(job);
-    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
+    engineStub.send(job);
   }
 
   /**
    * Send notification to master about COMPLETED event 
    */
-  protected void completed(JobData jobData, String message, Map<String, Object> result) {
+  protected void completed(JobData jobData, String message, Map<String, Object> result, EngineStub engineStub) {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
     jobData.setJob(job);
-    mqTransportStub.send(transportQueueConfig.getFromBackendQueue(), job);
+    engineStub.send(job);
   }
 
   /**

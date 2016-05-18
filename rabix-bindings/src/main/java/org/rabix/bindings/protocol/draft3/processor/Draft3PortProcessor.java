@@ -47,13 +47,13 @@ public class Draft3PortProcessor {
       String id = entry.getKey();
       Object value = entry.getValue();
 
-      ApplicationPort port = job.getApp().getPort(Draft3SchemaHelper.denormalizeId(id), clazz);
+      ApplicationPort port = job.getApp().getPort(Draft3SchemaHelper.normalizeId(id), clazz);
       if (port == null) {
-        throw new Draft3PortProcessorException("Port with ID=" + Draft3SchemaHelper.denormalizeId(id) + " doesn't exist.");
+        throw new Draft3PortProcessorException("Port with ID=" + Draft3SchemaHelper.normalizeId(id) + " doesn't exist.");
       }
       Object mappedValue = null;
       try {
-        mappedValue = processValue(value, port, port.getSchema(), Draft3SchemaHelper.denormalizeId(id), portProcessor);
+        mappedValue = processValue(value, port, port.getSchema(), Draft3SchemaHelper.normalizeId(id), portProcessor);
       } catch (Exception e) {
         throw new Draft3PortProcessorException("Failed to process value " + value, e);
       }
@@ -75,6 +75,10 @@ public class Draft3PortProcessor {
     Draft3PortProcessorResult portProcessorResult = portProcessor.process(value, port);
     if (portProcessorResult.isProcessed()) {
       return portProcessorResult.getValue();
+    }
+    
+    if (Draft3SchemaHelper.isAnyFromSchema(schema)) {
+      return value;
     }
     
     if (Draft3SchemaHelper.isFileFromValue(value)) {
