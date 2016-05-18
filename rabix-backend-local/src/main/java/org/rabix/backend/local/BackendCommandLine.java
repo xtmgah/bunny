@@ -110,7 +110,7 @@ public class BackendCommandLine {
       }
 
       Map<String, Object> configOverrides = new HashMap<>();
-      String executionDirPath = commandLine.getOptionValue("execution-dir");
+      String executionDirPath = commandLine.getOptionValue("basedir");
       if (executionDirPath != null) {
         File executionDir = new File(executionDirPath);
         if (!executionDir.exists() || !executionDir.isDirectory()) {
@@ -127,6 +127,9 @@ public class BackendCommandLine {
           workingDir = new File(".").getCanonicalPath();
         }
         configOverrides.put("backend.execution.directory", workingDir);
+      }
+      if(commandLine.hasOption("no-container")) {
+        configOverrides.put("backend.docker.enabled", false);
       }
 
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
@@ -308,10 +311,14 @@ public class BackendCommandLine {
   private static Options createOptions() {
     Options options = new Options();
     options.addOption("v", "verbose", false, "verbose");
-    options.addOption("e", "execution-dir", true, "execution directory");
+    options.addOption("b", "basedir", true, "execution directory");
     options.addOption("l", "log-iterations-dir", true, "log engine tables directory");
     options.addOption("c", "configuration-dir", true, "configuration directory");
     options.addOption("t", "conformance-test", false, "conformance test");
+    options.addOption("", "no-container",  false, "don't use containers");
+    options.addOption("", "tmpdir-prefix", true, "doesn't do anything");
+    options.addOption("", "tmp-outdir-prefix", true, "doesn't do anything");
+    options.addOption("", "quiet", false, "quiet");
     options.addOption("h", "help", false, "help");
     return options;
   }
