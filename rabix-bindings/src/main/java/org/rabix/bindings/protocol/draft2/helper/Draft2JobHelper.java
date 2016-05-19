@@ -12,7 +12,7 @@ import org.rabix.common.json.BeanSerializer;
 public class Draft2JobHelper {
 
   public static Draft2Job getDraft2Job(Job job) throws BindingException {
-    String resolvedAppStr = new Draft2DocumentResolver().resolve(job.getApp());
+    String resolvedAppStr = Draft2DocumentResolver.resolve(job.getApp());
     Draft2JobApp app = BeanSerializer.deserialize(JSONHelper.transformToJSON(resolvedAppStr), Draft2JobApp.class);
     return new Draft2JobProcessor().process(new Draft2Job(app, job.getInputs()));
   }

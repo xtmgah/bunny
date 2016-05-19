@@ -210,9 +210,7 @@ public class BackendCommandLine {
   private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs, ProtocolType protocolType) throws BindingException {
     switch (protocolType) {
     case DRAFT2:
-      Draft2DocumentResolver draft2DocumentResolver = new Draft2DocumentResolver();
-      
-      String draft2ResolvedApp = draft2DocumentResolver.resolve(appURI);
+      String draft2ResolvedApp = Draft2DocumentResolver.resolve(appURI);
       Draft2JobApp draft2App = BeanSerializer.deserialize(draft2ResolvedApp, Draft2JobApp.class);
       
       if (!draft2App.isCommandLineTool()) {

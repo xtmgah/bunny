@@ -17,7 +17,7 @@ public class Draft2AppProcessor implements ProtocolAppProcessor {
 
   @Override
   public String loadApp(String uri) throws BindingException {
-    return new Draft2DocumentResolver().resolve(uri);
+    return Draft2DocumentResolver.resolve(uri);
   }
   
   @Override
