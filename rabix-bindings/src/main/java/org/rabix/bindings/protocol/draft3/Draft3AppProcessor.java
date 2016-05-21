@@ -17,7 +17,7 @@ public class Draft3AppProcessor implements ProtocolAppProcessor {
 
   @Override
   public String loadApp(String uri) throws BindingException {
-    return new Draft3DocumentResolver().resolve(uri);
+    return Draft3DocumentResolver.resolve(uri);
   }
   
   @Override
