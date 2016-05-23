@@ -254,9 +254,7 @@ public class BackendCommandLine {
         throw new BindingException(e);
       }
     case DRAFT3:
-      Draft3DocumentResolver draft3DocumentResolver = new Draft3DocumentResolver();
-
-      String draft3ResolvedApp = draft3DocumentResolver.resolve(appURI);
+      String draft3ResolvedApp = Draft3DocumentResolver.resolve(appURI);
       Draft3JobApp draft3App = BeanSerializer.deserialize(draft3ResolvedApp, Draft3JobApp.class);
 
       if (!draft3App.isCommandLineTool()) {
