@@ -63,14 +63,14 @@ public class Draft2CommandLineTool extends Draft2JobApp {
     if (Draft2ExpressionBeanHelper.isExpression(stdin)) {
       return Draft2ExpressionBeanHelper.evaluate(job, stdin);
     }
-    return stdin != null ? stdin.toString() : "";
+    return stdin != null ? stdin.toString() : null;
   }
 
   public String getStdout(Draft2Job job) throws Draft2ExpressionException {
     if (Draft2ExpressionBeanHelper.isExpression(stdout)) {
       return Draft2ExpressionBeanHelper.evaluate(job, stdout);
     }
-    return stdout != null ? stdout.toString() : "";
+    return stdout != null ? stdout.toString() : null;
   }
 
   public String getStderr(Draft2Job job) throws Draft2ExpressionException {
