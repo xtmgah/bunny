@@ -85,6 +85,20 @@ public class ScatterHelper {
     }
   }
   
+  public JobRecord createJobRecord(String id, String parentId, DAGNode node, boolean isScattered, String contextId) {
+    boolean isBlocking = false;
+    for (LinkMerge linkMerge : node.getLinkMergeSet(LinkPortType.INPUT)) {
+      if (LinkMerge.isBlocking(linkMerge)) {
+        isBlocking = true;
+        break;
+      }
+    }
+    if (ScatterMethod.isBlocking(node.getScatterMethod())) {
+      isBlocking = true;
+    }
+    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node instanceof DAGContainer, isScattered, false, isBlocking);
+  }
+  
   private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer numberOfScattered, Integer position) throws EventHandlerException {
     ScatterMapping scatterMapping = job.getScatterMapping();
     scatterMapping.enable(port, value, position);
@@ -177,20 +191,6 @@ public class ScatterHelper {
     default:
       throw new EventHandlerException("Scatter method " + scatterMethod + " is not supported.");
     }
-  }
-  
-  private JobRecord createJobRecord(String id, String parentId, DAGNode node, boolean isScattered, String contextId) {
-    boolean isBlocking = false;
-    for (LinkMerge linkMerge : node.getLinkMergeSet(LinkPortType.INPUT)) {
-      if (LinkMerge.isBlocking(linkMerge)) {
-        isBlocking = true;
-        break;
-      }
-    }
-    if (ScatterMethod.isBlocking(node.getScatterMethod())) {
-      isBlocking = true;
-    }
-    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node instanceof DAGContainer, isScattered, false, isBlocking);
   }
   
 }

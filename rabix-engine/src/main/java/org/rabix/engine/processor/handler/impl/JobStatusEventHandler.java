@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.model.LinkMerge;
-import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
@@ -149,7 +148,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     for (DAGNode node : containerNode.getChildren()) {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
-      JobRecord childJob = createJobRecord(newJobId, job.getExternalId(), node, false, contextId);
+      JobRecord childJob = scatterHelper.createJobRecord(newJobId, job.getExternalId(), node, false, contextId);
       jobRecordService.create(childJob);
 
       for (DAGLinkPort port : node.getInputPorts()) {
@@ -214,18 +213,4 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     jobRecordService.update(job);
   }
   
-  private JobRecord createJobRecord(String id, String parentId, DAGNode node, boolean isScattered, String contextId) {
-    boolean isBlocking = false;
-    for (LinkMerge linkMerge : node.getLinkMergeSet(LinkPortType.INPUT)) {
-      if (LinkMerge.isBlocking(linkMerge)) {
-        isBlocking = true;
-        break;
-      }
-    }
-    if (ScatterMethod.isBlocking(node.getScatterMethod())) {
-      isBlocking = true;
-    }
-    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node instanceof DAGContainer, isScattered, false, isBlocking);
-  }
-
 }
