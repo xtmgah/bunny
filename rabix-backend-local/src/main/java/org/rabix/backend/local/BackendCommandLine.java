@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,14 +237,15 @@ public class BackendCommandLine {
         String draft2Stdout = draft2CommandLineTool.getStdout(draft2Job);
 
         Draft2CreateFileRequirement draft2CreateFileRequirement = draft2CommandLineTool.getCreateFileRequirement();
-        Map<Object, Object> draft2CreatedFiles = new HashMap<>();
+        Map<Object, Object> draft2CreatedFiles = null;
         if (draft2CreateFileRequirement != null) {
+          draft2CreatedFiles = new HashMap<>();
           for (Draft2FileRequirement draft2FileRequirement : draft2CreateFileRequirement.getFileRequirements()) {
             draft2CreatedFiles.put(draft2FileRequirement.getFilename(draft2Job), draft2FileRequirement.getContent(draft2Job));
           }
         }
         Map<String, Object> draft2Result = new HashMap<>();
-        draft2Result.put("args", draft2CommandLineParts);
+        draft2Result.put("args", commandLineToString(draft2CommandLineParts));
         draft2Result.put("stdin", draft2Stdin);
         draft2Result.put("stdout", draft2Stdout);
         draft2Result.put("createfiles", draft2CreatedFiles);
@@ -340,6 +342,14 @@ public class BackendCommandLine {
   private static void printUsageAndExit(Options options) {
     new HelpFormatter().printHelp("rabix [OPTION]... <tool> <job>", options);
     System.exit(0);
+  }
+  
+  private static List<String> commandLineToString(List<Object> commandLineParts) {
+    List<String> commandLineString = new ArrayList<String>();
+    for(Object part: commandLineParts) {
+      commandLineString.add(part.toString());
+    }
+    return commandLineString;
   }
 
   private static File getConfigDir(CommandLine commandLine, Options options) throws IOException {
