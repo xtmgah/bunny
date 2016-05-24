@@ -105,7 +105,7 @@ public class Draft2DocumentResolver {
       Draft2DocumentResolverReference reference = new Draft2DocumentResolverReference(false, new TextNode(content));
       getReferenceCache(appUrl).put(path, reference);
       getReplacements(appUrl).add(new Draft2DocumentResolverReplacement(parentNode, currentNode, path));
-      return null;  // TODO fix
+      return null;
     }
     
     boolean isReference = currentNode.has(RESOLVER_REFERENCE_KEY);
@@ -139,7 +139,11 @@ public class Draft2DocumentResolver {
           referenceDocumentRoot = findDocumentRoot(root, file, referencePath, isJsonPointer);
           parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
         }
-        reference.setResolvedNode(traverse(appUrl, root, file, parentChild.parent, parentChild.child));
+        JsonNode resolvedNode = traverse(appUrl, root, file, parentChild.parent, parentChild.child);
+        if (resolvedNode == null) {
+          return null;
+        }
+        reference.setResolvedNode(resolvedNode);
         reference.setResolving(false);
         getReferenceCache(appUrl).put(referencePath, reference);
       }
