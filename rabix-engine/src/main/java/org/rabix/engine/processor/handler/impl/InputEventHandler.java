@@ -17,7 +17,6 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
-import org.rabix.engine.processor.handler.impl.helper.ScatterHelper;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
@@ -35,11 +34,11 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
   private final LinkRecordService linkService;
   private final VariableRecordService variableService;
   
-  private final ScatterHelper scatterHelper;
+  private final ScatterHandler scatterHelper;
   private final EventProcessor eventProcessor;
 
   @Inject
-  public InputEventHandler(EventProcessor eventProcessor, ScatterHelper scatterHelper, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, DAGNodeDB nodeDB) {
+  public InputEventHandler(EventProcessor eventProcessor, ScatterHandler scatterHelper, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, DAGNodeDB nodeDB) {
     this.nodeDB = nodeDB;
     this.jobService = jobService;
     this.linkService = linkService;

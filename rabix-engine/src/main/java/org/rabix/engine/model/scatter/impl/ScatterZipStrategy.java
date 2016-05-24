@@ -6,26 +6,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.model.scatter.PortMapping;
 import org.rabix.engine.model.scatter.RowMapping;
-import org.rabix.engine.model.scatter.ScatterMapping;
+import org.rabix.engine.model.scatter.ScatterStrategy;
+import org.rabix.engine.service.VariableRecordService;
 
 import com.google.common.base.Preconditions;
 
-public class ScatterOneToOneMapping implements ScatterMapping {
+public class ScatterZipStrategy implements ScatterStrategy {
 
   private LinkedList<Combination> combinations;
   
   private Map<String, LinkedList<Object>> values;
   private Map<String, LinkedList<Boolean>> indexes;
 
-  public ScatterOneToOneMapping(DAGNode dagNode) {
+  private final ScatterMethod scatterMethod;
+  private final VariableRecordService variableRecordService;
+  
+  public ScatterZipStrategy(DAGNode dagNode, VariableRecordService variableRecordService) {
     values = new HashMap<>();
     indexes = new HashMap<>();
     combinations = new LinkedList<>();
     
+    this.scatterMethod = dagNode.getScatterMethod();
+    this.variableRecordService = variableRecordService;
     initialize(dagNode);
   }
   
@@ -66,7 +73,7 @@ public class ScatterOneToOneMapping implements ScatterMapping {
   }
 
   @Override
-  public List<RowMapping> getEnabledRows() {
+  public List<RowMapping> enabled() {
     List<RowMapping> result = new LinkedList<>();
 
     List<String> ports = new LinkedList<>();
@@ -133,7 +140,7 @@ public class ScatterOneToOneMapping implements ScatterMapping {
   }
   
   @Override
-  public int getNumberOfRows() {
+  public int enabledCount() {
     return combinations.size();
   }
 
@@ -145,6 +152,16 @@ public class ScatterOneToOneMapping implements ScatterMapping {
       this.position = position;
       this.enabled = enabled;
     }
+  }
+
+  @Override
+  public boolean isBlocking() {
+    return ScatterMethod.isBlocking(scatterMethod);
+  }
+
+  @Override
+  public LinkedList<Object> values(String jobId, String portId, String contextId) {
+    return null;
   }
 
 }

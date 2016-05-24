@@ -37,7 +37,7 @@ public class JobRecordService {
         jr.setInputCounters(jobRecord.getInputCounters());
         jr.setOutputCounters(jobRecord.getOutputCounters());
         jr.setScatterWrapper(jobRecord.isScatterWrapper());
-        jr.setScatterMapping(jobRecord.getScatterMapping());
+        jr.setScatterStrategy(jobRecord.getScatterStrategy());
         return;
       }
     }

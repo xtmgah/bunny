@@ -1,4 +1,4 @@
-package org.rabix.engine.processor.handler.impl.helper;
+package org.rabix.engine.processor.handler.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,8 +8,8 @@ import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLinkPort;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
@@ -18,19 +18,18 @@ import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.RowMapping;
-import org.rabix.engine.model.scatter.ScatterMapping;
-import org.rabix.engine.model.scatter.impl.ScatterCartesianMapping;
-import org.rabix.engine.model.scatter.impl.ScatterOneToOneMapping;
+import org.rabix.engine.model.scatter.ScatterStrategy;
+import org.rabix.engine.model.scatter.ScatterStrategyFactory;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
-import org.rabix.engine.service.JobRecordService.JobState;
 
 import com.google.inject.Inject;
 
-public class ScatterHelper {
+public class ScatterHandler {
 
   private final DAGNodeDB dagNodeDB;
   private final EventProcessor eventProcessor;
@@ -38,14 +37,16 @@ public class ScatterHelper {
   private final JobRecordService jobRecordService;
   private final LinkRecordService linkRecordService;
   private final VariableRecordService variableRecordService;
+  private final ScatterStrategyFactory scatterStrategyFactory;
   
   @Inject
-  public ScatterHelper(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor) {
+  public ScatterHandler(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor, final ScatterStrategyFactory scatterStrategyFactory) {
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;
     this.linkRecordService = linkRecordService;
     this.variableRecordService = variableRecordService;
+    this.scatterStrategyFactory = scatterStrategyFactory;
   }
   
   /**
@@ -55,8 +56,12 @@ public class ScatterHelper {
   public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
     DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
-    if (job.getScatterMapping() == null) {
-      job.setScatterMapping(getScatterMapping(node));
+    if (job.getScatterStrategy() == null) {
+      try {
+        job.setScatterStrategy(scatterStrategyFactory.create(node));
+      } catch (BindingException e) {
+        throw new EventHandlerException(e);
+      }
     }
 
     if (isLookAhead) {
@@ -100,16 +105,16 @@ public class ScatterHelper {
   }
   
   private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer numberOfScattered, Integer position) throws EventHandlerException {
-    ScatterMapping scatterMapping = job.getScatterMapping();
-    scatterMapping.enable(port, value, position);
+    ScatterStrategy scatterStrategy = job.getScatterStrategy();
+    scatterStrategy.enable(port, value, position);
     
     List<RowMapping> mappings = null;
     try {
-      mappings = scatterMapping.getEnabledRows();
+      mappings = scatterStrategy.enabled();
     } catch (BindingException e) {
-      throw new EventHandlerException("Failed to enable ScatterMapping for node " + node.getId(), e);
+      throw new EventHandlerException("Failed to enable ScatterStrategy for node " + node.getId(), e);
     }
-    scatterMapping.commit(mappings);
+    scatterStrategy.commit(mappings);
     
     for (RowMapping mapping : mappings) {
       job.setState(JobState.RUNNING);
@@ -172,24 +177,9 @@ public class ScatterHelper {
    */
   private int getNumberOfScattered(JobRecord job, Integer scatteredNodes) {
     if (scatteredNodes != null) {
-      return Math.max(scatteredNodes, job.getScatterMapping().getNumberOfRows());
+      return Math.max(scatteredNodes, job.getScatterStrategy().enabledCount());
     } else {
-      return job.getScatterMapping().getNumberOfRows();
-    }
-  }
-  
-  private ScatterMapping getScatterMapping(DAGNode dagNode) throws EventHandlerException {
-    ScatterMethod scatterMethod = dagNode.getScatterMethod();
-    if (scatterMethod == null) {
-      return new ScatterOneToOneMapping(dagNode);
-    }
-    switch (scatterMethod) {
-    case dotproduct:
-      return new ScatterOneToOneMapping(dagNode);
-    case flat_crossproduct:
-      return new ScatterCartesianMapping(dagNode);
-    default:
-      throw new EventHandlerException("Scatter method " + scatterMethod + " is not supported.");
+      return job.getScatterStrategy().enabledCount();
     }
   }
   

@@ -1,5 +1,7 @@
 package org.rabix.engine.model.scatter.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,26 +9,40 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGLinkPort;
+import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.common.helper.InternalSchemaHelper;
+import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.PortMapping;
 import org.rabix.engine.model.scatter.RowMapping;
-import org.rabix.engine.model.scatter.ScatterMapping;
+import org.rabix.engine.model.scatter.ScatterStrategy;
+import org.rabix.engine.service.VariableRecordService;
 
-public class ScatterCartesianMapping implements ScatterMapping {
+public class ScatterCartesianStrategy implements ScatterStrategy {
 
   private LinkedList<Combination> combinations;
 
   private Map<String, LinkedList<Object>> values;
   private Map<String, LinkedList<Integer>> positions;
 
-  public ScatterCartesianMapping(DAGNode dagNode) {
+  private final ScatterMethod scatterMethod;
+  private final VariableRecordService variableRecordService;
+  
+  public ScatterCartesianStrategy(DAGNode dagNode, VariableRecordService variableRecordService) {
     this.values = new HashMap<>();
     this.positions = new HashMap<>();
     this.combinations = new LinkedList<>();
+    this.scatterMethod = dagNode.getScatterMethod();
+    this.variableRecordService = variableRecordService;
     initialize(dagNode);
   }
 
+  public ScatterMethod getScatterMethod() {
+    return scatterMethod;
+  }
+  
   public void initialize(DAGNode dagNode) {
     for (DAGLinkPort port : dagNode.getInputPorts()) {
       if (port.isScatter()) {
@@ -49,6 +65,45 @@ public class ScatterCartesianMapping implements ScatterMapping {
     values.put(port, valueList);
   }
 
+  @Override
+  public LinkedList<Object> values(String jobId, String portId, String contextId) {
+    Collections.sort(combinations, new Comparator<Combination>() {
+      @Override
+      public int compare(Combination o1, Combination o2) {
+        return o1.indexes.toString().compareTo(o2.indexes.toString());
+      }
+    });
+
+    if (scatterMethod.equals(ScatterMethod.flat_crossproduct)) {
+      LinkedList<Object> result = new LinkedList<>();
+      for (Combination combination : combinations) {
+        String scatteredJobId = InternalSchemaHelper.scatterId(jobId, combination.position);
+        VariableRecord variableRecord = variableRecordService.find(scatteredJobId, portId, LinkPortType.OUTPUT, contextId);
+        result.addLast(variableRecord.getValue());
+      }
+      return result;
+    }
+    if (scatterMethod.equals(ScatterMethod.nested_crossproduct)) {
+      LinkedList<Object> result = new LinkedList<>();
+      
+      int position = 1;
+      LinkedList<Object> subresult = new LinkedList<>();
+      for (Combination combination : combinations) {
+        if (combination.indexes.get(0) != position) {
+          result.addLast(subresult);
+          subresult = new LinkedList<>();
+          position++;
+        }
+        String scatteredJobId = InternalSchemaHelper.scatterId(jobId, combination.position);
+        VariableRecord variableRecord = variableRecordService.find(scatteredJobId, portId, LinkPortType.OUTPUT, contextId);
+        subresult.addLast(variableRecord.getValue());
+      }
+      result.addLast(subresult);
+      return result;
+    }
+    return null;
+  }
+  
   private <T> LinkedList<T> expand(LinkedList<T> list, Integer position) {
     if (list == null) {
       list = new LinkedList<>();
@@ -63,8 +118,7 @@ public class ScatterCartesianMapping implements ScatterMapping {
     return list;
   }
 
-  private LinkedList<LinkedList<Integer>> cartesianProduct(LinkedList<LinkedList<Integer>> lists)
-      throws BindingException {
+  private LinkedList<LinkedList<Integer>> cartesianProduct(LinkedList<LinkedList<Integer>> lists) throws BindingException {
     if (lists.size() < 2) {
       throw new BindingException("Can't have a product of fewer than two lists (got " + lists.size() + ")");
     }
@@ -98,12 +152,12 @@ public class ScatterCartesianMapping implements ScatterMapping {
   }
 
   @Override
-  public int getNumberOfRows() {
+  public int enabledCount() {
     return combinations.size();
   }
 
   @Override
-  public List<RowMapping> getEnabledRows() throws BindingException {
+  public List<RowMapping> enabled() throws BindingException {
     List<RowMapping> result = new LinkedList<>();
     LinkedList<LinkedList<Integer>> mapping = new LinkedList<>();
     for (Entry<String, LinkedList<Integer>> positionEntry : positions.entrySet()) {
@@ -112,11 +166,11 @@ public class ScatterCartesianMapping implements ScatterMapping {
     LinkedList<LinkedList<Integer>> newMapping = cartesianProduct(mapping);
 
     for (int i = 0; i < newMapping.size(); i++) {
-      LinkedList<Integer> positions = newMapping.get(i);
-      if (!hasNull(positions)) {
-        Combination combination = getCombination(i + 1);
+      LinkedList<Integer> indexes = newMapping.get(i);
+      if (!hasNull(indexes)) {
+        Combination combination = getCombination(indexes);
         if (combination == null) {
-          combination = new Combination(i + 1, false, positions);
+          combination = new Combination(combinations.size() + 1, false, indexes);
           combinations.add(combination);
         }
         if (!combination.enabled) {
@@ -125,7 +179,7 @@ public class ScatterCartesianMapping implements ScatterMapping {
           int positionIndex = 1;
           for (Entry<String, LinkedList<Object>> valueEntry : values.entrySet()) {
             String port = valueEntry.getKey();
-            int position = combination.combination.get(positionIndex - 1);
+            int position = combination.indexes.get(positionIndex - 1);
             Object value = valueEntry.getValue().get(position - 1);
             portMappings.add(new PortMapping(port, value));
             positionIndex++;
@@ -146,9 +200,9 @@ public class ScatterCartesianMapping implements ScatterMapping {
     return false;
   }
 
-  private Combination getCombination(int position) {
+  private Combination getCombination(LinkedList<Integer> indexes) {
     for (Combination combination : combinations) {
-      if (combination.position == position) {
+      if (combination.indexes.toString().equals(indexes.toString())) {
         return combination;
       }
     }
@@ -158,13 +212,24 @@ public class ScatterCartesianMapping implements ScatterMapping {
   private class Combination {
     int position;
     boolean enabled;
-    LinkedList<Integer> combination;
+    LinkedList<Integer> indexes;
 
-    public Combination(int position, boolean enabled, LinkedList<Integer> combination) {
+    public Combination(int position, boolean enabled, LinkedList<Integer> indexes) {
       this.position = position;
       this.enabled = enabled;
-      this.combination = combination;
+      this.indexes = indexes;
     }
+
+    @Override
+    public String toString() {
+      return "Combination [position=" + position + ", enabled=" + enabled + ", indexes=" + indexes + "]";
+    }
+    
+  }
+
+  @Override
+  public boolean isBlocking() {
+    return ScatterMethod.isBlocking(scatterMethod);
   }
 
 }
