@@ -92,7 +92,7 @@ public class BackendCommandLine {
       }
 
       String appPath = commandLine.getArgList().get(0);
-      File appFile = new File(appPath);
+      File appFile = new File(URIHelper.extractBase(appPath));
       if (!appFile.exists()) {
         logger.info("Application file {} does not exist.", appFile.getCanonicalPath());
         printUsageAndExit(posixOptions);

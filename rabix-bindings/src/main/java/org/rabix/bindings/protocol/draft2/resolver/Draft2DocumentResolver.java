@@ -37,28 +37,42 @@ public class Draft2DocumentResolver {
 
   private static ConcurrentMap<String, String> cache = new ConcurrentHashMap<>(); 
   
-  private static Map<String, Map<String, Draft2DocumentResolverReference>> referenceCache = new HashMap<>();
-  private static Map<String, LinkedHashSet<Draft2DocumentResolverReplacement>> replacements = new HashMap<>();
+  private static final Map<String, Map<String, JsonNode>> fragmentsCache = new HashMap<>();
+
+  private static final Map<String, Map<String, Draft2DocumentResolverReference>> referenceCache = new HashMap<>();
+  private static final Map<String, LinkedHashSet<Draft2DocumentResolverReplacement>> replacements = new HashMap<>();
   
   public static String resolve(String appUrl) throws BindingException {
     if (cache.containsKey(appUrl)) {
       return cache.get(appUrl);
     }
     
+    String appUrlBase = URIHelper.extractBase(appUrl);
+    
     File file = null;
     JsonNode root = null;
     try {
-      boolean isFile = URIHelper.isFile(appUrl);
+      boolean isFile = URIHelper.isFile(appUrlBase);
       if (isFile) {
-        file = new File(URIHelper.getURIInfo(appUrl));
+        file = new File(URIHelper.getURIInfo(appUrlBase));
       } else {
         file = new File(".");
       }
-      String input = JSONHelper.transformToJSON(URIHelper.getData(appUrl));
+      String input = JSONHelper.transformToJSON(URIHelper.getData(appUrlBase));
       root = JSONHelper.readJsonNode(input);
     } catch (IOException e) {
       throw new BindingException(e);
     }
+    
+    if (root.isArray()) {
+      Map<String, JsonNode> fragmentsCachePerUrl = getFragmentsCache(appUrl);
+      for (JsonNode child : root) {
+        fragmentsCachePerUrl.put(child.get("id").textValue(), child);
+      }
+      String fragment = URIHelper.extractFragment(appUrl);
+      root = fragmentsCachePerUrl.get(fragment);
+    }
+    
     traverse(appUrl, root, file, null, root, true);
 
     for (Draft2DocumentResolverReplacement replacement : getReplacements(appUrl)) {
@@ -72,7 +86,8 @@ public class Draft2DocumentResolver {
     cache.put(appUrl, JSONHelper.writeObject(root));
 
     clearReplacements(appUrl);
-    clearReferenceCache(appUrl);;
+    clearReferenceCache(appUrl);
+    clearFragmentCache(appUrl);
     return cache.get(appUrl);
   }
   
@@ -100,8 +115,16 @@ public class Draft2DocumentResolver {
         reference.setResolving(true);
         getReferenceCache(appUrl).put(referencePath, reference);
 
-        JsonNode referenceDocumentRoot = findDocumentRoot(root, file, referencePath, isJsonPointer);
-        ParentChild parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
+        Map<String, JsonNode> fragmentsCachePerUrl = getFragmentsCache(appUrl);
+        
+        ParentChild parentChild = null;
+        JsonNode referenceDocumentRoot = null;
+        if (fragmentsCachePerUrl != null && fragmentsCachePerUrl.containsKey(referencePath)) {
+          parentChild = new ParentChild(root, fragmentsCachePerUrl.get(referencePath));
+        } else {
+          referenceDocumentRoot = findDocumentRoot(root, file, referencePath, isJsonPointer);
+          parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
+        }
         reference.setResolvedNode(traverse(appUrl, root, file, parentChild.parent, parentChild.child, true));
         reference.setResolving(false);
         getReferenceCache(appUrl).put(referencePath, reference);
@@ -254,8 +277,21 @@ public class Draft2DocumentResolver {
     return referenceCachePerUrl;
   }
   
+  private synchronized static Map<String, JsonNode> getFragmentsCache(String url) {
+    Map<String, JsonNode> fragmentsCachePerUrl = fragmentsCache.get(url);
+    if (fragmentsCachePerUrl == null) {
+      fragmentsCachePerUrl = new HashMap<String, JsonNode>();
+      fragmentsCache.put(url, fragmentsCachePerUrl);
+    }
+    return fragmentsCachePerUrl;
+  }
+  
   private synchronized static void clearReferenceCache(String url) {
     referenceCache.remove(url);
+  }
+  
+  private synchronized static void clearFragmentCache(String url) {
+    fragmentsCache.remove(url);
   }
   
   private static class ParentChild {
