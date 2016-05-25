@@ -1,4 +1,4 @@
-package org.rabix.engine.service.scatter.strategy;
+package org.rabix.engine.service.scatter.strategy.impl;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,11 +12,12 @@ import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
-import org.rabix.engine.model.scatter.ScatterZipStrategy;
-import org.rabix.engine.model.scatter.ScatterZipStrategy.Combination;
+import org.rabix.engine.model.scatter.impl.ScatterZipStrategy;
+import org.rabix.engine.model.scatter.impl.ScatterZipStrategy.Combination;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.PortMapping;
 import org.rabix.engine.service.scatter.RowMapping;
+import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

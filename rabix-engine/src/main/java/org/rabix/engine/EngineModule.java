@@ -15,6 +15,7 @@ import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.ScatterService;
+import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandlerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -31,6 +32,7 @@ public class EngineModule extends AbstractModule {
     bind(ContextRecordService.class).in(Scopes.SINGLETON);
 
     bind(ScatterService.class).in(Scopes.SINGLETON);
+    bind(ScatterStrategyHandlerFactory.class).in(Scopes.SINGLETON);
     bind(InitEventHandler.class).in(Scopes.SINGLETON);
     bind(InputEventHandler.class).in(Scopes.SINGLETON);
     bind(OutputEventHandler.class).in(Scopes.SINGLETON);

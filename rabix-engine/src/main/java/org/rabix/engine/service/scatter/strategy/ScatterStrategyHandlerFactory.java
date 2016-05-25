@@ -1,6 +1,8 @@
 package org.rabix.engine.service.scatter.strategy;
 
 import org.rabix.bindings.model.ScatterMethod;
+import org.rabix.engine.service.scatter.strategy.impl.ScatterCartesianStrategyHandler;
+import org.rabix.engine.service.scatter.strategy.impl.ScatterZipStrategyHandler;
 
 import com.google.inject.Inject;
 
