@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.rabix.bindings.model.ScatterMethod;
 
-public class ScatterCartesianStrategy {
+public class ScatterCartesianStrategy implements ScatterStrategy {
 
   private ScatterMethod scatterMethod;
   private LinkedList<Combination> combinations = new LinkedList<>();

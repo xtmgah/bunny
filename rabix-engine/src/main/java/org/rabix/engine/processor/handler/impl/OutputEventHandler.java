@@ -18,6 +18,7 @@ import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
+import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandlerFactory;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
@@ -33,13 +34,15 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
   private LinkRecordService linkService;
   
   private final EventProcessor eventProcessor;
+  private final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory;
   
   @Inject
-  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService) {
+  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, ScatterStrategyHandlerFactory scatterStrategyHandlerFactory) {
     this.jobService = jobService;
     this.linkService = linkService;
     this.variableService = variableService;
     this.eventProcessor = eventProcessor;
+    this.scatterStrategyHandlerFactory = scatterStrategyHandlerFactory;
   }
 
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
@@ -63,11 +66,11 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     Object value = null;
     
     if (sourceJob.isScatterWrapper()) {
-      ScatterStrategyHandler scatterStrategy = sourceJob.getScatterStrategy();
+      ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(sourceJob.getScatterStrategy().getScatterMethod());
       
-      if (scatterStrategy.isBlocking()) {
+      if (scatterStrategyHandler.isBlocking()) {
         if (sourceJob.isOutputPortReady(event.getPortId())) {
-          value = scatterStrategy.values(sourceJob.getId(), event.getPortId(), event.getContextId());
+          value = scatterStrategyHandler.values(sourceJob.getScatterStrategy(), sourceJob.getId(), event.getPortId(), event.getContextId());
         } else {
           return;
         }
@@ -102,7 +105,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             if (!(destinationJob.getOutputPortIncoming(event.getPortId()) > 1)) {
               value = value != null? value : event.getValue();
               int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
-              if (scatterStrategy.isBlocking()) {
+              if (scatterStrategyHandler.isBlocking()) {
                 Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, false, 1, 1);
                 eventProcessor.send(updateOutputEvent);
               } else {

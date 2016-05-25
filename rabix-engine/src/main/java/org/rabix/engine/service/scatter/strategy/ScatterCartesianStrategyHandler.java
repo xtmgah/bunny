@@ -15,68 +15,73 @@ import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterCartesianStrategy;
 import org.rabix.engine.model.scatter.ScatterCartesianStrategy.Combination;
+import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.PortMapping;
 import org.rabix.engine.service.scatter.RowMapping;
 
+import com.google.inject.Inject;
+
 public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
 
-  private final ScatterCartesianStrategy strategy;
-  
   private final VariableRecordService variableRecordService;
-  
-  public ScatterCartesianStrategyHandler(DAGNode dagNode, VariableRecordService variableRecordService) {
-    this.strategy = new ScatterCartesianStrategy(dagNode.getScatterMethod());
+
+  @Inject
+  public ScatterCartesianStrategyHandler(VariableRecordService variableRecordService) {
     this.variableRecordService = variableRecordService;
-    initialize(dagNode);
   }
 
-  public void initialize(DAGNode dagNode) {
+  @Override
+  public ScatterStrategy initialize(DAGNode dagNode) {
+    ScatterCartesianStrategy strategy = new ScatterCartesianStrategy(dagNode.getScatterMethod());
     for (DAGLinkPort port : dagNode.getInputPorts()) {
       if (port.isScatter()) {
         strategy.getValues().put(port.getId(), new LinkedList<Object>());
         strategy.getPositions().put(port.getId(), new LinkedList<Integer>());
       }
     }
+    return strategy;
   }
 
   @Override
-  public void enable(String port, Object value, Integer position) {
-    LinkedList<Integer> positionList = strategy.getPositions().get(port);
+  public void enable(ScatterStrategy strategy, String port, Object value, Integer position) {
+    ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
+    LinkedList<Integer> positionList = scatterCartesianStrategy.getPositions().get(port);
     positionList = expand(positionList, position);
     positionList.set(position - 1, position);
-    strategy.getPositions().put(port, positionList);
+    scatterCartesianStrategy.getPositions().put(port, positionList);
 
-    LinkedList<Object> valueList = strategy.getValues().get(port);
+    LinkedList<Object> valueList = scatterCartesianStrategy.getValues().get(port);
     valueList = expand(valueList, position);
     valueList.set(position - 1, value);
-    strategy.getValues().put(port, valueList);
+    scatterCartesianStrategy.getValues().put(port, valueList);
   }
 
   @Override
-  public LinkedList<Object> values(String jobId, String portId, String contextId) {
-    Collections.sort(strategy.getCombinations(), new Comparator<Combination>() {
+  public LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId) {
+    ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
+    Collections.sort(scatterCartesianStrategy.getCombinations(), new Comparator<Combination>() {
       @Override
       public int compare(Combination o1, Combination o2) {
         return o1.getIndexes().toString().compareTo(o2.getIndexes().toString());
       }
     });
 
-    if (strategy.getScatterMethod().equals(ScatterMethod.flat_crossproduct)) {
+    if (scatterCartesianStrategy.getScatterMethod().equals(ScatterMethod.flat_crossproduct)) {
       LinkedList<Object> result = new LinkedList<>();
-      for (Combination combination : strategy.getCombinations()) {
+      for (Combination combination : scatterCartesianStrategy.getCombinations()) {
         String scatteredJobId = InternalSchemaHelper.scatterId(jobId, combination.getPosition());
         VariableRecord variableRecord = variableRecordService.find(scatteredJobId, portId, LinkPortType.OUTPUT, contextId);
         result.addLast(variableRecord.getValue());
       }
       return result;
     }
-    if (strategy.getScatterMethod().equals(ScatterMethod.nested_crossproduct)) {
+    if (scatterCartesianStrategy.getScatterMethod().equals(ScatterMethod.nested_crossproduct)) {
       LinkedList<Object> result = new LinkedList<>();
       
       int position = 1;
       LinkedList<Object> subresult = new LinkedList<>();
-      for (Combination combination : strategy.getCombinations()) {
+      for (Combination combination : scatterCartesianStrategy.getCombinations()) {
         if (combination.getIndexes().get(0) != position) {
           result.addLast(subresult);
           subresult = new LinkedList<>();
@@ -129,9 +134,10 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
   }
 
   @Override
-  public void commit(List<RowMapping> mappings) {
+  public void commit(ScatterStrategy strategy, List<RowMapping> mappings) {
+    ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
     for (RowMapping mapping : mappings) {
-      for (Combination combination : strategy.getCombinations()) {
+      for (Combination combination : scatterCartesianStrategy.getCombinations()) {
         if (combination.getPosition() == mapping.getIndex()) {
           combination.setEnabled(true);
         }
@@ -140,15 +146,17 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
   }
 
   @Override
-  public int enabledCount() {
-    return strategy.getCombinations().size();
+  public int enabledCount(ScatterStrategy strategy) {
+    ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
+    return scatterCartesianStrategy.getCombinations().size();
   }
 
   @Override
-  public List<RowMapping> enabled() throws BindingException {
+  public List<RowMapping> enabled(ScatterStrategy strategy) throws BindingException {
+    ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
     List<RowMapping> result = new LinkedList<>();
     LinkedList<LinkedList<Integer>> mapping = new LinkedList<>();
-    for (Entry<String, LinkedList<Integer>> positionEntry : strategy.getPositions().entrySet()) {
+    for (Entry<String, LinkedList<Integer>> positionEntry : scatterCartesianStrategy.getPositions().entrySet()) {
       mapping.add(positionEntry.getValue());
     }
     LinkedList<LinkedList<Integer>> newMapping = cartesianProduct(mapping);
@@ -156,16 +164,16 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
     for (int i = 0; i < newMapping.size(); i++) {
       LinkedList<Integer> indexes = newMapping.get(i);
       if (!hasNull(indexes)) {
-        Combination combination = getCombination(indexes);
+        Combination combination = getCombination(scatterCartesianStrategy, indexes);
         if (combination == null) {
-          combination = new Combination(strategy.getCombinations().size() + 1, false, indexes);
-          strategy.getCombinations().add(combination);
+          combination = new Combination(scatterCartesianStrategy.getCombinations().size() + 1, false, indexes);
+          scatterCartesianStrategy.getCombinations().add(combination);
         }
         if (!combination.isEnabled()) {
           List<PortMapping> portMappings = new LinkedList<>();
 
           int positionIndex = 1;
-          for (Entry<String, LinkedList<Object>> valueEntry : strategy.getValues().entrySet()) {
+          for (Entry<String, LinkedList<Object>> valueEntry : scatterCartesianStrategy.getValues().entrySet()) {
             String port = valueEntry.getKey();
             int position = combination.getIndexes().get(positionIndex - 1);
             Object value = valueEntry.getValue().get(position - 1);
@@ -188,7 +196,7 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
     return false;
   }
 
-  private Combination getCombination(LinkedList<Integer> indexes) {
+  private Combination getCombination(ScatterCartesianStrategy strategy, LinkedList<Integer> indexes) {
     for (Combination combination : strategy.getCombinations()) {
       if (combination.getIndexes().toString().equals(indexes.toString())) {
         return combination;
@@ -197,13 +205,14 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
     return null;
   }
 
-  @Override
-  public boolean isBlocking() {
-    return ScatterMethod.isBlocking(strategy.getScatterMethod());
+  public ScatterMethod getScatterMethod(Object strategy) {
+    ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
+    return scatterCartesianStrategy.getScatterMethod();
   }
   
-  public ScatterMethod getScatterMethod() {
-    return strategy.getScatterMethod();
+  @Override
+  public boolean isBlocking() {
+    return true;
   }
 
 }

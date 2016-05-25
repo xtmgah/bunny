@@ -4,20 +4,24 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.scatter.RowMapping;
 
 public interface ScatterStrategyHandler {
 
-  void enable(String port, Object value, Integer position);
-
-  void commit(List<RowMapping> mappings);
-  
-  int enabledCount();
+  ScatterStrategy initialize(DAGNode dagNode);
   
   boolean isBlocking();
   
-  List<RowMapping> enabled() throws BindingException;
-  
-  LinkedList<Object> values(String jobId, String portId, String contextId);
-  
+  List<RowMapping> enabled(ScatterStrategy strategy) throws BindingException;
+
+  int enabledCount(ScatterStrategy strategy);
+
+  void commit(ScatterStrategy strategy, List<RowMapping> mappings);
+
+  LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId);
+
+  void enable(ScatterStrategy strategy, String port, Object value, Integer position);
+
 }
