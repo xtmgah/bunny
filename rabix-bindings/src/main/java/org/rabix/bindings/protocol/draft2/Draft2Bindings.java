@@ -22,6 +22,7 @@ import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 
 public class Draft2Bindings implements Bindings {
+  
 
   private final ProtocolType protocolType;
   

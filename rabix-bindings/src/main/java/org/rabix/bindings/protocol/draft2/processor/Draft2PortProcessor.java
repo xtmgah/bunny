@@ -48,17 +48,16 @@ public class Draft2PortProcessor {
       Object value = entry.getValue();
 
       ApplicationPort port = job.getApp().getPort(Draft2SchemaHelper.denormalizeId(id), clazz);
-      if (port == null) {
-        throw new Draft2PortProcessorException("Port with ID=" + Draft2SchemaHelper.denormalizeId(id) + " doesn't exist.");
-      }
-      Object mappedValue = null;
-      try {
-        mappedValue = processValue(value, port, port.getSchema(), Draft2SchemaHelper.denormalizeId(id), portProcessor);
-      } catch (Exception e) {
-        throw new Draft2PortProcessorException("Failed to process value " + value, e);
-      }
-      if (mappedValue != null) {
-        mappedValues.put(entry.getKey(), mappedValue);
+      if (port != null) {
+        Object mappedValue = null;
+        try {
+          mappedValue = processValue(value, port, port.getSchema(), Draft2SchemaHelper.denormalizeId(id), portProcessor);
+        } catch (Exception e) {
+          throw new Draft2PortProcessorException("Failed to process value " + value, e);
+        }
+        if (mappedValue != null) {
+          mappedValues.put(entry.getKey(), mappedValue);
+        }
       }
     }
     return mappedValues;

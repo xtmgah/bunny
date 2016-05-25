@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,10 +17,13 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.filemapper.FileMapper;
+import org.rabix.bindings.filemapper.FileMappingException;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
@@ -123,24 +127,15 @@ public class BackendCommandLine {
           configOverrides.put("backend.execution.directory", executionDir.getCanonicalPath());
         }
       } else {
-        String workingDir = null;
-        try {
-          workingDir = inputsFile.getParentFile().getCanonicalPath();
-        } catch (Exception e) {
-          workingDir = new File(".").getCanonicalPath();
-        }
-        configOverrides.put("backend.execution.directory", workingDir);
+        configOverrides.put("backend.execution.directory", new File(".").getCanonicalPath());
       }
-      if(commandLine.hasOption("no-container")) {
+      if (commandLine.hasOption("no-container")) {
         configOverrides.put("backend.docker.enabled", false);
       }
 
       ConfigModule configModule = new ConfigModule(configDir, configOverrides);
-      Injector injector = Guice.createInjector(
-          new SimpleFTPModule(), 
-          new EngineModule(),
-          new ExecutorModule(configModule), 
-          new AbstractModule() {
+      Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
+          new ExecutorModule(configModule), new AbstractModule() {
             @Override
             protected void configure() {
               bind(JobDB.class).in(Scopes.SINGLETON);
@@ -153,11 +148,19 @@ public class BackendCommandLine {
             }
           });
 
+      Configuration configuration = configModule.provideConfig();
+      Boolean conformance = configuration.getBoolean("rabix.conformance");
+
       String appUrl = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
-      
-      if (commandLine.hasOption("t")) {
+
+      if (conformance && commandLine.hasOption("t")) {
+        Path inputsDir = Paths.get(Paths.get(inputsFile.getPath()).getParent().toAbsolutePath().toString());
+        Path workDir = Paths.get("").toAbsolutePath();
+        Path pathRelative = workDir.relativize(inputsDir);
+        inputs = loadInputs(inputs, appUrl, pathRelative.toString());
+
         Bindings bindings = BindingsFactory.create(appUrl);
         System.out.println(JSONHelper.writeObject(createConformanceTestResults(appUrl, inputs, bindings.getProtocolType())));
         System.exit(0);
@@ -166,19 +169,19 @@ public class BackendCommandLine {
       final JobService jobService = injector.getInstance(JobService.class);
       final BackendService backendService = injector.getInstance(BackendService.class);
       final ExecutorService executorService = injector.getInstance(ExecutorService.class);
-      
+
       BackendLocal backendLocal = new BackendLocal();
       backendLocal = backendService.create(backendLocal);
       executorService.initialize(backendLocal);
-      
+
       final Job job = jobService.create(new Job(appUrl, inputs));
-      
+
       Thread checker = new Thread(new Runnable() {
         @Override
         public void run() {
           Job rootJob = jobService.get(job.getId());
-          
-          while(!Job.isFinished(rootJob)) {
+
+          while (!Job.isFinished(rootJob)) {
             try {
               Thread.sleep(1000);
               rootJob = jobService.get(job.getId());
@@ -211,18 +214,20 @@ public class BackendCommandLine {
   }
 
   @SuppressWarnings("unchecked")
-  private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs, ProtocolType protocolType) throws BindingException {
+  private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs,
+      ProtocolType protocolType) throws BindingException {
     switch (protocolType) {
     case DRAFT2:
       String draft2ResolvedApp = Draft2DocumentResolver.resolve(appURI);
       Draft2JobApp draft2App = BeanSerializer.deserialize(draft2ResolvedApp, Draft2JobApp.class);
-      
+
       if (!draft2App.isCommandLineTool()) {
         logger.error("The application is not a valid command line tool.");
         System.exit(10);
       }
-      
-      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp, Draft2CommandLineTool.class);
+
+      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp,
+          Draft2CommandLineTool.class);
       Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
       Map<String, Object> draft2AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
       Integer draft2Cpu = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("cpu") : null;
@@ -262,7 +267,8 @@ public class BackendCommandLine {
         System.exit(10);
       }
 
-      Draft3CommandLineTool draft3CommandLineTool = BeanSerializer.deserialize(draft3ResolvedApp, Draft3CommandLineTool.class);
+      Draft3CommandLineTool draft3CommandLineTool = BeanSerializer.deserialize(draft3ResolvedApp,
+          Draft3CommandLineTool.class);
       Draft3Job draft3Job = new Draft3Job(draft3CommandLineTool, (Map<String, Object>) inputs);
       Map<String, Object> draft3AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
       Integer draft3Cpu = draft3AllocatedResources != null ? (Integer) draft3AllocatedResources.get("cpu") : null;
@@ -297,7 +303,7 @@ public class BackendCommandLine {
     }
     return null;
   }
-  
+
   /**
    * Reads content from a file
    */
@@ -315,7 +321,7 @@ public class BackendCommandLine {
     options.addOption("b", "basedir", true, "execution directory");
     options.addOption("c", "configuration-dir", true, "configuration directory");
     options.addOption("t", "conformance-test", false, "conformance test");
-    options.addOption(null, "no-container",  false, "don't use containers");
+    options.addOption(null, "no-container", false, "don't use containers");
     options.addOption(null, "tmpdir-prefix", true, "doesn't do anything");
     options.addOption(null, "tmp-outdir-prefix", true, "doesn't do anything");
     options.addOption(null, "quiet", false, "quiet");
@@ -341,10 +347,10 @@ public class BackendCommandLine {
     new HelpFormatter().printHelp("rabix [OPTION]... <tool> <job>", options);
     System.exit(0);
   }
-  
+
   private static List<String> commandLineToString(List<Object> commandLineParts) {
     List<String> commandLineString = new ArrayList<String>();
-    for(Object part: commandLineParts) {
+    for (Object part : commandLineParts) {
       commandLineString.add(part.toString());
     }
     return commandLineString;
@@ -360,8 +366,10 @@ public class BackendCommandLine {
         logger.debug("Configuration directory {} doesn't exist or is not a directory.", configPath);
       }
     }
-    File config = new File(new File(BackendCommandLine.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile().getParentFile() + "/config");
-    
+    File config = new File(
+        new File(BackendCommandLine.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile()
+            .getParentFile() + "/config");
+
     logger.debug("Config path: " + config.getCanonicalPath());
     if (config.exists() && config.isDirectory()) {
       logger.debug("Configuration directory found localy.");
@@ -375,6 +383,31 @@ public class BackendCommandLine {
       printUsageAndExit(options);
     }
     return config;
+  }
+
+  private static Map<String, Object> loadInputs(Map<String, Object> inputs, String appUrl, String inputsBasedir)
+      throws BindingException {
+    Object allocatedResources = inputs.remove("allocatedResources");
+    Job job = new Job(appUrl, inputs);
+    Bindings bindings = BindingsFactory.create(job.getApp());
+    job = bindings.mapInputFilePaths(job, new BackendCommandLine().new InputFileMapper(inputsBasedir));
+    Map<String, Object> result = job.getInputs();
+    result.put("allocatedResources", allocatedResources);
+    return result;
+  }
+
+  private class InputFileMapper implements FileMapper {
+
+    private File basedir;
+
+    public InputFileMapper(String basedir) {
+      this.basedir = new File(basedir);
+    }
+
+    @Override
+    public String map(String filePath) throws FileMappingException {
+      return new File(this.basedir, filePath).getPath();
+    }
   }
 
 }
