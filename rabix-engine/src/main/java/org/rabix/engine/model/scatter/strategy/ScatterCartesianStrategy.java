@@ -1,4 +1,4 @@
-package org.rabix.engine.model.scatter.impl;
+package org.rabix.engine.model.scatter.strategy;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,10 +15,10 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.model.VariableRecord;
-import org.rabix.engine.model.scatter.PortMapping;
-import org.rabix.engine.model.scatter.RowMapping;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.service.scatter.PortMapping;
+import org.rabix.engine.service.scatter.RowMapping;
 
 public class ScatterCartesianStrategy implements ScatterStrategy {
 

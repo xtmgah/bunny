@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.rabix.bindings.BindingException;
+import org.rabix.engine.service.scatter.RowMapping;
 
 public interface ScatterStrategy {
 

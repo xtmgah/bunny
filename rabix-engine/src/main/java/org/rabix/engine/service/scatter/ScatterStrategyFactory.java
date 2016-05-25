@@ -1,9 +1,10 @@
-package org.rabix.engine.model.scatter;
+package org.rabix.engine.service.scatter;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.engine.model.scatter.impl.ScatterCartesianStrategy;
-import org.rabix.engine.model.scatter.impl.ScatterZipStrategy;
+import org.rabix.engine.model.scatter.ScatterStrategy;
+import org.rabix.engine.model.scatter.strategy.ScatterCartesianStrategy;
+import org.rabix.engine.model.scatter.strategy.ScatterZipStrategy;
 import org.rabix.engine.service.VariableRecordService;
 
 import com.google.common.base.Preconditions;

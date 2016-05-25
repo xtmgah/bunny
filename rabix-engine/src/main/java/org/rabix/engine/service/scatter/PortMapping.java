@@ -1,4 +1,4 @@
-package org.rabix.engine.model.scatter;
+package org.rabix.engine.service.scatter;
 
 public class PortMapping {
 
