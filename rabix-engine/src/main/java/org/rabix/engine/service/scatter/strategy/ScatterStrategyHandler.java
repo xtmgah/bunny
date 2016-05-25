@@ -1,4 +1,4 @@
-package org.rabix.engine.model.scatter;
+package org.rabix.engine.service.scatter.strategy;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import org.rabix.bindings.BindingException;
 import org.rabix.engine.service.scatter.RowMapping;
 
-public interface ScatterStrategy {
+public interface ScatterStrategyHandler {
 
   void enable(String port, Object value, Integer position);
 

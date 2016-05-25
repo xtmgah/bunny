@@ -7,8 +7,8 @@ import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
-import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 
 public class JobRecord {
 
@@ -31,7 +31,7 @@ public class JobRecord {
   private int numberOfGlobalInputs = 0;
   private int numberOfGlobalOutputs = 0;
   
-  private ScatterStrategy scatterStrategy;
+  private ScatterStrategyHandler scatterStrategy;
   
   public JobRecord(String rootId, String id, String uniqueId, String parentId, JobState state, boolean isContainer, boolean isScattered, boolean master, boolean blocking) {
     this.id = id;
@@ -181,11 +181,11 @@ public class JobRecord {
     this.isScatterWrapper = isScatterWrapper;
   }
 
-  public ScatterStrategy getScatterStrategy() {
+  public ScatterStrategyHandler getScatterStrategy() {
     return scatterStrategy;
   }
 
-  public void setScatterStrategy(ScatterStrategy scatterStrategy) {
+  public void setScatterStrategy(ScatterStrategyHandler scatterStrategy) {
     this.scatterStrategy = scatterStrategy;
   }
 

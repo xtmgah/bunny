@@ -17,11 +17,11 @@ import org.rabix.engine.event.impl.InputUpdateEvent;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
-import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
@@ -103,7 +103,7 @@ public class ScatterService {
   }
   
   private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer numberOfScattered, Integer position) throws EventHandlerException {
-    ScatterStrategy scatterStrategy = job.getScatterStrategy();
+    ScatterStrategyHandler scatterStrategy = job.getScatterStrategy();
     scatterStrategy.enable(port, value, position);
     
     List<RowMapping> mappings = null;

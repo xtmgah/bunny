@@ -1,11 +1,9 @@
-package org.rabix.engine.model.scatter.strategy;
+package org.rabix.engine.service.scatter.strategy;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.rabix.bindings.model.ScatterMethod;
@@ -14,29 +12,21 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.model.VariableRecord;
-import org.rabix.engine.model.scatter.ScatterStrategy;
+import org.rabix.engine.model.scatter.ScatterZipStrategy;
+import org.rabix.engine.model.scatter.ScatterZipStrategy.Combination;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.PortMapping;
 import org.rabix.engine.service.scatter.RowMapping;
 
 import com.google.common.base.Preconditions;
 
-public class ScatterZipStrategy implements ScatterStrategy {
+public class ScatterZipStrategyHandler implements ScatterStrategyHandler {
 
-  private LinkedList<Combination> combinations;
-  
-  private Map<String, LinkedList<Object>> values;
-  private Map<String, LinkedList<Boolean>> indexes;
-
-  private final ScatterMethod scatterMethod;
+  private final ScatterZipStrategy strategy;
   private final VariableRecordService variableRecordService;
   
-  public ScatterZipStrategy(DAGNode dagNode, VariableRecordService variableRecordService) {
-    values = new HashMap<>();
-    indexes = new HashMap<>();
-    combinations = new LinkedList<>();
-    
-    this.scatterMethod = dagNode.getScatterMethod();
+  public ScatterZipStrategyHandler(DAGNode dagNode, VariableRecordService variableRecordService) {
+    this.strategy = new ScatterZipStrategy();
     this.variableRecordService = variableRecordService;
     initialize(dagNode);
   }
@@ -44,8 +34,8 @@ public class ScatterZipStrategy implements ScatterStrategy {
   public void initialize(DAGNode dagNode) {
     for(DAGLinkPort port : dagNode.getInputPorts()) {
       if (port.isScatter()) {
-        values.put(port.getId(), new LinkedList<Object>());
-        indexes.put(port.getId(), new LinkedList<Boolean>());
+        strategy.getValues().put(port.getId(), new LinkedList<Object>());
+        strategy.getIndexes().put(port.getId(), new LinkedList<Boolean>());
       }
     }
   }
@@ -54,8 +44,8 @@ public class ScatterZipStrategy implements ScatterStrategy {
     Preconditions.checkNotNull(port);
     Preconditions.checkNotNull(position);
     
-    List<Object> valueList = values.get(port);
-    List<Boolean> indexList = indexes.get(port);
+    List<Object> valueList = strategy.getValues().get(port);
+    List<Boolean> indexList = strategy.getIndexes().get(port);
 
     if (indexList.size() < position) {
       expand(indexList, position);
@@ -84,7 +74,7 @@ public class ScatterZipStrategy implements ScatterStrategy {
     List<String> ports = new LinkedList<>();
     LinkedList<LinkedList<Boolean>> indexLists = new LinkedList<>();
 
-    for (Entry<String, LinkedList<Boolean>> entry : indexes.entrySet()) {
+    for (Entry<String, LinkedList<Boolean>> entry : strategy.getIndexes().entrySet()) {
       ports.add(entry.getKey());
       indexLists.add(entry.getValue());
     }
@@ -105,27 +95,27 @@ public class ScatterZipStrategy implements ScatterStrategy {
         break;
       } else {
         Combination combination = null;
-        for (int index = 0; index < combinations.size(); index++) {
-          Combination c = combinations.get(index);
+        for (int index = 0; index < strategy.getCombinations().size(); index++) {
+          Combination c = strategy.getCombinations().get(index);
 
-          if (c.position == i + 1) {
+          if (c.getPosition() == i + 1) {
             combination = c;
             break;
           }
         }
         if (combination == null) {
           combination = new Combination(i + 1, false);
-          combinations.add(combination);
+          strategy.getCombinations().add(combination);
         }
 
-        if (!combination.enabled) {
+        if (!combination.isEnabled()) {
           List<PortMapping> portMappings = new LinkedList<>();
 
           for (String portId : ports) {
-            Object value = values.get(portId).get(i);
+            Object value = strategy.getValues().get(portId).get(i);
             portMappings.add(new PortMapping(portId, value));
           }
-          result.add(new RowMapping(combination.position, portMappings));
+          result.add(new RowMapping(combination.getPosition(), portMappings));
         }
       }
     }
@@ -135,9 +125,9 @@ public class ScatterZipStrategy implements ScatterStrategy {
   @Override
   public void commit(List<RowMapping> mappings) {
     for (RowMapping mapping : mappings) {
-      for (Combination combination : combinations) {
-        if (combination.position == mapping.getIndex()) {
-          combination.enabled = true;
+      for (Combination combination : strategy.getCombinations()) {
+        if (combination.getPosition() == mapping.getIndex()) {
+          combination.setEnabled(true);
           break;
         }
       }
@@ -145,41 +135,32 @@ public class ScatterZipStrategy implements ScatterStrategy {
   }
   
   @Override
-  public int enabledCount() {
-    return combinations.size();
-  }
-
-  private class Combination {
-    int position;
-    boolean enabled;
-
-    public Combination(int position, boolean enabled) {
-      this.position = position;
-      this.enabled = enabled;
-    }
-  }
-
-  @Override
-  public boolean isBlocking() {
-    return ScatterMethod.isBlocking(scatterMethod);
-  }
-
-  @Override
   public LinkedList<Object> values(String jobId, String portId, String contextId) {
-    Collections.sort(combinations, new Comparator<Combination>() {
+    Collections.sort(strategy.getCombinations(), new Comparator<Combination>() {
       @Override
       public int compare(Combination o1, Combination o2) {
-        return o1.position - o2.position;
+        return o1.getPosition() - o2.getPosition();
       }
     });
     
     LinkedList<Object> result = new LinkedList<>();
-    for (Combination combination : combinations) {
-      String scatteredJobId = InternalSchemaHelper.scatterId(jobId, combination.position);
+    for (Combination combination : strategy.getCombinations()) {
+      String scatteredJobId = InternalSchemaHelper.scatterId(jobId, combination.getPosition());
       VariableRecord variableRecord = variableRecordService.find(scatteredJobId, portId, LinkPortType.OUTPUT, contextId);
       result.addLast(variableRecord.getValue());
     }
     return result;
+  }
+
+  
+  @Override
+  public int enabledCount() {
+    return strategy.getCombinations().size();
+  }
+
+  @Override
+  public boolean isBlocking() {
+    return ScatterMethod.isBlocking(strategy.getScatterMethod());
   }
 
 }

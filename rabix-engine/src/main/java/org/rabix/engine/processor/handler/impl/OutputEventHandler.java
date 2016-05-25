@@ -9,7 +9,6 @@ import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
 import org.rabix.engine.event.impl.OutputUpdateEvent;
 import org.rabix.engine.model.ContextRecord.ContextStatus;
-import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
@@ -18,6 +17,7 @@ import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
@@ -63,7 +63,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     Object value = null;
     
     if (sourceJob.isScatterWrapper()) {
-      ScatterStrategy scatterStrategy = sourceJob.getScatterStrategy();
+      ScatterStrategyHandler scatterStrategy = sourceJob.getScatterStrategy();
       
       if (scatterStrategy.isBlocking()) {
         if (sourceJob.isOutputPortReady(event.getPortId())) {
