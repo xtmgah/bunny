@@ -52,8 +52,8 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
     Channel channel = null;
     try {
       channel = connection.createChannel();
-      
-      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
+
+      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType(), false);
       String payload = BeanSerializer.serializeFull(entity);
       channel.basicPublish(queue.getExchange(), queue.getRoutingKey(), null, payload.getBytes(DEFAULT_ENCODING));
       return ResultPair.success();
@@ -75,7 +75,7 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
     try {
       channel = connection.createChannel();
       
-      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
+      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType(), false);
       String queueName = channel.queueDeclare().getQueue();
       channel.queueBind(queueName, queue.getExchange(), queue.getRoutingKey());
 
