@@ -92,7 +92,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             int numberOfDestinationIncomingLinks = jobService.getInputPortIncoming(destinationJob, event.getPortId());
             if (isDestinationPortScatterable && !destinationJob.isBlocking() && numberOfDestinationIncomingLinks <= 1) {
               value = value != null ? value : event.getValue();
-              int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
+              int numberOfScattered = sourceJob.getGlobalOutputsCount();
               Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
               eventProcessor.send(updateInputEvent);
             } else {
@@ -109,7 +109,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             int numberOfOutputPortIncomingLinks = jobService.getOutputPortIncoming(destinationJob, event.getPortId());
             if (numberOfOutputPortIncomingLinks <= 1) {
               value = value != null? value : event.getValue();
-              int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
+              int numberOfScattered = sourceJob.getGlobalOutputsCount();
               if (scatterStrategyHandler.isBlocking()) {
                 Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, false, 1, 1);
                 eventProcessor.send(updateOutputEvent);
@@ -147,7 +147,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             break;
           case OUTPUT:
             if (sourceJob.isScattered()) {
-              int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
+              int numberOfScattered = sourceJob.getGlobalOutputsCount();
               int position = InternalSchemaHelper.getScatteredNumber(sourceJob.getId());
               Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, position);
               eventProcessor.send(updateOutputEvent);

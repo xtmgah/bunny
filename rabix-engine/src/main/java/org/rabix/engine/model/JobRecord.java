@@ -23,8 +23,8 @@ public class JobRecord {
   private boolean isContainer;                  // it's a container Job
   private boolean isScatterWrapper;             // it's a scatter wrapper
 
-  private int numberOfGlobalInputs = 0;
-  private int numberOfGlobalOutputs = 0;
+  private int globalInputsCount = 0;
+  private int globalOutputsCount = 0;
   
   private ScatterStrategy scatterStrategy;
   
@@ -101,20 +101,20 @@ public class JobRecord {
     this.isScatterWrapper = isScatterWrapper;
   }
 
-  public int getNumberOfGlobalInputs() {
-    return numberOfGlobalInputs;
+  public int getGlobalInputsCount() {
+    return globalInputsCount;
   }
 
-  public void setNumberOfGlobalInputs(int numberOfGlobalInputs) {
-    this.numberOfGlobalInputs = numberOfGlobalInputs;
+  public void setGlobalInputsCount(int globalInputsCount) {
+    this.globalInputsCount = globalInputsCount;
   }
 
-  public int getNumberOfGlobalOutputs() {
-    return numberOfGlobalOutputs;
+  public int getGlobalOutputsCount() {
+    return globalOutputsCount;
   }
 
-  public void setNumberOfGlobalOutputs(int numberOfGlobalOutputs) {
-    this.numberOfGlobalOutputs = numberOfGlobalOutputs;
+  public void setGlobalOutputsCount(int globalOutputsCount) {
+    this.globalOutputsCount = globalOutputsCount;
   }
 
   public ScatterStrategy getScatterStrategy() {
@@ -194,7 +194,8 @@ public class JobRecord {
 
   @Override
   public String toString() {
-    return "JobRecord [id=" + id + ", externalId=" + externalId + ", rootId=" + rootId + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterStrategy=" + scatterStrategy + "]";
+    return "JobRecord [id=" + id + ", externalId=" + externalId + ", rootId=" + rootId + ", parentId=" + parentId + ", blocking=" + blocking + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", globalInputsCount=" + globalInputsCount + ", globalOutputsCount=" + globalOutputsCount + ", scatterStrategy=" + scatterStrategy + "]";
   }
+
 
 }

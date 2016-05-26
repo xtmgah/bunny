@@ -62,7 +62,7 @@ public class ScatterService {
     }
 
     if (isLookAhead) {
-      int numberOfScattered = getNumberOfScattered(scatterStrategyHandler, job, numberOfScatteredFromEvent);
+      int numberOfScattered = getScatteredCount(scatterStrategyHandler, job, numberOfScatteredFromEvent);
       createScatteredJobs(job, portId, value, node, numberOfScattered, position);
       return;
     }
@@ -102,7 +102,7 @@ public class ScatterService {
     return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node instanceof DAGContainer, isScattered, isBlocking);
   }
   
-  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer numberOfScattered, Integer position) throws EventHandlerException {
+  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer scatteredCount, Integer position) throws EventHandlerException {
     ScatterStrategy scatterStrategy = job.getScatterStrategy();
     
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(node.getScatterMethod());
@@ -128,7 +128,7 @@ public class ScatterService {
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         Object defaultValue = node.getDefaults().get(inputPort.getId());
         VariableRecord variableN = new VariableRecord(job.getRootId(), jobNId, inputPort.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
-        variableN.setNumberGlobals(getNumberOfScattered(scatterStrategyHandler, job, numberOfScattered));
+        variableN.setNumberGlobals(getScatteredCount(scatterStrategyHandler, job, scatteredCount));
         variableRecordService.create(variableN);
 
         if (jobN.getState().equals(JobState.PENDING)) {
@@ -150,7 +150,7 @@ public class ScatterService {
       }
       for (DAGLinkPort outputPort : node.getOutputPorts()) {
         VariableRecord variableN = new VariableRecord(job.getRootId(), jobNId, outputPort.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(outputPort.getId(), outputPort.getType()));
-        variableN.setNumberGlobals(getNumberOfScattered(scatterStrategyHandler, job, numberOfScattered));
+        variableN.setNumberGlobals(getScatteredCount(scatterStrategyHandler, job, scatteredCount));
         variableRecordService.create(variableN);
         jobRecordService.incrementPortCounter(jobN, outputPort, LinkPortType.OUTPUT);
 
@@ -161,10 +161,10 @@ public class ScatterService {
       job.setState(JobState.RUNNING);
       job.setScatterWrapper(true);
       
-      jobRecordService.resetOutputPortCounters(job, getNumberOfScattered(scatterStrategyHandler, job, numberOfScattered));
+      jobRecordService.resetOutputPortCounters(job, getScatteredCount(scatterStrategyHandler, job, scatteredCount));
       jobRecordService.update(job);
       
-      jobN.setNumberOfGlobalOutputs(getNumberOfScattered(scatterStrategyHandler, job, numberOfScattered));
+      jobN.setGlobalOutputsCount(getScatteredCount(scatterStrategyHandler, job, scatteredCount));
       jobRecordService.create(jobN);
 
       for (Event subevent : events) {
@@ -176,7 +176,7 @@ public class ScatterService {
   /**
    * Get number of scattered jobs 
    */
-  private int getNumberOfScattered(ScatterStrategyHandler scatterStrategyHandler, JobRecord job, Integer scatteredNodes) {
+  private int getScatteredCount(ScatterStrategyHandler scatterStrategyHandler, JobRecord job, Integer scatteredNodes) {
     if (scatteredNodes != null) {
       return Math.max(scatteredNodes, scatterStrategyHandler.enabledCount(job.getScatterStrategy()));
     } else {

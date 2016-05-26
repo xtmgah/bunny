@@ -194,12 +194,12 @@ public class JobRecordService {
   }
   
   public void resetInputPortCounters(JobRecord jobRecord, int value) {
-    if (jobRecord.getNumberOfGlobalInputs() == value) {
+    if (jobRecord.getGlobalInputsCount() == value) {
       return;
     }
-    int oldValue = jobRecord.getNumberOfGlobalInputs();
-    if (jobRecord.getNumberOfGlobalInputs() < value) {
-      jobRecord.setNumberOfGlobalInputs(value);
+    int oldValue = jobRecord.getGlobalInputsCount();
+    if (jobRecord.getGlobalInputsCount() < value) {
+      jobRecord.setGlobalInputsCount(value);
 
       for (PortCounter pc : jobRecord.getInputCounters()) {
         if (pc.getCounter() != value) {
@@ -207,9 +207,9 @@ public class JobRecordService {
             continue;
           }
           if (oldValue != 0) {
-            pc.setCounter(jobRecord.getNumberOfGlobalInputs() - (oldValue - pc.getCounter()));
+            pc.setCounter(jobRecord.getGlobalInputsCount() - (oldValue - pc.getCounter()));
           } else {
-            pc.setCounter(jobRecord.getNumberOfGlobalInputs());
+            pc.setCounter(jobRecord.getGlobalInputsCount());
           }
         }
       }
@@ -217,12 +217,12 @@ public class JobRecordService {
   }
 
   public void resetOutputPortCounters(JobRecord jobRecord, int value) {
-    if (jobRecord.getNumberOfGlobalOutputs() == value) {
+    if (jobRecord.getGlobalOutputsCount() == value) {
       return;
     }
-    int oldValue = jobRecord.getNumberOfGlobalOutputs();
-    if (jobRecord.getNumberOfGlobalOutputs() < value) {
-      jobRecord.setNumberOfGlobalOutputs(value);
+    int oldValue = jobRecord.getGlobalOutputsCount();
+    if (jobRecord.getGlobalOutputsCount() < value) {
+      jobRecord.setGlobalOutputsCount(value);
 
       for (PortCounter pc : jobRecord.getOutputCounters()) {
         if (pc.getCounter() == 0) {
@@ -230,9 +230,9 @@ public class JobRecordService {
         }
         if (pc.getCounter() != value) {
           if (oldValue != 0) {
-            pc.setCounter(jobRecord.getNumberOfGlobalOutputs() - (oldValue - pc.getCounter()));
+            pc.setCounter(jobRecord.getGlobalOutputsCount() - (oldValue - pc.getCounter()));
           } else {
-            pc.setCounter(jobRecord.getNumberOfGlobalOutputs());
+            pc.setCounter(jobRecord.getGlobalOutputsCount());
           }
         }
       }
