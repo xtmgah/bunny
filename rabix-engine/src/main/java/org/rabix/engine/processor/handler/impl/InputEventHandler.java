@@ -57,24 +57,35 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     DAGNode node = nodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
 
     if (event.isLookAhead()) {
-      if (job.isBlocking() || (job.getInputPortIncoming(event.getPortId()) > 1)) {
+      int numberOfIncomingLinks = jobService.getInputPortIncoming(job, event.getPortId());
+      if (job.isBlocking() || (numberOfIncomingLinks > 1)) {
         return; // guard: should not happen
       } else {
-        job.resetInputPortCounters(event.getNumberOfScattered());
+        jobService.resetInputPortCounters(job, event.getNumberOfScattered());
       }
-    } else if ((job.getInputPortIncoming(event.getPortId()) > 1) && job.isScatterPort(event.getPortId()) && !LinkMerge.isBlocking(node.getLinkMerge(event.getPortId(), LinkPortType.INPUT))) {
-      job.resetOutputPortCounters(job.getInputPortIncoming(event.getPortId()));
+    } else {
+      boolean isScatter = jobService.isScatterPort(job, event.getPortId());
+      int numberOfIncomingLinks = jobService.getInputPortIncoming(job, event.getPortId());
+      boolean isBlocking = LinkMerge.isBlocking(node.getLinkMerge(event.getPortId(), LinkPortType.INPUT));
+      
+      if (numberOfIncomingLinks > 1 && isScatter && !isBlocking) {
+        jobService.resetOutputPortCounters(job, numberOfIncomingLinks);
+      }
     }
     
     variable.addValue(event.getValue(), event.getPosition());
-    job.decrementPortCounter(event.getPortId(), LinkPortType.INPUT);
+    jobService.decrementPortCounter(job, event.getPortId(), LinkPortType.INPUT);
     
     // scatter
     if (!job.isBlocking() && !job.isScattered()) {
-      if (job.isScatterPort(event.getPortId())) {
-        if ((job.isInputPortBlocking(node, event.getPortId()))) {
+      boolean isScatterPort = jobService.isScatterPort(job, event.getPortId());
+      boolean isInputPortBlocking = jobService.isInputPortBlocking(job, node, event.getPortId());
+      
+      if (isScatterPort) {
+        if (isInputPortBlocking) {
           // it's blocking
-          if (job.isInputPortReady(event.getPortId())) {
+          boolean isInputPortReady = jobService.isInputPortReady(job, event.getPortId());
+          if (isInputPortReady) {
             scatterHelper.scatterPort(job, event.getPortId(), variable.getValue(), event.getPosition(), event.getNumberOfScattered(), event.isLookAhead(), false);
             update(job, variable);
             return;
@@ -92,7 +103,8 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
       }
     }
 
-    if (job.isReady()) {
+    boolean isJobReady = jobService.isReady(job);
+    if (isJobReady) {
       JobStatusEvent jobStatusEvent = new JobStatusEvent(job.getId(), event.getContextId(), JobState.READY, null);
       eventProcessor.send(jobStatusEvent);
     }

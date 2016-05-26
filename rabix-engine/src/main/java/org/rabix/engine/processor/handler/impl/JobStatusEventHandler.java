@@ -116,12 +116,16 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
           eventProcessor.send(updateEvent);
         }
       }
-    } else if (!job.isScattered() && job.getScatterPorts().size() > 0) {
-      job.setState(JobState.RUNNING);
-      
-      for (String port : job.getScatterPorts()) {
-        VariableRecord variable = variableRecordService.find(job.getId(), port, LinkPortType.INPUT, contextId);
-        scatterHelper.scatterPort(job, port, variable.getValue(), 1, null, false, false);
+    } else {
+      List<String> scatterPortIds = jobRecordService.getScatterPorts(job);
+
+      if (!job.isScattered() && scatterPortIds.size() > 0) {
+        job.setState(JobState.RUNNING);
+
+        for (String port : scatterPortIds) {
+          VariableRecord variable = variableRecordService.find(job.getId(), port, LinkPortType.INPUT, contextId);
+          scatterHelper.scatterPort(job, port, variable.getValue(), 1, null, false, false);
+        }
       }
     }
   }
@@ -197,18 +201,19 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private void handleLinkPort(JobRecord job, DAGLinkPort linkPort) {
     if (linkPort.getType().equals(LinkPortType.INPUT)) {
       if (job.getState().equals(JobState.PENDING)) {
-        job.incrementPortCounter(linkPort, LinkPortType.INPUT);
-        job.increaseInputPortIncoming(linkPort.getId());
+        jobRecordService.incrementPortCounter(job, linkPort, LinkPortType.INPUT);
+        jobRecordService.increaseInputPortIncoming(job, linkPort.getId());
         
-        if (job.getInputPortIncoming(linkPort.getId()) > 1) {
+        int numberOfIncomingLinks = jobRecordService.getInputPortIncoming(job, linkPort.getId());
+        if (numberOfIncomingLinks > 1) {
           if (LinkMerge.isBlocking(linkPort.getLinkMerge())) {
             job.setBlocking(true);
           }
         }
       }
     } else {
-      job.incrementPortCounter(linkPort, LinkPortType.OUTPUT);
-      job.increaseOutputPortIncoming(linkPort.getId());
+      jobRecordService.incrementPortCounter(job, linkPort, LinkPortType.OUTPUT);
+      jobRecordService.increaseOutputPortIncoming(job, linkPort.getId());
     }
     jobRecordService.update(job);
   }
