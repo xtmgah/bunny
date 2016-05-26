@@ -59,7 +59,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     if (isCompleted) {
       sourceJob.setState(JobState.COMPLETED);
       jobService.update(sourceJob);
-      if (sourceJob.isMaster()) {
+      if (sourceJob.isRoot()) {
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
       }
     }

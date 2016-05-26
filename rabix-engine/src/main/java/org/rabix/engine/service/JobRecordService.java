@@ -74,7 +74,7 @@ public class JobRecordService {
   
   public synchronized JobRecord findRoot(String contextId) {
     for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.isMaster() && jr.getRootId().equals(contextId)) {
+      if (jr.isRoot() && jr.getRootId().equals(contextId)) {
         return jr;
       }
     }
