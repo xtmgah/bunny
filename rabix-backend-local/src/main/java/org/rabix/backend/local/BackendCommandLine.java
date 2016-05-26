@@ -133,7 +133,7 @@ public class BackendCommandLine {
         configOverrides.put("backend.docker.enabled", false);
       }
 
-      ConfigModule configModule = new ConfigModule(configDir, configOverrides);
+      final ConfigModule configModule = new ConfigModule(configDir, configOverrides);
       Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
           new ExecutorModule(configModule), new AbstractModule() {
             @Override
@@ -155,16 +155,22 @@ public class BackendCommandLine {
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
 
+      Path inputsDir = Paths.get(Paths.get(inputsFile.getPath()).getParent().toAbsolutePath().toString());
+      
       if (conformance && commandLine.hasOption("t")) {
-        Path inputsDir = Paths.get(Paths.get(inputsFile.getPath()).getParent().toAbsolutePath().toString());
         Path workDir = Paths.get("").toAbsolutePath();
         Path pathRelative = workDir.relativize(inputsDir);
         inputs = loadInputs(inputs, appUrl, pathRelative.toString());
-
+        
         Bindings bindings = BindingsFactory.create(appUrl);
         System.out.println(JSONHelper.writeObject(createConformanceTestResults(appUrl, inputs, bindings.getProtocolType())));
         System.exit(0);
       }
+      
+      Path workDir = Paths.get(configuration.getString("backend.execution.directory")).toAbsolutePath();
+      Path pathRelative = workDir.relativize(inputsDir);
+      inputs = loadInputs(inputs, appUrl, pathRelative.toString());
+      
 
       final JobService jobService = injector.getInstance(JobService.class);
       final BackendService backendService = injector.getInstance(BackendService.class);
@@ -192,10 +198,21 @@ public class BackendCommandLine {
           }
           if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
             try {
-              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
+              Map<String, Object> result = null;
+              Configuration configuration = configModule.provideConfig();
+              if (configuration.getBoolean("rabix.conformance")) {
+                  result = conformanceOutputs(rootJob);
+              }
+              else {
+                result = rootJob.getOutputs();
+              }
+              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result));
               System.exit(0);
             } catch (JsonProcessingException e) {
               logger.error("Failed to write outputs to standard out", e);
+              System.exit(10);
+            } catch (BindingException e) {
+              logger.error("Failed to remap files for conformance tests", e);
               System.exit(10);
             }
           } else {
@@ -324,6 +341,7 @@ public class BackendCommandLine {
     options.addOption(null, "no-container", false, "don't use containers");
     options.addOption(null, "tmpdir-prefix", true, "doesn't do anything");
     options.addOption(null, "tmp-outdir-prefix", true, "doesn't do anything");
+    options.addOption("o", "outdir", true, "");
     options.addOption(null, "quiet", false, "quiet");
     options.addOption("h", "help", false, "help");
     return options;
@@ -387,13 +405,19 @@ public class BackendCommandLine {
 
   private static Map<String, Object> loadInputs(Map<String, Object> inputs, String appUrl, String inputsBasedir)
       throws BindingException {
-    Object allocatedResources = inputs.remove("allocatedResources");
+    // Object allocatedResources = inputs.remove("allocatedResources");
     Job job = new Job(appUrl, inputs);
     Bindings bindings = BindingsFactory.create(job.getApp());
     job = bindings.mapInputFilePaths(job, new BackendCommandLine().new InputFileMapper(inputsBasedir));
     Map<String, Object> result = job.getInputs();
-    result.put("allocatedResources", allocatedResources);
+    // result.put("allocatedResources", allocatedResources);
     return result;
+  }
+  
+  private static Map<String, Object> conformanceOutputs(Job rootJob) throws BindingException {
+    Bindings bindings = BindingsFactory.create(rootJob.getApp());
+    Job job = bindings.mapOutputFilePaths(rootJob, new BackendCommandLine().new OutputFileMapper());
+    return job.getOutputs();
   }
 
   private class InputFileMapper implements FileMapper {
@@ -407,6 +431,14 @@ public class BackendCommandLine {
     @Override
     public String map(String filePath) throws FileMappingException {
       return new File(this.basedir, filePath).getPath();
+    }
+  }
+  
+  private class OutputFileMapper implements FileMapper {
+
+    @Override
+    public String map(String filePath) throws FileMappingException {
+      return new File(filePath).getName();
     }
   }
 
