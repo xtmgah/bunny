@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -405,19 +406,34 @@ public class BackendCommandLine {
 
   private static Map<String, Object> loadInputs(Map<String, Object> inputs, String appUrl, String inputsBasedir)
       throws BindingException {
-    // Object allocatedResources = inputs.remove("allocatedResources");
     Job job = new Job(appUrl, inputs);
     Bindings bindings = BindingsFactory.create(job.getApp());
     job = bindings.mapInputFilePaths(job, new BackendCommandLine().new InputFileMapper(inputsBasedir));
     Map<String, Object> result = job.getInputs();
-    // result.put("allocatedResources", allocatedResources);
     return result;
   }
   
   private static Map<String, Object> conformanceOutputs(Job rootJob) throws BindingException {
     Bindings bindings = BindingsFactory.create(rootJob.getApp());
+    rootJob.getOutputs();
     Job job = bindings.mapOutputFilePaths(rootJob, new BackendCommandLine().new OutputFileMapper());
-    return job.getOutputs();
+    Map<String, Object> result = job.getOutputs();
+    removeName(result);
+    return result;
+  }
+  
+  @SuppressWarnings("unchecked")
+  private static void removeName(Object values) {
+    if(values instanceof Map) {
+      if (((Map<String, Object>) values).containsKey("class") && ((Map<String, Object>) values).get("class").equals("File")) {
+        ((Map<String, Object>) values).remove("name");
+      }
+      else {
+        for(Entry<String, Object> entry : ((Map<String, Object>) values).entrySet()) {
+          removeName(entry.getValue());
+        }
+      }
+    }
   }
 
   private class InputFileMapper implements FileMapper {
