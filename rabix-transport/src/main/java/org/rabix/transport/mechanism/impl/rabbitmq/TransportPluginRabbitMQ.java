@@ -1,9 +1,6 @@
 package org.rabix.transport.mechanism.impl.rabbitmq;
 
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.common.json.BeanSerializer;
@@ -25,43 +22,42 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
 
   private static final Logger logger = LoggerFactory.getLogger(TransportPluginRabbitMQ.class);
   
+  private Connection connection;
   private ConnectionFactory factory;
   
   public TransportPluginRabbitMQ(Configuration configuration) throws TransportPluginException {
     factory = new ConnectionFactory();
-    
-    if (TransportConfigRabbitMQ.isDev(configuration)) {
-      factory.setHost("localhost");
-    } else {
-      factory.setHost(TransportConfigRabbitMQ.getHost(configuration));
-      factory.setPort(TransportConfigRabbitMQ.getPort(configuration));
-      factory.setUsername(TransportConfigRabbitMQ.getUsername(configuration));
-      factory.setPassword(TransportConfigRabbitMQ.getPassword(configuration));
-      factory.setVirtualHost(TransportConfigRabbitMQ.getVirtualhost(configuration));
-      if (TransportConfigRabbitMQ.isSSL(configuration)) {
-        try {
+
+    try {
+      if (TransportConfigRabbitMQ.isDev(configuration)) {
+        factory.setHost("localhost");
+      } else {
+        factory.setHost(TransportConfigRabbitMQ.getHost(configuration));
+        factory.setPort(TransportConfigRabbitMQ.getPort(configuration));
+        factory.setUsername(TransportConfigRabbitMQ.getUsername(configuration));
+        factory.setPassword(TransportConfigRabbitMQ.getPassword(configuration));
+        factory.setVirtualHost(TransportConfigRabbitMQ.getVirtualhost(configuration));
+        if (TransportConfigRabbitMQ.isSSL(configuration)) {
           factory.useSslProtocol();
-        } catch (KeyManagementException | NoSuchAlgorithmException e) {
-          logger.error("Failed to initialize TransportPluginRabbitMQ", e);
-          throw new TransportPluginException("Failed to initialize TransportPluginRabbitMQ", e);
         }
       }
+      connection = factory.newConnection();
+    } catch (Exception e) {
+      throw new TransportPluginException("Failed to initialize TransportPluginRabbitMQ", e);
     }
   }
   
   @Override
   public <T> ResultPair<T> send(TransportQueueRabbitMQ queue, T entity) {
     Channel channel = null;
-    Connection connection = null;
     try {
-      connection = factory.newConnection();
       channel = connection.createChannel();
-      
-      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
+
+      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType(), false);
       String payload = BeanSerializer.serializeFull(entity);
       channel.basicPublish(queue.getExchange(), queue.getRoutingKey(), null, payload.getBytes(DEFAULT_ENCODING));
       return ResultPair.success();
-    } catch (IOException | TimeoutException e) {
+    } catch (IOException e) {
       logger.error("Failed to send a message to " + queue, e);
       return ResultPair.fail("Failed to send a message to " + queue, e);
     } finally {
@@ -70,23 +66,16 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
           channel.close();
         } catch (Exception ignore) { }
       }
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (Exception ignore) { }
-      }
     }
   }
 
   @Override
   public <T> ResultPair<T> receive(final TransportQueueRabbitMQ queue, final Class<T> clazz, final ReceiveCallback<T> receiveCallback) {
     Channel channel = null;
-    Connection connection = null;
     try {
-      connection = factory.newConnection();
       channel = connection.createChannel();
       
-      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
+      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType(), false);
       String queueName = channel.queueDeclare().getQueue();
       channel.queueBind(queueName, queue.getExchange(), queue.getRoutingKey());
 
@@ -110,11 +99,6 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
       if (channel != null) {
         try {
           channel.close();
-        } catch (Exception ignore) { }
-      }
-      if (connection != null) {
-        try {
-          connection.close();
         } catch (Exception ignore) { }
       }
     }

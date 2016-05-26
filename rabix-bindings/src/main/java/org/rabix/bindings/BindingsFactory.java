@@ -38,7 +38,7 @@ public class BindingsFactory {
           continue;
         }
         return binding;
-      } catch (Exception e) {
+      } catch (Exception ignore) {
       }
     }
     throw new BindingException("Cannot find binding for the payload.");

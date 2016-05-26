@@ -23,8 +23,9 @@ public class URIHelper {
 
   private final static Logger logger = LoggerFactory.getLogger(URIHelper.class);
 
+  public static final  String FRAGMENT_SEPARATOR = "#";
   private static final String DEFAULT_ENCODING = "UTF-8";
-
+  
   public final static String FTP_URI_SCHEME = "ftp://";
   public final static String HTTP_URI_SCHEME = "http";
   public final static String DATA_URI_SCHEME = "data";
@@ -45,13 +46,27 @@ public class URIHelper {
       return fetchFromFTP(uri);
     }
     if (isHTTP(uri)) {
-      return fetchFromHTTP(uri);
+      return fetchFromHTTP(extractBase(uri));
     }
     if (isFile(uri)) {
-      return loadFromFile(uri);
+      return loadFromFile(extractBase(uri));
     }
     if (isData(uri)) {
       return loadData(uri);
+    }
+    return uri;
+  }
+  
+  public static String extractBase(String uri) {
+    if (uri.contains(FRAGMENT_SEPARATOR)) {
+      return uri.substring(0, uri.lastIndexOf(FRAGMENT_SEPARATOR));
+    }
+    return uri;
+  }
+  
+  public static String extractFragment(String uri) {
+    if (uri.contains(FRAGMENT_SEPARATOR)) {
+      return uri.substring(uri.lastIndexOf(FRAGMENT_SEPARATOR));
     }
     return uri;
   }
