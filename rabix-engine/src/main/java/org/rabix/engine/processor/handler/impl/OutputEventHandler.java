@@ -52,7 +52,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     }
     VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
     jobService.decrementPortCounter(sourceJob, event.getPortId(), LinkPortType.OUTPUT);
-    sourceVariable.addValue(event.getValue(), event.getPosition());
+    variableService.addValue(sourceVariable, event.getValue(), event.getPosition());
     jobService.update(sourceJob);
     
     boolean isCompleted = jobService.isCompleted(sourceJob);
@@ -98,7 +98,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             } else {
               boolean isOutputPortReady = jobService.isOutputPortReady(sourceJob, event.getPortId());
               if (isOutputPortReady) {
-                value = value != null ? value : sourceVariable.getValue();
+                value = value != null ? value : variableService.transformValue(sourceVariable);
                 Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
                 eventProcessor.send(updateInputEvent);
               }
@@ -120,7 +120,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             } else {
               boolean isOutputPortReady = jobService.isOutputPortReady(sourceJob, event.getPortId());
               if (isOutputPortReady) {
-                value = value != null? value : sourceVariable.getValue();
+                value = value != null? value : variableService.transformValue(sourceVariable);
                 Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
                 eventProcessor.send(updateInputEvent);
               }
@@ -138,7 +138,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
       for (LinkRecord link : links) {
         List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
         
-        value = sourceVariable.getValue();
+        value = variableService.transformValue(sourceVariable);
         for (VariableRecord destinationVariable : destinationVariables) {
           switch (destinationVariable.getType()) {
           case INPUT:

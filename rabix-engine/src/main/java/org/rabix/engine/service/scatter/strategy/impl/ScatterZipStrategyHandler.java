@@ -157,7 +157,7 @@ public class ScatterZipStrategyHandler implements ScatterStrategyHandler {
     for (Combination combination : scatterZipStrategy.getCombinations()) {
       String scatteredJobId = InternalSchemaHelper.scatterId(jobId, combination.getPosition());
       VariableRecord variableRecord = variableRecordService.find(scatteredJobId, portId, LinkPortType.OUTPUT, contextId);
-      result.addLast(variableRecord.getValue());
+      result.addLast(variableRecordService.transformValue(variableRecord));
     }
     return result;
   }

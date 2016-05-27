@@ -39,7 +39,8 @@ public class JobHelper {
         Map<String, Object> inputs = new HashMap<>();
         List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
         for (VariableRecord inputVariable : inputVariables) {
-          inputs.put(inputVariable.getPortId(), inputVariable.getValue());
+          Object value = variableRecordService.transformValue(inputVariable);
+          inputs.put(inputVariable.getPortId(), value);
         }
         ContextRecord contextRecord = contextRecordService.find(job.getRootId());
         Context context = new Context(job.getRootId(), contextRecord.getConfig());
@@ -56,7 +57,8 @@ public class JobHelper {
     
     Map<String, Object> outputs = new HashMap<>();
     for (VariableRecord outputVariable : outputVariables) {
-      outputs.put(outputVariable.getPortId(), outputVariable.getValue());
+      Object value = variableRecordService.transformValue(outputVariable);
+      outputs.put(outputVariable.getPortId(), value);
     }
     return Job.cloneWithOutputs(job, outputs);
   }

@@ -112,7 +112,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
           VariableRecord sourceVariable = variableRecordService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, contextId);
           VariableRecord destinationVariable = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, contextId);
           
-          Event updateEvent = new InputUpdateEvent(contextId, destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
+          Object value = variableRecordService.transformValue(sourceVariable);
+          Event updateEvent = new InputUpdateEvent(contextId, destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
           eventProcessor.send(updateEvent);
         }
       }
@@ -124,7 +125,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
         for (String port : scatterPortIds) {
           VariableRecord variable = variableRecordService.find(job.getId(), port, LinkPortType.INPUT, contextId);
-          scatterHelper.scatterPort(job, port, variable.getValue(), 1, null, false, false);
+          Object value = variableRecordService.transformValue(variable);
+          scatterHelper.scatterPort(job, port, value, 1, null, false, false);
         }
       }
     }
