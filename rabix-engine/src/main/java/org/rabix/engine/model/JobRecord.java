@@ -155,10 +155,6 @@ public class JobRecord {
       this.incoming = 0;
     }
 
-    public void increaseIncoming() {
-      this.incoming++;
-    }
-    
     public String getPort() {
       return port;
     }
@@ -190,12 +186,17 @@ public class JobRecord {
     public void setIncoming(int incoming) {
       this.incoming = incoming;
     }
+
+    @Override
+    public String toString() {
+      return "PortCounter [port=" + port + ", counter=" + counter + ", scatter=" + scatter + ", incoming=" + incoming + "]";
+    }
+
   }
 
   @Override
   public String toString() {
     return "JobRecord [id=" + id + ", externalId=" + externalId + ", rootId=" + rootId + ", parentId=" + parentId + ", blocking=" + blocking + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", globalInputsCount=" + globalInputsCount + ", globalOutputsCount=" + globalOutputsCount + ", scatterStrategy=" + scatterStrategy + "]";
   }
-
 
 }

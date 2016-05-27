@@ -5,18 +5,18 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 
 public class VariableRecord {
 
-  private String contextId;
-
   private String jobId;
+  private Object value;
   private String portId;
   private LinkPortType type;
-  private Object value;
   private LinkMerge linkMerge;
 
   private boolean isWrapped;    // is value wrapped into array?
   private int globalsCount;     // number of 'global' outputs if node is scattered
 
   private int timesUpdatedCount = 0;
+  
+  private String contextId;
   
   private boolean isDefault = true;
 
@@ -32,6 +32,11 @@ public class VariableRecord {
   public String getContextId() {
     return contextId;
   }
+
+  public void setContextId(String contextId) {
+    this.contextId = contextId;
+  }
+
 
   public String getJobId() {
     return jobId;
@@ -60,7 +65,11 @@ public class VariableRecord {
   public Object getValue() {
     return value;
   }
-  
+
+  public void setValue(Object value) {
+    this.value = value;
+  }
+
   public LinkMerge getLinkMerge() {
     return linkMerge;
   }
@@ -69,44 +78,36 @@ public class VariableRecord {
     this.linkMerge = linkMerge;
   }
 
-  public boolean isDefault() {
-    return isDefault;
-  }
-
-  public void setDefault(boolean isDefault) {
-    this.isDefault = isDefault;
-  }
-
-  public void setContextId(String contextId) {
-    this.contextId = contextId;
-  }
-
-  public int getTimesUpdatedCount() {
-    return timesUpdatedCount;
-  }
-  
-  public void setTimesUpdatedCount(int numberOfTimesUpdated) {
-    this.timesUpdatedCount = numberOfTimesUpdated;
-  }
-
-  public int getGlobalsCount() {
-    return globalsCount;
-  }
-
-  public void setGlobalsCount(int numberOfGlobals) {
-    this.globalsCount = numberOfGlobals;
-  }
-  
-  public void setValue(Object value) {
-    this.value = value;
-  }
-
   public boolean isWrapped() {
     return isWrapped;
   }
 
   public void setWrapped(boolean isWrapped) {
     this.isWrapped = isWrapped;
+  }
+
+  public int getGlobalsCount() {
+    return globalsCount;
+  }
+
+  public void setGlobalsCount(int globalsCount) {
+    this.globalsCount = globalsCount;
+  }
+
+  public int getTimesUpdatedCount() {
+    return timesUpdatedCount;
+  }
+
+  public void setTimesUpdatedCount(int timesUpdatedCount) {
+    this.timesUpdatedCount = timesUpdatedCount;
+  }
+
+  public boolean isDefault() {
+    return isDefault;
+  }
+
+  public void setDefault(boolean isDefault) {
+    this.isDefault = isDefault;
   }
 
   @Override

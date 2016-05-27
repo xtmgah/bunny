@@ -280,7 +280,7 @@ public class JobRecordService {
   public void increaseInputPortIncoming(JobRecord jobRecord, String port) {
     for (PortCounter portCounter : jobRecord.getInputCounters()) {
       if (portCounter.getPort().equals(port)) {
-        portCounter.increaseIncoming();
+        portCounter.setIncoming(portCounter.getIncoming() + 1);
         return;
       }
     }
@@ -289,7 +289,7 @@ public class JobRecordService {
   public void increaseOutputPortIncoming(JobRecord jobRecord, String port) {
     for (PortCounter portCounter : jobRecord.getOutputCounters()) {
       if (portCounter.getPort().equals(port)) {
-        portCounter.increaseIncoming();;
+        portCounter.setIncoming(portCounter.getIncoming() + 1);
         return;
       }
     }

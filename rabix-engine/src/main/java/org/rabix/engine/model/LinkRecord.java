@@ -87,5 +87,5 @@ public class LinkRecord {
   public String toString() {
     return "LinkRecord [contextId=" + contextId + ", sourceJobId=" + sourceJobId + ", sourceJobPort=" + sourceJobPort + ", sourceVarType=" + sourceVarType + ", destinationJobId=" + destinationJobId + ", destinationJobPort=" + destinationJobPort + ", destinationVarType=" + destinationVarType + ", position=" + position + "]";
   }
-  
+
 }
