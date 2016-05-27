@@ -407,9 +407,11 @@ public class BackendCommandLine {
   private static Map<String, Object> loadInputs(Map<String, Object> inputs, String appUrl, String inputsBasedir)
       throws BindingException {
     Job job = new Job(appUrl, inputs);
+    Object allocatedResources = inputs.remove("allocatedResources");
     Bindings bindings = BindingsFactory.create(job.getApp());
     job = bindings.mapInputFilePaths(job, new BackendCommandLine().new InputFileMapper(inputsBasedir));
     Map<String, Object> result = job.getInputs();
+    result.put("allocatedResources", allocatedResources);
     return result;
   }
   
