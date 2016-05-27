@@ -8,10 +8,10 @@ import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobRecord {
 
-  private final String id;
-  private final String externalId;
-  private final String rootId;
-  private final String parentId;
+  private String id;
+  private String externalId;
+  private String rootId;
+  private String parentId;
   private boolean blocking;
   
   private JobState state;
@@ -44,7 +44,39 @@ public class JobRecord {
   public boolean isRoot() {
     return externalId.equals(rootId);
   }
-  
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getExternalId() {
+    return externalId;
+  }
+
+  public void setExternalId(String externalId) {
+    this.externalId = externalId;
+  }
+
+  public String getRootId() {
+    return rootId;
+  }
+
+  public void setRootId(String rootId) {
+    this.rootId = rootId;
+  }
+
+  public String getParentId() {
+    return parentId;
+  }
+
+  public void setParentId(String parentId) {
+    this.parentId = parentId;
+  }
+
   public boolean isBlocking() {
     return blocking;
   }
@@ -123,22 +155,6 @@ public class JobRecord {
 
   public void setScatterStrategy(ScatterStrategy scatterStrategy) {
     this.scatterStrategy = scatterStrategy;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public String getExternalId() {
-    return externalId;
-  }
-
-  public String getRootId() {
-    return rootId;
-  }
-
-  public String getParentId() {
-    return parentId;
   }
 
   public static class PortCounter {
