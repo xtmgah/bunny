@@ -7,18 +7,34 @@ import java.util.Map;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ScatterZipStrategy implements ScatterStrategy {
 
+  @JsonProperty("scatterMethod")
   private ScatterMethod scatterMethod;
+  @JsonProperty("combinations")
   private LinkedList<Combination> combinations = new LinkedList<>();
   
+  @JsonProperty("values")
   private Map<String, LinkedList<Object>> values = new HashMap<>();
+  @JsonProperty("indexes")
   private Map<String, LinkedList<Boolean>> indexes = new HashMap<>();
 
   public ScatterZipStrategy() {
     this.scatterMethod = ScatterMethod.dotproduct;
   }
   
+  @JsonCreator
+  public ScatterZipStrategy(@JsonProperty("scatterMethod") ScatterMethod scatterMethod, @JsonProperty("combinations") LinkedList<Combination> combinations, @JsonProperty("values") Map<String, LinkedList<Object>> values, @JsonProperty("indexes") Map<String, LinkedList<Boolean>> indexes) {
+    super();
+    this.scatterMethod = scatterMethod;
+    this.combinations = combinations;
+    this.values = values;
+    this.indexes = indexes;
+  }
+
   public ScatterMethod getScatterMethod() {
     return scatterMethod;
   }
@@ -51,17 +67,19 @@ public class ScatterZipStrategy implements ScatterStrategy {
     this.indexes = indexes;
   }
 
-  
   @Override
   public String toString() {
     return "ScatterZipStrategyModel [scatterMethod=" + scatterMethod + ", combinations=" + combinations + ", values=" + values + ", indexes=" + indexes + "]";
   }
 
   public static class Combination {
+    @JsonProperty("position")
     private int position;
+    @JsonProperty("enabled")
     private boolean enabled;
 
-    public Combination(int position, boolean enabled) {
+    @JsonCreator
+    public Combination(@JsonProperty("position") int position, @JsonProperty("enabled") boolean enabled) {
       this.position = position;
       this.enabled = enabled;
     }

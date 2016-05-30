@@ -1,4 +1,4 @@
-package org.rabix.engine.db;
+package org.rabix.db;
 
 public class DBException extends Exception {
 
