@@ -76,6 +76,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       }
       break;
     case FAILED:
+      jobRecord.setState(JobState.FAILED);
+      jobRecordService.update(jobRecord);
       eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
       break;
     default:
