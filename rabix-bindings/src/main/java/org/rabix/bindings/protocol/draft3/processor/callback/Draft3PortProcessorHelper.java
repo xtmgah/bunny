@@ -13,8 +13,8 @@ public class Draft3PortProcessorHelper {
 
   private final Draft3PortProcessor portProcessor;
 
-  public Draft3PortProcessorHelper(Draft3Job draft2Job) {
-    this.portProcessor = new Draft3PortProcessor(draft2Job);
+  public Draft3PortProcessorHelper(Draft3Job draft3Job) {
+    this.portProcessor = new Draft3PortProcessor(draft3Job);
   }
 
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft3PortProcessorException {

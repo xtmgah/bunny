@@ -12,6 +12,7 @@ import org.rabix.engine.model.ContextRecord.ContextStatus;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
+import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
@@ -49,19 +50,30 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
     sourceJob.decrementPortCounter(event.getPortId(), LinkPortType.OUTPUT);
     sourceVariable.addValue(event.getValue(), event.getPosition());
-
+    jobService.update(sourceJob);
+    
     if (sourceJob.isCompleted()) {
       sourceJob.setState(JobState.COMPLETED);
       jobService.update(sourceJob);
-      
       if (sourceJob.isMaster()) {
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
       }
     }
     
+    Object value = null;
+    
     if (sourceJob.isScatterWrapper()) {
+      ScatterStrategy scatterStrategy = sourceJob.getScatterStrategy();
+      
+      if (scatterStrategy.isBlocking()) {
+        if (sourceJob.isOutputPortReady(event.getPortId())) {
+          value = scatterStrategy.values(sourceJob.getId(), event.getPortId(), event.getContextId());
+        } else {
+          return;
+        }
+      }
+      
       List<LinkRecord> links = linkService.findBySource(sourceVariable.getJobId(), sourceVariable.getPortId(), event.getContextId());
-
       for (LinkRecord link : links) {
         List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
 
@@ -73,13 +85,13 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             destinationJob = jobService.find(destinationVariable.getJobId(), destinationVariable.getContextId());
             isDestinationPortScatterable = destinationJob.isScatterPort(destinationVariable.getPortId());
             if (isDestinationPortScatterable && !destinationJob.isBlocking() && !(destinationJob.getInputPortIncoming(event.getPortId()) > 1)) {
-              Object value = event.getValue();
+              value = value != null ? value : event.getValue();
               int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
               Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
               eventProcessor.send(updateInputEvent);
             } else {
               if (sourceJob.isOutputPortReady(event.getPortId())) {
-                Object value = sourceVariable.getValue();
+                value = value != null ? value : sourceVariable.getValue();
                 Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
                 eventProcessor.send(updateInputEvent);
               }
@@ -88,13 +100,18 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
           case OUTPUT:
             destinationJob = jobService.find(destinationVariable.getJobId(), destinationVariable.getContextId());
             if (!(destinationJob.getOutputPortIncoming(event.getPortId()) > 1)) {
-              Object value = event.getValue();
+              value = value != null? value : event.getValue();
               int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
-              Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
-              eventProcessor.send(updateOutputEvent);
+              if (scatterStrategy.isBlocking()) {
+                Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, false, 1, 1);
+                eventProcessor.send(updateOutputEvent);
+              } else {
+                Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
+                eventProcessor.send(updateOutputEvent);
+              }
             } else {
               if (sourceJob.isOutputPortReady(event.getPortId())) {
-                Object value = sourceVariable.getValue();
+                value = value != null? value : sourceVariable.getValue();
                 Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
                 eventProcessor.send(updateInputEvent);
               }
@@ -111,7 +128,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
       for (LinkRecord link : links) {
         List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
         
-        Object value = sourceVariable.getValue();
+        value = sourceVariable.getValue();
         for (VariableRecord destinationVariable : destinationVariables) {
           switch (destinationVariable.getType()) {
           case INPUT:

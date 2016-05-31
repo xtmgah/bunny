@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
-import org.rabix.bindings.protocol.draft3.expression.helper.Draft3ExpressionBeanHelper;
+import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,43 +34,23 @@ public class Draft3CommandLineTool extends Draft3JobApp {
   @SuppressWarnings("unchecked")
   public List<Object> getBaseCmd(Draft3Job job) throws Draft3ExpressionException {
     List<Object> result = new LinkedList<>();
-
     if (baseCommand instanceof List<?>) {
-      for (Object baseCmd : ((List<Object>) baseCommand)) {
-        Object transformed = transformBaseCommand(job, baseCmd);
-        if (transformed != null) {
-          result.add(transformed);
-        }
-      }
+      result = (List<Object>) baseCommand;
     } else if (baseCommand instanceof String) {
-      Object transformed = transformBaseCommand(job, baseCommand);
-      if (transformed != null) {
-        result.add(transformed);
-      }
+      result = new LinkedList<>();
+      result.add(baseCommand);
     }
     return result;
   }
   
-  private Object transformBaseCommand(Draft3Job job, Object baseCommand) throws Draft3ExpressionException {
-    if (Draft3ExpressionBeanHelper.isExpression(baseCommand)) {
-      return Draft3ExpressionBeanHelper.evaluate(job, baseCommand);
-    } else {
-      return baseCommand;
-    }
-  }
-
   public String getStdin(Draft3Job job) throws Draft3ExpressionException {
-    if (Draft3ExpressionBeanHelper.isExpression(stdin)) {
-      return Draft3ExpressionBeanHelper.evaluate(job, stdin);
-    }
-    return stdin != null ? stdin.toString() : "";
+    String evaluatedStdin = Draft3ExpressionResolver.resolve(stdin, job, null);
+    return evaluatedStdin != null ? evaluatedStdin.toString() : "";
   }
 
   public String getStdout(Draft3Job job) throws Draft3ExpressionException {
-    if (Draft3ExpressionBeanHelper.isExpression(stdout)) {
-      return Draft3ExpressionBeanHelper.evaluate(job, stdout);
-    }
-    return stdout != null ? stdout.toString() : "";
+    String evaluatedStdout = Draft3ExpressionResolver.resolve(stdout, job, null);
+    return evaluatedStdout != null ? evaluatedStdout.toString() : "";
   }
 
   public String getStderr(Draft3Job job) throws Draft3ExpressionException {
@@ -91,15 +71,11 @@ public class Draft3CommandLineTool extends Draft3JobApp {
   public Object getArgument(Draft3Job job, Object binding) throws Draft3ExpressionException {
     if (binding instanceof Map<?, ?>) {
       Object value = ((Map<?, ?>) binding).get(KEY_ARGUMENT_VALUE);
-      if (value == null) {
-        return null;
+      if (value != null) {
+        return Draft3ExpressionResolver.resolve(value, job, null);
       }
-      if (Draft3ExpressionBeanHelper.isExpression(value)) {
-        return Draft3ExpressionBeanHelper.evaluate(job, value);
-      }
-      return value;
     }
-    return null;
+    return Draft3ExpressionResolver.resolve(binding, job, null);
   }
 
   /**

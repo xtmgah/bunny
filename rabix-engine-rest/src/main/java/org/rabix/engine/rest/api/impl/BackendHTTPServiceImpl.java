@@ -6,8 +6,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.rabix.engine.rest.api.BackendHTTPService;
-import org.rabix.engine.rest.backend.Backend;
 import org.rabix.engine.rest.service.BackendService;
+import org.rabix.transport.backend.Backend;
 
 import com.google.inject.Inject;
 

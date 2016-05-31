@@ -8,8 +8,6 @@ import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.transport.TransportQueueConfig;
-import org.rabix.executor.transport.impl.TransportStubMQ;
 
 /**
  * Command that stops {@link JobHandler} 
@@ -17,8 +15,8 @@ import org.rabix.executor.transport.impl.TransportStubMQ;
 public class StopCommand extends JobHandlerCommand {
 
   @Inject
-  public StopCommand(JobDataService jobDataService, TransportStubMQ mqTransportStub, TransportQueueConfig transportQueueConfig) {
-    super(jobDataService, mqTransportStub, transportQueueConfig);
+  public StopCommand(JobDataService jobDataService) {
+    super(jobDataService);
   }
 
   @Override
@@ -29,7 +27,7 @@ public class StopCommand extends JobHandlerCommand {
 
       String message = String.format("Job %s aborted successfully.", jobId);
       jobDataService.save(jobData, message, JobStatus.ABORTED, contextId);
-      stopped(jobData, message);
+      stopped(jobData, message, handler.getEngineStub());
     } catch (ExecutorException e) {
       String message = String.format("Failed to stop %s. %s", jobId, e.toString());
       jobDataService.save(jobData, message, JobStatus.FAILED, contextId);

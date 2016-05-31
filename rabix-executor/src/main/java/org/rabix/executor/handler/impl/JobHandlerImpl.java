@@ -34,6 +34,7 @@ import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
 import org.rabix.executor.container.impl.CompletedContainerHandler;
+import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.DownloadFileService;
@@ -61,12 +62,15 @@ public class JobHandlerImpl implements JobHandler {
   private final HashAlgorithm hashAlgorithm;
 
   private Job job;
+  private EngineStub engineStub;
+
   private Configuration configuration;
   private ContainerHandler containerHandler;
-
+  
   @Inject
-  public JobHandlerImpl(@Assisted Job job, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, SimpleFTPClient ftpClient) {
     this.job = job;
+    this.engineStub = engineStub;
     this.configuration = configuration;
     this.downloadFileService = downloadFileService;
     this.jobDataService = jobDataService;
@@ -318,35 +322,43 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
+  public EngineStub getEngineStub() {
+    return engineStub;
+  }
+  
   private class InputFileMapper implements FileMapper {
-
     @Override
     public String map(String filePath) throws FileMappingException {
       BackendStore backendStore = StorageConfig.getBackendStore(configuration);
       switch (backendStore) {
       case FTP:
         logger.info("Map FTP path {} to physical path.", filePath);
-        return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
+        try {
+          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+        } catch (IOException e) {
+          throw new FileMappingException(e);
+        }
       case LOCAL:
         if (!filePath.startsWith(File.separator)) {
-          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getAbsolutePath();
+          try {
+            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+          } catch (IOException e) {
+            throw new FileMappingException(e);
+          }
         }
         return filePath;
       default:
         throw new FileMappingException("BackendStore " + backendStore + " is not supported.");
       }
     }
-
   }
 
   private class OutputFileMapper implements FileMapper {
-
     @Override
     public String map(String filePath) throws FileMappingException {
       logger.info("Map absolute physical path {} to relative physical path.", filePath);
       return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
     }
-
   }
 
 }

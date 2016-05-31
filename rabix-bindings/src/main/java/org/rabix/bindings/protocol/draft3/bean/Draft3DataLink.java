@@ -111,7 +111,7 @@ public class Draft3DataLink {
 
   @Override
   public String toString() {
-    return "DataLink [source=" + source + ", destination=" + destination + ", position=" + position + "]";
+    return "Draft3DataLink [source=" + source + ", destination=" + destination + ", position=" + position + ", scattered=" + scattered + ", linkMerge=" + linkMerge + "]";
   }
 
 }

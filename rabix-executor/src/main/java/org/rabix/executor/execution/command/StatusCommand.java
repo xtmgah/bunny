@@ -10,8 +10,6 @@ import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.transport.TransportQueueConfig;
-import org.rabix.executor.transport.TransportStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +23,8 @@ public class StatusCommand extends JobHandlerCommand {
   public final static long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(15);
   
   @Inject
-  public StatusCommand(JobDataService jobDataService, TransportStub mqTransportStub, TransportQueueConfig transportQueueConfig) {
-    super(jobDataService, mqTransportStub, transportQueueConfig);
+  public StatusCommand(JobDataService jobDataService) {
+    super(jobDataService);
   }
 
   @Override
@@ -50,16 +48,16 @@ public class StatusCommand extends JobHandlerCommand {
       if (!jobHandler.isSuccessful()) {
         message = String.format("Job %s failed with exit code %d.", job.getId(), jobHandler.getExitStatus());
         jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
-        failed(jobData, message, null);
+        failed(jobData, message, jobHandler.getEngineStub(), null);
       } else {
         message = String.format("Job %s completed successfully.", job.getId());
         jobDataService.save(jobData, message, JobStatus.COMPLETED, contextId);
-        completed(jobData, message, job.getOutputs());
+        completed(jobData, message, job.getOutputs(), jobHandler.getEngineStub());
       }
     } catch (Exception e) {
       String message = String.format("Failed to execute status command for %s. %s", jobId, e.getMessage());
       jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
-      failed(jobData, message, e);
+      failed(jobData, message, jobHandler.getEngineStub(), e);
       return new Result(true);
     }
     return new Result(true);

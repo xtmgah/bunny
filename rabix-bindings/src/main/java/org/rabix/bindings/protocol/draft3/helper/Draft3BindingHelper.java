@@ -1,16 +1,16 @@
 package org.rabix.bindings.protocol.draft3.helper;
 
-import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
-import org.rabix.bindings.protocol.draft3.expression.helper.Draft3ExpressionBeanHelper;
+import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
 
 public class Draft3BindingHelper extends Draft3BeanHelper {
 
   public static final String DEFAULT_SEPARATOR = "\u0020";
   public static final boolean IS_SEPARATED_BY_DEFAULT = true;
+  public static final boolean IS_SHELL_QUOTE_BY_DEFAULT = true;
   public static final boolean LOAD_CONTENTS_BY_DEFAULT = false;
   
   public static final String KEY_ID = "id";
@@ -18,6 +18,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
   public static final String KEY_DEFAULT = "default";
   public static final String KEY_PREFIX = "prefix";
   public static final String KEY_POSITION = "position";
+  public static final String KEY_SHELL_QUOTE = "shellQuote";
   public static final String KEY_GLOB = "glob";
   public static final String KEY_SEPARATE = "separate";
   public static final String KEY_ITEM_SEPARATOR = "itemSeparator";
@@ -45,6 +46,10 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
 
   public static boolean isSeparated(Object binding) {
     return getValue(KEY_SEPARATE, binding, IS_SEPARATED_BY_DEFAULT);
+  }
+  
+  public static boolean shellQuote(Object binding) {
+    return getValue(KEY_SHELL_QUOTE, binding, IS_SHELL_QUOTE_BY_DEFAULT);
   }
   
   public static boolean loadContents(Object binding) {
@@ -75,7 +80,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
     return getValue(KEY_INHERIT_METADATA_FROM, binding);
   }
   
-  public static List<String> getSecondaryFiles(Object binding) {
+  public static Object getSecondaryFiles(Object binding) {
     return getValue(KEY_SECONDARY_FILES, binding);
   }
   
@@ -104,14 +109,7 @@ public class Draft3BindingHelper extends Draft3BeanHelper {
    */
   public static Object evaluateOutputEval(Draft3Job job, Object output, Object binding) throws Draft3ExpressionException {
     Object outputEval = getOutputEval(binding);
-    if (Draft3ExpressionBeanHelper.isExpression(outputEval)) {
-      try {
-        return Draft3ExpressionBeanHelper.evaluate(job, output, outputEval);
-      } catch (Draft3ExpressionException e) {
-        throw new Draft3ExpressionException("Failed to evaluate outputEval.", e);
-      }
-    }
-    return output;
+    return Draft3ExpressionResolver.resolve(outputEval, job, output);
   }
   
 }

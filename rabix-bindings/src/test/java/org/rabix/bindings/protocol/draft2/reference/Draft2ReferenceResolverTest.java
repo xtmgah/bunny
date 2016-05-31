@@ -20,9 +20,8 @@ public class Draft2ReferenceResolverTest {
     String filePath = Draft2ReferenceResolverTest.class.getResource("count-lines1-wf.cwl.json").getFile();
     String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
-    Draft2DocumentResolver referenceResolver = new Draft2DocumentResolver();
     JsonNode resolvedRoot = readJsonNode("count-lines1-wf-resolved.cwl.json");
-    Assert.assertEquals(referenceResolver.resolve(fileURI), JSONHelper.writeObject(resolvedRoot));
+    Assert.assertEquals(Draft2DocumentResolver.resolve(fileURI), JSONHelper.writeObject(resolvedRoot));
   }
 
   @Test
@@ -30,9 +29,8 @@ public class Draft2ReferenceResolverTest {
     String filePath = Draft2ReferenceResolverTest.class.getResource("regular.json").getFile();
     String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
-    Draft2DocumentResolver referenceResolver = new Draft2DocumentResolver();
     JsonNode resolvedRoot = readJsonNode("regular-resolved.json");
-    Assert.assertEquals(referenceResolver.resolve(fileURI), JSONHelper.writeObject(resolvedRoot));
+    Assert.assertEquals(Draft2DocumentResolver.resolve(fileURI), JSONHelper.writeObject(resolvedRoot));
   }
 
   @Test
@@ -40,9 +38,8 @@ public class Draft2ReferenceResolverTest {
     String filePath = Draft2ReferenceResolverTest.class.getResource("regular-json-pointer.json").getFile();
     String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
-    Draft2DocumentResolver referenceResolver = new Draft2DocumentResolver();
     JsonNode resolvedRoot = readJsonNode("regular-json-pointer-resolved.json");
-    Assert.assertEquals(referenceResolver.resolve(fileURI), JSONHelper.writeObject(resolvedRoot));
+    Assert.assertEquals(Draft2DocumentResolver.resolve(fileURI), JSONHelper.writeObject(resolvedRoot));
   }
 
   @Test(expectedExceptions = { BindingException.class })
@@ -50,8 +47,7 @@ public class Draft2ReferenceResolverTest {
     String filePath = Draft2ReferenceResolverTest.class.getResource("circular.json").getFile();
     String fileURI = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, filePath);
     
-    Draft2DocumentResolver referenceResolver = new Draft2DocumentResolver();
-    referenceResolver.resolve(fileURI);
+    Draft2DocumentResolver.resolve(fileURI);
   }
   
   private JsonNode readJsonNode(String inputFile) throws IOException {

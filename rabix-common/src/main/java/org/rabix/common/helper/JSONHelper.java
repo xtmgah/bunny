@@ -13,6 +13,7 @@ import org.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BigIntegerNode;
 import com.fasterxml.jackson.databind.node.BinaryNode;
@@ -31,15 +32,17 @@ import com.fasterxml.jackson.databind.node.TextNode;
 public class JSONHelper {
 
   public static final ObjectMapper mapper = new ObjectMapper();
+  
+  static {
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+  }
 
-  @SuppressWarnings("unchecked")
   public static String transformToJSON(String data) {
     try {
       Yaml reader = new Yaml();
-      Map<String, Object> transformed = (Map<String, Object>) reader.load(data);
-      return writeObject(transformed);
+      return writeObject(reader.load(data));
     } catch (Exception e) {
-      // do nothing
+      // it's not YAML (or it's not valid)
     }
     return data;
   }

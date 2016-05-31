@@ -2,7 +2,6 @@ package org.rabix.engine.event.impl;
 
 import java.util.Map;
 
-import org.rabix.bindings.ProtocolType;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.service.JobRecordService.JobState;
 
@@ -13,14 +12,12 @@ public class JobStatusEvent implements Event {
   private final String contextId;
   
   private final Map<String, Object> result;
-  private final ProtocolType protocolType;
   
-  public JobStatusEvent(String jobId, String contextId, JobState state, Map<String, Object> result, ProtocolType protocolType) {
+  public JobStatusEvent(String jobId, String contextId, JobState state, Map<String, Object> result) {
     this.jobId = jobId;
     this.contextId = contextId;
     this.state = state;
     this.result = result;
-    this.protocolType = protocolType;
   }
   
   public String getJobId() {
@@ -40,10 +37,6 @@ public class JobStatusEvent implements Event {
     return result;
   }
   
-  public ProtocolType getProtocolType() {
-    return protocolType;
-  }
-  
   @Override
   public EventType getType() {
     return EventType.JOB_STATUS_UPDATE;
@@ -55,7 +48,6 @@ public class JobStatusEvent implements Event {
     int result = 1;
     result = prime * result + ((contextId == null) ? 0 : contextId.hashCode());
     result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
-    result = prime * result + ((protocolType == null) ? 0 : protocolType.hashCode());
     result = prime * result + ((this.result == null) ? 0 : this.result.hashCode());
     result = prime * result + ((state == null) ? 0 : state.hashCode());
     return result;
@@ -80,8 +72,6 @@ public class JobStatusEvent implements Event {
         return false;
     } else if (!jobId.equals(other.jobId))
       return false;
-    if (protocolType != other.protocolType)
-      return false;
     if (result == null) {
       if (other.result != null)
         return false;
@@ -94,7 +84,7 @@ public class JobStatusEvent implements Event {
 
   @Override
   public String toString() {
-    return "JobStatusEvent [jobId=" + jobId + ", state=" + state + ", contextId=" + contextId + ", result=" + result + ", protocolType=" + protocolType + "]";
+    return "JobStatusEvent [jobId=" + jobId + ", state=" + state + ", contextId=" + contextId + ", result=" + result + "]";
   }
 
 }

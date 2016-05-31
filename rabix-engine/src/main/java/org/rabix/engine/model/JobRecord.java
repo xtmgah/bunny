@@ -3,9 +3,11 @@ package org.rabix.engine.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.engine.model.scatter.ScatterMapping;
+import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.JobRecordService.JobState;
 
 public class JobRecord {
@@ -29,7 +31,7 @@ public class JobRecord {
   private int numberOfGlobalInputs = 0;
   private int numberOfGlobalOutputs = 0;
   
-  private ScatterMapping scatterMapping;
+  private ScatterStrategy scatterStrategy;
   
   public JobRecord(String rootId, String id, String uniqueId, String parentId, JobState state, boolean isContainer, boolean isScattered, boolean master, boolean blocking) {
     this.id = id;
@@ -98,6 +100,10 @@ public class JobRecord {
       }
     }
     return 0;
+  }
+  
+  public boolean isInputPortBlocking(DAGNode node, String port) {
+    return getInputPortIncoming(port) > 1 && LinkMerge.isBlocking(node.getLinkMerge(port, LinkPortType.INPUT));
   }
   
   public int getOutputPortIncoming(String port) {
@@ -175,12 +181,12 @@ public class JobRecord {
     this.isScatterWrapper = isScatterWrapper;
   }
 
-  public ScatterMapping getScatterMapping() {
-    return scatterMapping;
+  public ScatterStrategy getScatterStrategy() {
+    return scatterStrategy;
   }
 
-  public void setScatterMapping(ScatterMapping scatterMapping) {
-    this.scatterMapping = scatterMapping;
+  public void setScatterStrategy(ScatterStrategy scatterStrategy) {
+    this.scatterStrategy = scatterStrategy;
   }
 
   public boolean isInputPortReady(String port) {
@@ -383,7 +389,7 @@ public class JobRecord {
 
   @Override
   public String toString() {
-    return "JobRecord [id=" + id + ", externalId=" + externalId + ", rootId=" + rootId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterMapping=" + scatterMapping + "]";
+    return "JobRecord [id=" + id + ", externalId=" + externalId + ", rootId=" + rootId + ", master=" + master + ", state=" + state + ", inputCounters=" + inputCounters + ", outputCounters=" + outputCounters + ", isScattered=" + isScattered + ", isContainer=" + isContainer + ", isScatterWrapper=" + isScatterWrapper + ", numberOfGlobalInputs=" + numberOfGlobalInputs + ", numberOfGlobalOutputs=" + numberOfGlobalOutputs + ", scatterStrategy=" + scatterStrategy + "]";
   }
 
 }

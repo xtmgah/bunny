@@ -47,10 +47,6 @@ public class StorageConfig {
     }
   }
   
-  public static String getDockerURI(Configuration configuration) {
-    return configuration.getString("backend.docker.uri");
-  }
-  
   public static boolean isDockerSupported(Configuration configuration) {
     return configuration.getBoolean("backend.docker.enabled", false);
   }

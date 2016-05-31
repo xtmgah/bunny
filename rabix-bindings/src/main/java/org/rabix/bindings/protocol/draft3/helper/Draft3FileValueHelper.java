@@ -20,6 +20,7 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
   private static final String KEY_NAME = "name";
   private static final String KEY_PATH = "path";
   private static final String KEY_SIZE = "size";
+  private static final String KEY_FORMAT = "format";
   private static final String KEY_CHECKSUM = "checksum";
   private static final String KEY_METADATA = "metadata";
   private static final String KEY_CONTENTS = "contents";
@@ -32,6 +33,10 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
     setValue(Draft3SchemaHelper.KEY_JOB_TYPE, Draft3SchemaHelper.TYPE_JOB_FILE, raw);
   }
 
+  public static Object getFormat(Object raw) {
+    return getValue(KEY_FORMAT, raw);
+  }
+  
   public static String getName(Object raw) {
     return getValue(KEY_NAME, raw);
   }

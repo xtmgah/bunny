@@ -9,6 +9,7 @@ import org.rabix.engine.processor.handler.impl.InitEventHandler;
 import org.rabix.engine.processor.handler.impl.InputEventHandler;
 import org.rabix.engine.processor.handler.impl.JobStatusEventHandler;
 import org.rabix.engine.processor.handler.impl.OutputEventHandler;
+import org.rabix.engine.processor.handler.impl.ScatterHandler;
 import org.rabix.engine.processor.impl.EventProcessorImpl;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
@@ -29,6 +30,7 @@ public class EngineModule extends AbstractModule {
     bind(LinkRecordService.class).in(Scopes.SINGLETON);
     bind(ContextRecordService.class).in(Scopes.SINGLETON);
 
+    bind(ScatterHandler.class).in(Scopes.SINGLETON);
     bind(InitEventHandler.class).in(Scopes.SINGLETON);
     bind(InputEventHandler.class).in(Scopes.SINGLETON);
     bind(OutputEventHandler.class).in(Scopes.SINGLETON);

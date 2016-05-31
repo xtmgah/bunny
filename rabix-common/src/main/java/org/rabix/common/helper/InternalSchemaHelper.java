@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 public class InternalSchemaHelper {
 
   public static final String SEPARATOR = ".";
+  public static final String SLASH_SEPARATOR = "/";
   
   public static String concatenateIds(String id1, String id2) {
     return id1 + SEPARATOR + id2;

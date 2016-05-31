@@ -9,6 +9,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.protocol.draft3.bean.Draft3DataLink;
+import org.rabix.bindings.protocol.draft3.bean.Draft3InputPort;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
 import org.rabix.bindings.protocol.draft3.bean.Draft3OutputPort;
@@ -28,6 +29,9 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
 
   private final static Logger logger = LoggerFactory.getLogger(Draft3JobProcessor.class);
   
+  public static final String DOT_SEPARATOR = ".";
+  public static final String SLASH_SEPARATOR = "/";
+  
   public Draft3Job process(Draft3Job job) throws BeanProcessorException {
     try {
       return process(null, job);
@@ -40,7 +44,7 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
   private Draft3Job process(Draft3Job parentJob, Draft3Job job) throws Draft3Exception {
     if (job.getId() == null) {
       String workflowId = parentJob != null ? parentJob.getId() : null;
-      String id = workflowId != null? workflowId + Draft3SchemaHelper.PORT_ID_SEPARATOR + Draft3SchemaHelper.MASTER_JOB_ID : Draft3SchemaHelper.MASTER_JOB_ID;
+      String id = workflowId != null? workflowId + DOT_SEPARATOR + Draft3SchemaHelper.MASTER_JOB_ID : Draft3SchemaHelper.MASTER_JOB_ID;
       job.setId(id);
     }
     processElements(null, job);
@@ -48,8 +52,10 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
     if (job.getApp().isWorkflow()) {
       Draft3Workflow workflow = (Draft3Workflow) job.getApp();
       for (Draft3Step step : workflow.getSteps()) {
+        step.setId(Draft2ToDraft3Converter.convertStepID(step.getId()));
+        
         Draft3Job stepJob = step.getJob();
-        String stepId = job.getId() + Draft3SchemaHelper.PORT_ID_SEPARATOR + Draft3SchemaHelper.normalizeId(step.getId());
+        String stepId = job.getId() + DOT_SEPARATOR + Draft3SchemaHelper.normalizeId(step.getId());
         stepJob.setId(stepId);
         processElements(job, stepJob);
         process(job, stepJob);
@@ -63,6 +69,12 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
    */
   private void processElements(Draft3Job parentJob, Draft3Job job) throws Draft3Exception {
     Draft3JobApp app = job.getApp();
+    for (Draft3InputPort port : app.getInputs()) {
+      port.setId(Draft2ToDraft3Converter.convertPortID(port.getId()));
+    }
+    for (Draft3OutputPort port : app.getOutputs()) {
+      port.setId(Draft2ToDraft3Converter.convertPortID(port.getId()));
+    }
     if (app.isWorkflow()) {
       Draft3Workflow workflow = (Draft3Workflow) app;
       if (CollectionUtils.isEmpty(workflow.getDataLinks())) {
@@ -78,22 +90,38 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
    */
   private void createDataLinks(Draft3Workflow workflow) throws Draft3Exception {
     for (Draft3OutputPort port : workflow.getOutputs()) {
+      port.setId(Draft2ToDraft3Converter.convertPortID(port.getId()));
+      
       List<String> sources = transformSource(port.getSource());
       for (int position = 0; position < sources.size(); position++) {
         String destination = port.getId();
         LinkMerge linkMerge = port.getLinkMerge() != null? LinkMerge.valueOf(port.getLinkMerge()) : LinkMerge.merge_nested;
-        Draft3DataLink dataLink = new Draft3DataLink(sources.get(position), destination, linkMerge, position + 1);
+        
+        String source = sources.get(position);
+        source = Draft2ToDraft3Converter.convertSource(source);
+        source = Draft3SchemaHelper.normalizeId(source);
+        Draft3DataLink dataLink = new Draft3DataLink(source, destination, linkMerge, position + 1);
         workflow.addDataLink(dataLink);
       }
     }
     for (Draft3Step step : workflow.getSteps()) {
+      step.setId(Draft2ToDraft3Converter.convertStepID(step.getId()));
+      
       List<Draft3DataLink> dataLinks = new ArrayList<>();
       for (Map<String, Object> input : step.getInputs()) {
+        
         List<String> sources = transformSource(Draft3BindingHelper.getSource(input));
         for (int position = 0; position < sources.size(); position++) {
           String destination = Draft3BindingHelper.getId(input);
+          destination = Draft2ToDraft3Converter.convertDestinationId(destination);
+          destination = step.getId() + SLASH_SEPARATOR + destination;
           LinkMerge linkMerge = Draft3BindingHelper.getLinkMerge(input) != null ? LinkMerge.valueOf(Draft3BindingHelper.getLinkMerge(input)) : LinkMerge.merge_nested;
-          Draft3DataLink dataLink = new Draft3DataLink(sources.get(position), destination, linkMerge, position + 1);
+          
+          String source = sources.get(position);
+          source = Draft2ToDraft3Converter.convertSource(source);
+          
+          source = Draft3SchemaHelper.normalizeId(source);
+          Draft3DataLink dataLink = new Draft3DataLink(source, destination, linkMerge, position + 1);
           dataLinks.add(dataLink);
         }
       }
@@ -122,7 +150,7 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
    */
   private void processPorts(Draft3Job parentJob, Draft3Job job, List<? extends ApplicationPort> ports) throws Draft3Exception {
     for (ApplicationPort port : ports) {
-      String prefix = job.getId().substring(job.getId().lastIndexOf(Draft3SchemaHelper.PORT_ID_SEPARATOR) + 1) + Draft3SchemaHelper.PORT_ID_SEPARATOR;
+      String prefix = job.getId().substring(job.getId().lastIndexOf(DOT_SEPARATOR) + 1) + SLASH_SEPARATOR;
       setScatter(job, prefix, port);  // if it's a container
       if (parentJob != null) {
         // it it's an embedded container
@@ -179,12 +207,12 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
       String destination = dataLink.getDestination();
       
       String scatter = null;
-      if (job.getId().contains(Draft3SchemaHelper.PORT_ID_SEPARATOR)) {
-        String mod = job.getId().substring(job.getId().indexOf(".") + 1);
+      if (job.getId().contains(DOT_SEPARATOR)) {
+        String mod = job.getId().substring(job.getId().indexOf(DOT_SEPARATOR) + 1);
         if (strip) {
-          mod = mod.substring(mod.indexOf(Draft3SchemaHelper.PORT_ID_SEPARATOR) + 1);
+          mod = mod.substring(mod.indexOf(DOT_SEPARATOR) + 1);
         }
-        scatter = Draft3SchemaHelper.ID_START + mod + Draft3SchemaHelper.PORT_ID_SEPARATOR + Draft3SchemaHelper.normalizeId(port.getId());
+        scatter = mod + SLASH_SEPARATOR + Draft3SchemaHelper.normalizeId(port.getId());
       } else {
         scatter = port.getId();
       }
