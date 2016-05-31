@@ -103,13 +103,13 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
         return;
       }
     }
-
+    update(job, variable);
+    
     boolean isJobReady = jobService.isReady(job);
     if (isJobReady) {
       JobStatusEvent jobStatusEvent = new JobStatusEvent(job.getId(), event.getContextId(), JobState.READY, null);
       eventProcessor.send(jobStatusEvent);
     }
-    update(job, variable);
   }
   
   private void update(JobRecord job, VariableRecord variable) {

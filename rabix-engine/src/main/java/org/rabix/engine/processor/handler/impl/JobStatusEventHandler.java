@@ -62,8 +62,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     switch (event.getState()) {
     case READY:
       jobRecord.setState(JobState.READY);
-      jobRecordService.update(jobRecord);
       ready(jobRecord, event.getContextId());
+      jobRecordService.update(jobRecord);
       break;
     case RUNNING:
       jobRecord.setState(JobState.RUNNING);

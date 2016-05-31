@@ -22,10 +22,6 @@ public class ScatterZipStrategy implements ScatterStrategy {
   @JsonProperty("indexes")
   private Map<String, LinkedList<Boolean>> indexes = new HashMap<>();
 
-  public ScatterZipStrategy() {
-    this.scatterMethod = ScatterMethod.dotproduct;
-  }
-  
   @JsonCreator
   public ScatterZipStrategy(@JsonProperty("scatterMethod") ScatterMethod scatterMethod, @JsonProperty("combinations") LinkedList<Combination> combinations, @JsonProperty("values") Map<String, LinkedList<Object>> values, @JsonProperty("indexes") Map<String, LinkedList<Boolean>> indexes) {
     super();
@@ -33,6 +29,10 @@ public class ScatterZipStrategy implements ScatterStrategy {
     this.combinations = combinations;
     this.values = values;
     this.indexes = indexes;
+  }
+  
+  public ScatterZipStrategy() {
+    this.scatterMethod = ScatterMethod.dotproduct;
   }
 
   public ScatterMethod getScatterMethod() {

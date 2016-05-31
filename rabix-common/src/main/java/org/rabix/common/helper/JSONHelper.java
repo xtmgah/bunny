@@ -84,6 +84,9 @@ public class JSONHelper {
   }
 
   public static <T> T readObject(String json, Class<T> clazz) {
+    if (json == null) {
+      return null;
+    }
     try {
       return mapper.readValue(json, clazz);
     } catch (IOException e) {

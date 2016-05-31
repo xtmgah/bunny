@@ -6,6 +6,9 @@ import java.util.List;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.JobRecordService.JobState;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class JobRecord {
 
   private String id;
@@ -158,17 +161,22 @@ public class JobRecord {
   }
 
   public static class PortCounter {
+    @JsonProperty("port")
     private String port;
+    @JsonProperty("counter")
     private int counter;
+    @JsonProperty("scatter")
     private boolean scatter;
-    
+    @JsonProperty("incoming")
     private int incoming;
 
-    public PortCounter(String port, int counter, boolean scatter) {
+    @JsonCreator
+    public PortCounter(@JsonProperty("port") String port, @JsonProperty("counter") int counter,
+        @JsonProperty("scatter") boolean scatter, @JsonProperty("incoming") int incoming) {
       this.port = port;
       this.counter = counter;
       this.scatter = scatter;
-      this.incoming = 0;
+      this.incoming = incoming;
     }
 
     public String getPort() {

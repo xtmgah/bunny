@@ -44,6 +44,7 @@ import org.rabix.bindings.protocol.draft3.resolver.Draft3DocumentResolver;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
+import org.rabix.db.DBModule;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.BackendHTTPService;
 import org.rabix.engine.rest.api.JobHTTPService;
@@ -139,6 +140,7 @@ public class BackendCommandLine {
       Injector injector = Guice.createInjector(
           new SimpleFTPModule(), 
           new EngineModule(),
+          new DBModule(),
           new ExecutorModule(configModule), 
           new AbstractModule() {
             @Override

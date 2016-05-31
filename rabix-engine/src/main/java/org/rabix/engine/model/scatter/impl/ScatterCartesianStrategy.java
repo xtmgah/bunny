@@ -7,13 +7,31 @@ import java.util.Map;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ScatterCartesianStrategy implements ScatterStrategy {
 
+  @JsonProperty("scatterMethod")
   private ScatterMethod scatterMethod;
+  @JsonProperty("combinations")
   private LinkedList<Combination> combinations = new LinkedList<>();
 
+  @JsonProperty("values")
   private Map<String, LinkedList<Object>> values = new HashMap<>();
+  @JsonProperty("positions")
   private Map<String, LinkedList<Integer>> positions = new HashMap<>();
+
+  @JsonCreator
+  public ScatterCartesianStrategy(@JsonProperty("scatterMethod") ScatterMethod scatterMethod,
+      @JsonProperty("combinations") LinkedList<Combination> combinations,
+      @JsonProperty("values") Map<String, LinkedList<Object>> values,
+      @JsonProperty("positions") Map<String, LinkedList<Integer>> positions) {
+    this.scatterMethod = scatterMethod;
+    this.combinations = combinations;
+    this.values = values;
+    this.positions = positions;
+  }
 
   public ScatterCartesianStrategy(ScatterMethod scatterMethod) {
     this.scatterMethod = scatterMethod;
@@ -52,11 +70,15 @@ public class ScatterCartesianStrategy implements ScatterStrategy {
   }
 
   public static class Combination {
+    @JsonProperty("position")
     private int position;
+    @JsonProperty("enabled")
     private boolean enabled;
+    @JsonProperty("indexes")
     private LinkedList<Integer> indexes;
 
-    public Combination(int position, boolean enabled, LinkedList<Integer> indexes) {
+    @JsonCreator
+    public Combination(@JsonProperty("position") int position, @JsonProperty("enabled") boolean enabled, @JsonProperty("indexes") LinkedList<Integer> indexes) {
       this.position = position;
       this.enabled = enabled;
       this.indexes = indexes;

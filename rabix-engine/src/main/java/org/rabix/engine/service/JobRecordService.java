@@ -1,17 +1,20 @@
 package org.rabix.engine.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.db.DBException;
+import org.rabix.engine.db.JobRecordRepository;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.JobRecord.PortCounter;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 public class JobRecordService {
 
@@ -23,71 +26,79 @@ public class JobRecordService {
     FAILED
   }
 
-  private Map<String, List<JobRecord>> jobRecordsPerContext = new HashMap<String, List<JobRecord>>();
-
+  private final JobRecordRepository jobRecordRepository;
+  
+  @Inject
+  public JobRecordService(final JobRecordRepository jobRecordRepository) {
+    this.jobRecordRepository = jobRecordRepository;
+  }
+  
   public static String generateUniqueId() {
     return UUID.randomUUID().toString();
   }
   
-  public synchronized void create(JobRecord jobRecord) {
-    getJobRecords(jobRecord.getRootId()).add(jobRecord);
+  @Transactional
+  public void create(JobRecord jobRecord) {
+    try {
+      jobRecordRepository.insert(jobRecord);
+    } catch (DBException e) {
+      // TODO handle
+      e.printStackTrace();
+    }
   }
 
-  public synchronized void update(JobRecord jobRecord) {
-    for (JobRecord jr : getJobRecords(jobRecord.getRootId())) {
-      if (jr.getId().equals(jobRecord.getId())) {
-        jr.setState(jobRecord.getState());
-        jr.setContainer(jobRecord.isContainer());
-        jr.setScattered(jobRecord.isScattered());
-        jr.setInputCounters(jobRecord.getInputCounters());
-        jr.setOutputCounters(jobRecord.getOutputCounters());
-        jr.setScatterWrapper(jobRecord.isScatterWrapper());
-        jr.setScatterStrategy(jobRecord.getScatterStrategy());
-        return;
-      }
+  @Transactional
+  public void update(JobRecord jobRecord) {
+    try {
+      jobRecordRepository.update(jobRecord);
+    } catch (DBException e) {
+      // TODO handle
+      e.printStackTrace();
     }
   }
   
-  public synchronized List<JobRecord> find(String contextId) {
-    return getJobRecords(contextId);
-  }
-  
-  public synchronized List<JobRecord> findReady(String contextId) {
-    List<JobRecord> result = new ArrayList<>();
-    
-    for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.getState().equals(JobState.READY) && jr.getRootId().equals(contextId)) {
-        result.add(jr);
-      }
-    }
-    return result;
-  }
-  
-  public synchronized JobRecord find(String id, String contextId) {
-    for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.getId().equals(id) && jr.getRootId().equals(contextId)) {
-        return jr;
-      }
+  @Transactional
+  public List<JobRecord> findReady(String contextId) {
+    try {
+      return jobRecordRepository.findReady(contextId);
+    } catch (DBException e) {
+      // TODO handle
+      e.printStackTrace();
     }
     return null;
   }
   
-  public synchronized JobRecord findRoot(String contextId) {
-    for (JobRecord jr : getJobRecords(contextId)) {
-      if (jr.isRoot() && jr.getRootId().equals(contextId)) {
-        return jr;
-      }
+  @Transactional
+  public JobRecord find(String id, String contextId) {
+    try {
+      return jobRecordRepository.find(id, contextId);
+    } catch (DBException e) {
+      // TODO handle
+      e.printStackTrace();
     }
     return null;
   }
   
-  private synchronized List<JobRecord> getJobRecords(String contextId) {
-    List<JobRecord> jobRecordList = jobRecordsPerContext.get(contextId);
-    if (jobRecordList == null) {
-      jobRecordList = new ArrayList<>();
-      jobRecordsPerContext.put(contextId, jobRecordList);
+  @Transactional
+  public JobRecord findRoot(String contextId) {
+    try {
+      return jobRecordRepository.findRoot(contextId);
+    } catch (DBException e) {
+      // TODO handle
+      e.printStackTrace();
     }
-    return jobRecordList;
+    return null;
+  }
+  
+  @Transactional
+  public List<JobRecord> find(String contextId) {
+    try {
+      return jobRecordRepository.find(contextId);
+    } catch (DBException e) {
+      // TODO handle
+      e.printStackTrace();
+    }
+    return null;
   }
   
   public PortCounter getInputCounter(JobRecord jobRecord, String port) {
@@ -161,7 +172,7 @@ public class JobRecordService {
         return;
       }
     }
-    PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
+    PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter(), 0);
     counters.add(portCounter);
   }
   
@@ -179,7 +190,7 @@ public class JobRecordService {
       }
     }
     if (!exists) {
-      PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
+      PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter(), 0);
       counters.add(portCounter);
     }
   }
