@@ -7,6 +7,7 @@ import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.ContextRecordService;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 public class ContextStatusEventHandler implements EventHandler<ContextStatusEvent> {
 
@@ -18,6 +19,7 @@ public class ContextStatusEventHandler implements EventHandler<ContextStatusEven
   }
   
   @Override
+  @Transactional
   public void handle(ContextStatusEvent event) throws EventHandlerException {
     ContextRecord contextRecord = contextRecordService.find(event.getContextId());
     contextRecord.setStatus(event.getStatus());

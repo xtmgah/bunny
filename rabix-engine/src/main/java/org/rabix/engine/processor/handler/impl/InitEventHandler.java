@@ -25,6 +25,7 @@ import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * Handles {@link InitEvent} events.
@@ -46,6 +47,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     this.variableRecordService = variableRecordService;
   }
 
+  @Transactional
   public void handle(final InitEvent event) throws EventHandlerException {
     ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
     

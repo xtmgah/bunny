@@ -23,6 +23,7 @@ import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * Handles {@link OutputUpdateEvent} events.
@@ -45,6 +46,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     this.scatterStrategyHandlerFactory = scatterStrategyHandlerFactory;
   }
 
+  @Transactional
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
     JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {

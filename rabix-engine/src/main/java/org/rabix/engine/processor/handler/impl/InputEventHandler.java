@@ -24,6 +24,7 @@ import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * Handles {@link InputUpdateEvent} events.
@@ -50,6 +51,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
   }
   
   @Override
+  @Transactional
   public void handle(InputUpdateEvent event) throws EventHandlerException {
     JobRecord job = jobService.find(event.getJobId(), event.getContextId());
     VariableRecord variable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());

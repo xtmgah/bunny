@@ -1,6 +1,5 @@
 package org.rabix.db.transaction;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -22,27 +21,25 @@ public class JdbcTransactionService {
   }
 
   public void begin() throws SQLException {
-    logger.debug("Start the transaction");
-
     JdbcTransaction transaction = JdbcTransactionHolder.getCurrentTransaction();
 
-    Connection connection = null;
     if (transaction == null) {
-      connection = dataSource.getConnection();
-    } else {
-      connection = transaction.getConnection();
+      transaction = new JdbcTransaction(dataSource.getConnection());
+      JdbcTransactionHolder.setCurrentTransaction(transaction);
     }
     
-    logger.debug("Save the transaction for thread: {}.", Thread.currentThread());
-    JdbcTransactionHolder.setCurrentTransaction(new JdbcTransaction(connection));
+    transaction.increaseScopeCounter();
   }
 
   public void commit() throws SQLException {
+    JdbcTransaction transaction = JdbcTransactionHolder.getCurrentTransaction();
+    transaction.decreaseScopeCounter();
+    
+    if (transaction.getScopeCounter().get() > 0) {
+      return;
+    }
     logger.debug("Commit the transaction");
-
     try {
-      logger.debug("Get the connection for thread: {}.", Thread.currentThread());
-      JdbcTransaction transaction = JdbcTransactionHolder.getCurrentTransaction();
       transaction.commit();
       transaction.getConnection().close();
     } finally {
@@ -52,9 +49,7 @@ public class JdbcTransactionService {
 
   public void rollback() throws SQLException {
     logger.debug("Rollback the transaction");
-
     try {
-      logger.debug("Get the transaction for thread: {}.", Thread.currentThread());
       JdbcTransaction transaction = JdbcTransactionHolder.getCurrentTransaction();
       transaction.rollback();
       transaction.getConnection().close();

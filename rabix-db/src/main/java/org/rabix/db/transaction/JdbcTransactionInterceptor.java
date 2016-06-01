@@ -18,10 +18,7 @@ public class JdbcTransactionInterceptor implements MethodInterceptor {
   public Object invoke(MethodInvocation method) throws Throwable {
     try {
       transactionService.begin();
-      logger.debug("Start to invoke the method: " + method);
-
       Object result = method.proceed();
-      logger.debug("Finish invoking the method: " + method);
       transactionService.commit();
       return result;
     } catch (Exception e) {

@@ -33,6 +33,7 @@ import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
@@ -56,6 +57,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   }
 
   @Override
+  @Transactional
   public void handle(JobStatusEvent event) throws EventHandlerException {
     JobRecord jobRecord = jobRecordService.find(event.getJobId(), event.getContextId());
 
