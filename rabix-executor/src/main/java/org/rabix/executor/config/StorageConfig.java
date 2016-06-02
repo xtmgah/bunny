@@ -10,6 +10,7 @@ import org.rabix.common.helper.InternalSchemaHelper;
 public class StorageConfig {
 
   public static enum BackendStore {
+    CONFORMANCE,
     LOCAL,
     FTP
   }
@@ -33,6 +34,14 @@ public class StorageConfig {
     return workingDir;
   }
   
+  public static String getConformanceInputsDir(Configuration configuration) {
+    return configuration.getString("conformance.inputs.directory");
+  }
+  
+  public static String getConformanceOutputsDir(Configuration configuration) {
+    return configuration.getString("conformance.outputs.directory");
+  }
+  
   private static String[] transformLocalIDsToPath(Job job) {
     String nodeId = job.getName();
     return nodeId.split("\\" + InternalSchemaHelper.SEPARATOR);
@@ -52,11 +61,14 @@ public class StorageConfig {
   }
   
   public static BackendStore getBackendStore(Configuration configuration) {
+    Boolean conformance = configuration.getBoolean("rabix.conformance");
+    if(conformance) {
+      return BackendStore.CONFORMANCE;
+    }
     String backendStore = configuration.getString("backend.store");
     if (backendStore == null || backendStore.isEmpty()) {
       backendStore = BackendStore.LOCAL.name();
     }
-    
     for (BackendStore backendStoreEnum : BackendStore.values()) {
       if (backendStore.trim().equalsIgnoreCase(backendStoreEnum.name())) {
         return backendStoreEnum;

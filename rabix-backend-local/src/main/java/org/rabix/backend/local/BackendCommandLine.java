@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -36,6 +35,7 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2Resources;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
+import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 import org.rabix.bindings.protocol.draft3.Draft3CommandLineBuilder;
 import org.rabix.bindings.protocol.draft3.bean.Draft3CommandLineTool;
@@ -133,7 +133,12 @@ public class BackendCommandLine {
       if (commandLine.hasOption("no-container")) {
         configOverrides.put("backend.docker.enabled", false);
       }
-
+      
+      Path inputsDir = Paths.get(Paths.get(inputsFile.getPath()).getParent().toAbsolutePath().toString());
+      Path workDir = Paths.get((String) configOverrides.get("backend.execution.directory")).toAbsolutePath();
+      configOverrides.put("conformance.inputs.directory", inputsDir.toString());
+      configOverrides.put("conformance.outputs.directory", workDir.toString());
+      
       final ConfigModule configModule = new ConfigModule(configDir, configOverrides);
       Injector injector = Guice.createInjector(new SimpleFTPModule(), new EngineModule(),
           new ExecutorModule(configModule), new AbstractModule() {
@@ -155,24 +160,15 @@ public class BackendCommandLine {
       String appUrl = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
-
-      Path inputsDir = Paths.get(Paths.get(inputsFile.getPath()).getParent().toAbsolutePath().toString());
       
       if (conformance && commandLine.hasOption("t")) {
-        Path workDir = Paths.get("").toAbsolutePath();
+        workDir = Paths.get("").toAbsolutePath();
         Path pathRelative = workDir.relativize(inputsDir);
-        inputs = loadInputs(inputs, appUrl, pathRelative.toString());
-        
         Bindings bindings = BindingsFactory.create(appUrl);
-        System.out.println(JSONHelper.writeObject(createConformanceTestResults(appUrl, inputs, bindings.getProtocolType())));
+        System.out.println(JSONHelper.writeObject(createConformanceTestResults(appUrl, inputs, bindings, pathRelative.toString())));
         System.exit(0);
       }
       
-      Path workDir = Paths.get(configuration.getString("backend.execution.directory")).toAbsolutePath();
-      Path pathRelative = workDir.relativize(inputsDir);
-      inputs = loadInputs(inputs, appUrl, pathRelative.toString());
-      
-
       final JobService jobService = injector.getInstance(JobService.class);
       final BackendService backendService = injector.getInstance(BackendService.class);
       final ExecutorService executorService = injector.getInstance(ExecutorService.class);
@@ -199,21 +195,10 @@ public class BackendCommandLine {
           }
           if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
             try {
-              Map<String, Object> result = null;
-              Configuration configuration = configModule.provideConfig();
-              if (configuration.getBoolean("rabix.conformance")) {
-                  result = conformanceOutputs(rootJob);
-              }
-              else {
-                result = rootJob.getOutputs();
-              }
-              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
               System.exit(0);
             } catch (JsonProcessingException e) {
               logger.error("Failed to write outputs to standard out", e);
-              System.exit(10);
-            } catch (BindingException e) {
-              logger.error("Failed to remap files for conformance tests", e);
               System.exit(10);
             }
           } else {
@@ -232,13 +217,13 @@ public class BackendCommandLine {
   }
 
   @SuppressWarnings("unchecked")
-  private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs,
-      ProtocolType protocolType) throws BindingException {
+  private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs, Bindings bindings, String inputsDir) throws BindingException {
+    ProtocolType protocolType = bindings.getProtocolType();
     switch (protocolType) {
     case DRAFT2:
       String draft2ResolvedApp = Draft2DocumentResolver.resolve(appURI);
       Draft2JobApp draft2App = BeanSerializer.deserialize(draft2ResolvedApp, Draft2JobApp.class);
-
+      
       if (!draft2App.isCommandLineTool()) {
         logger.error("The application is not a valid command line tool.");
         System.exit(10);
@@ -246,10 +231,15 @@ public class BackendCommandLine {
 
       Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp,
           Draft2CommandLineTool.class);
-      Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
+      
       Map<String, Object> draft2AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
       Integer draft2Cpu = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("cpu") : null;
       Integer draft2Mem = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("mem") : null;
+      Job job = new Job(appURI, inputs);
+      job = bindings.mapInputFilePaths(job, new BackendCommandLine().new ConformanceFileMapper(inputsDir));
+      inputs = job.getInputs();
+      inputs.put("allocatedResources", draft2AllocatedResources);
+      Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, inputs);
       draft2Job.setResources(new Draft2Resources(false, draft2Cpu, draft2Mem));
 
       Draft2CommandLineBuilder draft2CommandLineBuilder = new Draft2CommandLineBuilder();
@@ -403,60 +393,18 @@ public class BackendCommandLine {
     }
     return config;
   }
-
-  private static Map<String, Object> loadInputs(Map<String, Object> inputs, String appUrl, String inputsBasedir)
-      throws BindingException {
-    Job job = new Job(appUrl, inputs);
-    Object allocatedResources = inputs.remove("allocatedResources");
-    Bindings bindings = BindingsFactory.create(job.getApp());
-    job = bindings.mapInputFilePaths(job, new BackendCommandLine().new InputFileMapper(inputsBasedir));
-    Map<String, Object> result = job.getInputs();
-    result.put("allocatedResources", allocatedResources);
-    return result;
-  }
   
-  private static Map<String, Object> conformanceOutputs(Job rootJob) throws BindingException {
-    Bindings bindings = BindingsFactory.create(rootJob.getApp());
-    rootJob.getOutputs();
-    Job job = bindings.mapOutputFilePaths(rootJob, new BackendCommandLine().new OutputFileMapper());
-    Map<String, Object> result = job.getOutputs();
-    removeName(result);
-    return result;
-  }
-  
-  @SuppressWarnings("unchecked")
-  private static void removeName(Object values) {
-    if(values instanceof Map) {
-      if (((Map<String, Object>) values).containsKey("class") && ((Map<String, Object>) values).get("class").equals("File")) {
-        ((Map<String, Object>) values).remove("name");
-      }
-      else {
-        for(Entry<String, Object> entry : ((Map<String, Object>) values).entrySet()) {
-          removeName(entry.getValue());
-        }
-      }
+  public class ConformanceFileMapper implements FileMapper {
+    
+    private String inputsDir;
+    
+    public ConformanceFileMapper(String inputsDir) {
+      this.inputsDir = inputsDir;
     }
-  }
-
-  private class InputFileMapper implements FileMapper {
-
-    private File basedir;
-
-    public InputFileMapper(String basedir) {
-      this.basedir = new File(basedir);
-    }
-
+    
     @Override
     public String map(String filePath) throws FileMappingException {
-      return new File(this.basedir, filePath).getPath();
-    }
-  }
-  
-  private class OutputFileMapper implements FileMapper {
-
-    @Override
-    public String map(String filePath) throws FileMappingException {
-      return new File(filePath).getName();
+      return new File(inputsDir, filePath).getPath();
     }
   }
 

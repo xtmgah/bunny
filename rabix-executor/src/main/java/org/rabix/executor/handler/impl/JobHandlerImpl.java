@@ -59,6 +59,7 @@ public class JobHandlerImpl implements JobHandler {
 
   private final SimpleFTPClient ftpClient;
   private final boolean enableHash;
+  private final boolean addFilename;
   private final HashAlgorithm hashAlgorithm;
 
   private Job job;
@@ -77,6 +78,7 @@ public class JobHandlerImpl implements JobHandler {
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
+    this.addFilename = FileConfig.addFilename(configuration);
     this.hashAlgorithm = FileConfig.checksumAlgorithm(configuration);
   }
 
@@ -326,11 +328,20 @@ public class JobHandlerImpl implements JobHandler {
     return engineStub;
   }
   
-  private class InputFileMapper implements FileMapper {
+  public class InputFileMapper implements FileMapper {
     @Override
     public String map(String filePath) throws FileMappingException {
       BackendStore backendStore = StorageConfig.getBackendStore(configuration);
       switch (backendStore) {
+      case CONFORMANCE:
+        String inputsDir = StorageConfig.getConformanceInputsDir(configuration);
+        String outputsDir = StorageConfig.getConformanceOutputsDir(configuration);
+        if(new File(outputsDir, filePath).exists()) {
+          return new File(outputsDir, filePath).getPath();
+        }
+        else {
+          return new File(inputsDir, filePath).getPath();
+        }
       case FTP:
         logger.info("Map FTP path {} to physical path.", filePath);
         try {
@@ -353,9 +364,19 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  private class OutputFileMapper implements FileMapper {
+  public class OutputFileMapper implements FileMapper {
     @Override
     public String map(String filePath) throws FileMappingException {
+      BackendStore backendStore = StorageConfig.getBackendStore(configuration);
+      if (backendStore == BackendStore.CONFORMANCE) {
+        String outputsDir = StorageConfig.getConformanceOutputsDir(configuration);
+        try {
+          FileUtils.copyFile(new File(filePath), new File(outputsDir, new File(filePath).getName()));
+        } catch (IOException e) {
+          throw new FileMappingException(e);
+        }
+        return new File(filePath).getName();
+      }
       logger.info("Map absolute physical path {} to relative physical path.", filePath);
       return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
     }

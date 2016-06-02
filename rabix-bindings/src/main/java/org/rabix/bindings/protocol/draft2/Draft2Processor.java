@@ -245,7 +245,9 @@ public class Draft2Processor implements ProtocolProcessor {
           Draft2FileValueHelper.setChecksum(file, fileData, hashAlgorithm);
         }
         Draft2FileValueHelper.setSize(file.length(), fileData);
-        Draft2FileValueHelper.setName(file.getName(), fileData);
+//        if (setName != null) {
+//          Draft2FileValueHelper.setName(file.getName(), fileData);
+//        }
         Draft2FileValueHelper.setPath(file.getAbsolutePath(), fileData);
 
         List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputBinding);
