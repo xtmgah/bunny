@@ -56,6 +56,5 @@ public class JdbcTransactionService {
     } finally {
       JdbcTransactionHolder.removeCurrentTransaction();
     }
-
   }
 }

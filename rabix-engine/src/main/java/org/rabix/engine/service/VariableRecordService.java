@@ -2,73 +2,78 @@ package org.rabix.engine.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.db.DBException;
+import org.rabix.engine.db.VariableRecordRepository;
 import org.rabix.engine.model.VariableRecord;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 public class VariableRecordService {
 
-  private Map<String, List<VariableRecord>> variableRecordsPerContext = new HashMap<String, List<VariableRecord>>();
-
-  public synchronized void create(VariableRecord variableRecord) {
-    getVariableRecords(variableRecord.getContextId()).add(variableRecord);
+  private final VariableRecordRepository variableRecordRepository;
+  
+  @Inject
+  public VariableRecordService(final VariableRecordRepository variableRecordRepository) {
+    this.variableRecordRepository = variableRecordRepository;
+  }
+  
+  @Transactional
+  public void create(VariableRecord variableRecord) {
+    try {
+      variableRecordRepository.insert(variableRecord);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
-  public synchronized void update(VariableRecord variableRecord) {
-    for (VariableRecord vr : getVariableRecords(variableRecord.getContextId())) {
-      if (vr.getJobId().equals(variableRecord.getJobId()) && vr.getPortId().equals(variableRecord.getPortId()) && vr.getType().equals(variableRecord.getType()) && vr.getContextId().equals(variableRecord.getContextId())) {
-        vr.setValue(variableRecord.getValue());
-        return;
-      }
+  @Transactional
+  public void update(VariableRecord variableRecord) {
+    try {
+      variableRecordRepository.update(variableRecord);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
   
-  public synchronized List<VariableRecord> find(String jobId, LinkPortType type, String contextId) {
-    List<VariableRecord> result = new ArrayList<>();
-    for (VariableRecord vr : getVariableRecords(contextId)) {
-      if (vr.getJobId().equals(jobId) && vr.getType().equals(type) && vr.getContextId().equals(contextId)) {
-        result.add(vr);
-      }
+  @Transactional
+  public List<VariableRecord> find(String jobId, LinkPortType type, String contextId) {
+    try {
+      return variableRecordRepository.findByType(jobId, type, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
     }
-    return result;
   }
   
-  public synchronized List<VariableRecord> find(String jobId, String portId, String contextId) {
-    List<VariableRecord> result = new ArrayList<>();
-    for (VariableRecord vr : getVariableRecords(contextId)) {
-      if (vr.getJobId().equals(jobId) && vr.getPortId().equals(portId) && vr.getContextId().equals(contextId)) {
-        result.add(vr);
-      }
+  @Transactional
+  public List<VariableRecord> find(String jobId, String portId, String contextId) {
+    try {
+      return variableRecordRepository.findByPort(jobId, portId, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
     }
-    return result;
   }
 
-  public synchronized VariableRecord find(String jobId, String portId, LinkPortType type, String contextId) {
-    for (VariableRecord vr : getVariableRecords(contextId)) {
-      if (vr.getJobId().equals(jobId) && vr.getPortId().equals(portId) && vr.getType().equals(type) && vr.getContextId().equals(contextId)) {
-        return vr;
-      }
+  @Transactional
+  public VariableRecord find(String jobId, String portId, LinkPortType type, String contextId) {
+    try {
+      return variableRecordRepository.find(jobId, portId, type, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
     }
-    return null;
   }
 
-  public synchronized List<VariableRecord> findByJobId(String jobId, LinkPortType type, String contextId) {
-    List<VariableRecord> result = new ArrayList<>();
-    for (VariableRecord vr : getVariableRecords(contextId)) {
-      if (vr.getJobId().equals(jobId) && vr.getType().equals(type) && vr.getContextId().equals(contextId)) {
-        result.add(vr);
-      }
-    }
-    return result;
-  }
-
-  public synchronized List<VariableRecord> find(String contextId) {
-    return getVariableRecords(contextId);
-  }
-  
   @SuppressWarnings("unchecked")
   public void addValue(VariableRecord variableRecord, Object value, Integer position) {
     variableRecord.setTimesUpdatedCount(variableRecord.getTimesUpdatedCount() + 1);
@@ -148,15 +153,6 @@ public class VariableRecordService {
       flattenedValues.add(value);
     }
     return flattenedValues;
-  }
-  
-  public synchronized List<VariableRecord> getVariableRecords(String contextId) {
-    List<VariableRecord> variableList = variableRecordsPerContext.get(contextId);
-    if (variableList == null) {
-      variableList = new ArrayList<>();
-      variableRecordsPerContext.put(contextId, variableList);
-    }
-    return variableList;
   }
   
 }
