@@ -1,72 +1,76 @@
 package org.rabix.engine.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.db.DBException;
+import org.rabix.engine.db.LinkRecordRepository;
 import org.rabix.engine.model.LinkRecord;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 public class LinkRecordService {
 
-  private Map<String, List<LinkRecord>> linkRecordsPerContext = new HashMap<String, List<LinkRecord>>();
+  private final LinkRecordRepository linkRecordRepository;
 
-  public void create(LinkRecord link) {
-    getLinkRecords(link.getContextId()).add(link);
-  }
-
-  public synchronized List<LinkRecord> findBySourceJobId(String jobId, String contextId) {
-    List<LinkRecord> result = new ArrayList<>();
-    for (LinkRecord lr : getLinkRecords(contextId)) {
-      if (lr.getSourceJobId().equals(jobId) && lr.getContextId().equals(contextId)) {
-        result.add(lr);
-      }
-    }
-    return result;
+  @Inject
+  public LinkRecordService(final LinkRecordRepository linkRecordRepository) {
+    this.linkRecordRepository = linkRecordRepository;
   }
   
-  public synchronized List<LinkRecord> findBySourceAndSourceType(String jobId, LinkPortType varType, String contextId) {
-    List<LinkRecord> result = new ArrayList<>();
-    for (LinkRecord lr : getLinkRecords(contextId)) {
-      if (lr.getSourceJobId().equals(jobId) && lr.getSourceVarType().equals(varType) && lr.getContextId().equals(contextId)) {
-        result.add(lr);
-      }
+  @Transactional
+  public void create(LinkRecord linkRecord) {
+    try {
+      linkRecordRepository.insert(linkRecord);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
-    return result;
-  }
-  
-  public synchronized List<LinkRecord> findBySource(String jobId, String portId, String contextId) {
-    List<LinkRecord> result = new ArrayList<>();
-    for (LinkRecord lr : getLinkRecords(contextId)) {
-      if (lr.getSourceJobId().equals(jobId) && lr.getSourceJobPort().equals(portId) && lr.getContextId().equals(contextId)) {
-        result.add(lr);
-      }
-    }
-    return result;
-  }
-  
-  public synchronized List<LinkRecord> findBySourceAndDestinationType(String jobId, String portId, LinkPortType varType, String contextId) {
-    List<LinkRecord> result = new ArrayList<>();
-    for (LinkRecord lr : getLinkRecords(contextId)) {
-      if (lr.getSourceJobId().equals(jobId) && lr.getSourceJobPort().equals(portId) && lr.getDestinationVarType().equals(varType) && lr.getContextId().equals(contextId)) {
-        result.add(lr);
-      }
-    }
-    return result;
   }
 
-  public synchronized List<LinkRecord> find(String contextId) {
-    return getLinkRecords(contextId);
-  }
-  
-  private synchronized List<LinkRecord> getLinkRecords(String contextId) {
-    List<LinkRecord> linkList = linkRecordsPerContext.get(contextId);
-    if (linkList == null) {
-      linkList = new ArrayList<>();
-      linkRecordsPerContext.put(contextId, linkList);
+  @Transactional
+  public List<LinkRecord> findBySourceJobId(String jobId, String contextId) {
+    try {
+      return linkRecordRepository.findBySourceJobId(jobId, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
     }
-    return linkList;
   }
   
+  @Transactional
+  public List<LinkRecord> findBySourceAndSourceType(String jobId, LinkPortType varType, String contextId) {
+    try {
+      return linkRecordRepository.findBySourceAndSourceType(jobId, varType, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    }
+  }
+  
+  @Transactional
+  public List<LinkRecord> findBySource(String jobId, String portId, String contextId) {
+    try {
+      return linkRecordRepository.findBySource(jobId, portId, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    }
+  }
+  
+  @Transactional
+  public List<LinkRecord> findBySourceAndDestinationType(String jobId, String portId, LinkPortType varType, String contextId) {
+    try {
+      return linkRecordRepository.findBySourceAndDestinationType(jobId, varType, contextId);
+    } catch (DBException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    }
+  }
+
 }
