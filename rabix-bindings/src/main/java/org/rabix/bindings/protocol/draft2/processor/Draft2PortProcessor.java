@@ -91,7 +91,7 @@ public class Draft2PortProcessor {
           continue;
         }
 
-        Object singleResult = processValue(entry.getValue(), port, schema, entry.getKey(), portProcessor);
+        Object singleResult = processValue(entry.getValue(), port, Draft2SchemaHelper.getType(field), entry.getKey(), portProcessor);
         result.put(entry.getKey(), singleResult);
       }
       return result;
@@ -101,7 +101,7 @@ public class Draft2PortProcessor {
       List<Object> result = new LinkedList<>();
 
       for (Object item : ((List<?>) value)) {
-        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(job.getApp().getSchemaDefs(), schema);
+        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(item, job.getApp().getSchemaDefs(), schema);
         Object singleResult = processValue(item, port, arrayItemSchema, key, portProcessor);
         result.add(singleResult);
       }

@@ -218,7 +218,8 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
         String fieldKey = entry.getKey();
         Object fieldValue = entry.getValue();
 
-        Object field = Draft2SchemaHelper.getField(fieldKey, Draft2SchemaHelper.getSchemaForRecordField(job.getApp().getSchemaDefs(), schema));
+        Object field = Draft2SchemaHelper.getField(fieldKey, Draft2SchemaHelper.getSchemaForRecordField(job.getApp().getSchemaDefs(), schema));          
+        
         if (field == null) {
           logger.info("Field {} not found in schema {}", fieldKey, schema);
           continue;
@@ -243,7 +244,7 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
       commandLinePartBuilder.keyValue(keyValue);
       
       for (Object item : ((List<?>) value)) {
-        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(commandLineTool.getSchemaDefs(), schema);
+        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(item, commandLineTool.getSchemaDefs(), schema);
         Object arrayItemInputBinding = new HashMap<>();
         if (schema != null && Draft2SchemaHelper.getInputBinding(schema) != null) {
           arrayItemInputBinding = (Map<String, Object>) Draft2SchemaHelper.getInputBinding(schema);
