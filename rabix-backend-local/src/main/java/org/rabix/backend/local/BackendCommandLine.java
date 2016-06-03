@@ -35,7 +35,6 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2Resources;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement.Draft2FileRequirement;
 import org.rabix.bindings.protocol.draft2.expression.Draft2ExpressionException;
-import org.rabix.bindings.protocol.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.protocol.draft2.resolver.Draft2DocumentResolver;
 import org.rabix.bindings.protocol.draft3.Draft3CommandLineBuilder;
 import org.rabix.bindings.protocol.draft3.bean.Draft3CommandLineTool;
@@ -219,6 +218,7 @@ public class BackendCommandLine {
   @SuppressWarnings("unchecked")
   private static Map<String, Object> createConformanceTestResults(String appURI, Map<String, Object> inputs, Bindings bindings, String inputsDir) throws BindingException {
     ProtocolType protocolType = bindings.getProtocolType();
+    Job job = null;
     switch (protocolType) {
     case DRAFT2:
       String draft2ResolvedApp = Draft2DocumentResolver.resolve(appURI);
@@ -229,13 +229,12 @@ public class BackendCommandLine {
         System.exit(10);
       }
 
-      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp,
-          Draft2CommandLineTool.class);
+      Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp, Draft2CommandLineTool.class);
       
       Map<String, Object> draft2AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
       Integer draft2Cpu = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("cpu") : null;
       Integer draft2Mem = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("mem") : null;
-      Job job = new Job(appURI, inputs);
+      job = new Job(appURI, inputs);
       job = bindings.mapInputFilePaths(job, new BackendCommandLine().new ConformanceFileMapper(inputsDir));
       inputs = job.getInputs();
       inputs.put("allocatedResources", draft2AllocatedResources);
@@ -275,14 +274,18 @@ public class BackendCommandLine {
         System.exit(10);
       }
 
-      Draft3CommandLineTool draft3CommandLineTool = BeanSerializer.deserialize(draft3ResolvedApp,
-          Draft3CommandLineTool.class);
-      Draft3Job draft3Job = new Draft3Job(draft3CommandLineTool, (Map<String, Object>) inputs);
+      Draft3CommandLineTool draft3CommandLineTool = BeanSerializer.deserialize(draft3ResolvedApp, Draft3CommandLineTool.class);
+      
       Map<String, Object> draft3AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
       Integer draft3Cpu = draft3AllocatedResources != null ? (Integer) draft3AllocatedResources.get("cpu") : null;
       Integer draft3Mem = draft3AllocatedResources != null ? (Integer) draft3AllocatedResources.get("mem") : null;
+      job = new Job(appURI, inputs);
+      job = bindings.mapInputFilePaths(job, new BackendCommandLine().new ConformanceFileMapper(inputsDir));
+      inputs = job.getInputs();
+      inputs.put("allocatedResources", draft3AllocatedResources);
+      Draft3Job draft3Job = new Draft3Job(draft3CommandLineTool, (Map<String, Object>) inputs);
       draft3Job.setResources(new Draft3Resources(false, draft3Cpu, draft3Mem));
-
+      
       Draft3CommandLineBuilder draft3CommandLineBuilder = new Draft3CommandLineBuilder();
       List<Object> draft3CommandLineParts = draft3CommandLineBuilder.buildCommandLineParts(draft3Job);
       String draft3Stdin;
@@ -291,14 +294,15 @@ public class BackendCommandLine {
         String draft3Stdout = draft3CommandLineTool.getStdout(draft3Job);
 
         Draft3CreateFileRequirement draft3CreateFileRequirement = draft3CommandLineTool.getCreateFileRequirement();
-        Map<Object, Object> draft3CreatedFiles = new HashMap<>();
+        Map<Object, Object> draft3CreatedFiles = null;
         if (draft3CreateFileRequirement != null) {
+          draft3CreatedFiles = new HashMap<>();
           for (Draft3FileRequirement draft3FileRequirement : draft3CreateFileRequirement.getFileRequirements()) {
             draft3CreatedFiles.put(draft3FileRequirement.getFilename(draft3Job), draft3FileRequirement.getContent(draft3Job));
           }
         }
         Map<String, Object> result = new HashMap<>();
-        result.put("args", draft3CommandLineParts);
+        result.put("args", commandLineToString(draft3CommandLineParts));
         result.put("stdin", draft3Stdin);
         result.put("stdout", draft3Stdout);
         result.put("createfiles", draft3CreatedFiles);
