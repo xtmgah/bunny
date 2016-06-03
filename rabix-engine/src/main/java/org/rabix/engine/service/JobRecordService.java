@@ -7,9 +7,9 @@ import java.util.UUID;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.db.DBException;
 import org.rabix.engine.db.JobRecordRepository;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.JobRecord.PortCounter;
 
@@ -128,7 +128,7 @@ public class JobRecordService {
     return 0;
   }
   
-  public boolean isInputPortBlocking(JobRecord jobRecord, DAGNode node, String port) {
+  public boolean isInputPortBlocking(JobRecord jobRecord, DAGNodeGraph node, String port) {
     return getInputPortIncoming(jobRecord, port) > 1 && LinkMerge.isBlocking(node.getLinkMerge(port, LinkPortType.INPUT));
   }
   

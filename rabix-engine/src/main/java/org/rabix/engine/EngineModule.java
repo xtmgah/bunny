@@ -1,6 +1,5 @@
 package org.rabix.engine;
 
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.dispatcher.EventDispatcherFactory;
 import org.rabix.engine.processor.handler.HandlerFactory;
@@ -10,7 +9,9 @@ import org.rabix.engine.processor.handler.impl.InputEventHandler;
 import org.rabix.engine.processor.handler.impl.JobStatusEventHandler;
 import org.rabix.engine.processor.handler.impl.OutputEventHandler;
 import org.rabix.engine.processor.impl.EventProcessorImpl;
+import org.rabix.engine.service.ApplicationService;
 import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
@@ -24,7 +25,8 @@ public class EngineModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(DAGNodeDB.class).in(Scopes.SINGLETON);
+    bind(DAGNodeService.class).in(Scopes.SINGLETON);
+    bind(ApplicationService.class).in(Scopes.SINGLETON);
     
     bind(JobRecordService.class).in(Scopes.SINGLETON);
     bind(VariableRecordService.class).in(Scopes.SINGLETON);

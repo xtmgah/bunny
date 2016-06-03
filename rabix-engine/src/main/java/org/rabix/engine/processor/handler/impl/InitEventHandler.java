@@ -3,23 +3,22 @@ package org.rabix.engine.processor.handler.impl;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.CloneHelper;
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
 import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.ContextRecord.ContextStatus;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
@@ -32,15 +31,15 @@ import com.google.inject.persist.Transactional;
  */
 public class InitEventHandler implements EventHandler<InitEvent> {
 
-  private DAGNodeDB nodeDB;
+  private DAGNodeService dagNodeService;
   private EventProcessor eventProcessor;
   private JobRecordService jobRecordService;
   private ContextRecordService contextRecordService;
   private VariableRecordService variableRecordService;
 
   @Inject
-  public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
-    this.nodeDB = dagNodeDB;
+  public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService) {
+    this.dagNodeService = dagNodeService;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;
     this.contextRecordService = contextRecordService;
@@ -52,10 +51,9 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
     
     contextRecordService.create(context);
-    nodeDB.loadDB(event.getNode(), event.getContextId());
+    DAGNodeGraph node = dagNodeService.load(event.getNode(), event.getContextId());
     
-    DAGNode node = nodeDB.get(event.getNode().getId(), event.getContextId());
-    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node instanceof DAGContainer, false, false);
+    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node.isContainer(), false, false);
 
     for (DAGLinkPort inputPort : node.getInputPorts()) {
       if (job.getState().equals(JobState.PENDING)) {
@@ -88,7 +86,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
   }
   
   @SuppressWarnings("unchecked")
-  private Map<String, Object> mixInputs(DAGNode dagNode, Map<String, Object> inputs) {
+  private Map<String, Object> mixInputs(DAGNodeGraph dagNode, Map<String, Object> inputs) {
     Map<String, Object> mixedInputs;
     try {
       mixedInputs = (Map<String, Object>) CloneHelper.deepCopy(dagNode.getDefaults());

@@ -4,13 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.rabix.bindings.BindingException;
-import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.scatter.RowMapping;
 
 public interface ScatterStrategyHandler {
 
-  ScatterStrategy initialize(DAGNode dagNode);
+  ScatterStrategy initialize(DAGNodeGraph dagNode);
   
   boolean isBlocking();
   

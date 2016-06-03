@@ -12,13 +12,14 @@ import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.model.ContextRecord;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.VariableRecord;
+import org.rabix.engine.service.ApplicationService;
 import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
@@ -28,13 +29,13 @@ public class JobHelper {
     return UUID.randomUUID().toString();
   }
   
-  public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB, String contextId) {
+  public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService, ApplicationService applicationService, String contextId) {
     Set<Job> jobs = new HashSet<>();
     List<JobRecord> jobRecords = jobRecordService.findReady(contextId);
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
+        DAGNodeGraph node = dagNodeService.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
 
         Map<String, Object> inputs = new HashMap<>();
         List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
@@ -44,7 +45,7 @@ public class JobHelper {
         }
         ContextRecord contextRecord = contextRecordService.find(job.getRootId());
         Context context = new Context(job.getRootId(), contextRecord.getConfig());
-        String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
+        String encodedApp = URIHelper.createDataURI(applicationService.get(node.getAppHash()));
         jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
       }
     }

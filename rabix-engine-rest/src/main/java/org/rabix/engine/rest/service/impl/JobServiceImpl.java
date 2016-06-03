@@ -13,7 +13,6 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.JobHelper;
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.model.ContextRecord;
@@ -25,7 +24,9 @@ import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
+import org.rabix.engine.service.ApplicationService;
 import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
@@ -45,15 +46,17 @@ public class JobServiceImpl implements JobService {
   private final ContextRecordService contextRecordService;
   
   private final JobDB jobDB;
-  private final DAGNodeDB dagNodeDB;
+  private final DAGNodeService dagNodeService;
+  private final ApplicationService applicationService;
   
   private final EventProcessor eventProcessor;
   private final BackendDispatcher backendDispatcher;
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeDB dagNodeDB, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeService dagNodeService, ApplicationService applicationService, JobDB jobDB) {
     this.jobDB = jobDB;
-    this.dagNodeDB = dagNodeDB;
+    this.dagNodeService = dagNodeService;
+    this.applicationService = applicationService;
     this.eventProcessor = eventProcessor;
     
     this.jobRecordService = jobRecordService;
@@ -113,7 +116,7 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
+    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeService, applicationService, contextId);
   }
   
   @Override

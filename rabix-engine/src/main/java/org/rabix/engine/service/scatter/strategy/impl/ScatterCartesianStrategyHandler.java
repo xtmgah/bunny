@@ -10,8 +10,8 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.model.scatter.impl.ScatterCartesianStrategy;
@@ -33,7 +33,7 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
   }
 
   @Override
-  public ScatterStrategy initialize(DAGNode dagNode) {
+  public ScatterStrategy initialize(DAGNodeGraph dagNode) {
     ScatterCartesianStrategy strategy = new ScatterCartesianStrategy(dagNode.getScatterMethod());
     for (DAGLinkPort port : dagNode.getInputPorts()) {
       if (port.isScatter()) {

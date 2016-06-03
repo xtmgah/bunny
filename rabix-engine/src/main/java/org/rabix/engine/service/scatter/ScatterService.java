@@ -6,20 +6,19 @@ import java.util.List;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
-import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.InputUpdateEvent;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
@@ -31,7 +30,7 @@ import com.google.inject.Inject;
 
 public class ScatterService {
 
-  private final DAGNodeDB dagNodeDB;
+  private final DAGNodeService dagNodeService;
   private final EventProcessor eventProcessor;
   
   private final JobRecordService jobRecordService;
@@ -40,8 +39,8 @@ public class ScatterService {
   private final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory;
   
   @Inject
-  public ScatterService(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor, final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory) {
-    this.dagNodeDB = dagNodeDB;
+  public ScatterService(final DAGNodeService dagNodeService, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor, final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory) {
+    this.dagNodeService = dagNodeService;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;
     this.linkRecordService = linkRecordService;
@@ -54,7 +53,7 @@ public class ScatterService {
    */
   @SuppressWarnings("unchecked")
   public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
-    DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
+    DAGNodeGraph node = dagNodeService.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(node.getScatterMethod());
     if (job.getScatterStrategy() == null) {
@@ -88,7 +87,7 @@ public class ScatterService {
     }
   }
   
-  public JobRecord createJobRecord(String id, String parentId, DAGNode node, boolean isScattered, String contextId) {
+  public JobRecord createJobRecord(String id, String parentId, DAGNodeGraph node, boolean isScattered, String contextId) {
     boolean isBlocking = false;
     for (LinkMerge linkMerge : node.getLinkMergeSet(LinkPortType.INPUT)) {
       if (LinkMerge.isBlocking(linkMerge)) {
@@ -99,10 +98,10 @@ public class ScatterService {
     if (ScatterMethod.isBlocking(node.getScatterMethod())) {
       isBlocking = true;
     }
-    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node instanceof DAGContainer, isScattered, isBlocking);
+    return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node.isContainer(), isScattered, isBlocking);
   }
   
-  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNode node, Integer scatteredCount, Integer position) throws EventHandlerException {
+  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNodeGraph node, Integer scatteredCount, Integer position) throws EventHandlerException {
     ScatterStrategy scatterStrategy = job.getScatterStrategy();
     
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(node.getScatterMethod());

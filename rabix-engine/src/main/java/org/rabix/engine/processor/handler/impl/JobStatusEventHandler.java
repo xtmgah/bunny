@@ -10,15 +10,14 @@ import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
-import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
 import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.event.impl.OutputUpdateEvent;
 import org.rabix.engine.model.ContextRecord.ContextStatus;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.LinkRecord;
@@ -26,18 +25,19 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
-import org.rabix.engine.service.scatter.ScatterService;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.service.scatter.ScatterService;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
-  private final DAGNodeDB dagNodeDB;
+  private final DAGNodeService dagNodeService;
   private final ScatterService scatterHelper;
   private final EventProcessor eventProcessor;
   
@@ -46,8 +46,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private final VariableRecordService variableRecordService;
 
   @Inject
-  public JobStatusEventHandler(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterHelper) {
-    this.dagNodeDB = dagNodeDB;
+  public JobStatusEventHandler(final DAGNodeService dagNodeService, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterHelper) {
+    this.dagNodeService = dagNodeService;
     this.scatterHelper = scatterHelper;
     this.eventProcessor = eventProcessor;
     
@@ -96,11 +96,11 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     if (job.isContainer()) {
       job.setState(JobState.RUNNING);
 
-      DAGContainer containerNode;
+      DAGNodeGraph containerNode;
       if (job.isScattered()) {
-        containerNode = (DAGContainer) dagNodeDB.get(InternalSchemaHelper.getJobIdFromScatteredId(job.getId()), contextId);
+        containerNode = dagNodeService.get(InternalSchemaHelper.getJobIdFromScatteredId(job.getId()), contextId);
       } else {
-        containerNode = (DAGContainer) dagNodeDB.get(job.getId(), contextId);
+        containerNode = dagNodeService.get(job.getId(), contextId);
       }
       rollOutContainer(job, containerNode, contextId);
 
@@ -136,14 +136,14 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     }
   }
   
-  private Set<String> findImmediateReadyNodes(DAGNode node) {
-    if (node instanceof DAGContainer) {
+  private Set<String> findImmediateReadyNodes(DAGNodeGraph node) {
+    if (node.isContainer()) {
       Set<String> nodesWithoutDestination = new HashSet<>();
-      for (DAGNode child : ((DAGContainer) node).getChildren()) {
+      for (DAGNodeGraph child : node.getChildren()) {
         nodesWithoutDestination.add(child.getId());
       }
       
-      for (DAGLink link : ((DAGContainer) node).getLinks()) {
+      for (DAGLink link : node.getLinks()) {
         nodesWithoutDestination.remove(link.getDestination().getNodeId());
       }
       return nodesWithoutDestination;
@@ -154,8 +154,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   /**
    * Unwraps {@link DAGContainer}
    */
-  private void rollOutContainer(JobRecord job, DAGContainer containerNode, String contextId) {
-    for (DAGNode node : containerNode.getChildren()) {
+  private void rollOutContainer(JobRecord job, DAGNodeGraph containerNode, String contextId) {
+    for (DAGNodeGraph node : containerNode.getChildren()) {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
       JobRecord childJob = scatterHelper.createJobRecord(newJobId, job.getExternalId(), node, false, contextId);
