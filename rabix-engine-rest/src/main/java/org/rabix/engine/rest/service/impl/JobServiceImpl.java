@@ -134,11 +134,11 @@ public class JobServiceImpl implements JobService {
       InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
       eventProcessor.send(initEvent);
       return job;
-    } catch (BindingException e) {
-      logger.error("Failed to create Bindings", e);
-      throw new JobServiceException("Failed to create Bindings", e);
     } catch (EventHandlerException e) {
       throw new JobServiceException("Failed to start job", e);
+    } catch (Exception e) {
+      logger.error("Failed to create Bindings", e);
+      throw new JobServiceException("Failed to create Bindings", e);
     }
   }
   
