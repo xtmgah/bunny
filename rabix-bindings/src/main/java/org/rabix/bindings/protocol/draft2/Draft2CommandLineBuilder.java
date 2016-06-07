@@ -275,8 +275,9 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
         return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).parts(flattenedValues).build();
       }
       List<Object> prefixedValues = new ArrayList<>();
+      prefixedValues.add(prefix);
       for (Object arrayItem : flattenedValues) {
-        prefixedValues.add(prefix + separator + arrayItem);
+        prefixedValues.add(arrayItem);
       }
       return new Draft2CommandLinePart.Builder(position, isFile).keyValue(keyValue).parts(prefixedValues).build();
     }
