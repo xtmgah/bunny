@@ -14,6 +14,10 @@ import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
 import org.rabix.bindings.protocol.draft2.bean.Draft2OutputPort;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Step;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Workflow;
+import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
+import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
+import org.rabix.bindings.protocol.draft2.bean.resource.Draft2ResourceType;
+import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2EnvVarRequirement;
 import org.rabix.bindings.protocol.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 import org.rabix.common.json.processor.BeanProcessor;
@@ -51,6 +55,7 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
         Draft2Job stepJob = step.getJob();
         String stepId = job.getId() + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.normalizeId(step.getId());
         stepJob.setId(stepId);
+        overrideHints(job.getApp(), stepJob.getApp());
         processElements(job, stepJob);
         process(job, stepJob);
       }
@@ -58,6 +63,20 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
     return job;
   }
   
+  /**
+   * Override hints with requirements for draft-2 conformance tests
+   */
+  private void overrideHints(Draft2JobApp parentJob, Draft2JobApp stepJob) {
+    if(parentJob.getRequirement(Draft2ResourceType.CPU_RESOURCE, Draft2CpuResource.class) != null) {
+      stepJob.setHint(parentJob.getRequirement(Draft2ResourceType.CPU_RESOURCE, Draft2CpuResource.class));
+    }
+    if(parentJob.getRequirement(Draft2ResourceType.MEMORY_RESOURCE, Draft2MemoryResource.class) != null) {
+      stepJob.setHint(parentJob.getRequirement(Draft2ResourceType.MEMORY_RESOURCE, Draft2MemoryResource.class));
+    }
+    if(parentJob.getRequirement(Draft2ResourceType.ENV_VAR_REQUIREMENT, Draft2EnvVarRequirement.class) != null) {
+      stepJob.setHint(parentJob.getRequirement(Draft2ResourceType.ENV_VAR_REQUIREMENT, Draft2EnvVarRequirement.class));
+    }
+  }
   /**
    * Process Job inputs, outputs and data links
    */
