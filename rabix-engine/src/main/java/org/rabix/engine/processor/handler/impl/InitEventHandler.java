@@ -18,7 +18,7 @@ import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.ContextRecordService;
-import org.rabix.engine.service.DAGNodeService;
+import org.rabix.engine.service.DAGNodeGraphService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.EngineServiceException;
@@ -36,7 +36,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
 
   private final static Logger logger = LoggerFactory.getLogger(InitEventHandler.class);
   
-  private DAGNodeService dagNodeService;
+  private DAGNodeGraphService dagNodeService;
   private EventProcessor eventProcessor;
   private JobRecordService jobRecordService;
   private ContextRecordService contextRecordService;
@@ -45,7 +45,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
   @Inject
   public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService,
       VariableRecordService variableRecordService, ContextRecordService contextRecordService,
-      DAGNodeService dagNodeService) {
+      DAGNodeGraphService dagNodeService) {
     this.dagNodeService = dagNodeService;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;

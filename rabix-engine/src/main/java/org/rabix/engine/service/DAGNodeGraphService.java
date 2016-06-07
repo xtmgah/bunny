@@ -6,7 +6,7 @@ import java.util.List;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.db.DBException;
-import org.rabix.engine.db.DAGNodeRepository;
+import org.rabix.engine.db.DAGNodeGraphRepository;
 import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,16 +14,16 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-public class DAGNodeService {
+public class DAGNodeGraphService {
 
-  private final static Logger logger = LoggerFactory.getLogger(DAGNodeService.class);
+  private final static Logger logger = LoggerFactory.getLogger(DAGNodeGraphService.class);
   
-  private final ApplicationService applicationService;
-
-  private DAGNodeRepository dagNodeRepository;
+  private final DAGNodeGraphRepository dagNodeRepository;
+  
+  private final ApplicationPayloadService applicationService;
   
   @Inject
-  public DAGNodeService(ApplicationService applicationService, DAGNodeRepository dagNodeRepository) {
+  public DAGNodeGraphService(ApplicationPayloadService applicationService, DAGNodeGraphRepository dagNodeRepository) {
     this.dagNodeRepository = dagNodeRepository;
     this.applicationService = applicationService;
   }

@@ -17,9 +17,9 @@ import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.VariableRecord;
-import org.rabix.engine.service.ApplicationService;
+import org.rabix.engine.service.ApplicationPayloadService;
 import org.rabix.engine.service.ContextRecordService;
-import org.rabix.engine.service.DAGNodeService;
+import org.rabix.engine.service.DAGNodeGraphService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
@@ -30,7 +30,7 @@ public class JobHelper {
     return UUID.randomUUID().toString();
   }
   
-  public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService, ApplicationService applicationService, String contextId) throws EngineServiceException {
+  public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeGraphService dagNodeService, ApplicationPayloadService applicationService, String contextId) throws EngineServiceException {
     Set<Job> jobs = new HashSet<>();
     List<JobRecord> jobRecords = jobRecordService.findReady(contextId);
 
@@ -46,7 +46,7 @@ public class JobHelper {
         }
         ContextRecord contextRecord = contextRecordService.find(job.getRootId());
         Context context = new Context(job.getRootId(), contextRecord.getConfig());
-        String encodedApp = URIHelper.createDataURI(applicationService.get(node.getAppHash()));
+        String encodedApp = URIHelper.createDataURI(applicationService.find(node.getAppHash()));
         jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
       }
     }

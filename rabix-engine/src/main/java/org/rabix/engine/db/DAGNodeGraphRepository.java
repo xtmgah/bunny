@@ -15,9 +15,9 @@ import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DAGNodeRepository {
+public class DAGNodeGraphRepository {
 
-  private final static Logger logger = LoggerFactory.getLogger(DAGNodeRepository.class);
+  private final static Logger logger = LoggerFactory.getLogger(DAGNodeGraphRepository.class);
   
   private static final String INSERT_DAG_NODE = "INSERT INTO DAG_NODE (ID,DAG) VALUES (?,?::json);";
 

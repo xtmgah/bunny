@@ -24,9 +24,9 @@ import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
-import org.rabix.engine.service.ApplicationService;
+import org.rabix.engine.service.ApplicationPayloadService;
 import org.rabix.engine.service.ContextRecordService;
-import org.rabix.engine.service.DAGNodeService;
+import org.rabix.engine.service.DAGNodeGraphService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.JobRecordService.JobState;
@@ -47,14 +47,14 @@ public class JobServiceImpl implements JobService {
   private final ContextRecordService contextRecordService;
   
   private final JobDB jobDB;
-  private final DAGNodeService dagNodeService;
-  private final ApplicationService applicationService;
+  private final DAGNodeGraphService dagNodeService;
+  private final ApplicationPayloadService applicationService;
   
   private final EventProcessor eventProcessor;
   private final BackendDispatcher backendDispatcher;
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeService dagNodeService, ApplicationService applicationService, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeGraphService dagNodeService, ApplicationPayloadService applicationService, JobDB jobDB) {
     this.jobDB = jobDB;
     this.dagNodeService = dagNodeService;
     this.applicationService = applicationService;

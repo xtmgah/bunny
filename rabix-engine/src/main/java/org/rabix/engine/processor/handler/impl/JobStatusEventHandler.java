@@ -25,7 +25,7 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
-import org.rabix.engine.service.DAGNodeService;
+import org.rabix.engine.service.DAGNodeGraphService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
@@ -42,7 +42,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
   private final static Logger logger = LoggerFactory.getLogger(JobStatusEventHandler.class);
   
-  private final DAGNodeService dagNodeService;
+  private final DAGNodeGraphService dagNodeService;
   private final ScatterService scatterHelper;
   private final EventProcessor eventProcessor;
   
@@ -51,7 +51,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private final VariableRecordService variableRecordService;
 
   @Inject
-  public JobStatusEventHandler(final DAGNodeService dagNodeService, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterHelper) {
+  public JobStatusEventHandler(final DAGNodeGraphService dagNodeService, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterHelper) {
     this.dagNodeService = dagNodeService;
     this.scatterHelper = scatterHelper;
     this.eventProcessor = eventProcessor;

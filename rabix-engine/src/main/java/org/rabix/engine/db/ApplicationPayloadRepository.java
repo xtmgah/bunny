@@ -13,9 +13,9 @@ import org.rabix.db.transaction.JdbcTransactionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApplicationRepository {
+public class ApplicationPayloadRepository {
 
-private final static Logger logger = LoggerFactory.getLogger(DAGNodeRepository.class);
+private final static Logger logger = LoggerFactory.getLogger(DAGNodeGraphRepository.class);
   
   private static final String INSERT_APPLICATION = "INSERT INTO APPLICATION (ID,PAYLOAD) SELECT ?,?::json WHERE NOT EXISTS (SELECT ID FROM APPLICATION WHERE ID=?);";
   private static final String SELECT_APPLICATION = "SELECT PAYLOAD FROM APPLICATION WHERE ID=?;";

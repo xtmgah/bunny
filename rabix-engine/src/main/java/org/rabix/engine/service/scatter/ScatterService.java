@@ -18,7 +18,7 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandlerException;
-import org.rabix.engine.service.DAGNodeService;
+import org.rabix.engine.service.DAGNodeGraphService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 
 public class ScatterService {
 
-  private final DAGNodeService dagNodeService;
+  private final DAGNodeGraphService dagNodeService;
   private final EventProcessor eventProcessor;
   
   private final JobRecordService jobRecordService;
@@ -40,7 +40,7 @@ public class ScatterService {
   private final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory;
   
   @Inject
-  public ScatterService(final DAGNodeService dagNodeService, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor, final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory) {
+  public ScatterService(final DAGNodeGraphService dagNodeService, final JobRecordService jobRecordService, final VariableRecordService variableRecordService, final LinkRecordService linkRecordService, final EventProcessor eventProcessor, final ScatterStrategyHandlerFactory scatterStrategyHandlerFactory) {
     this.dagNodeService = dagNodeService;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;
