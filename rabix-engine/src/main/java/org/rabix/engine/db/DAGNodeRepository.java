@@ -21,14 +21,8 @@ public class DAGNodeRepository {
   
   private static final String INSERT_DAG_NODE = "INSERT INTO DAG_NODE (ID,DAG) VALUES (?,?::json);";
 
-  private static final String SELECT_DAG_NODE = 
-                "WITH RECURSIVE flattened AS "
-              + "(\r\n\tSELECT null AS parent, cast (dag->'id' AS TEXT) AS id, dag AS node, dag->'isContainer' AS is_container, id AS root_external_id\r\n\tFROM DAG_NODE WHERE ( dag->>'children' ) IS NOT NULL"
-              + "   \r\nUNION ALL"
-              + "   \r\n\tSELECT cast (f.node->'id' AS TEXT) AS parent, cast (json_array_elements(f.node->'children')->'id' AS TEXT) AS id, json_array_elements(f.node->'children') AS node, json_array_elements(f.node->'children')->'isContainer' AS is_container, f.root_external_id AS root_external_id"
-              + "\r\n\tFROM flattened f WHERE (f.node->'children') IS NOT NULL"
-              + "\r\n)\r\nSELECT parent, id, node, is_container, root_external_id FROM flattened AS f\r\nWHERE id=? AND root_external_id=?;";
-  
+  private static final String SELECT_DAG_NODE = "WITH RECURSIVE flattened AS (\r\n\tSELECT null AS parent, replace(cast (dag->'id' AS TEXT), '\"', '') AS id, dag AS node, dag->'isContainer' AS is_container, id AS root_external_id\r\n\tFROM dag_node WHERE ( dag->>'children' ) IS NOT NULL\r\nUNION ALL\r\n\tSELECT replace(cast (f.node->'id' AS TEXT), '\"', '') AS parent, replace(cast (json_array_elements(f.node->'children')->'id' AS TEXT), '\"', '') AS id, json_array_elements(f.node->'children') AS node, json_array_elements(f.node->'children')->'isContainer' AS is_container, f.root_external_id AS root_external_id\r\n\tFROM flattened f WHERE (f.node->'children') IS NOT NULL\r\n)\r\nSELECT parent, id, node, is_container, root_external_id FROM flattened\r\nWHERE id=? AND root_external_id=?;"; 
+                
   public void insert(DAGNodeGraph dagNode, String contextId) throws DBException {
     PreparedStatement stmt = null;
     try {
@@ -55,7 +49,7 @@ public class DAGNodeRepository {
       Connection c = JdbcTransactionHolder.getCurrentTransaction().getConnection();
 
       stmt = c.prepareStatement(SELECT_DAG_NODE);
-      stmt.setString(1, "\"" + id + "\"");
+      stmt.setString(1, id);
       stmt.setString(2, contextId);
 
       ResultSet result = stmt.executeQuery();
