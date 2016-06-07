@@ -59,7 +59,7 @@ public class JobHTTPServiceImpl implements JobHTTPService {
   }
   
   private Response error() {
-    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    return Response.status(Status.BAD_REQUEST).build();
   }
   
   private Response ok() {

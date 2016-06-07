@@ -8,11 +8,18 @@ import java.util.Set;
 import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.ScatterMethod;
+import org.rabix.bindings.model.Application.ApplicationDeserializer;
+import org.rabix.bindings.model.Application.ApplicationSerializer;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class DAGNode {
 
   protected final String id;
+  @JsonDeserialize(using = ApplicationDeserializer.class)
+  @JsonSerialize(using = ApplicationSerializer.class)
   protected final Application app;
   protected final ScatterMethod scatterMethod;
   protected final List<DAGLinkPort> inputPorts;
