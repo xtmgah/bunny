@@ -133,7 +133,7 @@ public class BackendCommandLine {
         configOverrides.put("backend.docker.enabled", false);
       }
       
-      Path inputsDir = Paths.get(Paths.get(inputsFile.getPath()).getParent().toAbsolutePath().toString());
+      Path inputsDir = Paths.get(Paths.get(inputsFile.getCanonicalPath()).getParent().toAbsolutePath().toString());
       Path workDir = Paths.get((String) configOverrides.get("backend.execution.directory")).toAbsolutePath();
       configOverrides.put("conformance.inputs.directory", inputsDir.toString());
       configOverrides.put("conformance.outputs.directory", workDir.toString());
