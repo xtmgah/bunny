@@ -16,6 +16,7 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.model.scatter.impl.ScatterCartesianStrategy;
 import org.rabix.engine.model.scatter.impl.ScatterCartesianStrategy.Combination;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.PortMapping;
 import org.rabix.engine.service.scatter.RowMapping;
@@ -59,7 +60,7 @@ public class ScatterCartesianStrategyHandler implements ScatterStrategyHandler {
   }
 
   @Override
-  public LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId) {
+  public LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId) throws EngineServiceException {
     ScatterCartesianStrategy scatterCartesianStrategy = (ScatterCartesianStrategy) strategy;
     Collections.sort(scatterCartesianStrategy.getCombinations(), new Comparator<Combination>() {
       @Override

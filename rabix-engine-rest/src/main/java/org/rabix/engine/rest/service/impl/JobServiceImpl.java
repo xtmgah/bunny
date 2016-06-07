@@ -28,6 +28,7 @@ import org.rabix.engine.service.ApplicationService;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.validator.JobStateValidationException;
@@ -111,12 +112,20 @@ public class JobServiceImpl implements JobService {
     } catch (JobStateValidationException e) {
       logger.error("Failed to update Job state", e);
       throw new JobServiceException("Failed to update Job state", e);
+    } catch (EngineServiceException e) {
+      logger.error("Failed to handle update for Job " + job, e);
+      throw new JobServiceException("Failed to handle update for Job " + job, e);
     }
   }
   
   @Override
   public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeService, applicationService, contextId);
+    try {
+      return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeService, applicationService, contextId);
+    } catch (EngineServiceException e) {
+      logger.error("Failed to get ready Jobs", e);
+      throw new JobServiceException("Failed to get ready Jobs", e);
+    }
   }
   
   @Override
@@ -172,7 +181,7 @@ public class JobServiceImpl implements JobService {
 
   private class EndJobCallback implements IterationCallback {
     @Override
-    public void call(EventProcessor eventProcessor, String contextId, int iteration) {
+    public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
       ContextRecord context = contextRecordService.find(contextId);
       
       Job job = null;

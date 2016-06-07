@@ -21,6 +21,7 @@ import org.rabix.engine.service.ApplicationService;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 
 public class JobHelper {
@@ -29,7 +30,7 @@ public class JobHelper {
     return UUID.randomUUID().toString();
   }
   
-  public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService, ApplicationService applicationService, String contextId) {
+  public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService, ApplicationService applicationService, String contextId) throws EngineServiceException {
     Set<Job> jobs = new HashSet<>();
     List<JobRecord> jobRecords = jobRecordService.findReady(contextId);
 
@@ -52,7 +53,7 @@ public class JobHelper {
     return jobs;
   }
   
-  public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {
+  public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) throws EngineServiceException {
     JobRecord jobRecord = jobRecordService.findRoot(job.getContext().getId());
     List<VariableRecord> outputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.OUTPUT, job.getContext().getId());
     

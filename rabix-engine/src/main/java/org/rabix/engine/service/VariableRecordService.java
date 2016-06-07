@@ -8,12 +8,16 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.db.DBException;
 import org.rabix.engine.db.VariableRecordRepository;
 import org.rabix.engine.model.VariableRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 public class VariableRecordService {
 
+  private final static Logger logger = LoggerFactory.getLogger(VariableRecordService.class);
+  
   private final VariableRecordRepository variableRecordRepository;
   
   @Inject
@@ -22,55 +26,52 @@ public class VariableRecordService {
   }
   
   @Transactional
-  public void create(VariableRecord variableRecord) {
+  public void create(VariableRecord variableRecord) throws EngineServiceException {
     try {
       variableRecordRepository.insert(variableRecord);
     } catch (DBException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.error("Failed to insert VariableRecord " + variableRecord, e);
+      throw new EngineServiceException("Failed to insert VariableRecord " + variableRecord, e);
     }
   }
 
   @Transactional
-  public void update(VariableRecord variableRecord) {
+  public void update(VariableRecord variableRecord) throws EngineServiceException {
     try {
       variableRecordRepository.update(variableRecord);
     } catch (DBException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.error("Failed to update VariableRecord " + variableRecord, e);
+      throw new EngineServiceException("Failed to update VariableRecord " + variableRecord, e);
     }
   }
   
   @Transactional
-  public List<VariableRecord> find(String jobId, LinkPortType type, String contextId) {
+  public List<VariableRecord> find(String jobId, LinkPortType type, String contextId) throws EngineServiceException {
     try {
       return variableRecordRepository.findByType(jobId, type, contextId);
     } catch (DBException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      return null;
+      logger.error("Failed to find VariableRecords for jobId=" + jobId + ", linkPortType=" + type + ", rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find VariableRecords for jobId=" + jobId + ", linkPortType=" + type + ", rootId=" + contextId, e);
     }
   }
   
   @Transactional
-  public List<VariableRecord> find(String jobId, String portId, String contextId) {
+  public List<VariableRecord> find(String jobId, String portId, String contextId) throws EngineServiceException {
     try {
       return variableRecordRepository.findByPort(jobId, portId, contextId);
     } catch (DBException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      return null;
+      logger.error("Failed to find VariableRecords for jobId=" + jobId + ", portId=" + portId + ", rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find VariableRecords for jobId=" + jobId + ", portId=" + portId + ", rootId=" + contextId, e);
     }
   }
 
   @Transactional
-  public VariableRecord find(String jobId, String portId, LinkPortType type, String contextId) {
+  public VariableRecord find(String jobId, String portId, LinkPortType type, String contextId) throws EngineServiceException {
     try {
       return variableRecordRepository.find(jobId, portId, type, contextId);
     } catch (DBException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      return null;
+      logger.error("Failed to find VariableRecords for jobId=" + jobId + ", portId=" + portId + "linkPortType=" + type + ", rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find VariableRecords for jobId=" + jobId + ", portId=" + portId + "linkPortType=" + type + ", rootId=" + contextId, e);
     }
   }
 

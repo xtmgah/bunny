@@ -22,6 +22,7 @@ import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandlerFactory;
@@ -52,7 +53,7 @@ public class ScatterService {
    * Scatters port
    */
   @SuppressWarnings("unchecked")
-  public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
+  public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException, EngineServiceException {
     DAGNodeGraph node = dagNodeService.find(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(node.getScatterMethod());
@@ -101,7 +102,7 @@ public class ScatterService {
     return new JobRecord(contextId, id, JobRecordService.generateUniqueId(), parentId, JobState.PENDING, node.isContainer(), isScattered, isBlocking);
   }
   
-  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNodeGraph node, Integer scatteredCount, Integer position) throws EventHandlerException {
+  private void createScatteredJobs(JobRecord job, String port, Object value, DAGNodeGraph node, Integer scatteredCount, Integer position) throws EventHandlerException, EngineServiceException {
     ScatterStrategy scatterStrategy = job.getScatterStrategy();
     
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(node.getScatterMethod());

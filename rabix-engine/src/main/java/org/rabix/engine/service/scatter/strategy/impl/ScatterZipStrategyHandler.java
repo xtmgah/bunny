@@ -14,6 +14,7 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.model.scatter.impl.ScatterZipStrategy;
 import org.rabix.engine.model.scatter.impl.ScatterZipStrategy.Combination;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.PortMapping;
 import org.rabix.engine.service.scatter.RowMapping;
@@ -143,7 +144,7 @@ public class ScatterZipStrategyHandler implements ScatterStrategyHandler {
   }
   
   @Override
-  public LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId) {
+  public LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId) throws EngineServiceException {
     ScatterZipStrategy scatterZipStrategy = (ScatterZipStrategy) strategy;
     
     Collections.sort(scatterZipStrategy.getCombinations(), new Comparator<Combination>() {

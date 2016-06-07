@@ -19,7 +19,10 @@ import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandlerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
@@ -30,6 +33,8 @@ import com.google.inject.persist.Transactional;
  */
 public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
+  private final static Logger logger = LoggerFactory.getLogger(OutputEventHandler.class);
+  
   private JobRecordService jobService;
   private VariableRecordService variableService;
   private LinkRecordService linkService;
@@ -48,37 +53,42 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
   @Transactional
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
-    JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
-    if (event.isFromScatter()) {
-      jobService.resetOutputPortCounters(sourceJob, event.getNumberOfScattered());
-    }
-    VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
-    jobService.decrementPortCounter(sourceJob, event.getPortId(), LinkPortType.OUTPUT);
-    variableService.addValue(sourceVariable, event.getValue(), event.getPosition());
-    jobService.update(sourceJob);
-    variableService.update(sourceVariable);
-    
-    boolean isCompleted = jobService.isCompleted(sourceJob);
-    if (isCompleted) {
-      sourceJob.setState(JobState.COMPLETED);
-      jobService.update(sourceJob);
-      if (sourceJob.isRoot()) {
-        eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
+    try {
+      JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
+      if (event.isFromScatter()) {
+        jobService.resetOutputPortCounters(sourceJob, event.getNumberOfScattered());
       }
-    }
-    
-    if (sourceJob.isScatterWrapper()) {
-      processScatterWrapper(sourceJob, sourceVariable, event);
-      return;
-    }
-    
-    boolean isOutputPortReady = jobService.isOutputPortReady(sourceJob, event.getPortId());
-    if (isOutputPortReady) {
-      processReadyOutputPort(sourceJob, sourceVariable, event);
+      VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
+      jobService.decrementPortCounter(sourceJob, event.getPortId(), LinkPortType.OUTPUT);
+      variableService.addValue(sourceVariable, event.getValue(), event.getPosition());
+      jobService.update(sourceJob);
+      variableService.update(sourceVariable);
+
+      boolean isCompleted = jobService.isCompleted(sourceJob);
+      if (isCompleted) {
+        sourceJob.setState(JobState.COMPLETED);
+        jobService.update(sourceJob);
+        if (sourceJob.isRoot()) {
+          eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
+        }
+      }
+
+      if (sourceJob.isScatterWrapper()) {
+        processScatterWrapper(sourceJob, sourceVariable, event);
+        return;
+      }
+
+      boolean isOutputPortReady = jobService.isOutputPortReady(sourceJob, event.getPortId());
+      if (isOutputPortReady) {
+        processReadyOutputPort(sourceJob, sourceVariable, event);
+      }
+    } catch (EngineServiceException e) {
+      logger.error("Failed to handle OutputUpdateEvent " + event, e);
+      throw new EventHandlerException("Failed to handle OutputUpdateEvent " + event, e);
     }
   }
   
-  private void processScatterWrapper(JobRecord sourceJob, VariableRecord sourceVariable, OutputUpdateEvent event) throws EventHandlerException {
+  private void processScatterWrapper(JobRecord sourceJob, VariableRecord sourceVariable, OutputUpdateEvent event) throws EventHandlerException, EngineServiceException {
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(sourceJob.getScatterStrategy().getScatterMethod());
     
     Object value = null;
@@ -144,7 +154,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     }
   }
   
-  private void processReadyOutputPort(JobRecord sourceJob, VariableRecord sourceVariable, OutputUpdateEvent event) throws EventHandlerException {
+  private void processReadyOutputPort(JobRecord sourceJob, VariableRecord sourceVariable, OutputUpdateEvent event) throws EventHandlerException, EngineServiceException {
     List<LinkRecord> links = linkService.findBySource(event.getJobId(), event.getPortId(), event.getContextId());
     for (LinkRecord link : links) {
       List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());

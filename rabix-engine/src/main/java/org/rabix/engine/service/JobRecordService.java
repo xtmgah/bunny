@@ -12,12 +12,16 @@ import org.rabix.engine.db.JobRecordRepository;
 import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.JobRecord.PortCounter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 public class JobRecordService {
 
+  private final static Logger logger = LoggerFactory.getLogger(JobRecordService.class);
+  
   public static enum JobState {
     PENDING,
     READY,
@@ -38,67 +42,63 @@ public class JobRecordService {
   }
   
   @Transactional
-  public void create(JobRecord jobRecord) {
+  public void create(JobRecord jobRecord) throws EngineServiceException {
     try {
       jobRecordRepository.insert(jobRecord);
     } catch (DBException e) {
-      // TODO handle
-      e.printStackTrace();
+      logger.error("Failed to insert JobRecord " + jobRecord, e);
+      throw new EngineServiceException("Failed to insert JobRecord " + jobRecord, e);
     }
   }
 
   @Transactional
-  public void update(JobRecord jobRecord) {
+  public void update(JobRecord jobRecord) throws EngineServiceException {
     try {
       jobRecordRepository.update(jobRecord);
     } catch (DBException e) {
-      // TODO handle
-      e.printStackTrace();
+      logger.error("Failed to update JobRecord + " + jobRecord, e);
+      throw new EngineServiceException("Failed to update JobRecord + " + jobRecord, e);
     }
   }
   
   @Transactional
-  public List<JobRecord> findReady(String contextId) {
+  public List<JobRecord> findReady(String contextId) throws EngineServiceException {
     try {
       return jobRecordRepository.findReady(contextId);
     } catch (DBException e) {
-      // TODO handle
-      e.printStackTrace();
+      logger.error("Failed to find ready JobRecords for rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find ready JobRecords for rootId=" + contextId, e);
     }
-    return null;
   }
   
   @Transactional
-  public JobRecord find(String id, String contextId) {
+  public JobRecord find(String id, String contextId) throws EngineServiceException {
     try {
       return jobRecordRepository.find(id, contextId);
     } catch (DBException e) {
-      // TODO handle
-      e.printStackTrace();
+      logger.error("Failed to find JobRecord for id=" + id + " and rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find JobRecord for id=" + id + " and rootId=" + contextId, e);
     }
-    return null;
   }
   
   @Transactional
-  public JobRecord findRoot(String contextId) {
+  public JobRecord findRoot(String contextId) throws EngineServiceException {
     try {
       return jobRecordRepository.findRoot(contextId);
     } catch (DBException e) {
-      // TODO handle
-      e.printStackTrace();
+      logger.error("Failed to find root JobRecord for rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find root JobRecord for rootId=" + contextId, e);
     }
-    return null;
   }
   
   @Transactional
-  public List<JobRecord> find(String contextId) {
+  public List<JobRecord> find(String contextId) throws EngineServiceException {
     try {
       return jobRecordRepository.find(contextId);
     } catch (DBException e) {
-      // TODO handle
-      e.printStackTrace();
+      logger.error("Failed to find JobRecords for rootId=" + contextId, e);
+      throw new EngineServiceException("Failed to find JobRecords for rootId=" + contextId, e);
     }
-    return null;
   }
   
   public PortCounter getInputCounter(JobRecord jobRecord, String port) {

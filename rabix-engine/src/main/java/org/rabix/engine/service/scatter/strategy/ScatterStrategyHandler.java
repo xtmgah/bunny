@@ -6,6 +6,7 @@ import java.util.List;
 import org.rabix.bindings.BindingException;
 import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.rabix.engine.model.scatter.ScatterStrategy;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.scatter.RowMapping;
 
 public interface ScatterStrategyHandler {
@@ -20,7 +21,7 @@ public interface ScatterStrategyHandler {
 
   void commit(ScatterStrategy strategy, List<RowMapping> mappings);
 
-  LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId);
+  LinkedList<Object> values(ScatterStrategy strategy, String jobId, String portId, String contextId) throws EngineServiceException;
 
   void enable(ScatterStrategy strategy, String port, Object value, Integer position);
 

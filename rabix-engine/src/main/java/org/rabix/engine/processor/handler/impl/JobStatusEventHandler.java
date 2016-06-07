@@ -29,14 +29,19 @@ import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.ScatterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
+  private final static Logger logger = LoggerFactory.getLogger(JobStatusEventHandler.class);
+  
   private final DAGNodeService dagNodeService;
   private final ScatterService scatterHelper;
   private final EventProcessor eventProcessor;
@@ -59,38 +64,43 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   @Override
   @Transactional
   public void handle(JobStatusEvent event) throws EventHandlerException {
-    JobRecord jobRecord = jobRecordService.find(event.getJobId(), event.getContextId());
+    try {
+      JobRecord jobRecord = jobRecordService.find(event.getJobId(), event.getContextId());
 
-    switch (event.getState()) {
-    case READY:
-      jobRecord.setState(JobState.READY);
-      ready(jobRecord, event.getContextId());
-      jobRecordService.update(jobRecord);
-      break;
-    case RUNNING:
-      jobRecord.setState(JobState.RUNNING);
-      jobRecordService.update(jobRecord);
-      break;
-    case COMPLETED:
-      for (PortCounter portCounter : jobRecord.getOutputCounters()) {
-        Object output = event.getResult().get(portCounter.getPort());
-        eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
+      switch (event.getState()) {
+      case READY:
+        jobRecord.setState(JobState.READY);
+        ready(jobRecord, event.getContextId());
+        jobRecordService.update(jobRecord);
+        break;
+      case RUNNING:
+        jobRecord.setState(JobState.RUNNING);
+        jobRecordService.update(jobRecord);
+        break;
+      case COMPLETED:
+        for (PortCounter portCounter : jobRecord.getOutputCounters()) {
+          Object output = event.getResult().get(portCounter.getPort());
+          eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
+        }
+        break;
+      case FAILED:
+        jobRecord.setState(JobState.FAILED);
+        jobRecordService.update(jobRecord);
+        eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
+        break;
+      default:
+        break;
       }
-      break;
-    case FAILED:
-      jobRecord.setState(JobState.FAILED);
-      jobRecordService.update(jobRecord);
-      eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
-      break;
-    default:
-      break;
+    } catch (EngineServiceException e) {
+      logger.error("Failed to handle JobStatusEvent " + event, e);
+      throw new EventHandlerException("Failed to handle JobStatusEvent " + event, e);
     }
   }
   
   /**
    * Job is ready
    */
-  public void ready(JobRecord job, String contextId) throws EventHandlerException {
+  private void ready(JobRecord job, String contextId) throws EventHandlerException, EngineServiceException {
     job.setState(JobState.READY);
     
     if (job.isContainer()) {
@@ -154,7 +164,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   /**
    * Unwraps {@link DAGContainer}
    */
-  private void rollOutContainer(JobRecord job, DAGNodeGraph containerNode, String contextId) {
+  private void rollOutContainer(JobRecord job, DAGNodeGraph containerNode, String contextId) throws EngineServiceException {
     for (DAGNodeGraph node : containerNode.getChildren()) {
       String newJobId = InternalSchemaHelper.concatenateIds(job.getId(), InternalSchemaHelper.getLastPart(node.getId()));
 
@@ -204,7 +214,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   /**
    * Handle links for roll-out 
    */
-  private void handleLinkPort(JobRecord job, DAGLinkPort linkPort) {
+  private void handleLinkPort(JobRecord job, DAGLinkPort linkPort) throws EngineServiceException {
     if (linkPort.getType().equals(LinkPortType.INPUT)) {
       if (job.getState().equals(JobState.PENDING)) {
         jobRecordService.incrementPortCounter(job, linkPort, LinkPortType.INPUT);

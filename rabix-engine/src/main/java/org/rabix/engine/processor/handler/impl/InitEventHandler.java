@@ -21,7 +21,10 @@ import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.DAGNodeService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -31,14 +34,18 @@ import com.google.inject.persist.Transactional;
  */
 public class InitEventHandler implements EventHandler<InitEvent> {
 
+  private final static Logger logger = LoggerFactory.getLogger(InitEventHandler.class);
+  
   private DAGNodeService dagNodeService;
   private EventProcessor eventProcessor;
   private JobRecordService jobRecordService;
   private ContextRecordService contextRecordService;
   private VariableRecordService variableRecordService;
-  
+
   @Inject
-  public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService) {
+  public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService,
+      VariableRecordService variableRecordService, ContextRecordService contextRecordService,
+      DAGNodeService dagNodeService) {
     this.dagNodeService = dagNodeService;
     this.eventProcessor = eventProcessor;
     this.jobRecordService = jobRecordService;
@@ -48,42 +55,47 @@ public class InitEventHandler implements EventHandler<InitEvent> {
 
   @Transactional
   public void handle(final InitEvent event) throws EventHandlerException {
-    ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
-    
-    contextRecordService.create(context);
-    DAGNodeGraph node = dagNodeService.insert(event.getNode(), event.getContextId());
-    JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node.isContainer(), false, false);
+    try {
+      ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
 
-    for (DAGLinkPort inputPort : node.getInputPorts()) {
-      if (job.getState().equals(JobState.PENDING)) {
-        jobRecordService.incrementPortCounter(job, inputPort, LinkPortType.INPUT);
+      contextRecordService.create(context);
+      DAGNodeGraph node = dagNodeService.insert(event.getNode(), event.getContextId());
+      JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node.isContainer(), false, false);
+
+      for (DAGLinkPort inputPort : node.getInputPorts()) {
+        if (job.getState().equals(JobState.PENDING)) {
+          jobRecordService.incrementPortCounter(job, inputPort, LinkPortType.INPUT);
+        }
+        Object defaultValue = node.getDefaults().get(inputPort.getId());
+        VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), inputPort.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
+        variableRecordService.create(variable);
       }
-      Object defaultValue = node.getDefaults().get(inputPort.getId());
-      VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), inputPort.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
-      variableRecordService.create(variable);
-    }
 
-    for (DAGLinkPort outputPort : node.getOutputPorts()) {
-      jobRecordService.incrementPortCounter(job, outputPort, LinkPortType.OUTPUT);
+      for (DAGLinkPort outputPort : node.getOutputPorts()) {
+        jobRecordService.incrementPortCounter(job, outputPort, LinkPortType.OUTPUT);
 
-      VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), outputPort.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(outputPort.getId(), outputPort.getType()));
-      variableRecordService.create(variable);
-    }
-    jobRecordService.create(job);
+        VariableRecord variable = new VariableRecord(event.getContextId(), event.getNode().getId(), outputPort.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(outputPort.getId(), outputPort.getType()));
+        variableRecordService.create(variable);
+      }
+      jobRecordService.create(job);
 
-    if (node.getInputPorts().isEmpty()) {
-      // the node is ready
-      eventProcessor.send(new JobStatusEvent(job.getId(), event.getContextId(), JobState.READY, null));
-      return;
-    }
-    
-    Map<String, Object> mixedInputs = mixInputs(node, event.getValue());
-    for (DAGLinkPort inputPort : node.getInputPorts()) {
-      Object value = mixedInputs.get(inputPort.getId());
-      eventProcessor.send(new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, 1));
+      if (node.getInputPorts().isEmpty()) {
+        // the node is ready
+        eventProcessor.send(new JobStatusEvent(job.getId(), event.getContextId(), JobState.READY, null));
+        return;
+      }
+
+      Map<String, Object> mixedInputs = mixInputs(node, event.getValue());
+      for (DAGLinkPort inputPort : node.getInputPorts()) {
+        Object value = mixedInputs.get(inputPort.getId());
+        eventProcessor.send(new InputUpdateEvent(event.getContextId(), event.getNode().getId(), inputPort.getId(), value, 1));
+      }
+    } catch (EngineServiceException e) {
+      logger.error("Failed to handle InitEvent " + event, e);
+      throw new EventHandlerException("Failed to handle InitEvent " + event, e);
     }
   }
-  
+
   @SuppressWarnings("unchecked")
   private Map<String, Object> mixInputs(DAGNodeGraph dagNode, Map<String, Object> inputs) {
     Map<String, Object> mixedInputs;
