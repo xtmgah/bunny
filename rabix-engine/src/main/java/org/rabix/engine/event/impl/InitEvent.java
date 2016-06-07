@@ -6,17 +6,25 @@ import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.event.Event;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * This event is a starter event. It triggers the algorithm start. 
  */
 public class InitEvent implements Event {
 
+  @JsonProperty("node")
   private final DAGNode node;
+  @JsonProperty("value")
   private final Map<String, Object> value;
+  @JsonProperty("rootId")
   private final String rootId;
+  @JsonProperty("context")
   private final Context context;
   
-  public InitEvent(Context context, String rootId, DAGNode node, Map<String, Object> value) {
+  @JsonCreator
+  public InitEvent(@JsonProperty("context") Context context, @JsonProperty("rootId") String rootId, @JsonProperty("node") DAGNode node, @JsonProperty("value") Map<String, Object> value) {
     this.node = node;
     this.value = value;
     this.rootId = rootId;

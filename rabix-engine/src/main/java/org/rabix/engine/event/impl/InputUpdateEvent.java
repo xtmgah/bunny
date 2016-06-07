@@ -2,26 +2,33 @@ package org.rabix.engine.event.impl;
 
 import org.rabix.engine.event.Event;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * This event is used to update one input (per port) for the specific Job. It triggers the algorithm cycle.
  */
 public class InputUpdateEvent implements Event {
 
+  @JsonProperty("jobId")
   private final String jobId;
+  @JsonProperty("contextId")
   private final String contextId;
   
+  @JsonProperty("portId")
   private final String portId;
+  @JsonProperty("value")
   private final Object value;
 
+  @JsonProperty("position")
   private final Integer position;
+  @JsonProperty("numberOfScattered")
   private final Integer numberOfScattered;      // number of scattered nodes
+  @JsonProperty("isLookAhead")
   private final boolean isLookAhead;            // it's a look ahead event
   
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, Integer position) {
-    this(contextId, jobId, portId, value, false, null, position);
-  }
-
-  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, boolean isLookAhead, Integer scatteredNodes, Integer position) {
+  @JsonCreator
+  public InputUpdateEvent(@JsonProperty("contextId") String contextId, @JsonProperty("jobId") String jobId, @JsonProperty("portId") String portId, @JsonProperty("value") Object value, @JsonProperty("isLookAhead") boolean isLookAhead, @JsonProperty("scatteredNodes") Integer scatteredNodes, @JsonProperty("position") Integer position) {
     this.jobId = jobId;
     this.portId = portId;
     this.value = value;
@@ -29,6 +36,10 @@ public class InputUpdateEvent implements Event {
     this.isLookAhead = isLookAhead;
     this.numberOfScattered = scatteredNodes;
     this.position = position;
+  }
+  
+  public InputUpdateEvent(String contextId, String jobId, String portId, Object value, Integer position) {
+    this(contextId, jobId, portId, value, false, null, position);
   }
 
   public String getJobId() {

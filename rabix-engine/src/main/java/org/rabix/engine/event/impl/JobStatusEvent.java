@@ -5,15 +5,23 @@ import java.util.Map;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.service.JobRecordService.JobState;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class JobStatusEvent implements Event {
 
+  @JsonProperty("jobId")
   private final String jobId;
+  @JsonProperty("state")
   private final JobState state;
+  @JsonProperty("contextId")
   private final String contextId;
   
+  @JsonProperty("result")
   private final Map<String, Object> result;
   
-  public JobStatusEvent(String jobId, String contextId, JobState state, Map<String, Object> result) {
+  @JsonCreator
+  public JobStatusEvent(@JsonProperty("jobId") String jobId, @JsonProperty("contextId") String contextId, @JsonProperty("state") JobState state, @JsonProperty("result") Map<String, Object> result) {
     this.jobId = jobId;
     this.contextId = contextId;
     this.state = state;
