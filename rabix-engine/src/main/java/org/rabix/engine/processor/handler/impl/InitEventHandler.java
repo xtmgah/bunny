@@ -36,7 +36,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
   private JobRecordService jobRecordService;
   private ContextRecordService contextRecordService;
   private VariableRecordService variableRecordService;
-
+  
   @Inject
   public InitEventHandler(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeService dagNodeService) {
     this.dagNodeService = dagNodeService;
@@ -51,8 +51,7 @@ public class InitEventHandler implements EventHandler<InitEvent> {
     ContextRecord context = new ContextRecord(event.getRootId(), event.getContext().getConfig(), ContextStatus.RUNNING);
     
     contextRecordService.create(context);
-    DAGNodeGraph node = dagNodeService.load(event.getNode(), event.getContextId());
-    
+    DAGNodeGraph node = dagNodeService.insert(event.getNode(), event.getContextId());
     JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node.isContainer(), false, false);
 
     for (DAGLinkPort inputPort : node.getInputPorts()) {

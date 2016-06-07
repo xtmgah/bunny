@@ -53,7 +53,7 @@ public class ScatterService {
    */
   @SuppressWarnings("unchecked")
   public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
-    DAGNodeGraph node = dagNodeService.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
+    DAGNodeGraph node = dagNodeService.find(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
     ScatterStrategyHandler scatterStrategyHandler = scatterStrategyHandlerFactory.create(node.getScatterMethod());
     if (job.getScatterStrategy() == null) {

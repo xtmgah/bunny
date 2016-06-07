@@ -35,7 +35,7 @@ public class JobHelper {
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        DAGNodeGraph node = dagNodeService.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
+        DAGNodeGraph node = dagNodeService.find(InternalSchemaHelper.normalizeId(job.getId()), contextId);
 
         Map<String, Object> inputs = new HashMap<>();
         List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);

@@ -13,7 +13,10 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class DAGNodeRecord {
 
@@ -47,6 +50,8 @@ public class DAGNodeRecord {
     return "DAGNodeRecord [dagNode=" + dagNode + ", contextId=" + contextId + "]";
   }
 
+  @JsonInclude(Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class DAGNodeGraph {
 
     @JsonProperty("id")

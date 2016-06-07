@@ -2,15 +2,23 @@ package org.rabix.bindings.model.dag;
 
 import org.rabix.bindings.model.LinkMerge;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class DAGLink {
 
+  @JsonProperty("source")
   private final DAGLinkPort source;
+  @JsonProperty("destination")
   private final DAGLinkPort destination;
   
+  @JsonProperty("position")
   private final Integer position;
+  @JsonProperty("linkMerge")
   private final LinkMerge linkMerge;
 
-  public DAGLink(DAGLinkPort source, DAGLinkPort destination, LinkMerge linkMerge, Integer position) {
+  @JsonCreator
+  public DAGLink(@JsonProperty("source") DAGLinkPort source, @JsonProperty("destination") DAGLinkPort destination, @JsonProperty("linkMerge") LinkMerge linkMerge, @JsonProperty("position") Integer position) {
     this.source = source;
     this.position = position;
     this.linkMerge = linkMerge;

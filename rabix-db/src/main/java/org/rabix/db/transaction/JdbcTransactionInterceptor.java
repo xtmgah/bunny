@@ -22,6 +22,7 @@ public class JdbcTransactionInterceptor implements MethodInterceptor {
       transactionService.commit();
       return result;
     } catch (Exception e) {
+      e.printStackTrace();
       logger.error("Failed to commit transaction!", e);
       try {
         transactionService.rollback();

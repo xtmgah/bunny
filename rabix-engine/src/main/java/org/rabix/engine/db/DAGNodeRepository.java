@@ -6,79 +6,41 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.postgresql.util.PGobject;
-import org.rabix.bindings.BindingException;
-import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.helper.URIHelper;
-import org.rabix.bindings.model.Application;
-import org.rabix.bindings.model.ScatterMethod;
-import org.rabix.bindings.model.dag.DAGLinkPort;
-import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.db.DBException;
 import org.rabix.db.transaction.JdbcTransactionHolder;
+import org.rabix.engine.model.DAGNodeRecord.DAGNodeGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 public class DAGNodeRepository {
 
   private final static Logger logger = LoggerFactory.getLogger(DAGNodeRepository.class);
   
-  private static final String SELECT_DAG_NODE = "SELECT * FROM DAG_NODE WHERE ID=? AND CONTEXT_ID=?;";
-  
-  private static final String INSERT_DAG_NODE = "INSERT INTO DAG_NODE (ID,CONTEXT_ID,APPLICATION,SCATTER_METHOD,INPUT_PORTS,OUTPUT_PORTS,DEFAULTS) VALUES (?,?,?::json,?,?::json,?::json,?::json);";
+  private static final String INSERT_DAG_NODE = "INSERT INTO DAG_NODE (ID,DAG) VALUES (?,?::json);";
 
-  public void insert(DAGNode dagNode, String contextId) throws DBException {
+  private static final String SELECT_DAG_NODE = 
+                "WITH RECURSIVE flattened AS "
+              + "(\r\n\tSELECT null AS parent, cast (dag->'id' AS TEXT) AS id, dag AS node, dag->'isContainer' AS is_container, id AS root_external_id\r\n\tFROM DAG_NODE WHERE ( dag->>'children' ) IS NOT NULL"
+              + "   \r\nUNION ALL"
+              + "   \r\n\tSELECT cast (f.node->'id' AS TEXT) AS parent, cast (json_array_elements(f.node->'children')->'id' AS TEXT) AS id, json_array_elements(f.node->'children') AS node, json_array_elements(f.node->'children')->'isContainer' AS is_container, f.root_external_id AS root_external_id"
+              + "\r\n\tFROM flattened f WHERE (f.node->'children') IS NOT NULL"
+              + "\r\n)\r\nSELECT parent, id, node, is_container, root_external_id FROM flattened AS f\r\nWHERE id=? AND root_external_id=?;";
+  
+  public void insert(DAGNodeGraph dagNode, String contextId) throws DBException {
     PreparedStatement stmt = null;
     try {
       Connection c = JdbcTransactionHolder.getCurrentTransaction().getConnection();
 
       stmt = c.prepareStatement(INSERT_DAG_NODE);
-
-      stmt.setString(1, dagNode.getId());
-      stmt.setString(2, contextId);
+      stmt.setString(1, contextId);
 
       PGobject appObject = new PGobject();
       appObject.setType("json");
-      if (dagNode.getApp() == null) {
-        appObject.setValue(null);
-      } else {
-        appObject.setValue(dagNode.getApp().serialize());
-      }
-      stmt.setObject(3, appObject);
-      
-      stmt.setString(4, dagNode.getScatterMethod().name());
-      
-      PGobject inputPortsObj = new PGobject();
-      inputPortsObj.setType("json");
-      if (dagNode.getInputPorts() == null) {
-        inputPortsObj.setValue(null);
-      } else {
-        inputPortsObj.setValue(JSONHelper.writeObject(dagNode.getInputPorts()));
-      }
-      stmt.setObject(5, inputPortsObj);
-      
-      PGobject outputPortsObj = new PGobject();
-      outputPortsObj.setType("json");
-      if (dagNode.getInputPorts() == null) {
-        outputPortsObj.setValue(null);
-      } else {
-        outputPortsObj.setValue(JSONHelper.writeObject(dagNode.getOutputPorts()));
-      }
-      stmt.setObject(6, outputPortsObj);
-      
-      PGobject defaultsObj = new PGobject();
-      defaultsObj.setType("json");
-      if (dagNode.getDefaults() == null) {
-        defaultsObj.setValue(null);
-      } else {
-        defaultsObj.setValue(JSONHelper.writeObject(dagNode.getDefaults()));
-      }
-      stmt.setObject(7, defaultsObj);
+      appObject.setValue(JSONHelper.writeObject(dagNode));
+      stmt.setObject(2, appObject);
       
       stmt.executeUpdate();
     } catch (SQLException e) {
@@ -87,52 +49,37 @@ public class DAGNodeRepository {
     }
   }
   
-  public DAGNode find(String id, String contextId) throws DBException {
+  public DAGNodeGraph find(String id, String contextId) throws DBException {
     PreparedStatement stmt = null;
     try {
       Connection c = JdbcTransactionHolder.getCurrentTransaction().getConnection();
 
       stmt = c.prepareStatement(SELECT_DAG_NODE);
-      stmt.setString(1, id);
+      stmt.setString(1, "\"" + id + "\"");
       stmt.setString(2, contextId);
 
       ResultSet result = stmt.executeQuery();
-      List<DAGNode> dagNodes = convertToDAGNodes(result);
+      List<DAGNodeGraph> dagNodes = convertToDAGNodes(result);
       stmt.close();
 
-      return dagNodes.size() == 1 ? dagNodes.get(0) : null;
+      return dagNodes.size() == 1? dagNodes.get(0) : null;
     } catch (SQLException e) {
-      logger.error("Failed to find DAGNode for id=" + id + " and contextId=" + contextId, e);
-      throw new DBException("Failed to find DAGNode for id=" + id + " and contextId=" + contextId, e);
+      logger.error("Failed to find DAGNodeGraph for id=" + id + " and rootId=" + contextId, e);
+      throw new DBException("Failed to find DAGNodeGraph for id=" + id + " and rootId=" + contextId, e);
     }
   }
   
-  private List<DAGNode> convertToDAGNodes(ResultSet resultSet) throws SQLException {
-    List<DAGNode> result = new ArrayList<>();
+  private List<DAGNodeGraph> convertToDAGNodes(ResultSet resultSet) throws SQLException {
+    List<DAGNodeGraph> result = new ArrayList<>();
 
     while (resultSet.next()) {
-      String id = resultSet.getString("ID");
-      String application = resultSet.getString("APPLICATION");
-      String scatterMethod = resultSet.getString("SCATTER_METHOD");
-      String inputPorts = resultSet.getString("INPUT_PORTS");
-      String outputPorts = resultSet.getString("OUTPUT_PORTS");
-      String defaults = resultSet.getString("DEFAULTS");
-
-      String applicationDataUri = URIHelper.createDataURI(application);
-      
-      Application applicationObj = null;
       try {
-        applicationObj = BindingsFactory.create(applicationDataUri).loadAppObject(applicationDataUri);
-      } catch (BindingException e) {
-        throw new SQLException("Failed to deserialize application " + application);
+      String node = resultSet.getString("NODE");
+      result.add(JSONHelper.readObject(node, DAGNodeGraph.class));
+      } catch(Exception e) {
+        e.printStackTrace();
       }
-      List<DAGLinkPort> inputPortsObj = JSONHelper.readObject(inputPorts, new TypeReference<List<DAGLinkPort>>() {});
-      List<DAGLinkPort> outputPortsObj = JSONHelper.readObject(outputPorts, new TypeReference<List<DAGLinkPort>>() {});
-      ScatterMethod scatterMethodObj = scatterMethod != null ? ScatterMethod.valueOf(scatterMethod) : null;
-      Map<String, Object> defaultsObj = JSONHelper.readMap(defaults);
-      result.add(new DAGNode(id, inputPortsObj, outputPortsObj, scatterMethodObj, applicationObj, defaultsObj));
     }
     return result;
   }
-  
 }

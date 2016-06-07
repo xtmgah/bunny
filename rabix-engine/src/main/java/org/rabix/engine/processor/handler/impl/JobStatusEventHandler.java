@@ -98,9 +98,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
 
       DAGNodeGraph containerNode;
       if (job.isScattered()) {
-        containerNode = dagNodeService.get(InternalSchemaHelper.getJobIdFromScatteredId(job.getId()), contextId);
+        containerNode = dagNodeService.find(InternalSchemaHelper.getJobIdFromScatteredId(job.getId()), contextId);
       } else {
-        containerNode = dagNodeService.get(job.getId(), contextId);
+        containerNode = dagNodeService.find(job.getId(), contextId);
       }
       rollOutContainer(job, containerNode, contextId);
 
@@ -144,7 +144,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       }
       
       for (DAGLink link : node.getLinks()) {
-        nodesWithoutDestination.remove(link.getDestination().getNodeId());
+        nodesWithoutDestination.remove(link.getDestination().getDagNodeId());
       }
       return nodesWithoutDestination;
     }
@@ -176,7 +176,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       String originalJobID = InternalSchemaHelper.normalizeId(job.getId());
 
       String sourceNodeId = originalJobID;
-      String linkSourceNodeId = link.getSource().getNodeId();
+      String linkSourceNodeId = link.getSource().getDagNodeId();
       if (linkSourceNodeId.startsWith(originalJobID)) {
         if (linkSourceNodeId.equals(sourceNodeId)) {
           sourceNodeId = job.getId();
@@ -185,7 +185,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         }
       }
       String destinationNodeId = originalJobID;
-      String linkDestinationNodeId = link.getDestination().getNodeId();
+      String linkDestinationNodeId = link.getDestination().getDagNodeId();
       if (linkDestinationNodeId.startsWith(originalJobID)) {
         if (linkDestinationNodeId.equals(destinationNodeId)) {
           destinationNodeId = job.getId();

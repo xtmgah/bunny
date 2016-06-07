@@ -56,7 +56,7 @@ public class InputEventHandler implements EventHandler<InputUpdateEvent> {
     JobRecord job = jobService.find(event.getJobId(), event.getContextId());
     VariableRecord variable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.INPUT, event.getContextId());
 
-    DAGNodeGraph node = dagNodeService.get(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
+    DAGNodeGraph node = dagNodeService.find(InternalSchemaHelper.normalizeId(job.getId()), event.getContextId());
 
     if (event.isLookAhead()) {
       int numberOfIncomingLinks = jobService.getInputPortIncoming(job, event.getPortId());
