@@ -11,7 +11,6 @@ import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
-import org.rabix.transport.mechanism.TransportPlugin;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
 import org.rabix.transport.mechanism.TransportPluginException;
@@ -26,7 +25,7 @@ public class EngineStubRabbitMQ implements EngineStub {
   
   private BackendRabbitMQ backendRabbitMQ;
   private ExecutorService executorService;
-  private TransportPlugin<TransportQueueRabbitMQ> transportPlugin;
+  private TransportPluginRabbitMQ transportPlugin;
 
   private ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
   private ScheduledExecutorService scheduledHeartbeatService = Executors.newSingleThreadScheduledExecutor();
@@ -46,6 +45,20 @@ public class EngineStubRabbitMQ implements EngineStub {
     EngineConfiguration engineConfiguration = backendRabbitMQ.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getHeartbeatRoutingKey());
+    
+    initialize();
+  }
+  
+  /**
+   * Try to initialize both exchanges (engine, backend)
+   */
+  private void initialize() {
+    try {
+      transportPlugin.initializeExchange(backendRabbitMQ.getBackendConfiguration().getExchange(), backendRabbitMQ.getBackendConfiguration().getExchangeType());
+      transportPlugin.initializeExchange(backendRabbitMQ.getEngineConfiguration().getExchange(), backendRabbitMQ.getEngineConfiguration().getExchangeType());
+    } catch (TransportPluginException e) {
+      // do nothing
+    }
   }
   
   @Override

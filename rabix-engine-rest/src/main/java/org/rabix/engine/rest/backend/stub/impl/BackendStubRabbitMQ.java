@@ -48,6 +48,20 @@ public class BackendStubRabbitMQ implements BackendStub {
     EngineConfiguration engineConfiguration = backend.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getHeartbeatRoutingKey());
+    
+    initialize();
+  }
+  
+  /**
+   * Try to initialize both exchanges (engine, backend)
+   */
+  private void initialize() {
+    try {
+      transportPluginMQ.initializeExchange(backendRabbitMQ.getBackendConfiguration().getExchange(), backendRabbitMQ.getBackendConfiguration().getExchangeType());
+      transportPluginMQ.initializeExchange(backendRabbitMQ.getEngineConfiguration().getExchange(), backendRabbitMQ.getEngineConfiguration().getExchangeType());
+    } catch (TransportPluginException e) {
+      // do nothing
+    }
   }
 
   @Override
@@ -60,6 +74,7 @@ public class BackendStubRabbitMQ implements BackendStub {
             @Override
             public void handleReceive(Job job) throws TransportPluginException {
               try {
+                logger.info("Received Job " + job);
                 jobService.update(job);
               } catch (JobServiceException e) {
                 throw new TransportPluginException("Failed to update Job", e);

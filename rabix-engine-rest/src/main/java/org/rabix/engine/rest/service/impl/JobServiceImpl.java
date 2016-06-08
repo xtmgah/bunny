@@ -159,6 +159,9 @@ public class JobServiceImpl implements JobService {
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
       Set<Job> jobs = getReady(eventProcessor, contextId);
+      if (jobs.isEmpty()) {
+        return;
+      }
       for (Job job : jobs) {
         jobDB.update(job);
       }

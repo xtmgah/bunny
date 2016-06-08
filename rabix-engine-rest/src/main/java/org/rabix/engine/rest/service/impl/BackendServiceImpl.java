@@ -53,7 +53,6 @@ public class BackendServiceImpl implements BackendService {
       String backendExchangeType = TransportConfigRabbitMQ.getBackendExchangeType(configuration);
       String backendReceiveRoutingKey = TransportConfigRabbitMQ.getBackendReceiveRoutingKey(configuration);
       
-      backendExchange = backendExchange + "_" + backend.getId();
       BackendConfiguration backendConfiguration = new BackendConfiguration(backendExchange, backendExchangeType, backendReceiveRoutingKey);
       ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
     }

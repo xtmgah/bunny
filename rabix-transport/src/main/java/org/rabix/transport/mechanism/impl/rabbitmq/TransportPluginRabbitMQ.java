@@ -47,13 +47,31 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
     }
   }
   
+  /**
+   * {@link TransportPluginRabbitMQ} extension for Exchange initialization 
+   */
+  public void initializeExchange(String exchange, String type) throws TransportPluginException {
+    Channel channel = null;
+    try {
+      channel = connection.createChannel();
+      channel.exchangeDeclare(exchange, type);
+    } catch (Exception e) {
+      throw new TransportPluginException("Failed to declare RabbitMQ exchange " + exchange + " and type " + type, e);
+    } finally {
+      if (channel != null) {
+        try {
+          channel.close();
+        } catch (Exception ignore) { }
+      }
+    }
+  }
+  
   @Override
   public <T> ResultPair<T> send(TransportQueueRabbitMQ queue, T entity) {
     Channel channel = null;
     try {
       channel = connection.createChannel();
       
-      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
       String payload = BeanSerializer.serializeFull(entity);
       channel.basicPublish(queue.getExchange(), queue.getRoutingKey(), null, payload.getBytes(DEFAULT_ENCODING));
       return ResultPair.success();
@@ -75,7 +93,6 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
     try {
       channel = connection.createChannel();
       
-      channel.exchangeDeclare(queue.getExchange(), queue.getExchangeType());
       String queueName = channel.queueDeclare().getQueue();
       channel.queueBind(queueName, queue.getExchange(), queue.getRoutingKey());
 
