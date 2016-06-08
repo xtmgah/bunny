@@ -46,15 +46,19 @@ public class BackendServiceImpl implements BackendService {
   }
   
   private <T extends Backend> T populate(T backend) {
-    backend.setId(generateUniqueBackendId());
-    
+    if (backend.getId() == null) {
+      backend.setId(generateUniqueBackendId());
+    }
+    // TODO remove hack
     if (BackendType.RABBIT_MQ.equals(backend.getType())) {
-      String backendExchange = TransportConfigRabbitMQ.getBackendExchange(configuration);
-      String backendExchangeType = TransportConfigRabbitMQ.getBackendExchangeType(configuration);
-      String backendReceiveRoutingKey = TransportConfigRabbitMQ.getBackendReceiveRoutingKey(configuration);
-      
-      BackendConfiguration backendConfiguration = new BackendConfiguration(backendExchange, backendExchangeType, backendReceiveRoutingKey);
-      ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
+      if (((BackendRabbitMQ) backend).getBackendConfiguration() == null) {
+        String backendExchange = TransportConfigRabbitMQ.getBackendExchange(configuration);
+        String backendExchangeType = TransportConfigRabbitMQ.getBackendExchangeType(configuration);
+        String backendReceiveRoutingKey = TransportConfigRabbitMQ.getBackendReceiveRoutingKey(configuration);
+
+        BackendConfiguration backendConfiguration = new BackendConfiguration(backendExchange, backendExchangeType, backendReceiveRoutingKey);
+        ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
+      }
     }
     return backend;
   }
