@@ -138,12 +138,15 @@ public class BackendRabbitMQ extends Backend {
     private String exchangeType;
     @JsonProperty("receive_routing_key")
     private String receiveRoutingKey;
+    @JsonProperty("heartbeatPeriodMills")
+    private Long heartbeatPeriodMills;
     
     @JsonCreator
-    public BackendConfiguration(@JsonProperty("exchange") String exchange, @JsonProperty("exchange_type") String exchangeType, @JsonProperty("receive_routing_key") String receiveRoutingKey) {
+    public BackendConfiguration(@JsonProperty("exchange") String exchange, @JsonProperty("exchange_type") String exchangeType, @JsonProperty("receive_routing_key") String receiveRoutingKey, @JsonProperty("heartbeatPeriodMills") Long heartbeatPeriodMills) {
       this.exchange = exchange;
       this.exchangeType = exchangeType;
       this.receiveRoutingKey = receiveRoutingKey;
+      this.heartbeatPeriodMills = heartbeatPeriodMills;
     }
 
     public String getExchange() {
@@ -156,6 +159,10 @@ public class BackendRabbitMQ extends Backend {
 
     public String getReceiveRoutingKey() {
       return receiveRoutingKey;
+    }
+    
+    public Long getHeartbeatPeriodMills() {
+      return heartbeatPeriodMills;
     }
 
     @Override

@@ -29,7 +29,7 @@ public class BackendDispatcher {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendDispatcher.class);
   
-  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(5);
+  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(10);
 
   private final List<BackendStub> backendStubs = new ArrayList<>();
   private final Map<String, Long> heartbeatInfo = new HashMap<>();
