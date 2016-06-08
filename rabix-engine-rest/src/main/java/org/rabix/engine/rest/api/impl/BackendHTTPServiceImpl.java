@@ -8,11 +8,15 @@ import javax.ws.rs.core.Response.Status;
 import org.rabix.engine.rest.api.BackendHTTPService;
 import org.rabix.engine.rest.service.BackendService;
 import org.rabix.transport.backend.Backend;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
 public class BackendHTTPServiceImpl implements BackendHTTPService {
 
+  private final static Logger logger = LoggerFactory.getLogger(BackendHTTPServiceImpl.class);
+  
   private final BackendService backendService;
   
   @Inject
@@ -25,6 +29,7 @@ public class BackendHTTPServiceImpl implements BackendHTTPService {
     try {
       return ok(backendService.create(backend));
     } catch (Exception e) {
+      logger.error("Failed to create Backend", e);
       return error();
     }
   }
