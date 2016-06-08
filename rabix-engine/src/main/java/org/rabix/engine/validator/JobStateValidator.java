@@ -20,6 +20,7 @@ public class JobStateValidator {
     List<JobState> transitionFromReady = new ArrayList<JobState>();
     transitionFromReady.add(JobState.RUNNING);
     transitionFromReady.add(JobState.FAILED);
+    transitionFromReady.add(JobState.COMPLETED);
     transitions.put(JobState.READY, transitionFromReady);
     List<JobState> transitionFromRunning = new ArrayList<JobState>();
     transitionFromRunning.add(JobState.COMPLETED);
