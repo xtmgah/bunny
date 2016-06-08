@@ -30,7 +30,7 @@ public class BackendHTTPServiceImpl implements BackendHTTPService {
   }
   
   private Response error() {
-    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    return Response.status(Status.BAD_REQUEST).build();
   }
   
   private Response ok() {
