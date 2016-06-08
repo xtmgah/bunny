@@ -57,6 +57,7 @@ public class BackendServiceImpl implements BackendService {
         String backendReceiveRoutingKey = TransportConfigRabbitMQ.getBackendReceiveRoutingKey(configuration);
         Long heartbeatPeriodMills = TransportConfigRabbitMQ.getBackendHeartbeatTimeMills(configuration);
 
+        backendExchange = backendExchange + "_" + backend.getId();
         BackendConfiguration backendConfiguration = new BackendConfiguration(backendExchange, backendExchangeType, backendReceiveRoutingKey, heartbeatPeriodMills);
         ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
       }
