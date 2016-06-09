@@ -74,7 +74,6 @@ public class BackendStubRabbitMQ implements BackendStub {
             @Override
             public void handleReceive(Job job) throws TransportPluginException {
               try {
-                logger.info("Received Job " + job);
                 jobService.update(job);
               } catch (JobServiceException e) {
                 throw new TransportPluginException("Failed to update Job", e);
