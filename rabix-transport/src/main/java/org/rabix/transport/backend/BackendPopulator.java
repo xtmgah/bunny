@@ -7,10 +7,13 @@ import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportConfigRabbitMQ;
 
+import com.google.inject.Inject;
+
 public class BackendPopulator {
 
   private final Configuration configuration;
 
+  @Inject
   public BackendPopulator(Configuration configuration) {
     this.configuration = configuration;
   }
