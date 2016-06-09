@@ -29,7 +29,7 @@ public class BackendDispatcher {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendDispatcher.class);
   
-  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(10);
+  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(5);
 
   private final List<BackendStub> backendStubs = new ArrayList<>();
   private final Map<String, Long> heartbeatInfo = new HashMap<>();
@@ -134,6 +134,7 @@ public class BackendDispatcher {
           if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
             backendStub.stop();
             backendStubs.remove(backendStub);
+            logger.info("Removing Backend {}", backendStub.getBackend().getId());
             
             List<Job> jobsToRemove = new ArrayList<>();
             for (Entry<Job, String> jobBackendEntry : jobBackendMapping.entrySet()) {
@@ -144,6 +145,7 @@ public class BackendDispatcher {
             for (Job job : jobsToRemove) {
               jobBackendMapping.remove(job);
               freeJobs.add(Job.cloneWithStatus(job, JobStatus.READY));
+              logger.info("Reassign Job {} to free Jobs", job.getId());
             }
           }
         }
