@@ -109,7 +109,7 @@ public class BackendDispatcher {
   public void remove(Job job) {
     try {
       dispatcherLock.lock();
-      this.jobBackendMapping.remove(job.getId());
+      this.jobBackendMapping.remove(job);
     } finally {
       dispatcherLock.unlock();
     }
