@@ -180,11 +180,13 @@ public class JobServiceImpl implements JobService {
         job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
         job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
         jobDB.update(job);
+        logger.info("Root Job {} completed.", job.getId());
         break;
       case FAILED:
         job = jobDB.get(contextId);
         job = Job.cloneWithStatus(job, JobStatus.FAILED);
         jobDB.update(job);
+        logger.info("Root Job {} failed.", job.getId());
         break;
       default:
         break;
