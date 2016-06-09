@@ -63,7 +63,7 @@ public class BackendStubRabbitMQ implements BackendStub {
       // do nothing
     }
   }
-
+  
   @Override
   public void start(final Map<String, Long> heartbeatInfo) {
     executorService.submit(new Runnable() {
@@ -104,6 +104,12 @@ public class BackendStubRabbitMQ implements BackendStub {
   @Override
   public void stop() {
     executorService.shutdown();
+    
+    try {
+      transportPluginMQ.deleteExchange(backendRabbitMQ.getBackendConfiguration().getExchange());
+    } catch (TransportPluginException e) {
+      // do nothing
+    }
   }
 
   @Override

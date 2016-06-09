@@ -126,6 +126,7 @@ public class BackendDispatcher {
     public void run() {
       try {
         dispatcherLock.lock();
+        logger.info("Checking Backend heartbeats...");
         
         long currentTime = System.currentTimeMillis();
         for (BackendStub backendStub : backendStubs) {
@@ -149,6 +150,7 @@ public class BackendDispatcher {
             }
           }
         }
+        logger.info("Heartbeats checked");
       } finally {
         dispatcherLock.unlock();
       }

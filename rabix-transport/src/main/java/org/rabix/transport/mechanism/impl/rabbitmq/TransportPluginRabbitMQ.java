@@ -66,6 +66,25 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
     }
   }
   
+  /**
+   * {@link TransportPluginRabbitMQ} extension for Exchange initialization 
+   */
+  public void deleteExchange(String exchange) throws TransportPluginException {
+    Channel channel = null;
+    try {
+      channel = connection.createChannel();
+      channel.exchangeDelete(exchange, true);
+    } catch (Exception e) {
+      throw new TransportPluginException("Failed to delete RabbitMQ exchange " + exchange, e);
+    } finally {
+      if (channel != null) {
+        try {
+          channel.close();
+        } catch (Exception ignore) { }
+      }
+    }
+  }
+  
   @Override
   public <T> ResultPair<T> send(TransportQueueRabbitMQ queue, T entity) {
     Channel channel = null;
