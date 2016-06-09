@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.engine.rest.backend.stub.BackendStub;
@@ -23,14 +24,14 @@ import org.rabix.transport.backend.Backend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
+
 public class BackendDispatcher {
 
-  private int position = 0;
-
   private final static Logger logger = LoggerFactory.getLogger(BackendDispatcher.class);
-  
-  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(5);
 
+  private final static long DEFAULT_HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(2);
+  
   private final List<BackendStub> backendStubs = new ArrayList<>();
   private final Map<String, Long> heartbeatInfo = new HashMap<>();
 
@@ -42,7 +43,13 @@ public class BackendDispatcher {
 
   private Lock dispatcherLock = new ReentrantLock(true);
 
-  public BackendDispatcher() {
+  private int position = 0;
+  
+  private final long heartbeatPeriod;
+  
+  @Inject
+  public BackendDispatcher(Configuration configuration) {
+    this.heartbeatPeriod = configuration.getLong("backend.cleaner.heartbeatPeriod", DEFAULT_HEARTBEAT_PERIOD);
     start();
   }
 
@@ -132,7 +139,7 @@ public class BackendDispatcher {
         for (BackendStub backendStub : backendStubs) {
           Backend backend = backendStub.getBackend();
 
-          if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
+          if (currentTime - heartbeatInfo.get(backend.getId()) > heartbeatPeriod) {
             backendStub.stop();
             backendStubs.remove(backendStub);
             logger.info("Removing Backend {}", backendStub.getBackend().getId());
