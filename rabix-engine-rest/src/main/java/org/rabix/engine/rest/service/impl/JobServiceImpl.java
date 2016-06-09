@@ -68,9 +68,8 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public void update(Job job) throws JobServiceException {
+    JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
     try {
-      JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
-      
       JobStatusEvent statusEvent = null;
       JobStatus status = job.getStatus();
       switch (status) {
@@ -105,8 +104,8 @@ public class JobServiceImpl implements JobService {
       }
       jobDB.update(job);
     } catch (JobStateValidationException e) {
-      logger.error("Failed to update Job state", e);
-      throw new JobServiceException("Failed to update Job state", e);
+      // TODO handle exception
+      logger.warn("Failed to update Job state from {} to {}", jobRecord.getState(), job.getStatus());
     }
   }
   
