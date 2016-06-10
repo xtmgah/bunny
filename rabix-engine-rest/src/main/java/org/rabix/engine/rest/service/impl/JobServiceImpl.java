@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Context;
@@ -27,8 +27,8 @@ import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.service.ApplicationPayloadService;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.DAGNodeGraphService;
-import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.EngineServiceException;
+import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.validator.JobStateValidationException;
@@ -111,7 +111,6 @@ public class JobServiceImpl implements JobService {
       jobDB.update(job);
     } catch (JobStateValidationException e) {
       logger.error("Failed to update Job state", e);
-      throw new JobServiceException("Failed to update Job state", e);
     } catch (EngineServiceException e) {
       logger.error("Failed to handle update for Job " + job, e);
       throw new JobServiceException("Failed to handle update for Job " + job, e);
@@ -180,6 +179,9 @@ public class JobServiceImpl implements JobService {
   }
 
   private class EndJobCallback implements IterationCallback {
+    
+    private AtomicInteger successCount = new AtomicInteger(0);
+    
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
       ContextRecord context = contextRecordService.find(contextId);
@@ -191,6 +193,7 @@ public class JobServiceImpl implements JobService {
         job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
         job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
         jobDB.update(job);
+        System.out.println("Number of successfull Jobs until now is " + successCount.incrementAndGet());
         break;
       case FAILED:
         job = jobDB.get(contextId);

@@ -1,10 +1,18 @@
 package org.rabix.engine.rest.service;
 
+import java.util.List;
+
+import org.rabix.engine.rest.db.BackendRecord;
 import org.rabix.transport.backend.Backend;
-import org.rabix.transport.mechanism.TransportPluginException;
 
 public interface BackendService {
 
-  <T extends Backend> T create(T backend) throws TransportPluginException;
+  List<BackendRecord> findActive() throws EngineRestServiceException;
+  
+  <T extends Backend> T create(T backend) throws EngineRestServiceException;
+  
+  void updateHeartbeat(String id, Long heartbeat) throws EngineRestServiceException;
+
+  void update(BackendRecord backendRecord) throws EngineRestServiceException;
   
 }

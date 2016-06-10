@@ -50,8 +50,7 @@ public class EventProcessorImpl implements EventProcessor {
   private final ConcurrentMap<String, Integer> iterations = new ConcurrentHashMap<>();
 
   @Inject
-  public EventProcessorImpl(HandlerFactory handlerFactory, EventDispatcherFactory eventDispatcherFactory,
-      ContextRecordService contextRecordService, PersistentQueues persistentQueues) {
+  public EventProcessorImpl(HandlerFactory handlerFactory, EventDispatcherFactory eventDispatcherFactory, ContextRecordService contextRecordService, PersistentQueues persistentQueues) {
     this.handlerFactory = handlerFactory;
     this.contextRecordService = contextRecordService;
     this.eventDispatcher = eventDispatcherFactory.create(EventDispatcher.Type.SYNC);

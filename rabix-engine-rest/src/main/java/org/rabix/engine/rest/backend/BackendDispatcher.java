@@ -1,11 +1,9 @@
 package org.rabix.engine.rest.backend;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,9 +17,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.engine.rest.backend.stub.BackendStub;
-import org.rabix.transport.backend.Backend;
+import org.rabix.engine.rest.db.BackendRecord;
+import org.rabix.engine.rest.db.BackendRecordRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
 
 public class BackendDispatcher {
 
@@ -29,10 +30,9 @@ public class BackendDispatcher {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendDispatcher.class);
   
-  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(5);
+  private final static long HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(1);
 
   private final List<BackendStub> backendStubs = new ArrayList<>();
-  private final Map<String, Long> heartbeatInfo = new HashMap<>();
 
   private final Set<Job> freeJobs = new HashSet<>();
   private final ConcurrentMap<Job, String> jobBackendMapping = new ConcurrentHashMap<>();
@@ -42,7 +42,11 @@ public class BackendDispatcher {
 
   private Lock dispatcherLock = new ReentrantLock(true);
 
-  public BackendDispatcher() {
+  private final BackendRecordRepository backendRecordRepository;
+
+  @Inject
+  public BackendDispatcher(BackendRecordRepository backendRecordRepository) {
+    this.backendRecordRepository = backendRecordRepository;
     start();
   }
 
@@ -98,9 +102,8 @@ public class BackendDispatcher {
   public void addBackendStub(BackendStub backendStub) {
     try {
       dispatcherLock.lock();
-      backendStub.start(heartbeatInfo);
+      backendStub.start();
       this.backendStubs.add(backendStub);
-      this.heartbeatInfo.put(backendStub.getBackend().getId(), System.currentTimeMillis());
     } finally {
       dispatcherLock.unlock();
     }
@@ -122,22 +125,29 @@ public class BackendDispatcher {
   }
 
   private class HeartbeatMonitor implements Runnable {
+    
     @Override
     public void run() {
       try {
         dispatcherLock.lock();
         
+        List<BackendRecord> backendRecords = backendRecordRepository.findActive();
+        
         long currentTime = System.currentTimeMillis();
-        for (BackendStub backendStub : backendStubs) {
-          Backend backend = backendStub.getBackend();
-
-          if (currentTime - heartbeatInfo.get(backend.getId()) > HEARTBEAT_PERIOD) {
-            backendStub.stop();
-            backendStubs.remove(backendStub);
+        for (BackendRecord backendRecord : backendRecords) {
+          if (currentTime - backendRecord.getHeartbeatTime() > HEARTBEAT_PERIOD) {
+            BackendStub backendStub = findBackendStub(backendRecord.getId());
+            if (backendStub != null) {
+              backendStub.stop();
+              backendStubs.remove(backendStub);
+            }
+            
+            backendRecord.setActive(false);
+            backendRecordRepository.update(backendRecord);
             
             List<Job> jobsToRemove = new ArrayList<>();
             for (Entry<Job, String> jobBackendEntry : jobBackendMapping.entrySet()) {
-              if (jobBackendEntry.getValue().equals(backend.getId())) {
+              if (jobBackendEntry.getValue().equals(backendRecord.getId())) {
                 jobsToRemove.add(jobBackendEntry.getKey());
               }
             }
@@ -147,9 +157,21 @@ public class BackendDispatcher {
             }
           }
         }
+      } catch (Exception e) {
+        e.printStackTrace();
+        logger.error("Failed to update Heartbeats", e);
       } finally {
         dispatcherLock.unlock();
       }
+    }
+    
+    private BackendStub findBackendStub(String id) {
+      for (BackendStub backendStub : backendStubs) {
+        if (id.equals(backendStub.getBackend().getId())) {
+          return backendStub;
+        }
+      }
+      return null;
     }
   }
 

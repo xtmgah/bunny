@@ -1,6 +1,5 @@
 package org.rabix.engine.rest.backend.stub.impl;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -8,6 +7,8 @@ import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
 import org.rabix.engine.rest.backend.stub.BackendStub;
+import org.rabix.engine.rest.service.BackendService;
+import org.rabix.engine.rest.service.EngineRestServiceException;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.transport.backend.Backend;
@@ -25,6 +26,8 @@ public class BackendStubLocal implements BackendStub {
   private final static Logger logger = LoggerFactory.getLogger(BackendStubLocal.class);
 
   private final JobService jobService;
+  private final BackendService backendService;
+  
   private final BackendLocal backendLocal;
   private final TransportPluginLocal transportPluginLocal;
 
@@ -34,8 +37,10 @@ public class BackendStubLocal implements BackendStub {
   
   private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
-  public BackendStubLocal(JobService jobService, Configuration configuration, BackendLocal backendLocal) throws TransportPluginException {
+  public BackendStubLocal(JobService jobService, Configuration configuration, BackendLocal backendLocal, BackendService backendService) throws TransportPluginException {
     this.jobService = jobService;
+    this.backendService = backendService;
+    
     this.backendLocal = backendLocal;
     this.transportPluginLocal = new TransportPluginLocal(configuration);
 
@@ -45,7 +50,7 @@ public class BackendStubLocal implements BackendStub {
   }
 
   @Override
-  public void start(final Map<String, Long> heartbeatInfo) {
+  public void start() {
     executorService.submit(new Runnable() {
       @Override
       public void run() {
@@ -72,7 +77,12 @@ public class BackendStubLocal implements BackendStub {
         transportPluginLocal.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class, new ReceiveCallback<HeartbeatInfo>() {
           @Override
           public void handleReceive(HeartbeatInfo entity) throws TransportPluginException {
-            heartbeatInfo.put(entity.getId(), entity.getTimestamp());
+            try {
+              backendService.updateHeartbeat(entity.getId(), entity.getTimestamp());
+            } catch (EngineRestServiceException e) {
+              logger.error("Failed to update heartbeat for " + entity.getId());
+              throw new TransportPluginException("Failed to update heartbeat for " + entity.getId());
+            }
           }
         });
       }

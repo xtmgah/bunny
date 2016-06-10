@@ -38,7 +38,6 @@ public class JdbcTransactionService {
     if (transaction.getScopeCounter().get() > 0) {
       return;
     }
-    logger.debug("Commit the transaction");
     try {
       transaction.commit();
       transaction.getConnection().close();
