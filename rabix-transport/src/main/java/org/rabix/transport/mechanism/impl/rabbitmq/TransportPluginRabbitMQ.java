@@ -30,7 +30,7 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
 
     try {
       if (TransportConfigRabbitMQ.isDev(configuration)) {
-        factory.setHost("localhost");
+        factory.setHost(TransportConfigRabbitMQ.getHost(configuration));
       } else {
         factory.setHost(TransportConfigRabbitMQ.getHost(configuration));
         factory.setPort(TransportConfigRabbitMQ.getPort(configuration));
