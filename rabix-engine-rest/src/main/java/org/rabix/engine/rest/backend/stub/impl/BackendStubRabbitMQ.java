@@ -90,12 +90,14 @@ public class BackendStubRabbitMQ implements BackendStub {
     executorService.submit(new Runnable() {
       @Override
       public void run() {
-        transportPluginMQ.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class, new ReceiveCallback<HeartbeatInfo>() {
-          @Override
-          public void handleReceive(HeartbeatInfo entity) throws TransportPluginException {
-            heartbeatInfo.put(entity.getId(), entity.getTimestamp());
-          }
-        });
+        while (true) {
+          transportPluginMQ.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class, new ReceiveCallback<HeartbeatInfo>() {
+            @Override
+            public void handleReceive(HeartbeatInfo entity) throws TransportPluginException {
+              heartbeatInfo.put(entity.getId(), entity.getTimestamp());
+            }
+          });
+        }
       }
     });
   }
