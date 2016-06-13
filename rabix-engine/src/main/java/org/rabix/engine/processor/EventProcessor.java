@@ -7,7 +7,7 @@ import org.rabix.engine.processor.handler.EventHandlerException;
 
 public interface EventProcessor {
 
-  void start(List<IterationCallback> iterationCallbacks);
+  void start(List<IterationCallback> iterationCallbacks, JobCallback jobCallback);
 
   void stop();
   

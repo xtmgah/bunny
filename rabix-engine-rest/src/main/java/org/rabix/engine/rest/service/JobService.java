@@ -1,5 +1,6 @@
 package org.rabix.engine.rest.service;
 
+import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.model.Job;
@@ -13,7 +14,7 @@ public interface JobService {
 
   Job create(Job job) throws JobServiceException;
   
-  Set<Job> get();
+  List<Job> get() throws EngineRestServiceException;
   
-  Job get(String id);
+  Job get(String id) throws EngineRestServiceException;
 }

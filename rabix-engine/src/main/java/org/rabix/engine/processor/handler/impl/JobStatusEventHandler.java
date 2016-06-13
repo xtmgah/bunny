@@ -5,12 +5,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
 import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.common.helper.InternalSchemaHelper;
+import org.rabix.engine.JobHelper;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
@@ -23,13 +25,16 @@ import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
+import org.rabix.engine.processor.JobCallback;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.service.ApplicationPayloadService;
+import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.DAGNodeGraphService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
-import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.ScatterService;
 import org.slf4j.Logger;
@@ -49,9 +54,14 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private final JobRecordService jobRecordService;
   private final LinkRecordService linkRecordService;
   private final VariableRecordService variableRecordService;
+  
+  private final ContextRecordService contextRecordService;
+  private final ApplicationPayloadService applicationPayloadService;
+
+  private JobCallback jobCallback;
 
   @Inject
-  public JobStatusEventHandler(final DAGNodeGraphService dagNodeService, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterHelper) {
+  public JobStatusEventHandler(final DAGNodeGraphService dagNodeService, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final EventProcessor eventProcessor, final ScatterService scatterHelper, final ContextRecordService contextRecordService, final ApplicationPayloadService applicationService) {
     this.dagNodeService = dagNodeService;
     this.scatterHelper = scatterHelper;
     this.eventProcessor = eventProcessor;
@@ -59,6 +69,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     this.jobRecordService = jobRecordService;
     this.linkRecordService = linkRecordService;
     this.variableRecordService = variableRecordService;
+    
+    this.contextRecordService = contextRecordService;
+    this.applicationPayloadService = applicationService;
   }
 
   @Override
@@ -72,6 +85,11 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         jobRecord.setState(JobState.READY);
         ready(jobRecord, event.getContextId());
         jobRecordService.update(jobRecord);
+
+        if (!jobRecord.isContainer()) {
+          Job job = JobHelper.createReadyJob(jobRecord, jobRecordService, variableRecordService, contextRecordService, dagNodeService, applicationPayloadService);
+          jobCallback.onReady(job);
+        }
         break;
       case RUNNING:
         jobRecord.setState(JobState.RUNNING);
@@ -82,16 +100,24 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
           Object output = event.getResult().get(portCounter.getPort());
           eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
         }
+        
+        if (jobRecord.isRoot()) {
+          jobCallback.onRootCompleted(jobRecord.getRootId());
+        }
         break;
       case FAILED:
         jobRecord.setState(JobState.FAILED);
         jobRecordService.update(jobRecord);
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
+        
+        if (jobRecord.isRoot()) {
+          jobCallback.onRootCompleted(jobRecord.getRootId());
+        }
         break;
       default:
         break;
       }
-    } catch (EngineServiceException e) {
+    } catch (Exception e) {
       logger.error("Failed to handle JobStatusEvent " + event, e);
       throw new EventHandlerException("Failed to handle JobStatusEvent " + event, e);
     }
@@ -232,6 +258,10 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       jobRecordService.increaseOutputPortIncoming(job, linkPort.getId());
     }
     jobRecordService.update(job);
+  }
+
+  public void setJobCallback(JobCallback jobCallback) {
+    this.jobCallback = jobCallback;
   }
   
 }

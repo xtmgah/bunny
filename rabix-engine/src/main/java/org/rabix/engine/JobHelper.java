@@ -36,21 +36,26 @@ public class JobHelper {
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        DAGNodeGraph node = dagNodeService.find(InternalSchemaHelper.normalizeId(job.getId()), contextId);
-
-        Map<String, Object> inputs = new HashMap<>();
-        List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
-        for (VariableRecord inputVariable : inputVariables) {
-          Object value = variableRecordService.transformValue(inputVariable);
-          inputs.put(inputVariable.getPortId(), value);
-        }
-        ContextRecord contextRecord = contextRecordService.find(job.getRootId());
-        Context context = new Context(job.getRootId(), contextRecord.getConfig());
-        String encodedApp = URIHelper.createDataURI(applicationService.find(node.getAppHash()));
-        jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
+        jobs.add(createReadyJob(job, jobRecordService, variableRecordService, contextRecordService, dagNodeService, applicationService));
       }
     }
     return jobs;
+  }
+  
+  public static Job createReadyJob(JobRecord job, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeGraphService dagNodeService, ApplicationPayloadService applicationService) throws EngineServiceException {
+    DAGNodeGraph node = dagNodeService.find(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
+
+    Map<String, Object> inputs = new HashMap<>();
+    List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
+    for (VariableRecord inputVariable : inputVariables) {
+      Object value = variableRecordService.transformValue(inputVariable);
+      inputs.put(inputVariable.getPortId(), value);
+    }
+    ContextRecord contextRecord = contextRecordService.find(job.getRootId());
+    Context context = new Context(job.getRootId(), contextRecord.getConfig());
+    String encodedApp = URIHelper.createDataURI(applicationService.find(node.getAppHash()));
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context);
+  
   }
   
   public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) throws EngineServiceException {

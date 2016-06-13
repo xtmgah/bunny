@@ -19,9 +19,9 @@ import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.DAGNodeGraphService;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
-import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.VariableRecordService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +60,9 @@ public class InitEventHandler implements EventHandler<InitEvent> {
 
       contextRecordService.create(context);
       DAGNodeGraph node = dagNodeService.insert(event.getNode(), event.getContextId());
+      
       JobRecord job = new JobRecord(event.getContextId(), event.getNode().getId(), event.getContextId(), null, JobState.PENDING, node.isContainer(), false, false);
-
+      
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         if (job.getState().equals(JobState.PENDING)) {
           jobRecordService.incrementPortCounter(job, inputPort, LinkPortType.INPUT);

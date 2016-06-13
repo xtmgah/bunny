@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response.Status;
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.api.JobHTTPService;
 import org.rabix.engine.rest.service.JobServiceException;
+import org.rabix.engine.rest.service.EngineRestServiceException;
 import org.rabix.engine.rest.service.JobService;
 
 import com.google.inject.Inject;
@@ -32,16 +33,25 @@ public class JobHTTPServiceImpl implements JobHTTPService {
   
   @Override
   public Response get() {
-    return ok(jobService.get());
+    try {
+      return ok(jobService.get());
+    } catch (EngineRestServiceException e) {
+      return error();
+    }
   }
   
   @Override
   public Response get(String id) {
-    Job job = jobService.get(id);
-    if (job == null) {
-      return entityNotFound();
+    try {
+      Job job = jobService.get(id);
+      
+      if (job == null) {
+        return entityNotFound();
+      }
+      return ok(job);
+    } catch (EngineRestServiceException e) {
+      return error();
     }
-    return ok(job);
   }
   
   @Override

@@ -19,7 +19,7 @@ public class JdbcTransactionInterceptor implements MethodInterceptor {
     try {
       transactionService.begin();
       Object result = method.proceed();
-      transactionService.commit();
+      transactionService.commit(method.getMethod().getDeclaringClass().getName() + "." + method.getMethod().getName());
       return result;
     } catch (Exception e) {
       e.printStackTrace();

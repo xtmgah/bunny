@@ -1,6 +1,7 @@
 package org.rabix.engine.rest.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -12,16 +13,17 @@ import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.db.DBException;
 import org.rabix.engine.JobHelper;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.event.impl.JobStatusEvent;
-import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.EventProcessor.IterationCallback;
-import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.processor.JobCallback;
 import org.rabix.engine.rest.backend.BackendDispatcher;
-import org.rabix.engine.rest.db.JobDB;
+import org.rabix.engine.rest.db.JobRepository;
+import org.rabix.engine.rest.service.EngineRestServiceException;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.service.ApplicationPayloadService;
@@ -37,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 public class JobServiceImpl implements JobService {
 
@@ -46,7 +49,7 @@ public class JobServiceImpl implements JobService {
   private final VariableRecordService variableRecordService;
   private final ContextRecordService contextRecordService;
   
-  private final JobDB jobDB;
+  private final JobRepository jobRepository;
   private final DAGNodeGraphService dagNodeService;
   private final ApplicationPayloadService applicationService;
   
@@ -54,8 +57,8 @@ public class JobServiceImpl implements JobService {
   private final BackendDispatcher backendDispatcher;
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeGraphService dagNodeService, ApplicationPayloadService applicationService, JobDB jobDB) {
-    this.jobDB = jobDB;
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeGraphService dagNodeService, ApplicationPayloadService applicationService, JobRepository jobRepository) {
+    this.jobRepository = jobRepository;
     this.dagNodeService = dagNodeService;
     this.applicationService = applicationService;
     this.eventProcessor = eventProcessor;
@@ -65,16 +68,20 @@ public class JobServiceImpl implements JobService {
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
 
-    List<IterationCallback> callbacks = new ArrayList<>();
-    callbacks.add(new EndJobCallback());
-    callbacks.add(new SendJobsCallback());
-    this.eventProcessor.start(callbacks);
+    this.eventProcessor.start(new ArrayList<IterationCallback>(), new JobReadyCallback());
   }
   
   @Override
+  @Transactional
   public void update(Job job) throws JobServiceException {
     try {
       JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
+      
+      if (jobRecord == null) {
+        // TODO handle
+        logger.error("Failed to find Job " + job.getId());
+        return;
+      }
       
       JobStatusEvent statusEvent = null;
       JobStatus status = job.getStatus();
@@ -108,16 +115,17 @@ public class JobServiceImpl implements JobService {
       default:
         break;
       }
-      jobDB.update(job);
+      jobRepository.update(job);
     } catch (JobStateValidationException e) {
       logger.error("Failed to update Job state", e);
-    } catch (EngineServiceException e) {
+    } catch (Exception e) {
       logger.error("Failed to handle update for Job " + job, e);
       throw new JobServiceException("Failed to handle update for Job " + job, e);
     }
   }
   
   @Override
+  @Transactional
   public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
     try {
       return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeService, applicationService, contextId);
@@ -128,6 +136,7 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
+  @Transactional
   public Job create(Job job) throws JobServiceException {
     Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
     job = Job.cloneWithIds(job, context.getId(), context.getId());
@@ -140,13 +149,11 @@ public class JobServiceImpl implements JobService {
       DAGNode node = bindings.translateToDAG(job);
       
       job = Job.cloneWithStatus(job, JobStatus.RUNNING);
-      jobDB.add(job);
+      jobRepository.insert(job);
 
       InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
-      eventProcessor.send(initEvent);
+      eventProcessor.addToQueue(initEvent);
       return job;
-    } catch (EventHandlerException e) {
-      throw new JobServiceException("Failed to start job", e);
     } catch (Exception e) {
       logger.error("Failed to create Bindings", e);
       throw new JobServiceException("Failed to create Bindings", e);
@@ -154,55 +161,55 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public Set<Job> get() {
-    return jobDB.getJobs();
+  public List<Job> get() throws EngineRestServiceException {
+    try {
+      return jobRepository.find();
+    } catch (DBException e) {
+      logger.error("Failed to get all Jobs", e);
+      throw new EngineRestServiceException("Failed to get all Jobs", e);
+    }
   }
 
   @Override
-  public Job get(String id) {
-    return jobDB.get(id);
+  public Job get(String id) throws EngineRestServiceException {
+    try {
+      return jobRepository.find(id);
+    } catch (DBException e) {
+      logger.error("Failed to get Job for id=" + id, e);
+      throw new EngineRestServiceException("Failed to get Job for id=" + id, e);
+    }
   }
 
   private Context createContext(String contextId) {
     return new Context(contextId, null);
   }
   
-  private class SendJobsCallback implements IterationCallback {
-    @Override
-    public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
-      Set<Job> jobs = getReady(eventProcessor, contextId);
-      for (Job job : jobs) {
-        jobDB.update(job);
-      }
-      backendDispatcher.send(jobs);
-    }
-  }
-
-  private class EndJobCallback implements IterationCallback {
-    
+  private class JobReadyCallback implements JobCallback {
     private AtomicInteger successCount = new AtomicInteger(0);
     
     @Override
-    public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
-      ContextRecord context = contextRecordService.find(contextId);
+    public void onReady(Job job) throws Exception {
+      jobRepository.update(job);
       
-      Job job = null;
-      switch (context.getStatus()) {
-      case COMPLETED:
-        job = jobDB.get(contextId);
-        job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
-        job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
-        jobDB.update(job);
-        System.out.println("Number of successfull Jobs until now is " + successCount.incrementAndGet());
-        break;
-      case FAILED:
-        job = jobDB.get(contextId);
-        job = Job.cloneWithStatus(job, JobStatus.FAILED);
-        jobDB.update(job);
-        break;
-      default:
-        break;
-      }
+      Set<Job> jobs = new HashSet<>();
+      jobs.add(job);
+      backendDispatcher.send(jobs);
+    }
+
+    @Override
+    public void onRootCompleted(String rootId) throws Exception {
+      Job job = jobRepository.find(rootId);
+      job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
+      job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
+      jobRepository.update(job);
+      System.out.println("Number of successfull Jobs until now is " + successCount.incrementAndGet());
+    }
+
+    @Override
+    public void onRootFailed(String rootId) throws Exception {
+      Job job = jobRepository.find(rootId);
+      job = Job.cloneWithStatus(job, JobStatus.FAILED);
+      jobRepository.update(job);
     }
   }
 

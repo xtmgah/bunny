@@ -15,15 +15,15 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.service.EngineServiceException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.LinkRecordService;
+import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandler;
 import org.rabix.engine.service.scatter.strategy.ScatterStrategyHandlerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.rabix.engine.service.LinkRecordService;
-import org.rabix.engine.service.EngineServiceException;
-import org.rabix.engine.service.VariableRecordService;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;

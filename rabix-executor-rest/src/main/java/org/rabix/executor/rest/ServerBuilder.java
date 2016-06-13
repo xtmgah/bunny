@@ -147,20 +147,20 @@ public class ServerBuilder {
     
   }
   
-//  public static void main(String[] args) throws InterruptedException {
-//    for (int i = 0; i < 1000; i++) {
-//      Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
-//      WebTarget webTarget = client.target("http://localhost" + ":" + 8081 + "/v0/engine/jobs");
-//
-//      Map<String, Object> inputs = new HashMap<>();
-//      Map<String, Object> file = new HashMap<>();
-//      file.put("class", "File");
-//      file.put("path", "whale.txt");
-//      inputs.put("file1", file);
-//
-//      Job job = new Job("file:///home/janko/Development/Git/Repositories/common-workflow-language/draft-2/draft-2/count-lines8-wf.cwl", inputs);
-//      Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
-//      invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
-//    }
-//  }
+  public static void main(String[] args) throws InterruptedException {
+    for (int i = 0; i < 10; i++) {
+      Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
+      WebTarget webTarget = client.target("http://localhost" + ":" + 8081 + "/v0/engine/jobs");
+
+      Map<String, Object> inputs = new HashMap<>();
+      Map<String, Object> file = new HashMap<>();
+      file.put("class", "File");
+      file.put("path", "whale.txt");
+      inputs.put("file1", file);
+
+      Job job = new Job("file:///home/voodoo/Development/Git/prototype/common-workflow-language/draft-2/draft-2/count-lines8-wf.cwl", inputs);
+      Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
+      invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
+    }
+  }
 }

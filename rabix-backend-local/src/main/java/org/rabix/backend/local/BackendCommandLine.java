@@ -52,8 +52,9 @@ import org.rabix.engine.rest.api.impl.BackendHTTPServiceImpl;
 import org.rabix.engine.rest.api.impl.JobHTTPServiceImpl;
 import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.BackendRecordRepository;
-import org.rabix.engine.rest.db.JobDB;
+import org.rabix.engine.rest.db.JobRepository;
 import org.rabix.engine.rest.service.BackendService;
+import org.rabix.engine.rest.service.EngineRestServiceException;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
@@ -145,7 +146,7 @@ public class BackendCommandLine {
           new AbstractModule() {
             @Override
             protected void configure() {
-              bind(JobDB.class).in(Scopes.SINGLETON);
+              bind(JobRepository.class).in(Scopes.SINGLETON);
               bind(BackendRecordRepository.class).in(Scopes.SINGLETON);
               bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
               bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
@@ -178,26 +179,32 @@ public class BackendCommandLine {
       Thread checker = new Thread(new Runnable() {
         @Override
         public void run() {
-          Job rootJob = jobService.get(job.getId());
-          
-          while(!Job.isFinished(rootJob)) {
-            try {
-              Thread.sleep(1000);
-              rootJob = jobService.get(job.getId());
-            } catch (InterruptedException e) {
-              logger.error("Failed to wait for root Job to finish", e);
-              throw new RuntimeException(e);
+          Job rootJob;
+          try {
+            rootJob = jobService.get(job.getId());
+            
+            while(!Job.isFinished(rootJob)) {
+              try {
+                Thread.sleep(1000);
+                rootJob = jobService.get(job.getId());
+              } catch (InterruptedException e) {
+                logger.error("Failed to wait for root Job to finish", e);
+                System.exit(10);
+              }
             }
-          }
-          if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
-            try {
-              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
-              System.exit(0);
-            } catch (JsonProcessingException e) {
-              logger.error("Failed to write outputs to standard out", e);
+            if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
+              try {
+                logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
+                System.exit(0);
+              } catch (JsonProcessingException e) {
+                logger.error("Failed to write outputs to standard out", e);
+                System.exit(10);
+              }
+            } else {
               System.exit(10);
             }
-          } else {
+          } catch (EngineRestServiceException e) {
+            logger.error("Failed to wait for root Job to finish", e);
             System.exit(10);
           }
         }

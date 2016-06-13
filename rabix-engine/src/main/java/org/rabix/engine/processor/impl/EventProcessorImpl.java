@@ -1,11 +1,15 @@
 package org.rabix.engine.processor.impl;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.rabix.common.PersistentQueues;
@@ -16,6 +20,7 @@ import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.ContextRecord.ContextStatus;
 import org.rabix.engine.processor.EventProcessor;
+import org.rabix.engine.processor.JobCallback;
 import org.rabix.engine.processor.dispatcher.EventDispatcher;
 import org.rabix.engine.processor.dispatcher.EventDispatcherFactory;
 import org.rabix.engine.processor.handler.EventHandlerException;
@@ -62,7 +67,11 @@ public class EventProcessorImpl implements EventProcessor {
     }
   }
 
-  public void start(final List<IterationCallback> iterationCallbacks) {
+  public void start(final List<IterationCallback> iterationCallbacks, final JobCallback jobCallback) {
+    if (jobCallback != null) {
+      handlerFactory.setJobCallback(jobCallback);
+    }
+    
     executorService.execute(new Runnable() {
       @Override
       public void run() {
@@ -74,8 +83,10 @@ public class EventProcessorImpl implements EventProcessor {
               Thread.sleep(SLEEP);
               continue;
             }
+            long currentTime = System.currentTimeMillis();
             String eventPayload = new String(events.dequeue());
             event = JSONHelper.readObject(eventPayload, Event.class);
+            
             ContextRecord context = contextRecordService.find(event.getContextId());
             if (context != null && context.getStatus().equals(ContextStatus.FAILED)) {
               logger.info("Skip event {}. Context {} has been invalidated.", event, context.getId());
@@ -96,6 +107,12 @@ public class EventProcessorImpl implements EventProcessor {
               }
             }
             iterations.put(event.getContextId(), iteration);
+            
+            try {
+              Files.write(Paths.get("/home/voodoo/Desktop/events.txt"), (event.getType().name() + ", seconds=" + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - currentTime) + "\n").getBytes(), StandardOpenOption.APPEND);
+            } catch (IOException e) {
+              // exception handling left as an exercise for the reader
+            }
           } catch (Exception e) {
             logger.error("EventProcessor failed to process event " + event, e);
             try {
@@ -114,8 +131,7 @@ public class EventProcessorImpl implements EventProcessor {
    * Invalidates context
    */
   private void invalidateContext(String contextId) throws EventHandlerException {
-    handlerFactory.get(Event.EventType.CONTEXT_STATUS_UPDATE)
-        .handle(new ContextStatusEvent(contextId, ContextStatus.FAILED));
+    handlerFactory.get(Event.EventType.CONTEXT_STATUS_UPDATE).handle(new ContextStatusEvent(contextId, ContextStatus.FAILED));
   }
 
   @Override

@@ -31,13 +31,14 @@ public class JdbcTransactionService {
     transaction.increaseScopeCounter();
   }
 
-  public void commit() throws SQLException {
+  public void commit(String label) throws SQLException {
     JdbcTransaction transaction = JdbcTransactionHolder.getCurrentTransaction();
     transaction.decreaseScopeCounter();
     
     if (transaction.getScopeCounter().get() > 0) {
       return;
     }
+    logger.info("Commit transaction for " + label);
     try {
       transaction.commit();
       transaction.getConnection().close();
