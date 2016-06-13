@@ -15,8 +15,10 @@ import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
 import org.rabix.bindings.model.Application;
+import org.rabix.bindings.model.Cpu;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Memory;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
@@ -180,6 +182,16 @@ public class ZeroBindings implements Bindings {
   @Override
   public ProtocolType getProtocolType() {
     return this.protocolType;
+  }
+
+  @Override
+  public Cpu getCPU(Job job) throws BindingException {
+    return null;
+  }
+
+  @Override
+  public Memory getMemory(Job job) throws BindingException {
+    return null;
   }
 
 }

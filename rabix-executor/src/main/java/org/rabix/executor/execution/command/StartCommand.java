@@ -3,11 +3,11 @@ package org.rabix.executor.execution.command;
 import javax.inject.Inject;
 
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.ExecutorException;
 import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 
 /**
@@ -25,11 +25,11 @@ public class StartCommand extends JobHandlerCommand {
     Job job = data.getJob();
     try {
       handler.start();
-      jobDataService.save(data, "Job " + job.getId() + " started successfully.", JobStatus.STARTED, contextId);
+      jobDataService.save(data, "Job " + job.getId() + " started successfully.", JobDataStatus.STARTED, contextId);
       started(data, "Job " + job.getId() + " started successfully.", handler.getEngineStub());
     } catch (ExecutorException e) {
       String message = String.format("Failed to start %s. %s", job.getId(), e.toString());
-      jobDataService.save(data, message, JobStatus.FAILED, contextId);
+      jobDataService.save(data, message, JobDataStatus.FAILED, contextId);
       failed(data, message, handler.getEngineStub(), e);
       return new Result(true);
     }
