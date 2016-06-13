@@ -3,8 +3,6 @@ package org.rabix.executor.rest;
 import java.io.File;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.ApplicationPath;
@@ -26,7 +24,6 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.rabix.bindings.model.Job;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
@@ -145,23 +142,5 @@ public class ServerBuilder {
       return response.readEntity(BackendRabbitMQ.class);
     }
     
-  }
-  
-  public static void main(String[] args) {
-    for (int i = 0; i < 10; i++) {
-      Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
-      WebTarget webTarget = client.target("http://localhost" + ":" + 8081 + "/v0/engine/jobs");
-
-      Map<String, Object> inputs = new HashMap<>();
-      Map<String, Object> file = new HashMap<>();
-      file.put("class", "File");
-      file.put("path", "public/whale.txt");
-      inputs.put("file1", file);
-
-      Job job = new Job("ftp:///apps/count-lines8-wf.cwl", inputs);
-
-      Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
-      invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
-    }
   }
 }
