@@ -63,7 +63,7 @@ public class Draft2DocumentResolver {
       }
       String input = JSONHelper.transformToJSON(URIHelper.getData(appUrlBase));
       root = JSONHelper.readJsonNode(input);
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new BindingException(e);
     }
     
@@ -220,6 +220,13 @@ public class Draft2DocumentResolver {
   }
   
   private static String loadContents(File file, String path) throws BindingException {
+    if (path.startsWith("ftp")) {
+      try {
+        return URIHelper.getData(path);
+      } catch (IOException e) {
+        throw new BindingException(e);
+      }
+    }
     if (path.startsWith("http")) {
       try {
         URL website = new URL(path);

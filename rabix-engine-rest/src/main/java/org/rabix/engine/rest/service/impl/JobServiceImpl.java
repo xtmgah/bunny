@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
@@ -169,6 +170,9 @@ public class JobServiceImpl implements JobService {
   }
 
   private class EndJobCallback implements IterationCallback {
+    
+    private AtomicInteger successCount = new AtomicInteger(0);
+    
     @Override
     public void call(EventProcessor eventProcessor, String contextId, int iteration) {
       ContextRecord context = contextRecordService.find(contextId);
@@ -180,7 +184,7 @@ public class JobServiceImpl implements JobService {
         job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
         job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
         jobDB.update(job);
-        logger.info("Root Job {} completed.", job.getId());
+        logger.info("Root Job {} completed. Number of successfull jobs is {}.", job.getId(), successCount.incrementAndGet());
         break;
       case FAILED:
         job = jobDB.get(contextId);
