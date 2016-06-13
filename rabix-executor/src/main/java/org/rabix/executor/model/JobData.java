@@ -7,15 +7,72 @@ import org.rabix.bindings.model.Job.JobStatus;
 
 public class JobData {
 
+  public static enum JobDataStatus {
+    PENDING,
+    READY,
+    STARTED,
+    
+    ABORTING,
+    ABORTED,
+    
+    FAILED,
+    COMPLETED,
+    RUNNING;
+    
+    public static JobDataStatus convertFromJobStatus(JobStatus status) {
+      switch (status) {
+      case PENDING:
+        return JobDataStatus.PENDING;
+      case READY:
+        return JobDataStatus.READY;
+      case STARTED:
+        return JobDataStatus.STARTED;
+      case ABORTED:
+        return JobDataStatus.ABORTED;
+      case FAILED:
+        return JobDataStatus.FAILED;
+      case COMPLETED:
+        return JobDataStatus.COMPLETED;
+      case RUNNING:
+        return JobDataStatus.RUNNING;
+      default:
+        return null;
+      }
+    }
+    
+    public static JobStatus convertToJobStatus(JobDataStatus status) {
+      switch (status) {
+      case PENDING:
+        return JobStatus.PENDING;
+      case READY:
+        return JobStatus.READY;
+      case STARTED:
+        return JobStatus.STARTED;
+      case ABORTED:
+        return JobStatus.ABORTED;
+      case ABORTING:
+        return JobStatus.ABORTED;
+      case FAILED:
+        return JobStatus.FAILED;
+      case COMPLETED:
+        return JobStatus.COMPLETED;
+      case RUNNING:
+        return JobStatus.RUNNING;
+      default:
+        return null;
+      }
+    }
+  }
+  
   private Job job;
-  private JobStatus status;
+  private JobDataStatus status;
   private Map<String, Object> result;
   private String message;
   private boolean important;
   private boolean terminal;
   private boolean logsUploaded;
 
-  public JobData(Job job, JobStatus status, boolean important, boolean terminal) {
+  public JobData(Job job, JobDataStatus status, boolean important, boolean terminal) {
     this.job = job;
     this.status = status;
     this.important = important;
@@ -31,11 +88,11 @@ public class JobData {
     this.job = job;
   }
 
-  public JobStatus getStatus() {
+  public JobDataStatus getStatus() {
     return status;
   }
 
-  public void setStatus(JobStatus status) {
+  public void setStatus(JobDataStatus status) {
     this.status = status;
   }
 
