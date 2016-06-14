@@ -24,11 +24,15 @@ import org.rabix.common.helper.JSONHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Preconditions;
 
 public class Draft3DocumentResolver {
 
   public static final String RESOLVER_REFERENCE_KEY = "import";
+  public static final String APP_STEP_KEY = "run";
+  public static final String RESOLVER_REFERENCE_INCLUDE_KEY = "$include";
+  
   public static final String RESOLVER_JSON_POINTER_KEY = "$job";
   
   public static final String DOCUMENT_FRAGMENT_SEPARATOR = "#";
@@ -59,7 +63,7 @@ public class Draft3DocumentResolver {
     } catch (IOException e) {
       throw new BindingException(e);
     }
-    traverse(appUrl, root, file, null, root, true);
+    traverse(appUrl, root, file, null, root);
 
     for (Draft3DocumentResolverReplacement replacement : getReplacements(appUrl)) {
       if (replacement.getParentNode().isArray()) {
@@ -76,17 +80,33 @@ public class Draft3DocumentResolver {
     return cache.get(appUrl);
   }
   
-  private static JsonNode traverse(String appUrl, JsonNode root, File file, JsonNode parentNode, JsonNode currentNode, boolean addReplacement) throws BindingException {
+  private static JsonNode traverse(String appUrl, JsonNode root, File file, JsonNode parentNode, JsonNode currentNode) throws BindingException {
     Preconditions.checkNotNull(currentNode, "current node id is null");
 
+    boolean isInclude = currentNode.has(RESOLVER_REFERENCE_INCLUDE_KEY);
+    if (isInclude) {
+      String path = currentNode.get(RESOLVER_REFERENCE_INCLUDE_KEY).textValue();
+      String content = loadContents(file, path);
+
+      Draft3DocumentResolverReference reference = new Draft3DocumentResolverReference(false, new TextNode(content));
+      getReferenceCache(appUrl).put(path, reference);
+      getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(parentNode, currentNode, path));
+      return null;
+    }
+    
     boolean isReference = currentNode.has(RESOLVER_REFERENCE_KEY);
+    boolean appReference = currentNode.has(APP_STEP_KEY) && currentNode.get(APP_STEP_KEY).isTextual();
     boolean isJsonPointer = currentNode.has(RESOLVER_JSON_POINTER_KEY) && parentNode != null; // we skip the first level $job
 
-    if (isReference || isJsonPointer) {
+    if (isReference || isJsonPointer || appReference) {
       String referencePath = null;
       if (isReference) {
         referencePath = currentNode.get(RESOLVER_REFERENCE_KEY).textValue();
-      } else {
+      }
+      else if (appReference) {
+        referencePath = currentNode.get(APP_STEP_KEY).textValue();
+      }
+      else {
         referencePath = currentNode.get(RESOLVER_JSON_POINTER_KEY).textValue();
       }
 
@@ -102,17 +122,24 @@ public class Draft3DocumentResolver {
 
         JsonNode referenceDocumentRoot = findDocumentRoot(root, file, referencePath, isJsonPointer);
         ParentChild parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
-        reference.setResolvedNode(traverse(appUrl, root, file, parentChild.parent, parentChild.child, true));
+        JsonNode resolvedNode = traverse(appUrl, root, file, parentChild.parent, parentChild.child);
+        if(resolvedNode == null) {
+          return null;
+        }
+        reference.setResolvedNode(resolvedNode);
         reference.setResolving(false);
         getReferenceCache(appUrl).put(referencePath, reference);
       }
-      if (addReplacement) {
+      if(appReference) {
+        getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(currentNode, currentNode.get("run"), referencePath));
+      }
+      else {
         getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(parentNode, currentNode, referencePath));
       }
       return reference.getResolvedNode();
     } else if (currentNode.isContainerNode()) {
       for (JsonNode subnode : currentNode) {
-        traverse(appUrl, root, file, currentNode, subnode, addReplacement);
+        traverse(appUrl, root, file, currentNode, subnode);
       }
     }
     return currentNode;
@@ -175,43 +202,46 @@ public class Draft3DocumentResolver {
       if (parts.length > 2) {
         throw new BindingException("Invalid reference " + reference);
       }
-      String externalResource = parts[0];
-      if (externalResource.startsWith("http")) {
+      String contents = loadContents(file, parts[0]);
+      return JSONHelper.readJsonNode(JSONHelper.transformToJSON(contents));
+    }
+  }
+  
+  private static String loadContents(File file, String path) throws BindingException {
+    if (path.startsWith("http")) {
+      try {
+        URL website = new URL(path);
+        URLConnection connection = website.openConnection();
+        BufferedReader in = null;
+
         try {
-          URL website = new URL(externalResource);
-          URLConnection connection = website.openConnection();
-          BufferedReader in = null;
+          in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-          try {
-            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-            StringBuilder response = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-              response.append(inputLine);
-            }
-
-            String linkContents = response.toString();
-            return JSONHelper.readJsonNode(linkContents);
-          } finally {
-            if (in != null) {
-              in.close();
-            }
+          StringBuilder response = new StringBuilder();
+          String inputLine;
+          while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
           }
-        } catch (Exception e) {
-          throw new BindingException("Couldn't fetch contents from " + externalResource);
+          return response.toString();
+        } finally {
+          if (in != null) {
+            in.close();
+          }
         }
-      } else {
-        try {
-          String filePath = new File(file.getParentFile(), externalResource).getCanonicalPath();
-          String fileContents = FileUtils.readFileToString(new File(filePath), DEFAULT_ENCODING);
-          return JSONHelper.readJsonNode(JSONHelper.transformToJSON(fileContents));
-        } catch (IOException e) {
-          throw new BindingException("Couldn't fetch contents from " + externalResource);
-        }
+      } catch (Exception e) {
+        throw new BindingException("Couldn't fetch contents from " + path);
+      }
+    } else {
+      try {
+        String filePath = new File(file.getParentFile(), path).getCanonicalPath();
+        return FileUtils.readFileToString(new File(filePath), DEFAULT_ENCODING);
+      } catch (IOException e) {
+        throw new BindingException("Couldn't fetch contents from " + path);
       }
     }
   }
+  
+  
 
   private static ParentChild findReferencedNode(JsonNode rootNode, String absolutePath) {
     if (!absolutePath.contains(DOCUMENT_FRAGMENT_SEPARATOR)) {

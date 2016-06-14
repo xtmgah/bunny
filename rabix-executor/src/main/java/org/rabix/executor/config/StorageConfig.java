@@ -61,7 +61,7 @@ public class StorageConfig {
   }
   
   public static BackendStore getBackendStore(Configuration configuration) {
-    Boolean conformance = configuration.getBoolean("rabix.conformance");
+    Boolean conformance = configuration.getString("rabix.conformance") != null;
     if(conformance) {
       return BackendStore.CONFORMANCE;
     }

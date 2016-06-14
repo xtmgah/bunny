@@ -14,7 +14,7 @@ public class FileConfig {
   }
   
   public static boolean addFilename(Configuration configuration) {
-    if(configuration.getBoolean("rabix.conformance")) {
+    if(configuration.getString("rabix.conformance") != null) {
       return false;
     }
     return configuration.getBoolean(ADD_FILENAME, true);

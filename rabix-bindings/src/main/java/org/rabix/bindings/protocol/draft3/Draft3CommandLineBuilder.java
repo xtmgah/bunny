@@ -248,7 +248,7 @@ public class Draft3CommandLineBuilder implements ProtocolCommandLineBuilder {
       commandLinePartBuilder.keyValue(keyValue);
       
       for (Object item : ((List<?>) value)) {
-        Object arrayItemSchema = Draft3SchemaHelper.getSchemaForArrayItem(commandLineTool.getSchemaDefs(), schema);
+        Object arrayItemSchema = Draft3SchemaHelper.getSchemaForArrayItem(item, commandLineTool.getSchemaDefs(), schema);
         Object arrayItemInputBinding = new HashMap<>();
         if (schema != null && Draft3SchemaHelper.getInputBinding(schema) != null) {
           arrayItemInputBinding = (Map<String, Object>) Draft3SchemaHelper.getInputBinding(schema);
@@ -279,8 +279,9 @@ public class Draft3CommandLineBuilder implements ProtocolCommandLineBuilder {
         return new Draft3CommandLinePart.Builder(position, isFile).keyValue(keyValue).parts(flattenedValues).build();
       }
       List<Object> prefixedValues = new ArrayList<>();
+      prefixedValues.add(prefix);
       for (Object arrayItem : flattenedValues) {
-        prefixedValues.add(prefix + separator + arrayItem);
+        prefixedValues.add(arrayItem);
       }
       return new Draft3CommandLinePart.Builder(position, isFile).keyValue(keyValue).parts(prefixedValues).build();
     }

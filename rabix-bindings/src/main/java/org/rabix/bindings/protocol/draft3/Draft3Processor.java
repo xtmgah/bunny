@@ -150,7 +150,7 @@ public class Draft3Processor implements ProtocolProcessor {
     Object result = null;
     if (Draft3SchemaHelper.isArrayFromSchema(schema)) {
       Draft3JobApp app = job.getApp();
-      Object itemSchema = Draft3SchemaHelper.getSchemaForArrayItem(app.getSchemaDefs(), schema);
+      Object itemSchema = Draft3SchemaHelper.getSchemaForArrayItem(null, app.getSchemaDefs(), schema);
       if (itemSchema == null) {
         return null;
       }
@@ -248,7 +248,9 @@ public class Draft3Processor implements ProtocolProcessor {
           Draft3FileValueHelper.setChecksum(file, fileData, hashAlgorithm);
         }
         Draft3FileValueHelper.setSize(file.length(), fileData);
-        Draft3FileValueHelper.setName(file.getName(), fileData);
+//      if (setName != null) {  
+//        Draft3FileValueHelper.setName(file.getName(), fileData);
+//      }
         Draft3FileValueHelper.setPath(file.getAbsolutePath(), fileData);
 
         List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputBinding);

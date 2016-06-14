@@ -154,7 +154,10 @@ public class BackendCommandLine {
           });
 
       Configuration configuration = configModule.provideConfig();
-      Boolean conformance = configuration.getBoolean("rabix.conformance");
+      Boolean conformance = configuration.getString("rabix.conformance") != null;
+      if(conformance) {
+        BindingsFactory.setProtocol(configuration.getString("rabix.conformance"));
+      }
 
       String appUrl = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);
       String inputsText = readFile(inputsFile.getAbsolutePath(), Charset.defaultCharset());
