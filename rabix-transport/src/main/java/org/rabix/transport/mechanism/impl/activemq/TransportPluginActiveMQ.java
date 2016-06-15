@@ -1,5 +1,10 @@
 package org.rabix.transport.mechanism.impl.activemq;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -26,6 +31,10 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
   
   private PooledConnectionFactory connectionFactory;
   
+  private ConcurrentMap<TransportQueueActiveMQ, Receiver<?>> receivers = new ConcurrentHashMap<>();
+  
+  private ExecutorService receiverThreadPool = Executors.newCachedThreadPool();
+
   public TransportPluginActiveMQ(Configuration configuration) throws TransportPluginException {
     connectionFactory = new PooledConnectionFactory(TransportConfigActiveMQ.getBroker(configuration));
     connectionFactory.setIdleTimeout(5000);
@@ -107,4 +116,80 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
     return TransportPluginType.ACTIVE_MQ;
   }
 
+  @Override
+  public <T> void startReceiver(TransportQueueActiveMQ sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
+    final Receiver<T> receiver = new Receiver<>(clazz, receiveCallback, sourceQueue);
+    receivers.put(sourceQueue, receiver);
+    receiverThreadPool.submit(new Runnable() {
+      @Override
+      public void run() {
+        receiver.start();
+      }
+    });    
+  }
+
+  @Override
+  public void stopReceiver(TransportQueueActiveMQ queue) {
+    Receiver<?> receiver = receivers.get(queue);
+    if (receiver != null) {
+      receiver.stop();
+      receivers.remove(queue);
+    }
+  }
+
+  private class Receiver<T> {
+
+    private Class<T> clazz;
+    private ReceiveCallback<T> callback;
+
+    private TransportQueueActiveMQ queue;
+
+    private volatile boolean isStopped = false;
+
+    public Receiver(Class<T> clazz, ReceiveCallback<T> callback, TransportQueueActiveMQ queue) {
+      this.clazz = clazz;
+      this.callback = callback;
+      this.queue = queue;
+    }
+
+    void start() {
+      Session session = null;
+      Connection connection = null;
+      MessageConsumer consumer = null;
+
+      try {
+        connection = connectionFactory.createConnection();
+        connection.start();
+
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createQueue(queue.getQueue());
+        consumer = session.createConsumer(destination);
+
+        while (!isStopped) {
+          Message message = consumer.receive();
+          TextMessage textMessage = (TextMessage) message;
+          String text = textMessage.getText();
+          callback.handleReceive(BeanSerializer.deserialize(text, clazz));
+        }
+      } catch (JMSException e) {
+        logger.error("Failed to receive a message from " + queue, e);
+      } catch (BeanProcessorException e) {
+        logger.error("Failed to deserialize message payload", e);
+      } catch (TransportPluginException e) {
+        logger.error("Failed to handle receive", e);
+      } finally {
+        try {
+          consumer.close();
+          session.close();
+          connection.close();
+        } catch (JMSException ignore) {
+        }
+      }
+    }
+
+    void stop() {
+      isStopped = true;
+    }
+
+  }
 }
