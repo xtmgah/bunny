@@ -118,42 +118,6 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
   }
 
   @Override
-  public <T> ResultPair<T> receive(final TransportQueueRabbitMQ queue, final Class<T> clazz,
-      final ReceiveCallback<T> receiveCallback) {
-    Channel channel = null;
-    try {
-      channel = connection.createChannel();
-
-      String queueName = channel.queueDeclare().getQueue();
-      channel.queueBind(queueName, queue.getExchange(), queue.getRoutingKey());
-
-      QueueingConsumer consumer = new QueueingConsumer(channel);
-      channel.basicConsume(queueName, true, consumer);
-
-      QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-      String message = new String(delivery.getBody());
-      receiveCallback.handleReceive(BeanSerializer.deserialize(message, clazz));
-      return ResultPair.<T> success();
-    } catch (BeanProcessorException e) {
-      logger.error("Failed to deserialize message payload", e);
-      return ResultPair.<T> fail("Failed to deserialize message payload", e);
-    } catch (TransportPluginException e) {
-      logger.error("Failed to handle receive", e);
-      return ResultPair.<T> fail("Failed to handle receive", e);
-    } catch (Exception e) {
-      logger.error("Failed to receive a message from " + queue, e);
-      return ResultPair.<T> fail("Failed to receive a message from " + queue, e);
-    } finally {
-      if (channel != null) {
-        try {
-          channel.close();
-        } catch (Exception ignore) {
-        }
-      }
-    }
-  }
-
-  @Override
   public TransportPluginType getType() {
     return TransportPluginType.RABBIT_MQ;
   }

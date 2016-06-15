@@ -38,24 +38,6 @@ public class TransportPluginLocal implements TransportPlugin<TransportQueueLocal
   }
 
   @Override
-  public <T> ResultPair<T> receive(TransportQueueLocal queue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
-    try {
-      String payload = VMQueues.<String> getQueue(queue.getQueue()).take();
-      receiveCallback.handleReceive(BeanSerializer.deserialize(payload, clazz));
-      return ResultPair.success();
-    } catch (InterruptedException e) {
-      logger.error("Failed to receive a message from " + queue, e);
-      return ResultPair.<T> fail("Failed to receive a message from " + queue, e);
-    } catch (BeanProcessorException e) {
-      logger.error("Failed to deserialize message payload", e);
-      return ResultPair.<T> fail("Failed to deserialize message payload", e);
-    } catch (TransportPluginException e) {
-      logger.error("Failed to handle receive", e);
-      return ResultPair.<T> fail("Failed to handle receive", e);
-    }
-  }
-
-  @Override
   public TransportPluginType getType() {
     return TransportPluginType.LOCAL;
   }

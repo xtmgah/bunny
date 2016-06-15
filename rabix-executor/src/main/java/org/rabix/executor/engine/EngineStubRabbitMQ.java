@@ -22,7 +22,6 @@ public class EngineStubRabbitMQ implements EngineStub {
   private ExecutorService executorService;
   private TransportPluginRabbitMQ transportPlugin;
 
-  private ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
   private ScheduledExecutorService scheduledHeartbeatService = Executors.newSingleThreadScheduledExecutor();
 
   private TransportQueueRabbitMQ sendToBackendQueue;
@@ -58,18 +57,12 @@ public class EngineStubRabbitMQ implements EngineStub {
   
   @Override
   public void start() {
-    new Thread(new Runnable() {
+    transportPlugin.startReceiver(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
-      public void run() {
-        transportPlugin.startReceiver(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
-          @Override
-          public void handleReceive(Job job) throws TransportPluginException {
-            executorService.start(job, job.getContext().getId());
-          }
-        });
+      public void handleReceive(Job job) throws TransportPluginException {
+        executorService.start(job, job.getContext().getId());
       }
-    }).start();
-    
+    });
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
@@ -80,7 +73,6 @@ public class EngineStubRabbitMQ implements EngineStub {
 
   @Override
   public void stop() {
-    scheduledService.shutdown();
     scheduledHeartbeatService.shutdown();
   }
 

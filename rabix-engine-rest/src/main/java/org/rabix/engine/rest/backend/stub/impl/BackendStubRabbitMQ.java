@@ -18,12 +18,8 @@ import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BackendStubRabbitMQ implements BackendStub {
-
-  private final static Logger logger = LoggerFactory.getLogger(BackendStubActiveMQ.class);
 
   private JobService jobService;
   private BackendRabbitMQ backendRabbitMQ;

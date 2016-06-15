@@ -74,43 +74,6 @@ public class TransportPluginActiveMQ implements TransportPlugin<TransportQueueAc
     }
   }
 
-  public <T> ResultPair<T> receive(TransportQueueActiveMQ queue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
-    Session session = null;
-    Connection connection = null;
-    MessageConsumer consumer = null;
-
-    try {
-      connection = connectionFactory.createConnection();
-      connection.start();
-
-      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      Destination destination = session.createQueue(queue.getQueue());
-      consumer = session.createConsumer(destination);
-
-      Message message = consumer.receive();
-      TextMessage textMessage = (TextMessage) message;
-      String text = textMessage.getText();
-      receiveCallback.handleReceive(BeanSerializer.deserialize(text, clazz));
-      return ResultPair.<T>success();
-    } catch (JMSException e) {
-      logger.error("Failed to receive a message from " + queue, e);
-      return ResultPair.<T> fail("Failed to receive a message from " + queue, e);
-    } catch (BeanProcessorException e) {
-      logger.error("Failed to deserialize message payload", e);
-      return ResultPair.<T> fail("Failed to deserialize message payload", e);
-    } catch (TransportPluginException e) {
-      logger.error("Failed to handle receive", e);
-      return ResultPair.<T> fail("Failed to handle receive", e);
-    } finally {
-      try {
-        consumer.close();
-        session.close();
-        connection.close();
-      } catch (JMSException ignore) {
-      }
-    }
-  }
-
   @Override
   public TransportPluginType getType() {
     return TransportPluginType.ACTIVE_MQ;

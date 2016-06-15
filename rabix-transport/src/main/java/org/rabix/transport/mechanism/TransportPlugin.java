@@ -4,8 +4,6 @@ public interface TransportPlugin<Q extends TransportQueue> {
 
   <T> ResultPair<T> send(Q destinationQueue, T entity);
 
-  <T> ResultPair<T> receive(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback);
-  
   <T> void startReceiver(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback);
   
   void stopReceiver(Q sourceQueue);
