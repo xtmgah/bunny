@@ -123,8 +123,8 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
   }
 
   @Override
-  public <T> void startReceiver(TransportQueueRabbitMQ sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback) {
-    final Receiver<T> receiver = new Receiver<>(clazz, receiveCallback, sourceQueue);
+  public <T> void startReceiver(TransportQueueRabbitMQ sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback, ErrorCallback errorCallback) {
+    final Receiver<T> receiver = new Receiver<>(clazz, receiveCallback, errorCallback, sourceQueue);
     receivers.put(sourceQueue, receiver);
     receiverThreadPool.submit(new Runnable() {
       @Override
@@ -147,12 +147,13 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
 
     private Class<T> clazz;
     private ReceiveCallback<T> callback;
+    private ErrorCallback errorCallback;
 
     private TransportQueueRabbitMQ queue;
 
     private volatile boolean isStopped = false;
 
-    public Receiver(Class<T> clazz, ReceiveCallback<T> callback, TransportQueueRabbitMQ queue) {
+    public Receiver(Class<T> clazz, ReceiveCallback<T> callback, ErrorCallback errorCallback, TransportQueueRabbitMQ queue) {
       this.clazz = clazz;
       this.callback = callback;
       this.queue = queue;
@@ -175,10 +176,13 @@ public class TransportPluginRabbitMQ implements TransportPlugin<TransportQueueRa
         }
       } catch (BeanProcessorException e) {
         logger.error("Failed to deserialize message payload", e);
+        errorCallback.handleError(e);
       } catch (TransportPluginException e) {
         logger.error("Failed to handle receive", e);
+        errorCallback.handleError(e);
       } catch (Exception e) {
         logger.error("Failed to receive a message from " + queue, e);
+        errorCallback.handleError(e);
       } finally {
         if (channel != null) {
           try {

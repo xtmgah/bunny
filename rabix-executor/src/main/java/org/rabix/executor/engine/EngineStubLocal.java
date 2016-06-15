@@ -10,13 +10,18 @@ import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendLocal;
 import org.rabix.transport.mechanism.TransportPlugin;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.local.TransportPluginLocal;
 import org.rabix.transport.mechanism.impl.local.TransportQueueLocal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EngineStubLocal implements EngineStub {
 
+  private final static Logger logger = LoggerFactory.getLogger(EngineStubLocal.class);
+  
   private BackendLocal backendLocal;
   private ExecutorService executorService;
   private TransportPlugin<TransportQueueLocal> transportPlugin;
@@ -39,6 +44,11 @@ public class EngineStubLocal implements EngineStub {
       @Override
       public void handleReceive(Job job) throws TransportPluginException {
         executorService.start(job, job.getContext().getId());
+      }
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
       }
     });
     

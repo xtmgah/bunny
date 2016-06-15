@@ -14,13 +14,18 @@ import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BackendStubRabbitMQ implements BackendStub {
 
+  private final static Logger logger = LoggerFactory.getLogger(BackendStubRabbitMQ.class);
+  
   private JobService jobService;
   private BackendRabbitMQ backendRabbitMQ;
   private TransportPluginRabbitMQ transportPluginMQ;
@@ -70,6 +75,11 @@ public class BackendStubRabbitMQ implements BackendStub {
           throw new TransportPluginException("Failed to update Job", e);
         }
       }
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
+      }
     });
 
     transportPluginMQ.startReceiver(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class,
@@ -77,6 +87,11 @@ public class BackendStubRabbitMQ implements BackendStub {
           @Override
           public void handleReceive(HeartbeatInfo entity) throws TransportPluginException {
             heartbeatInfo.put(entity.getId(), entity.getTimestamp());
+          }
+        }, new ErrorCallback() {
+          @Override
+          public void handleError(Exception error) {
+            logger.error("Failed to receive message.", error);
           }
         });
   }

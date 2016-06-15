@@ -4,7 +4,7 @@ public interface TransportPlugin<Q extends TransportQueue> {
 
   <T> ResultPair<T> send(Q destinationQueue, T entity);
 
-  <T> void startReceiver(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback);
+  <T> void startReceiver(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback, ErrorCallback errorCallback);
   
   void stopReceiver(Q sourceQueue);
   
@@ -12,6 +12,10 @@ public interface TransportPlugin<Q extends TransportQueue> {
   
   public static interface ReceiveCallback<T> {
     void handleReceive(T entity) throws TransportPluginException;
+  }
+  
+  public static interface ErrorCallback {
+    void handleError(Exception error);
   }
   
   public static class ResultPair<T> {

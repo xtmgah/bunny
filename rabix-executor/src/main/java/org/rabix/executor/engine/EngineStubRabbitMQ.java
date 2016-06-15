@@ -11,13 +11,18 @@ import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EngineStubRabbitMQ implements EngineStub {
 
+  private final static Logger logger = LoggerFactory.getLogger(EngineStubRabbitMQ.class);
+  
   private BackendRabbitMQ backendRabbitMQ;
   private ExecutorService executorService;
   private TransportPluginRabbitMQ transportPlugin;
@@ -62,7 +67,13 @@ public class EngineStubRabbitMQ implements EngineStub {
       public void handleReceive(Job job) throws TransportPluginException {
         executorService.start(job, job.getContext().getId());
       }
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
+      }
     });
+    
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
