@@ -8,10 +8,8 @@ import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolRequirementProvider;
-import org.rabix.bindings.model.Cpu;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Memory;
 import org.rabix.bindings.model.requirement.CPURequirement;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
@@ -154,26 +152,6 @@ public class Draft2RequirementProvider implements ProtocolRequirementProvider {
       throw new BindingException(e);
     }
     return result;
-  }
-
-  @Override
-  public Cpu getCPU(Job job) throws BindingException {
-    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
-    try {
-      return new Cpu(draft2Job.getCPU().longValue(), null);
-    } catch (Draft2ExpressionException e) {
-      throw new BindingException(e);
-    }
-  }
-
-  @Override
-  public Memory getMemory(Job job) throws BindingException {
-    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
-    try {
-      return new Memory(draft2Job.getMemory().longValue(), null);
-    } catch (Draft2ExpressionException e) {
-      throw new BindingException(e);
-    }
   }
 
 }

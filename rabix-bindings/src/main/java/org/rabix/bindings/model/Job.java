@@ -89,6 +89,10 @@ public class Job {
     return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context);
   }
   
+  public static Job cloneWithResources(Job job, Resources resources) {
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+  }
+
   public static Job cloneWithStatus(Job job, JobStatus status) {
     return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context);
   }

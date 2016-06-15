@@ -16,10 +16,8 @@ import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.ProtocolValueProcessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Application;
-import org.rabix.bindings.model.Cpu;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Memory;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 
@@ -116,16 +114,6 @@ public class Draft2Bindings implements Bindings {
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
     return requirementProvider.getHints(job);
-  }
-  
-  @Override
-  public Cpu getCPU(Job job) throws BindingException {
-    return requirementProvider.getCPU(job);
-  }
-
-  @Override
-  public Memory getMemory(Job job) throws BindingException {
-    return requirementProvider.getMemory(job);
   }
   
   @Override

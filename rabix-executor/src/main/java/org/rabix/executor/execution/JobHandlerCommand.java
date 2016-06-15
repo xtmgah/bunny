@@ -7,7 +7,6 @@ import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ public abstract class JobHandlerCommand {
       return run(data, handler, contextId);
     } catch (Exception e) {
       failed(data, "Executor faced a runtime exception.", handler.getEngineStub(), e);
-      jobDataService.save(data, "Executor faced a runtime exception.", JobDataStatus.FAILED, contextId);
+      jobDataService.save(data, "Executor faced a runtime exception.", JobStatus.FAILED, contextId);
       throw e;
     }
   }

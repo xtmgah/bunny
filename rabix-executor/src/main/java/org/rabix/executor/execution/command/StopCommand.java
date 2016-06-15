@@ -2,11 +2,11 @@ package org.rabix.executor.execution.command;
 
 import javax.inject.Inject;
 
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.ExecutorException;
 import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 
 /**
@@ -26,11 +26,11 @@ public class StopCommand extends JobHandlerCommand {
       handler.stop();
 
       String message = String.format("Job %s aborted successfully.", jobId);
-      jobDataService.save(jobData, message, JobDataStatus.ABORTED, contextId);
+      jobDataService.save(jobData, message, JobStatus.ABORTED, contextId);
       stopped(jobData, message, handler.getEngineStub());
     } catch (ExecutorException e) {
       String message = String.format("Failed to stop %s. %s", jobId, e.toString());
-      jobDataService.save(jobData, message, JobDataStatus.FAILED, contextId);
+      jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
     }
     return new Result(true);
   }

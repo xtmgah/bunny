@@ -6,10 +6,8 @@ import java.util.Set;
 
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Application;
-import org.rabix.bindings.model.Cpu;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Memory;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 
@@ -42,10 +40,6 @@ public interface Bindings {
   List<Requirement> getRequirements(Job job) throws BindingException;
 
   List<Requirement> getHints(Job job) throws BindingException;
-  
-  Cpu getCPU(Job job) throws BindingException;
-  
-  Memory getMemory(Job job) throws BindingException;
   
   DAGNode translateToDAG(Job job) throws BindingException;
 

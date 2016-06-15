@@ -8,10 +8,8 @@ import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolRequirementProvider;
-import org.rabix.bindings.model.Cpu;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Memory;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement;
@@ -24,7 +22,6 @@ import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3Create
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3DockerResource;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement.EnvironmentDef;
-import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionResolver;
 import org.rabix.bindings.protocol.draft3.helper.Draft3FileValueHelper;
@@ -137,36 +134,6 @@ public class Draft3RequirementProvider implements ProtocolRequirementProvider {
       }
     }
     return result;
-  }
-
-  @Override
-  public Cpu getCPU(Job job) throws BindingException {
-    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
-    
-    Draft3ResourceRequirement resourceRequirement = draft3Job.getApp().getResourceRequirement();
-    if (resourceRequirement != null) {
-      try {
-        return new Cpu(resourceRequirement.getCoresMin(draft3Job), resourceRequirement.getCoresMax(draft3Job));
-      } catch (Draft3ExpressionException e) {
-        throw new BindingException(e);
-      }
-    }
-    return null;
-  }
-
-  @Override
-  public Memory getMemory(Job job) throws BindingException {
-    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
-    
-    Draft3ResourceRequirement resourceRequirement = draft3Job.getApp().getResourceRequirement();
-    if (resourceRequirement != null) {
-      try {
-        return new Memory(resourceRequirement.getRamMin(draft3Job), resourceRequirement.getRamMax(draft3Job));
-      } catch (Draft3ExpressionException e) {
-        throw new BindingException(e);
-      }
-    }
-    return null;
   }
 
 }
