@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
@@ -38,9 +39,7 @@ public class Draft3GlobServiceImpl implements Draft3GlobService {
     Preconditions.checkNotNull(workingDir);
     
     try {
-      if (Draft3ExpressionResolver.isExpressionObject(glob)) {
-        glob = Draft3ExpressionResolver.resolve(glob, job, null);
-      }
+      glob = Draft3ExpressionResolver.resolve(glob, job, null);
     } catch (Draft3ExpressionException e) {
       logger.error("Failed to evaluate glob " + glob, e);
       throw new Draft3GlobException("Failed to evaluate glob " + glob, e);
@@ -55,7 +54,7 @@ public class Draft3GlobServiceImpl implements Draft3GlobService {
       globs.add((String) glob);
     }
     
-    final Set<File> files = new HashSet<>();
+    final Set<File> files = new TreeSet<>();
     for (String singleGlob : globs) {
       final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + singleGlob);
       try {
@@ -79,5 +78,4 @@ public class Draft3GlobServiceImpl implements Draft3GlobService {
     }
     return files;
   }
-  
 }

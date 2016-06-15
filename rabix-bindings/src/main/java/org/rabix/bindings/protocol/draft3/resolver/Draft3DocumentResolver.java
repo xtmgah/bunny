@@ -29,7 +29,7 @@ import com.google.common.base.Preconditions;
 
 public class Draft3DocumentResolver {
 
-  public static final String RESOLVER_REFERENCE_KEY = "import";
+  public static final String RESOLVER_REFERENCE_KEY = "$import";
   public static final String APP_STEP_KEY = "run";
   public static final String RESOLVER_REFERENCE_INCLUDE_KEY = "$include";
   
