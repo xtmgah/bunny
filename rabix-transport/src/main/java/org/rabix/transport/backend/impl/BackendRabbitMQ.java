@@ -10,13 +10,13 @@ public class BackendRabbitMQ extends Backend {
 
   @JsonProperty("host")
   private String host;
-  @JsonProperty("engineConfiguration")
+  @JsonProperty("engine_configuration")
   private EngineConfiguration engineConfiguration;
-  @JsonProperty("backendConfiguration")
+  @JsonProperty("backend_configuration")
   private BackendConfiguration backendConfiguration;
   
   @JsonCreator
-  public BackendRabbitMQ(@JsonProperty("id") String id, @JsonProperty("host") String host, @JsonProperty("engineConfiguration") EngineConfiguration engineConfiguration, @JsonProperty("backendConfiguration") BackendConfiguration backendConfiguration) {
+  public BackendRabbitMQ(@JsonProperty("id") String id, @JsonProperty("host") String host, @JsonProperty("engine_configuration") EngineConfiguration engineConfiguration, @JsonProperty("backend_configuration") BackendConfiguration backendConfiguration) {
     this.id = id;
     this.host = host;
     this.engineConfiguration = engineConfiguration;
@@ -138,11 +138,11 @@ public class BackendRabbitMQ extends Backend {
     private String exchangeType;
     @JsonProperty("receive_routing_key")
     private String receiveRoutingKey;
-    @JsonProperty("heartbeatPeriodMills")
+    @JsonProperty("heartbeat_period_mills")
     private Long heartbeatPeriodMills;
     
     @JsonCreator
-    public BackendConfiguration(@JsonProperty("exchange") String exchange, @JsonProperty("exchange_type") String exchangeType, @JsonProperty("receive_routing_key") String receiveRoutingKey, @JsonProperty("heartbeatPeriodMills") Long heartbeatPeriodMills) {
+    public BackendConfiguration(@JsonProperty("exchange") String exchange, @JsonProperty("exchange_type") String exchangeType, @JsonProperty("receive_routing_key") String receiveRoutingKey, @JsonProperty("heartbeat_period_mills") Long heartbeatPeriodMills) {
       this.exchange = exchange;
       this.exchangeType = exchangeType;
       this.receiveRoutingKey = receiveRoutingKey;
