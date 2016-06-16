@@ -49,7 +49,7 @@ public class BackendDispatcher {
   
   @Inject
   public BackendDispatcher(Configuration configuration) {
-    this.heartbeatPeriod = configuration.getLong("backend.cleaner.heartbeatPeriod", DEFAULT_HEARTBEAT_PERIOD);
+    this.heartbeatPeriod = configuration.getLong("backend.cleaner.heartbeatPeriodMills", DEFAULT_HEARTBEAT_PERIOD);
     start();
   }
 
@@ -69,7 +69,7 @@ public class BackendDispatcher {
       }
     }, 0, 10, TimeUnit.SECONDS);
 
-    heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, 20, TimeUnit.SECONDS);
+    heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, heartbeatPeriod, TimeUnit.MILLISECONDS);
   }
 
   public boolean send(Set<Job> jobs) {
