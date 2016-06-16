@@ -128,7 +128,6 @@ public class JobDataServiceImpl implements JobDataService {
         for (JobData jobData : aborting) {
           save(JobData.cloneWithStatus(jobData, JobDataStatus.ABORTED));
           jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get(), engineStub);
-          jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
         }
 
         List<JobData> pending = find(JobDataStatus.PENDING);
