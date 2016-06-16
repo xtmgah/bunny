@@ -148,7 +148,7 @@ public class ServerBuilder {
   }
   
   public static void main(String[] args) throws InterruptedException {
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < 100; i++) {
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
       WebTarget webTarget = client.target("http://localhost" + ":" + 8081 + "/v0/engine/jobs");
 

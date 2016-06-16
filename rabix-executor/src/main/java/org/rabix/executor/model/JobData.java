@@ -64,20 +64,48 @@ public class JobData {
     }
   }
   
-  private Job job;
-  private JobDataStatus status;
-  private Map<String, Object> result;
-  private String message;
-  private boolean important;
-  private boolean terminal;
-  private boolean logsUploaded;
+  private final Job job;
+  private final JobDataStatus status;
+  private final Map<String, Object> result;
+  private final String message;
+  private final boolean important;
+  private final boolean terminal;
+  private final boolean logsUploaded;
 
-  public JobData(Job job, JobDataStatus status, boolean important, boolean terminal) {
+  public JobData(Job job, JobDataStatus status, String message, boolean important, boolean terminal) {
     this.job = job;
     this.status = status;
     this.important = important;
     this.terminal = terminal;
     this.logsUploaded = false;
+    this.result = null;
+    this.message = message;
+  }
+  
+  public JobData(Job job, JobDataStatus status, String message, Map<String, Object> result, boolean important, boolean terminal) {
+    this.job = job;
+    this.status = status;
+    this.important = important;
+    this.terminal = terminal;
+    this.logsUploaded = false;
+    this.result = result;
+    this.message = message;
+  }
+  
+  public static JobData cloneWithJob(JobData jobData, Job job) {
+    return new JobData(job, jobData.status, jobData.message, jobData.result, jobData.important, jobData.terminal);
+  }
+  
+  public static JobData cloneWithResult(JobData jobData, Map<String, Object> result) {
+    return new JobData(jobData.job, jobData.status, jobData.message, result, jobData.important, jobData.terminal);
+  }
+  
+  public static JobData cloneWithStatus(JobData jobData, JobDataStatus status) {
+    return new JobData(jobData.job, status, jobData.message, jobData.important, jobData.terminal);
+  }
+  
+  public static JobData cloneWithStatusAndMessage(JobData jobData, JobDataStatus status, String message) {
+    return new JobData(jobData.job, status, message, jobData.important, jobData.terminal);
   }
 
   public String getId() {
@@ -88,56 +116,28 @@ public class JobData {
     return job;
   }
 
-  public void setJob(Job job) {
-    this.job = job;
-  }
-
   public JobDataStatus getStatus() {
     return status;
-  }
-
-  public void setStatus(JobDataStatus status) {
-    this.status = status;
   }
 
   public Map<String, Object> getResult() {
     return result;
   }
 
-  public void setResult(Map<String, Object> result) {
-    this.result = result;
-  }
-
   public String getMessage() {
     return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
   }
 
   public boolean isImportant() {
     return important;
   }
 
-  public void setImportant(boolean important) {
-    this.important = important;
-  }
-
   public boolean isTerminal() {
     return terminal;
   }
 
-  public void setTerminal(boolean terminal) {
-    this.terminal = terminal;
-  }
-
   public boolean isLogsUploaded() {
     return logsUploaded;
-  }
-
-  public void setLogsUploaded(boolean logsUploaded) {
-    this.logsUploaded = logsUploaded;
   }
 
   @Override

@@ -45,7 +45,7 @@ public abstract class JobHandlerCommand {
       return run(data, handler, contextId);
     } catch (Exception e) {
       failed(data, "Executor faced a runtime exception.", handler.getEngineStub(), e);
-      jobDataService.save(data, "Executor faced a runtime exception.", JobDataStatus.FAILED);
+      data = jobDataService.save(data, "Executor faced a runtime exception.", JobDataStatus.FAILED);
       throw e;
     }
   }
@@ -69,7 +69,8 @@ public abstract class JobHandlerCommand {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
   }
 
@@ -80,7 +81,8 @@ public abstract class JobHandlerCommand {
     logger.error(message, e);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
   }
 
@@ -91,10 +93,13 @@ public abstract class JobHandlerCommand {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
   }
 
+  static volatile int count = 0;
+  
   /**
    * Send notification to master about COMPLETED event 
    */
@@ -103,7 +108,8 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
   }
 

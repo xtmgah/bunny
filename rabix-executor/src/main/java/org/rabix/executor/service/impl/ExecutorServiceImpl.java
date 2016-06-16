@@ -11,10 +11,6 @@ import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.engine.EngineStubActiveMQ;
 import org.rabix.executor.engine.EngineStubLocal;
 import org.rabix.executor.engine.EngineStubRabbitMQ;
-import org.rabix.executor.execution.JobHandlerCommandDispatcher;
-import org.rabix.executor.execution.command.StartCommand;
-import org.rabix.executor.execution.command.StatusCommand;
-import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.ExecutorService;
@@ -28,18 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 public class ExecutorServiceImpl implements ExecutorService {
 
   private static final Logger logger = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 
   private final JobDataService jobDataService;
-  private final JobHandlerCommandDispatcher jobHandlerCommandDispatcher;
-
-  private final Provider<StopCommand> stopCommandProvider;
-  private final Provider<StartCommand> startCommandProvider;
-  private final Provider<StatusCommand> statusCommandProvider;
 
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
@@ -47,15 +37,9 @@ public class ExecutorServiceImpl implements ExecutorService {
   private Configuration configuration;
 
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, JobHandlerCommandDispatcher jobHandlerCommandDispatcher,
-      Provider<StopCommand> stopCommandProvider, Provider<StartCommand> startCommandProvider,
-      Provider<StatusCommand> statusCommandProvider, Configuration configuration) {
+  public ExecutorServiceImpl(JobDataService jobDataService, Configuration configuration) {
     this.configuration = configuration;
     this.jobDataService = jobDataService;
-    this.stopCommandProvider = stopCommandProvider;
-    this.startCommandProvider = startCommandProvider;
-    this.statusCommandProvider = statusCommandProvider;
-    this.jobHandlerCommandDispatcher = jobHandlerCommandDispatcher;
   }
 
   @Override
@@ -73,6 +57,7 @@ public class ExecutorServiceImpl implements ExecutorService {
       default:
         break;
       }
+      jobDataService.initialize(engineStub);
       engineStub.start();
     } catch (TransportPluginException e) {
       logger.error("Failed to initialize Executor", e);
@@ -84,11 +69,8 @@ public class ExecutorServiceImpl implements ExecutorService {
   public void start(final Job job, String contextId) {
     logger.debug("start(id={}, important={}, uploadOutputs={})", job.getId());
 
-    final JobData jobData = new JobData(job, JobDataStatus.READY, false, false);
+    final JobData jobData = new JobData(job, JobDataStatus.PENDING, "Job is queued to start.", false, false);
     jobDataService.save(jobData);
-
-    jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
-    jobHandlerCommandDispatcher.dispatch(jobData, statusCommandProvider.get(), engineStub);
   }
 
   @Override
@@ -96,7 +78,7 @@ public class ExecutorServiceImpl implements ExecutorService {
     logger.debug("stop(id={})", jobId);
 
     final JobData jobData = jobDataService.find(jobId, contextId);
-    jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get(), engineStub);
+    jobDataService.save(jobData, "Stopping job", JobDataStatus.ABORTING);
   }
 
   @Override
@@ -122,7 +104,7 @@ public class ExecutorServiceImpl implements ExecutorService {
         if (!stopEverything && jobData.isImportant()) {
           continue;
         }
-        jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get(), engineStub);
+        jobDataService.save(jobData, "Stopping job", JobDataStatus.ABORTING);
         abortedJobsCount++;
       }
     }
