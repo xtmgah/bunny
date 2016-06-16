@@ -16,6 +16,7 @@ import org.rabix.executor.execution.command.StartCommand;
 import org.rabix.executor.execution.command.StatusCommand;
 import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.transport.backend.Backend;
@@ -83,7 +84,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   public void start(final Job job, String contextId) {
     logger.debug("start(id={}, important={}, uploadOutputs={})", job.getId());
 
-    final JobData jobData = new JobData(job, JobStatus.READY, false, false);
+    final JobData jobData = new JobData(job, JobDataStatus.READY, false, false);
     jobDataService.save(jobData, contextId);
 
     jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
@@ -104,7 +105,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 
     JobData jobData = jobDataService.find(jobId, contextId);
     if (jobData != null) {
-      return jobData.getStatus();
+      return JobDataStatus.convertToJobStatus(jobData.getStatus());
     }
     return null;
   }
@@ -113,7 +114,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   public void shutdown(Boolean stopEverything) {
     logger.debug("shutdown(stopEverything={})", stopEverything);
 
-    List<JobData> jobsToStop = jobDataService.find(JobStatus.STARTED, JobStatus.READY);
+    List<JobData> jobsToStop = jobDataService.find(JobDataStatus.STARTED, JobDataStatus.READY);
 
     int abortedJobsCount = 0;
     if (jobsToStop != null) {
@@ -150,11 +151,12 @@ public class ExecutorServiceImpl implements ExecutorService {
     return false;
   }
 
-  private boolean isFinished(JobStatus jobStatus) {
+  private boolean isFinished(JobDataStatus jobStatus) {
     switch (jobStatus) {
     case COMPLETED:
     case FAILED:
     case ABORTED:
+    case ABORTING:
       return true;
     default:
       return false;

@@ -158,7 +158,7 @@ public class ServerBuilder {
       file.put("path", "whale.txt");
       inputs.put("file1", file);
 
-      Job job = new Job("file:///Users/janko/Development/Git/prototype/common-workflow-language/draft-2/draft-2/count-lines8-wf.cwl", inputs);
+      Job job = new Job("file:///home/janko/Development/Git/Repositories/common-workflow-language/draft-2/draft-2/count-lines8-wf.cwl", inputs);
       Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
       invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
       System.out.println(i);

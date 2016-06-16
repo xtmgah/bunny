@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +30,10 @@ public class JobDataServiceImpl implements JobDataService {
   }
 
   @Override
-  public synchronized List<JobData> find(JobStatus... statuses) {
+  public synchronized List<JobData> find(JobDataStatus... statuses) {
     Preconditions.checkNotNull(statuses);
 
-    List<JobStatus> statusList = Arrays.asList(statuses);
+    List<JobDataStatus> statusList = Arrays.asList(statuses);
     logger.debug("find(status={})", statusList);
 
     List<JobData> jobDataByStatus = new ArrayList<>();
@@ -55,7 +55,7 @@ public class JobDataServiceImpl implements JobDataService {
   }
 
   @Override
-  public synchronized void save(JobData jobData, String message, JobStatus status, String contextId) {
+  public synchronized void save(JobData jobData, String message, JobDataStatus status, String contextId) {
     Preconditions.checkNotNull(jobData);
     logger.debug("save(jobData={}, message={}, status={})", jobData, message, status);
     jobData.setStatus(status);
