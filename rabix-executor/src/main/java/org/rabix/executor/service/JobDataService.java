@@ -7,9 +7,9 @@ import org.rabix.executor.model.JobData.JobDataStatus;
 
 public interface JobDataService {
 
-  void save(JobData data, String contextId);
+  void save(JobData data);
 
-  void save(JobData jobData, String message, JobDataStatus status, String contextId);
+  void save(JobData jobData, String message, JobDataStatus status);
   
   public JobData find(String id, String contextId);
 

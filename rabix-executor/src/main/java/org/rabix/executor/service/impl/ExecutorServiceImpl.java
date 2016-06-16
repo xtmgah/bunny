@@ -85,7 +85,7 @@ public class ExecutorServiceImpl implements ExecutorService {
     logger.debug("start(id={}, important={}, uploadOutputs={})", job.getId());
 
     final JobData jobData = new JobData(job, JobDataStatus.READY, false, false);
-    jobDataService.save(jobData, contextId);
+    jobDataService.save(jobData);
 
     jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
     jobHandlerCommandDispatcher.dispatch(jobData, statusCommandProvider.get(), engineStub);

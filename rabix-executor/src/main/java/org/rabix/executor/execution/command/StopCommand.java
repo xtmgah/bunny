@@ -26,11 +26,11 @@ public class StopCommand extends JobHandlerCommand {
       handler.stop();
 
       String message = String.format("Job %s aborted successfully.", jobId);
-      jobDataService.save(jobData, message, JobDataStatus.ABORTED, contextId);
+      jobDataService.save(jobData, message, JobDataStatus.ABORTED);
       stopped(jobData, message, handler.getEngineStub());
     } catch (ExecutorException e) {
       String message = String.format("Failed to stop %s. %s", jobId, e.toString());
-      jobDataService.save(jobData, message, JobDataStatus.FAILED, contextId);
+      jobDataService.save(jobData, message, JobDataStatus.FAILED);
     }
     return new Result(true);
   }

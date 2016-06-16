@@ -25,11 +25,11 @@ public class StartCommand extends JobHandlerCommand {
     Job job = data.getJob();
     try {
       handler.start();
-      jobDataService.save(data, "Job " + job.getId() + " started successfully.", JobDataStatus.STARTED, contextId);
+      jobDataService.save(data, "Job " + job.getId() + " started successfully.", JobDataStatus.STARTED);
       started(data, "Job " + job.getId() + " started successfully.", handler.getEngineStub());
     } catch (ExecutorException e) {
       String message = String.format("Failed to start %s. %s", job.getId(), e.toString());
-      jobDataService.save(data, message, JobDataStatus.FAILED, contextId);
+      jobDataService.save(data, message, JobDataStatus.FAILED);
       failed(data, message, handler.getEngineStub(), e);
       return new Result(true);
     }

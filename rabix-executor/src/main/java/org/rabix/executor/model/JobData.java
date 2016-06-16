@@ -80,6 +80,10 @@ public class JobData {
     this.logsUploaded = false;
   }
 
+  public String getId() {
+    return job.getId();
+  }
+  
   public Job getJob() {
     return job;
   }

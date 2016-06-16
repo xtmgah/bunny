@@ -47,16 +47,16 @@ public class StatusCommand extends JobHandlerCommand {
       job = jobHandler.postprocess(jobData.isTerminal());
       if (!jobHandler.isSuccessful()) {
         message = String.format("Job %s failed with exit code %d.", job.getId(), jobHandler.getExitStatus());
-        jobDataService.save(jobData, message, JobDataStatus.FAILED, contextId);
+        jobDataService.save(jobData, message, JobDataStatus.FAILED);
         failed(jobData, message, jobHandler.getEngineStub(), null);
       } else {
         message = String.format("Job %s completed successfully.", job.getId());
-        jobDataService.save(jobData, message, JobDataStatus.COMPLETED, contextId);
+        jobDataService.save(jobData, message, JobDataStatus.COMPLETED);
         completed(jobData, message, job.getOutputs(), jobHandler.getEngineStub());
       }
     } catch (Exception e) {
       String message = String.format("Failed to execute status command for %s. %s", jobId, e.getMessage());
-      jobDataService.save(jobData, message, JobDataStatus.FAILED, contextId);
+      jobDataService.save(jobData, message, JobDataStatus.FAILED);
       failed(jobData, message, jobHandler.getEngineStub(), e);
       return new Result(true);
     }

@@ -45,7 +45,7 @@ public abstract class JobHandlerCommand {
       return run(data, handler, contextId);
     } catch (Exception e) {
       failed(data, "Executor faced a runtime exception.", handler.getEngineStub(), e);
-      jobDataService.save(data, "Executor faced a runtime exception.", JobDataStatus.FAILED, contextId);
+      jobDataService.save(data, "Executor faced a runtime exception.", JobDataStatus.FAILED);
       throw e;
     }
   }

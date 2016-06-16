@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.rabix.bindings.model.Job;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
@@ -26,7 +25,7 @@ public class JobDataServiceImpl implements JobDataService {
   public synchronized JobData find(String id, String contextId) {
     Preconditions.checkNotNull(id);
     logger.debug("find(id={})", id);
-    return getJobs(contextId).get(id);
+    return getJobDataMap(contextId).get(id);
   }
 
   @Override
@@ -48,22 +47,22 @@ public class JobDataServiceImpl implements JobDataService {
   }
 
   @Override
-  public synchronized void save(JobData jobData, String contextId) {
+  public synchronized void save(JobData jobData) {
+    Preconditions.checkNotNull(jobData);
     logger.debug("save(jobData={})", jobData);
-    Job job = jobData.getJob();
-    getJobs(contextId).put(job.getId(), jobData);
+    getJobDataMap(jobData.getJob().getRootId()).put(jobData.getId(), jobData);
   }
 
   @Override
-  public synchronized void save(JobData jobData, String message, JobDataStatus status, String contextId) {
+  public synchronized void save(JobData jobData, String message, JobDataStatus status) {
     Preconditions.checkNotNull(jobData);
     logger.debug("save(jobData={}, message={}, status={})", jobData, message, status);
     jobData.setStatus(status);
     jobData.setMessage(message);
-    save(jobData, contextId);
+    save(jobData);
   }
   
-  private synchronized Map<String, JobData> getJobs(String contextId) {
+  private synchronized Map<String, JobData> getJobDataMap(String contextId) {
     Map<String, JobData> jobList = jobs.get(contextId);
     if (jobList == null) {
       jobList = new HashMap<>();

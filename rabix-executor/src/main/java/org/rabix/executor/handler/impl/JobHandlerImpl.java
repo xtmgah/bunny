@@ -187,7 +187,7 @@ public class JobHandlerImpl implements JobHandler {
 
       JobData jobData = jobDataService.find(job.getId(), job.getRootId());
       jobData.setResult(job.getOutputs());
-      jobDataService.save(jobData, job.getRootId());
+      jobDataService.save(jobData);
 
       logger.debug("Command line tool {} returned result {}.", job.getId(), job.getOutputs());
       return job;
