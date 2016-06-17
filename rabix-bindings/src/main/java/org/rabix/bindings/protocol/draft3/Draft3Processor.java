@@ -253,7 +253,7 @@ public class Draft3Processor implements ProtocolProcessor {
 //      }
         Draft3FileValueHelper.setPath(file.getAbsolutePath(), fileData);
 
-        List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputBinding);
+        List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputPort.getSecondaryFiles());
         if (secondaryFiles != null) {
           Draft3FileValueHelper.setSecondaryFiles(secondaryFiles, fileData);
         }
@@ -288,8 +288,7 @@ public class Draft3Processor implements ProtocolProcessor {
    * Gets secondary files (absolute paths)
    */
   @SuppressWarnings("unchecked")
-  private List<Map<String, Object>> getSecondaryFiles(Draft3Job job, HashAlgorithm hashAlgorithm, Map<String, Object> fileValue, String fileName, Object binding) throws Draft3ExpressionException {
-    Object secondaryFilesObj = Draft3BindingHelper.getSecondaryFiles(binding);
+  private List<Map<String, Object>> getSecondaryFiles(Draft3Job job, HashAlgorithm hashAlgorithm, Map<String, Object> fileValue, String fileName, Object secondaryFilesObj) throws Draft3ExpressionException {
 
     if (secondaryFilesObj == null) {
       return null;
@@ -302,31 +301,41 @@ public class Draft3Processor implements ProtocolProcessor {
     
     List<Map<String, Object>> secondaryFileMaps = new ArrayList<>();
     for (Object suffixObj : secondaryFilesList) {
-      String suffix = Draft3ExpressionResolver.resolve(suffixObj, job, fileValue);
-      String secondaryFilePath = fileName.toString();
-
-      while (suffix.startsWith("^")) {
-        int extensionIndex = secondaryFilePath.lastIndexOf(".");
-        if (extensionIndex != -1) {
-          secondaryFilePath = secondaryFilePath.substring(0, extensionIndex);
-          suffixObj = suffix.substring(1);
-        } else {
-          break;
+      Object expr = Draft3ExpressionResolver.resolve(suffixObj, job, fileValue);
+      Map<String, Object> secondaryFileMap = new HashMap<>();
+      if(expr instanceof String) {
+        String secondaryFilePath;
+        String suffix = (String) expr;
+        if((suffix).startsWith("^") || suffix.startsWith(".")) {
+          secondaryFilePath = fileName.toString();
+          while (suffix.startsWith("^")) {
+            int extensionIndex = secondaryFilePath.lastIndexOf(".");
+            if (extensionIndex != -1) {
+              secondaryFilePath = secondaryFilePath.substring(0, extensionIndex);
+              suffixObj = suffix.substring(1);
+            } else {
+              break;
+            }
+          }
+          secondaryFilePath += ((String) suffixObj).startsWith(".") ? suffixObj : "." + suffixObj;
         }
-      }
-      secondaryFilePath += suffix.startsWith(".") ? suffixObj : "." + suffixObj;
-      File secondaryFile = new File(secondaryFilePath);
-      if (secondaryFile.exists()) {
-        Map<String, Object> secondaryFileMap = new HashMap<>();
-        Draft3FileValueHelper.setFileType(secondaryFileMap);
-        Draft3FileValueHelper.setPath(secondaryFile.getAbsolutePath(), secondaryFileMap);
-        Draft3FileValueHelper.setSize(secondaryFile.length(), secondaryFileMap);
-        Draft3FileValueHelper.setName(secondaryFile.getName(), secondaryFileMap);
-        if (hashAlgorithm != null) {
-          Draft3FileValueHelper.setChecksum(secondaryFile, secondaryFileMap, hashAlgorithm);
+        else {
+          secondaryFilePath = suffix;
         }
-        secondaryFileMaps.add(secondaryFileMap);
+        File secondaryFile = new File(secondaryFilePath);
+        if (secondaryFile.exists()) {
+          Draft3FileValueHelper.setFileType(secondaryFileMap);
+          Draft3FileValueHelper.setPath(secondaryFile.getAbsolutePath(), secondaryFileMap);
+          //Draft3FileValueHelper.setSize(secondaryFile.length(), secondaryFileMap);
+          //Draft3FileValueHelper.setName(secondaryFile.getName(), secondaryFileMap);
+          if (hashAlgorithm != null) {
+            Draft3FileValueHelper.setChecksum(secondaryFile, secondaryFileMap, hashAlgorithm);
+          }
+        }
+      } else if (expr instanceof Map) {
+        secondaryFileMap = (Map<String, Object>) expr;
       }
+      secondaryFileMaps.add(secondaryFileMap);
     }
     return secondaryFileMaps;
   }

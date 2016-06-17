@@ -21,17 +21,22 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.JSONHelper;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Preconditions;
 
 public class Draft3DocumentResolver {
 
-  public static final String RESOLVER_REFERENCE_KEY = "$import";
   public static final String APP_STEP_KEY = "run";
+  public static final String RESOLVER_REFERENCE_KEY = "$import";
   public static final String RESOLVER_REFERENCE_INCLUDE_KEY = "$include";
+  public static final String GRAPH_KEY = "$graph";
+  public static final String SCHEMA_KEY = "$schema";
+  public static final String NAMESPACE_KEY = "$namespace";
   
   public static final String RESOLVER_JSON_POINTER_KEY = "$job";
   
@@ -40,6 +45,7 @@ public class Draft3DocumentResolver {
   private static final String DEFAULT_ENCODING = "UTF-8";
 
   private static ConcurrentMap<String, String> cache = new ConcurrentHashMap<>(); 
+  private static boolean graphResolve = false;
   
   private static Map<String, Map<String, Draft3DocumentResolverReference>> referenceCache = new HashMap<>();
   private static Map<String, LinkedHashSet<Draft3DocumentResolverReplacement>> replacements = new HashMap<>();
@@ -63,6 +69,9 @@ public class Draft3DocumentResolver {
     } catch (IOException e) {
       throw new BindingException(e);
     }
+    if(root.has(GRAPH_KEY)) {
+      graphResolve = true;
+    }
     traverse(appUrl, root, file, null, root);
 
     for (Draft3DocumentResolverReplacement replacement : getReplacements(appUrl)) {
@@ -73,7 +82,34 @@ public class Draft3DocumentResolver {
       }
     }
     
-    cache.put(appUrl, JSONHelper.writeObject(root));
+    if(graphResolve) {
+      String fragment = URIHelper.extractFragment(appUrl).substring(1);
+      
+      clearReplacements(appUrl);
+      clearReferenceCache(appUrl);;
+      
+      removeFragmentIdentifier(appUrl, root, file, null, root, fragment);
+      
+      
+      for (Draft3DocumentResolverReplacement replacement : getReplacements(appUrl)) {
+        if (replacement.getParentNode().isArray()) {
+          replaceArrayItem(appUrl, root, replacement);
+        } else if (replacement.getParentNode().isObject()) {
+          replaceObjectItem(appUrl, root, replacement);
+        }
+      }
+      
+      for(final JsonNode elem: root.get(GRAPH_KEY)) {
+        if(elem.get("id").asText().equals(fragment)) {
+          cache.put(appUrl, JSONHelper.writeObject(elem));
+          break;
+        }
+      }
+      graphResolve = false;
+    }
+    else {
+      cache.put(appUrl, JSONHelper.writeObject(root));
+    }
 
     clearReplacements(appUrl);
     clearReferenceCache(appUrl);;
@@ -82,7 +118,7 @@ public class Draft3DocumentResolver {
   
   private static JsonNode traverse(String appUrl, JsonNode root, File file, JsonNode parentNode, JsonNode currentNode) throws BindingException {
     Preconditions.checkNotNull(currentNode, "current node id is null");
-
+   
     boolean isInclude = currentNode.has(RESOLVER_REFERENCE_INCLUDE_KEY);
     if (isInclude) {
       String path = currentNode.get(RESOLVER_REFERENCE_INCLUDE_KEY).textValue();
@@ -240,8 +276,6 @@ public class Draft3DocumentResolver {
       }
     }
   }
-  
-  
 
   private static ParentChild findReferencedNode(JsonNode rootNode, String absolutePath) {
     if (!absolutePath.contains(DOCUMENT_FRAGMENT_SEPARATOR)) {
@@ -250,6 +284,18 @@ public class Draft3DocumentResolver {
     String subpath = absolutePath.substring(absolutePath.indexOf(DOCUMENT_FRAGMENT_SEPARATOR) + 1);
     String[] parts = subpath.split("/");
 
+    if(rootNode.has("$graph")) {
+      JsonNode objects = rootNode.get("$graph");
+      JsonNode child = null;
+      JsonNode parent = objects;
+      for(final JsonNode elem: objects) {
+        if(elem.get("id").asText().equals(parts[0])) {
+          child = elem;
+          break;
+        }
+      }
+      return new ParentChild(parent, child);
+    }
     JsonNode parent = null;
     JsonNode child = rootNode;
     for (String part : parts) {
@@ -301,6 +347,23 @@ public class Draft3DocumentResolver {
     public String toString() {
       return "ParentChild [parent=" + parent + ", child=" + child + "]";
     }
+  }
+  
+  private static JsonNode removeFragmentIdentifier(String appUrl, JsonNode root, File file, JsonNode parentNode, JsonNode currentNode, String fragment) throws BindingException {
+    Preconditions.checkNotNull(currentNode, "current node id is null");
+    if(currentNode.isTextual() && currentNode.asText().startsWith(DOCUMENT_FRAGMENT_SEPARATOR)) {
+      Draft3DocumentResolverReference reference = new Draft3DocumentResolverReference();
+      reference.setResolvedNode(JsonNodeFactory.instance.textNode(currentNode.asText().replace(fragment + "/", "")));
+      getReferenceCache(appUrl).put(currentNode.asText(), reference);
+      getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(parentNode, currentNode, currentNode.asText()));
+      
+    }
+    else if (currentNode.isContainerNode()) {
+      for (JsonNode subnode : currentNode) {
+        removeFragmentIdentifier(appUrl, root, file, currentNode, subnode, fragment);
+      }
+    }
+    return currentNode;
   }
 
 }
