@@ -213,10 +213,12 @@ public class JobRecord {
 
   public void incrementPortCounter(DAGLinkPort port, LinkPortType type) {
     List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
-
+    
     for (PortCounter pc : counters) {
       if (pc.port.equals(port.getId())) {
-        pc.counter = pc.counter + 1;
+        if(port.isScatter()) {
+          pc.counter = pc.counter + 1;
+        }
         return;
       }
     }
