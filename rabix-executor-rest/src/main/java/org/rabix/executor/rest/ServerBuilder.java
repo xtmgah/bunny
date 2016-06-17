@@ -148,7 +148,7 @@ public class ServerBuilder {
   }
   
   public static void main(String[] args) throws InterruptedException {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 200; i++) {
       Client client = ClientBuilder.newClient(new ClientConfig().register(LoggingFilter.class));
       WebTarget webTarget = client.target("http://localhost" + ":" + 8081 + "/v0/engine/jobs");
 
@@ -161,7 +161,6 @@ public class ServerBuilder {
       Job job = new Job("file:///home/janko/Development/Git/Repositories/common-workflow-language/draft-2/draft-2/count-lines8-wf.cwl", inputs);
       Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
       invocationBuilder.post(Entity.entity(job, MediaType.APPLICATION_JSON));
-      System.out.println(i);
     }
   }
 }

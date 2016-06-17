@@ -54,7 +54,9 @@ public class EventProcessorImpl implements EventProcessor {
     this.eventDispatcher = eventDispatcherFactory.create(EventDispatcher.Type.SYNC);
   }
 
-  public void start(final List<IterationCallback> iterationCallbacks) {
+  public void start(final List<IterationCallback> iterationCallbacks, JobStatusCallback jobStatusCallback) {
+    this.handlerFactory.initialize(jobStatusCallback);
+    
     executorService.execute(new Runnable() {
       @Override
       public void run() {
