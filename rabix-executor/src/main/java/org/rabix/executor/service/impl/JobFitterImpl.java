@@ -60,6 +60,10 @@ public class JobFitterImpl implements JobFitter {
   @Override
   public synchronized void free(Job job) throws BindingException {
     Bindings bindings = BindingsFactory.create(job);
+    if (bindings.canExecute(job)) {
+      return;
+    }
+    
     ResourceRequirement resourceRequirement = bindings.getResourceRequirement(job);
 
     availableCores += resourceRequirement.getCpuMin() != null ? resourceRequirement.getCpuMin() : 0;
