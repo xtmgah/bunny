@@ -10,17 +10,14 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolRequirementProvider;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.requirement.CPURequirement;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement.SingleFileRequirement;
-import org.rabix.bindings.model.requirement.MemoryRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.bindings.model.requirement.ResourceRequirement;
 import org.rabix.bindings.protocol.draft2.bean.Draft2Job;
 import org.rabix.bindings.protocol.draft2.bean.Draft2JobApp;
-import org.rabix.bindings.protocol.draft2.bean.resource.Draft2CpuResource;
-import org.rabix.bindings.protocol.draft2.bean.resource.Draft2MemoryResource;
 import org.rabix.bindings.protocol.draft2.bean.resource.Draft2Resource;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2CreateFileRequirement;
 import org.rabix.bindings.protocol.draft2.bean.resource.requirement.Draft2DockerResource;
@@ -116,42 +113,39 @@ public class Draft2RequirementProvider implements ProtocolRequirementProvider {
   
   private List<Requirement> convertRequirements(Job job, List<Draft2Resource> resources) throws BindingException {
     if (resources == null) {
-      return Collections.<Requirement>emptyList();
+      return Collections.<Requirement> emptyList();
     }
     Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
 
     List<Requirement> result = new ArrayList<>();
-    try {
-      for (Draft2Resource draft2Resource : resources) {
-        if (draft2Resource instanceof Draft2CpuResource) {
-          Draft2CpuResource draft2CPUResource = (Draft2CpuResource) draft2Resource;
-          Integer cpu = draft2CPUResource.getCpu(draft2Job);
-          result.add(new CPURequirement(cpu));
-          continue;
-        }
-        if (draft2Resource instanceof Draft2MemoryResource) {
-          Draft2MemoryResource draft2MemoryResource = (Draft2MemoryResource) draft2Resource;
-          Integer memory = draft2MemoryResource.getMemory(draft2Job);
-          result.add(new MemoryRequirement(memory));
-          continue;
-        }
-        if (draft2Resource instanceof Draft2DockerResource) {
-          result.add(getDockerRequirement((Draft2DockerResource) draft2Resource));
-          continue;
-        }
-        if (draft2Resource instanceof Draft2EnvVarRequirement) {
-          result.add(getEnvironmentVariableRequirement(draft2Job, (Draft2EnvVarRequirement) draft2Resource));
-          continue;
-        }
-        if (draft2Resource instanceof Draft2CreateFileRequirement) {
-          result.add(getFileRequirement(draft2Job, (Draft2CreateFileRequirement) draft2Resource));
-          continue;
-        }
+    for (Draft2Resource draft2Resource : resources) {
+      if (draft2Resource instanceof Draft2DockerResource) {
+        result.add(getDockerRequirement((Draft2DockerResource) draft2Resource));
+        continue;
       }
+      if (draft2Resource instanceof Draft2EnvVarRequirement) {
+        result.add(getEnvironmentVariableRequirement(draft2Job, (Draft2EnvVarRequirement) draft2Resource));
+        continue;
+      }
+      if (draft2Resource instanceof Draft2CreateFileRequirement) {
+        result.add(getFileRequirement(draft2Job, (Draft2CreateFileRequirement) draft2Resource));
+        continue;
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public ResourceRequirement getResourceRequirement(Job job) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    
+    try {
+      Long cpu = draft2Job.getCPU() != null ? draft2Job.getCPU().longValue() : null ;
+      Long memory = draft2Job.getMemory() != null ? draft2Job.getMemory().longValue() : null;
+      return new ResourceRequirement(cpu, null, memory, null, null, null, null);
     } catch (Draft2ExpressionException e) {
       throw new BindingException(e);
     }
-    return result;
   }
 
 }

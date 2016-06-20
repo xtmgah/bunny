@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.rabix.bindings.BindingException;
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.execution.JobHandlerCommandDispatcher;
 import org.rabix.executor.execution.command.StartCommand;
@@ -18,6 +19,7 @@ import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +43,13 @@ public class JobDataServiceImpl implements JobDataService {
   
   private ScheduledExecutorService starter = Executors.newSingleThreadScheduledExecutor();
 
+  private JobFitter jobFitter;
+
   @Inject
   public JobDataServiceImpl(JobHandlerCommandDispatcher jobHandlerCommandDispatcher,
       Provider<StopCommand> stopCommandProvider, Provider<StartCommand> startCommandProvider,
-      Provider<StatusCommand> statusCommandProvider) {
+      Provider<StatusCommand> statusCommandProvider, JobFitter jobFitter) {
+    this.jobFitter = jobFitter;
     this.jobHandlerCommandDispatcher = jobHandlerCommandDispatcher;
     this.stopCommandProvider = stopCommandProvider;
     this.startCommandProvider = startCommandProvider;
@@ -119,8 +124,6 @@ public class JobDataServiceImpl implements JobDataService {
   
   private class JobStatusHandler implements Runnable {
 
-    private int maxRunningJobs = 200;
-
     @Override
     public void run() {
       synchronized (jobDataMap) {
@@ -131,19 +134,23 @@ public class JobDataServiceImpl implements JobDataService {
         }
 
         List<JobData> pending = find(JobDataStatus.PENDING);
-        List<JobData> running = find(JobDataStatus.RUNNING, JobDataStatus.STARTED);
 
-        if (maxRunningJobs - running.size() == 0) {
-          logger.info("Running {} jobs. Waiting for some to finish...", running.size());
-        } else {
-          for (int i = 0; i < Math.min(pending.size(), maxRunningJobs - running.size()); i++) {
-            JobData jobData = pending.get(i);
+        JobData jobData = null;
+        for (int i = 0; i < pending.size(); i++) {
+          try {
+            jobData = pending.get(i);
+            if (!jobFitter.tryToFit(jobData.getJob())) {
+              continue;
+            }
             save(JobData.cloneWithStatus(jobData, JobDataStatus.READY));
 
             jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
             jobHandlerCommandDispatcher.dispatch(jobData, statusCommandProvider.get(), engineStub);
+          } catch (BindingException e) {
+            logger.error("Failed to schedule Job " + jobData.getId() + " for execution.", e);
           }
         }
+        
       }
     }
   }

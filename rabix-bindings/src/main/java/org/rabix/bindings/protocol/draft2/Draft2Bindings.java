@@ -20,6 +20,7 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.bindings.model.requirement.ResourceRequirement;
 
 public class Draft2Bindings implements Bindings {
 
@@ -114,6 +115,11 @@ public class Draft2Bindings implements Bindings {
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
     return requirementProvider.getHints(job);
+  }
+  
+  @Override
+  public ResourceRequirement getResourceRequirement(Job job) throws BindingException {
+    return requirementProvider.getResourceRequirement(job);
   }
   
   @Override
