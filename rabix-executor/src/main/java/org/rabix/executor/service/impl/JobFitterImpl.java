@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 public class JobFitterImpl implements JobFitter {
 
-  static int count = 0;
-  
   private static final long MEGABYTE = 1024L * 1024L;
 
   private static final Logger logger = LoggerFactory.getLogger(JobFitterImpl.class);
@@ -39,6 +37,9 @@ public class JobFitterImpl implements JobFitter {
   @Override
   public synchronized boolean tryToFit(Job job) throws BindingException {
     Bindings bindings = BindingsFactory.create(job);
+    if (bindings.canExecute(job)) {
+      return true;
+    }
     ResourceRequirement resourceRequirement = bindings.getResourceRequirement(job);
 
     Long cpu = resourceRequirement.getCpuMin();
