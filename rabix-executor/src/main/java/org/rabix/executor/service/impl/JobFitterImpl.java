@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 public class JobFitterImpl implements JobFitter {
 
+  static int count = 0;
+  
   private static final long MEGABYTE = 1024L * 1024L;
 
   private static final Logger logger = LoggerFactory.getLogger(JobFitterImpl.class);
@@ -59,8 +61,8 @@ public class JobFitterImpl implements JobFitter {
     Bindings bindings = BindingsFactory.create(job);
     ResourceRequirement resourceRequirement = bindings.getResourceRequirement(job);
 
-    availableCores += resourceRequirement.getCpuMin();
-    availableMemory += resourceRequirement.getMemMinMB();
+    availableCores += resourceRequirement.getCpuMin() != null ? resourceRequirement.getCpuMin() : 0;
+    availableMemory += resourceRequirement.getMemMinMB() != null ? resourceRequirement.getMemMinMB() : 0;
     
     logger.info("Job {} freed reqsources.", job.getId());
   }

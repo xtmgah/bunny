@@ -99,7 +99,7 @@ public class JobDataServiceImpl implements JobDataService {
       getJobDataMap(jobData.getJob().getRootId()).put(jobData.getId(), jobData);
     }
   }
-
+  
   @Override
   public JobData save(JobData jobData, String message, JobDataStatus status) {
     Preconditions.checkNotNull(jobData);
