@@ -13,7 +13,7 @@ import org.rabix.bindings.ProtocolProcessor;
 import org.rabix.bindings.ProtocolRequirementProvider;
 import org.rabix.bindings.ProtocolTranslator;
 import org.rabix.bindings.ProtocolType;
-import org.rabix.bindings.ProtocolValueProcessor;
+import org.rabix.bindings.ProtocolFileValueProcessor;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.FileValue;
@@ -28,7 +28,7 @@ public class Draft3Bindings implements Bindings {
   
   private final ProtocolTranslator translator;
   private final ProtocolAppProcessor appProcessor;
-  private final ProtocolValueProcessor valueProcessor;
+  private final ProtocolFileValueProcessor fileValueProcessor;
   
   private final ProtocolProcessor processor;
   private final ProtocolFilePathMapper filePathMapper;
@@ -41,7 +41,7 @@ public class Draft3Bindings implements Bindings {
     this.filePathMapper = new Draft3FilePathMapper();
     this.processor = new Draft3Processor();
     this.commandLineBuilder = new Draft3CommandLineBuilder();
-    this.valueProcessor = new Draft3ValueProcessor();
+    this.fileValueProcessor = new Draft3FileValueProcessor();
     this.translator = new Draft3Translator();
     this.requirementProvider = new Draft3RequirementProvider();
     this.appProcessor = new Draft3AppProcessor();
@@ -93,12 +93,12 @@ public class Draft3Bindings implements Bindings {
 
   @Override
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
-    return valueProcessor.getInputFiles(job);
+    return fileValueProcessor.getInputFiles(job);
   }
 
   @Override
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
-    return valueProcessor.getOutputFiles(job);
+    return fileValueProcessor.getOutputFiles(job);
   }
   
   @Override
