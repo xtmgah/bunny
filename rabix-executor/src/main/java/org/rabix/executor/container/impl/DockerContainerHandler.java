@@ -25,6 +25,7 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.common.logging.VerboseLogger;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -96,6 +97,8 @@ public class DockerContainerHandler implements ContainerHandler {
   
   private void pull(String image) throws ContainerException {
     logger.debug("Pulling docker image");
+    VerboseLogger.log(String.format("Pulling docker image %s", image));
+    
     AuthConfig authConfig = null;
     try {
       String serverAddress = extractServerName(image);
@@ -151,6 +154,7 @@ public class DockerContainerHandler implements ContainerHandler {
       }
       ContainerCreation creation = null;
       try {
+        VerboseLogger.log(String.format("Running command line: %s", commandLine));
         creation = dockerClient.createContainer(builder.build());
       } catch (DockerException | InterruptedException e) {
         logger.error("Failed to create Docker container.", e);

@@ -23,6 +23,7 @@ import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.common.logging.VerboseLogger;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -49,6 +50,8 @@ public class LocalContainerHandler implements ContainerHandler {
   @Override
   public synchronized void start() throws ContainerException {
     try {
+      VerboseLogger.log(String.format("Local execution (no container) has started"));
+      
       Bindings bindings = BindingsFactory.create(job);
       String commandLine = bindings.buildCommandLine(job);
 
@@ -70,6 +73,8 @@ public class LocalContainerHandler implements ContainerHandler {
 
       processBuilder.command("/bin/sh", "-c", commandLine);
       processBuilder.directory(workingDir);
+      
+      VerboseLogger.log(String.format("Running command line: %s", commandLine));
       processFuture = executorService.submit(new Callable<Integer>() {
         @Override
         public Integer call() throws Exception {

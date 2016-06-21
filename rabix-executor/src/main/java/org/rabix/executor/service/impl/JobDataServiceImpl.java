@@ -123,7 +123,6 @@ public class JobDataServiceImpl implements JobDataService {
   }
   
   private class JobStatusHandler implements Runnable {
-
     @Override
     public void run() {
       synchronized (jobDataMap) {
@@ -150,7 +149,6 @@ public class JobDataServiceImpl implements JobDataService {
             logger.error("Failed to schedule Job " + jobData.getId() + " for execution.", e);
           }
         }
-        
       }
     }
   }
