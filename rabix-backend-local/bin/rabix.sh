@@ -9,7 +9,7 @@ do
     fi
 done
 
-command="java -Dlogback.configurationFile=${loggingConfiguration} 2>/dev/null -jar $(dirname $0)/lib/rabix-backend-local-0.0.1-SNAPSHOT.jar 2>/dev/null"
+command="java -Dlogback.configurationFile=${loggingConfiguration} -jar $(dirname $0)/lib/rabix-backend-local-0.0.1-SNAPSHOT.jar"
 
 for i in "$@"
 do
