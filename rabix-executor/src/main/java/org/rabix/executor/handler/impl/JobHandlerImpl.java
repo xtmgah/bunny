@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.inject.Inject;
 
@@ -294,7 +295,7 @@ public class JobHandlerImpl implements JobHandler {
         return outputs;
       } else {
         Map<String, Object> outputsMap = (Map<String, Object>) outputs;
-        Map<String, Object> result = new HashMap<String, Object>();
+        Map<String, Object> result = new TreeMap<String, Object>();
         for (String output : outputsMap.keySet()) {
           Object value = outputsMap.get(output);
           result.put(output, populateChecksum(value));

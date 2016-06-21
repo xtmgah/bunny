@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.protocol.draft3.bean.Draft3InputPort;
@@ -46,7 +47,7 @@ public class Draft3PortProcessor {
     if (values == null) {
       return null;
     }
-    Map<String, Object> mappedValues = new HashMap<>();
+    Map<String, Object> mappedValues = new TreeMap<>();
     for (Entry<String, Object> entry : values.entrySet()) {
       String id = entry.getKey();
       Object value = entry.getValue();

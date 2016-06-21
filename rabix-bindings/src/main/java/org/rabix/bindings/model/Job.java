@@ -56,7 +56,7 @@ public class Job {
       @JsonProperty("app") String app, 
       @JsonProperty("status") JobStatus status, 
       @JsonProperty("inputs") Map<String, Object> inputs, 
-      @JsonProperty("outputs") Map<String, Object> otputs,
+      @JsonProperty("outputs") Map<String, Object> outputs,
       @JsonProperty("context") Context context) {
     this.id = id;
     this.parentId = parentId;
@@ -65,7 +65,7 @@ public class Job {
     this.app = app;
     this.status = status;
     this.inputs = inputs;
-    this.outputs = otputs;
+    this.outputs = outputs;
     this.context = context;
   }
   

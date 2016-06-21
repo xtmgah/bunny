@@ -32,9 +32,13 @@ public class BindingsFactory {
   }
   
   public static void setProtocol(String prot) {
-    switch(prot) {
-    case "draft-2": protocol = ProtocolType.DRAFT2;
-    case "draft-3": protocol = ProtocolType.DRAFT3;
+    switch (prot) {
+    case "draft-2":
+      protocol = ProtocolType.DRAFT2;
+      break;
+    case "draft-3":
+      protocol = ProtocolType.DRAFT3;
+      break;
     }
   }
 

@@ -29,11 +29,11 @@ public class Draft3FilePathMapper implements ProtocolFilePathMapper {
 
   @Override
   public Job mapOutputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
-    Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
     
-    Draft3PortProcessor draft2PortProcessor = new Draft3PortProcessor(draft2Job);
+    Draft3PortProcessor draft3PortProcessor = new Draft3PortProcessor(draft3Job);
     try {
-      Map<String, Object> outputs = draft2PortProcessor.processOutputs(job.getOutputs(), new Draft3FilePathMapProcessorCallback(fileMapper));
+      Map<String, Object> outputs = draft3PortProcessor.processOutputs(job.getOutputs(), new Draft3FilePathMapProcessorCallback(fileMapper));
       return Job.cloneWithOutputs(job, outputs);
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -21,7 +22,6 @@ import org.rabix.bindings.BindingException;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.JSONHelper;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -30,8 +30,26 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Preconditions;
 
 public class Draft3DocumentResolver {
+  
+  public static Set<String> types = new HashSet<String>();
+  
+  static {
+    types.add("null");
+    types.add("boolean");
+    types.add("int");
+    types.add("long");
+    types.add("float");
+    types.add("double");
+    types.add("string");
+    types.add("File");
+    types.add("record");
+    types.add("enum");
+    types.add("array");
+    types.add("Any");
+  }
 
   public static final String APP_STEP_KEY = "run";
+  public static final String TYPE_KEY = "type";
   public static final String RESOLVER_REFERENCE_KEY = "$import";
   public static final String RESOLVER_REFERENCE_INCLUDE_KEY = "$include";
   public static final String GRAPH_KEY = "$graph";
@@ -132,6 +150,7 @@ public class Draft3DocumentResolver {
     
     boolean isReference = currentNode.has(RESOLVER_REFERENCE_KEY);
     boolean appReference = currentNode.has(APP_STEP_KEY) && currentNode.get(APP_STEP_KEY).isTextual();
+    // boolean typeReference = currentNode.has(TYPE_KEY) && currentNode.get(TYPE_KEY).isTextual() && isTypeReference(currentNode.get(TYPE_KEY).textValue());
     boolean isJsonPointer = currentNode.has(RESOLVER_JSON_POINTER_KEY) && parentNode != null; // we skip the first level $job
 
     if (isReference || isJsonPointer || appReference) {
@@ -169,6 +188,9 @@ public class Draft3DocumentResolver {
       if(appReference) {
         getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(currentNode, currentNode.get("run"), referencePath));
       }
+//      else if(typeReference) {
+//        getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(currentNode, currentNode.get("type"), referencePath));
+//      }
       else {
         getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(parentNode, currentNode, referencePath));
       }

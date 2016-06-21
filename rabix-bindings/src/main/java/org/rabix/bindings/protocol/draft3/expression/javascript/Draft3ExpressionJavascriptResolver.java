@@ -114,7 +114,7 @@ public class Draft3ExpressionJavascriptResolver {
       return null;
     }
     JsonNode node = JSONHelper.readJsonNode(result.toString());
-    return JSONHelper.transform(node.get("result"));
+    return JSONHelper.transformPreserveNull(node.get("result"));
   }
 
 }
