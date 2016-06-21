@@ -55,6 +55,7 @@ public class Draft3DocumentResolver {
   public static final String GRAPH_KEY = "$graph";
   public static final String SCHEMA_KEY = "$schema";
   public static final String NAMESPACE_KEY = "$namespace";
+  public static final String SCHEMADEF_KEY = "SchemaDefRequirement";
   
   public static final String RESOLVER_JSON_POINTER_KEY = "$job";
   
@@ -150,16 +151,19 @@ public class Draft3DocumentResolver {
     
     boolean isReference = currentNode.has(RESOLVER_REFERENCE_KEY);
     boolean appReference = currentNode.has(APP_STEP_KEY) && currentNode.get(APP_STEP_KEY).isTextual();
-    // boolean typeReference = currentNode.has(TYPE_KEY) && currentNode.get(TYPE_KEY).isTextual() && isTypeReference(currentNode.get(TYPE_KEY).textValue());
+    boolean typeReference = currentNode.has(TYPE_KEY) && currentNode.get(TYPE_KEY).isTextual() && isTypeReference(currentNode.get(TYPE_KEY).textValue());
     boolean isJsonPointer = currentNode.has(RESOLVER_JSON_POINTER_KEY) && parentNode != null; // we skip the first level $job
 
-    if (isReference || isJsonPointer || appReference) {
+    if (isReference || isJsonPointer || appReference || typeReference) {
       String referencePath = null;
       if (isReference) {
         referencePath = currentNode.get(RESOLVER_REFERENCE_KEY).textValue();
       }
       else if (appReference) {
         referencePath = currentNode.get(APP_STEP_KEY).textValue();
+      }
+      else if(typeReference) {
+        referencePath = currentNode.get(TYPE_KEY).textValue();
       }
       else {
         referencePath = currentNode.get(RESOLVER_JSON_POINTER_KEY).textValue();
@@ -174,7 +178,15 @@ public class Draft3DocumentResolver {
         reference = new Draft3DocumentResolverReference();
         reference.setResolving(true);
         getReferenceCache(appUrl).put(referencePath, reference);
-
+        
+//        if( !referencePath.startsWith(DOCUMENT_FRAGMENT_SEPARATOR)) {
+//          if(!URIHelper.extractBase(referencePath).equals(appUrl)) {
+//            String input = loadContents(file, referencePath);
+//            root = JSONHelper.readJsonNode(JSONHelper.transformToJSON(input));
+//            referencePath = URIHelper.extractFragment(referencePath);
+//          }
+//        }
+        
         JsonNode referenceDocumentRoot = findDocumentRoot(root, file, referencePath, isJsonPointer);
         ParentChild parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
         JsonNode resolvedNode = traverse(appUrl, root, file, parentChild.parent, parentChild.child);
@@ -188,9 +200,9 @@ public class Draft3DocumentResolver {
       if(appReference) {
         getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(currentNode, currentNode.get("run"), referencePath));
       }
-//      else if(typeReference) {
-//        getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(currentNode, currentNode.get("type"), referencePath));
-//      }
+      else if(typeReference) {
+        getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(currentNode, currentNode.get("type"), referencePath));
+      }
       else {
         getReplacements(appUrl).add(new Draft3DocumentResolverReplacement(parentNode, currentNode, referencePath));
       }
@@ -201,6 +213,13 @@ public class Draft3DocumentResolver {
       }
     }
     return currentNode;
+  }
+
+  private static boolean isTypeReference(String type) {
+    if(types.contains(type)) {
+      return false;
+    }
+    return true;
   }
 
   @SuppressWarnings("deprecation")
@@ -248,6 +267,7 @@ public class Draft3DocumentResolver {
 
   private static JsonNode findDocumentRoot(JsonNode root, File file, String reference, boolean isJsonPointer) throws BindingException {
     JsonNode startNode = root;
+    
     if (isJsonPointer) {
       startNode = startNode.get(RESOLVER_JSON_POINTER_KEY);
     }
@@ -317,6 +337,17 @@ public class Draft3DocumentResolver {
         }
       }
       return new ParentChild(parent, child);
+    }
+    else if (rootNode.has("class") && rootNode.get("class").asText().equals(SCHEMADEF_KEY)) {
+      JsonNode objects = rootNode.get("types");
+      JsonNode child = null;
+      for(final JsonNode elem: objects) {
+        if(elem.get("name").asText().equals(parts[0])) {
+          child = elem;
+          break;
+        }
+      }
+      return new ParentChild(null, child);
     }
     JsonNode parent = null;
     JsonNode child = rootNode;
