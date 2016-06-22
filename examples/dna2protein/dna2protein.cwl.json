@@ -197,9 +197,6 @@
             ]
           }
         ],
-        "baseCmd": [
-          ""
-        ],
         "hints": [
           {
             "class": "sbg:CPURequirement",
