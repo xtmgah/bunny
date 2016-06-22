@@ -1,6 +1,5 @@
 package org.rabix.engine.rest.service.impl;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -158,10 +157,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public void onReady(Job job) {
       jobDB.update(job);
-
-      Set<Job> jobs = new HashSet<>();
-      jobs.add(job);
-      backendDispatcher.send(jobs);
+      backendDispatcher.send(job);
     }
 
     @Override
