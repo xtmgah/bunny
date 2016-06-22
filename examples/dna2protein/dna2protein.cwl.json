@@ -93,9 +93,6 @@
             ]
           }
         ],
-        "baseCmd": [
-          ""
-        ],
         "stdout": {
           "class": "Expression",
           "script": "($job.inputs.output_filename || 'rna') + '.txt'",
