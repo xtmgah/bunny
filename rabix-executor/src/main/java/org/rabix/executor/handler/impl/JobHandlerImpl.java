@@ -97,7 +97,7 @@ public class JobHandlerImpl implements JobHandler {
       job = bindings.preprocess(job, workingDir);
 
       if (bindings.canExecute(job)) {
-        containerHandler = new CompletedContainerHandler();
+        containerHandler = new CompletedContainerHandler(job);
       } else {
         Requirement containerRequirement = getRequirement(combinedRequirements, DockerContainerRequirement.class);
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {

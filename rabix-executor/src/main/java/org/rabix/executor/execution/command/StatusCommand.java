@@ -10,6 +10,7 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +23,12 @@ public class StatusCommand extends JobHandlerCommand {
 
   public final static long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(15);
   
+  private JobFitter jobFitter;
+  
   @Inject
-  public StatusCommand(JobDataService jobDataService) {
+  public StatusCommand(JobDataService jobDataService, JobFitter jobFitter) {
     super(jobDataService);
+    this.jobFitter = jobFitter;
   }
 
   @Override
@@ -54,6 +58,7 @@ public class StatusCommand extends JobHandlerCommand {
         jobData = jobDataService.save(jobData, message, JobDataStatus.COMPLETED);
         completed(jobData, message, job.getOutputs(), jobHandler.getEngineStub());
       }
+      jobFitter.free(job);
     } catch (Exception e) {
       String message = String.format("Failed to execute status command for %s. %s", jobId, e.getMessage());
       jobData = jobDataService.save(jobData, message, JobDataStatus.FAILED);

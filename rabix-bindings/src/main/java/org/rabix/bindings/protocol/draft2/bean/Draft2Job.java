@@ -96,7 +96,7 @@ public final class Draft2Job {
   public Integer getCPU() throws Draft2ExpressionException {
     Draft2CpuResource cpuRequirement = app.getCpuRequirement();
     if (cpuRequirement == null || cpuRequirement.getCpu(this) == 0) {
-      return 1;
+      return null;
     }
     return cpuRequirement.getCpu(this);
   }
@@ -105,7 +105,7 @@ public final class Draft2Job {
   public Integer getMemory() throws Draft2ExpressionException {
     Draft2MemoryResource memoryRequirement = app.getMemoryRequirement();
     if (memoryRequirement == null || memoryRequirement.getMemory(this) == 0) {
-      return 4000;
+      return null;
     }
     return memoryRequirement.getMemory(this);
   }

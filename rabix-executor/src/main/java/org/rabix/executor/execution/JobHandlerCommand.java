@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.common.logging.VerboseLogger;
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public abstract class JobHandlerCommand {
 
   protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+  
   /**
    * Command types 
    */
@@ -72,6 +73,8 @@ public abstract class JobHandlerCommand {
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
+    
+    VerboseLogger.log(String.format("Job %s has started", job.getName()));
   }
 
   /**
@@ -111,6 +114,8 @@ public abstract class JobHandlerCommand {
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
+    
+    VerboseLogger.log(String.format("Job %s has completed", job.getName()));
   }
 
   /**

@@ -54,6 +54,7 @@ import org.rabix.engine.rest.db.BackendDB;
 import org.rabix.engine.rest.db.JobDB;
 import org.rabix.engine.rest.service.BackendService;
 import org.rabix.engine.rest.service.JobService;
+import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
@@ -61,6 +62,7 @@ import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
 import org.rabix.transport.backend.BackendPopulator;
 import org.rabix.transport.backend.impl.BackendLocal;
+import org.rabix.transport.mechanism.TransportPluginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,21 +97,21 @@ public class BackendCommandLine {
       String appPath = commandLine.getArgList().get(0);
       File appFile = new File(URIHelper.extractBase(appPath));
       if (!appFile.exists()) {
-        logger.info("Application file {} does not exist.", appFile.getCanonicalPath());
+        System.out.println(String.format("Application file %s does not exist.", appFile.getCanonicalPath()));
         printUsageAndExit(posixOptions);
       }
 
       String inputsPath = commandLine.getArgList().get(1);
       File inputsFile = new File(inputsPath);
       if (!inputsFile.exists()) {
-        logger.info("Inputs file {} does not exist.", inputsFile.getCanonicalPath());
+        System.out.println(String.format("Inputs file %s does not exist.", inputsFile.getCanonicalPath()));
         printUsageAndExit(posixOptions);
       }
 
       File configDir = getConfigDir(commandLine, posixOptions);
 
       if (!configDir.exists() || !configDir.isDirectory()) {
-        logger.info("Config directory {} doesn't exist or is not a directory", configDir.getCanonicalPath());
+        System.out.println(String.format("Config directory %s doesn't exist or is not a directory.", configDir.getCanonicalPath()));
         printUsageAndExit(posixOptions);
       }
 
@@ -118,7 +120,7 @@ public class BackendCommandLine {
       if (executionDirPath != null) {
         File executionDir = new File(executionDirPath);
         if (!executionDir.exists() || !executionDir.isDirectory()) {
-          logger.info("Execution directory {} doesn't exist or is not a directory", executionDirPath);
+          System.out.println(String.format("Execution directory %s doesn't exist or is not a directory", executionDirPath));
           System.exit(10);
         } else {
           configOverrides.put("backend.execution.directory", executionDir.getCanonicalPath());
@@ -191,7 +193,7 @@ public class BackendCommandLine {
           }
           if (rootJob.getStatus().equals(JobStatus.COMPLETED)) {
             try {
-              logger.info(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
+              System.out.println(JSONHelper.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootJob.getOutputs()));
               System.exit(0);
             } catch (JsonProcessingException e) {
               logger.error("Failed to write outputs to standard out", e);
@@ -206,9 +208,17 @@ public class BackendCommandLine {
       checker.join();
 
     } catch (ParseException e) {
-      logger.error("Encountered exception while parsing using PosixParser.", e);
-    } catch (Exception e) {
-      logger.error("Encountered exception while reading a input file.", e);
+      logger.error("Encountered an error while parsing using Posix parser.", e);
+      System.exit(10);
+    } catch (IOException e) {
+      logger.error("Encountered an error while reading a file.", e);
+      System.exit(10);
+    } catch (BindingException e) {
+      logger.error("Encountered an error while parsing an application.", e);
+      System.exit(10);
+    } catch (JobServiceException | TransportPluginException | InterruptedException e) {
+      logger.error("Encountered an error while starting local backend.", e);
+      System.exit(10);
     }
   }
 
@@ -330,7 +340,7 @@ public class BackendCommandLine {
    */
   private static boolean checkCommandLine(CommandLine commandLine) {
     if (commandLine.getArgList().size() != 2) {
-      logger.info("Invalid number of arguments");
+      System.out.println("Invalid number of arguments\n");
       return false;
     }
     return true;
@@ -340,8 +350,8 @@ public class BackendCommandLine {
    * Prints command line usage
    */
   private static void printUsageAndExit(Options options) {
-    new HelpFormatter().printHelp("rabix [OPTION]... <tool> <job>", options);
-    System.exit(0);
+    new HelpFormatter().printHelp("rabix.sh <tool> <job> [OPTION]...", options);
+    System.exit(10);
   }
   
   private static List<String> commandLineToString(List<Object> commandLineParts) {

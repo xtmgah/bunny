@@ -6,26 +6,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ResourceRequirement implements Requirement {
 
   @JsonProperty("cpuMin")
-  private final Integer cpuMin;
+  private final Long cpuMin;
   @JsonProperty("cpuRecommended")
-  private final Integer cpuRecommended;
+  private final Long cpuRecommended;
   @JsonProperty("memMinMB")
-  private final Integer memMinMB;
+  private final Long memMinMB;
   @JsonProperty("memRecommendedMB")
-  private final Integer memRecommendedMB;
+  private final Long memRecommendedMB;
   @JsonProperty("diskSpaceMinMB")
-  private final Integer diskSpaceMinMB;
+  private final Long diskSpaceMinMB;
   @JsonProperty("diskSpaceRecommendedMB")
-  private final Integer diskSpaceRecommendedMB;
+  private final Long diskSpaceRecommendedMB;
   @JsonProperty("networkAccess")
   private final Boolean networkAccess;
 
   @JsonCreator
-  public ResourceRequirement(@JsonProperty("cpuMin") Integer cpuMin,
-      @JsonProperty("cpuRecommended") Integer cpuRecommended, @JsonProperty("memMinMB") Integer memMinMB,
-      @JsonProperty("memRecommendedMB") Integer memRecommendedMB,
-      @JsonProperty("diskSpaceMinMB") Integer diskSpaceMinMB,
-      @JsonProperty("diskSpaceRecommendedMB") Integer diskSpaceRecommendedMB,
+  public ResourceRequirement(@JsonProperty("cpuMin") Long cpuMin,
+      @JsonProperty("cpuRecommended") Long cpuRecommended, @JsonProperty("memMinMB") Long memMinMB,
+      @JsonProperty("memRecommendedMB") Long memRecommendedMB,
+      @JsonProperty("diskSpaceMinMB") Long diskSpaceMinMB,
+      @JsonProperty("diskSpaceRecommendedMB") Long diskSpaceRecommendedMB,
       @JsonProperty("networkAccess") Boolean networkAccess) {
     this.cpuMin = cpuMin;
     this.cpuRecommended = cpuRecommended;
@@ -36,27 +36,27 @@ public class ResourceRequirement implements Requirement {
     this.networkAccess = networkAccess;
   }
 
-  public Integer getCpuMin() {
+  public Long getCpuMin() {
     return cpuMin;
   }
 
-  public Integer getCpuRecommended() {
+  public Long getCpuRecommended() {
     return cpuRecommended;
   }
 
-  public Integer getMemMinMB() {
+  public Long getMemMinMB() {
     return memMinMB;
   }
 
-  public Integer getMemRecommendedMB() {
+  public Long getMemRecommendedMB() {
     return memRecommendedMB;
   }
 
-  public Integer getDiskSpaceMinMB() {
+  public Long getDiskSpaceMinMB() {
     return diskSpaceMinMB;
   }
 
-  public Integer getDiskSpaceRecommendedMB() {
+  public Long getDiskSpaceRecommendedMB() {
     return diskSpaceRecommendedMB;
   }
 
