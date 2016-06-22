@@ -4,9 +4,11 @@ import java.util.Map;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.common.logging.VerboseLogger;
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public abstract class JobHandlerCommand {
 
   protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+  
   /**
    * Command types 
    */
@@ -44,7 +46,7 @@ public abstract class JobHandlerCommand {
       return run(data, handler, contextId);
     } catch (Exception e) {
       failed(data, "Executor faced a runtime exception.", handler.getEngineStub(), e);
-      jobDataService.save(data, "Executor faced a runtime exception.", JobStatus.FAILED, contextId);
+      data = jobDataService.save(data, "Executor faced a runtime exception.", JobDataStatus.FAILED);
       throw e;
     }
   }
@@ -68,8 +70,11 @@ public abstract class JobHandlerCommand {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
+    
+    VerboseLogger.log(String.format("Job %s has started", job.getName()));
   }
 
   /**
@@ -79,7 +84,8 @@ public abstract class JobHandlerCommand {
     logger.error(message, e);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
   }
 
@@ -90,10 +96,13 @@ public abstract class JobHandlerCommand {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
   }
 
+  static volatile int count = 0;
+  
   /**
    * Send notification to master about COMPLETED event 
    */
@@ -102,8 +111,11 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
-    jobData.setJob(job);
+    jobData = JobData.cloneWithJob(jobData, job);
+    jobDataService.save(jobData);
     engineStub.send(job);
+    
+    VerboseLogger.log(String.format("Job %s has completed", job.getName()));
   }
 
   /**

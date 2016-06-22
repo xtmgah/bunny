@@ -6,70 +6,151 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.bindings.BindingException;
+import org.rabix.executor.engine.EngineStub;
+import org.rabix.executor.execution.JobHandlerCommandDispatcher;
+import org.rabix.executor.execution.command.StartCommand;
+import org.rabix.executor.execution.command.StatusCommand;
+import org.rabix.executor.execution.command.StopCommand;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 public class JobDataServiceImpl implements JobDataService {
 
   private final static Logger logger = LoggerFactory.getLogger(JobDataServiceImpl.class);
 
-  private final Map<String, Map<String, JobData>> jobs = new HashMap<>();
+  private final Map<String, Map<String, JobData>> jobDataMap = new HashMap<>();
 
+  private Provider<StopCommand> stopCommandProvider;
+  private Provider<StartCommand> startCommandProvider;
+  private Provider<StatusCommand> statusCommandProvider;
+  
+  private JobHandlerCommandDispatcher jobHandlerCommandDispatcher;
+
+  private EngineStub engineStub;
+  
+  private ScheduledExecutorService starter = Executors.newSingleThreadScheduledExecutor();
+
+  private JobFitter jobFitter;
+
+  @Inject
+  public JobDataServiceImpl(JobHandlerCommandDispatcher jobHandlerCommandDispatcher,
+      Provider<StopCommand> stopCommandProvider, Provider<StartCommand> startCommandProvider,
+      Provider<StatusCommand> statusCommandProvider, JobFitter jobFitter) {
+    this.jobFitter = jobFitter;
+    this.jobHandlerCommandDispatcher = jobHandlerCommandDispatcher;
+    this.stopCommandProvider = stopCommandProvider;
+    this.startCommandProvider = startCommandProvider;
+    this.statusCommandProvider = statusCommandProvider;
+  }
+  
   @Override
-  public synchronized JobData find(String id, String contextId) {
+  public void initialize(EngineStub engineStub) {
+    this.engineStub = engineStub;
+    this.starter.scheduleAtFixedRate(new JobStatusHandler(), 0, 1, TimeUnit.SECONDS);
+  }
+  
+  @Override
+  public JobData find(String id, String contextId) {
     Preconditions.checkNotNull(id);
-    logger.debug("find(id={})", id);
-    return getJobs(contextId).get(id);
+    synchronized (jobDataMap) {
+      logger.debug("find(id={})", id);
+      return getJobDataMap(contextId).get(id);
+    }
   }
 
   @Override
-  public synchronized List<JobData> find(JobStatus... statuses) {
+  public List<JobData> find(JobDataStatus... statuses) {
     Preconditions.checkNotNull(statuses);
 
-    List<JobStatus> statusList = Arrays.asList(statuses);
-    logger.debug("find(status={})", statusList);
+    synchronized (jobDataMap) {
+      List<JobDataStatus> statusList = Arrays.asList(statuses);
+      logger.debug("find(status={})", statusList);
 
-    List<JobData> jobDataByStatus = new ArrayList<>();
-    for (Entry<String, Map<String, JobData>> entry : jobs.entrySet()) {
-      for (JobData jobData : entry.getValue().values()) {
-        if (statusList.contains(jobData.getStatus())) {
-          jobDataByStatus.add(jobData);
+      List<JobData> jobDataByStatus = new ArrayList<>();
+      for (Entry<String, Map<String, JobData>> entry : jobDataMap.entrySet()) {
+        for (JobData jobData : entry.getValue().values()) {
+          if (statusList.contains(jobData.getStatus())) {
+            jobDataByStatus.add(jobData);
+          }
+        }
+      }
+      return jobDataByStatus;
+    }
+  }
+
+  @Override
+  public void save(JobData jobData) {
+    Preconditions.checkNotNull(jobData);
+    synchronized (jobDataMap) {
+      logger.debug("save(jobData={})", jobData);
+      getJobDataMap(jobData.getJob().getRootId()).put(jobData.getId(), jobData);
+    }
+  }
+  
+  @Override
+  public JobData save(JobData jobData, String message, JobDataStatus status) {
+    Preconditions.checkNotNull(jobData);
+    synchronized (jobDataMap) {
+      logger.debug("save(jobData={}, message={}, status={})", jobData, message, status);
+      jobData = JobData.cloneWithStatusAndMessage(jobData, status, message);
+      save(jobData);
+      return jobData;
+    }
+  }
+  
+  private Map<String, JobData> getJobDataMap(String contextId) {
+    synchronized (jobDataMap) {
+      Map<String, JobData> jobList = jobDataMap.get(contextId);
+      if (jobList == null) {
+        jobList = new HashMap<>();
+        jobDataMap.put(contextId, jobList);
+      }
+      return jobList;
+    }
+  }
+  
+  private class JobStatusHandler implements Runnable {
+    @Override
+    public void run() {
+      synchronized (jobDataMap) {
+        List<JobData> aborting = find(JobDataStatus.ABORTING);
+        for (JobData jobData : aborting) {
+          save(JobData.cloneWithStatus(jobData, JobDataStatus.ABORTED));
+          jobHandlerCommandDispatcher.dispatch(jobData, stopCommandProvider.get(), engineStub);
+        }
+
+        List<JobData> pending = find(JobDataStatus.PENDING);
+
+        JobData jobData = null;
+        for (int i = 0; i < pending.size(); i++) {
+          try {
+            jobData = pending.get(i);
+            if (!jobFitter.tryToFit(jobData.getJob())) {
+              continue;
+            }
+            save(JobData.cloneWithStatus(jobData, JobDataStatus.READY));
+
+            jobHandlerCommandDispatcher.dispatch(jobData, startCommandProvider.get(), engineStub);
+            jobHandlerCommandDispatcher.dispatch(jobData, statusCommandProvider.get(), engineStub);
+          } catch (BindingException e) {
+            logger.error("Failed to schedule Job " + jobData.getId() + " for execution.", e);
+          }
         }
       }
     }
-    return jobDataByStatus;
-  }
-
-  @Override
-  public synchronized void save(JobData jobData, String contextId) {
-    logger.debug("save(jobData={})", jobData);
-    Job job = jobData.getJob();
-    getJobs(contextId).put(job.getId(), jobData);
-  }
-
-  @Override
-  public synchronized void save(JobData jobData, String message, JobStatus status, String contextId) {
-    Preconditions.checkNotNull(jobData);
-    logger.debug("save(jobData={}, message={}, status={})", jobData, message, status);
-    jobData.setStatus(status);
-    jobData.setMessage(message);
-    save(jobData, contextId);
-  }
-  
-  private synchronized Map<String, JobData> getJobs(String contextId) {
-    Map<String, JobData> jobList = jobs.get(contextId);
-    if (jobList == null) {
-      jobList = new HashMap<>();
-      jobs.put(contextId, jobList);
-    }
-    return jobList;
   }
 
 }

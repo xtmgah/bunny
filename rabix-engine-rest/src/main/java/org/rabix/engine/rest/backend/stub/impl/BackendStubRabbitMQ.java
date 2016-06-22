@@ -14,8 +14,8 @@ import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 public class BackendStubRabbitMQ implements BackendStub {
 
-  private final static Logger logger = LoggerFactory.getLogger(BackendStubActiveMQ.class);
-
+  private final static Logger logger = LoggerFactory.getLogger(BackendStubRabbitMQ.class);
+  
   private JobService jobService;
   private BackendRabbitMQ backendRabbitMQ;
   private TransportPluginRabbitMQ transportPluginMQ;
@@ -33,7 +33,7 @@ public class BackendStubRabbitMQ implements BackendStub {
   private TransportQueueRabbitMQ sendToBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendHeartbeatQueue;
-  
+
   private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
   public BackendStubRabbitMQ(JobService jobService, BackendRabbitMQ backend, Configuration configuration) throws TransportPluginException {
@@ -48,47 +48,63 @@ public class BackendStubRabbitMQ implements BackendStub {
     EngineConfiguration engineConfiguration = backend.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getHeartbeatRoutingKey());
+
+    initialize();
+  }
+
+  /**
+   * Try to initialize both exchanges (engine, backend)
+   */
+  private void initialize() {
+    try {
+      transportPluginMQ.initializeExchange(backendRabbitMQ.getBackendConfiguration().getExchange(), backendRabbitMQ.getBackendConfiguration().getExchangeType());
+      transportPluginMQ.initializeExchange(backendRabbitMQ.getEngineConfiguration().getExchange(), backendRabbitMQ.getEngineConfiguration().getExchangeType());
+    } catch (TransportPluginException e) {
+      // do nothing
+    }
   }
 
   @Override
   public void start(final Map<String, Long> heartbeatInfo) {
-    executorService.submit(new Runnable() {
+    transportPluginMQ.startReceiver(receiveFromBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
-      public void run() {
-        while (true) {
-          ResultPair<Job> result = transportPluginMQ.receive(receiveFromBackendQueue, Job.class, new ReceiveCallback<Job>() {
-            @Override
-            public void handleReceive(Job job) throws TransportPluginException {
-              try {
-                jobService.update(job);
-              } catch (JobServiceException e) {
-                throw new TransportPluginException("Failed to update Job", e);
-              }
-            }
-          });
-          if (!result.isSuccess()) {
-            logger.error(result.getMessage(), result.getException());
-          }
+      public void handleReceive(Job job) throws TransportPluginException {
+        try {
+          jobService.update(job);
+        } catch (JobServiceException e) {
+          throw new TransportPluginException("Failed to update Job", e);
         }
+      }
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
       }
     });
 
-    executorService.submit(new Runnable() {
-      @Override
-      public void run() {
-        transportPluginMQ.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class, new ReceiveCallback<HeartbeatInfo>() {
+    transportPluginMQ.startReceiver(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class,
+        new ReceiveCallback<HeartbeatInfo>() {
           @Override
           public void handleReceive(HeartbeatInfo entity) throws TransportPluginException {
             heartbeatInfo.put(entity.getId(), entity.getTimestamp());
           }
+        }, new ErrorCallback() {
+          @Override
+          public void handleError(Exception error) {
+            logger.error("Failed to receive message.", error);
+          }
         });
-      }
-    });
   }
 
   @Override
   public void stop() {
     executorService.shutdown();
+
+    try {
+      transportPluginMQ.deleteExchange(backendRabbitMQ.getBackendConfiguration().getExchange());
+    } catch (TransportPluginException e) {
+      // do nothing
+    }
   }
 
   @Override

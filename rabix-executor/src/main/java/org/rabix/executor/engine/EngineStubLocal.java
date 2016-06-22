@@ -10,8 +10,8 @@ import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendLocal;
 import org.rabix.transport.mechanism.TransportPlugin;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.local.TransportPluginLocal;
 import org.rabix.transport.mechanism.impl.local.TransportQueueLocal;
@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class EngineStubLocal implements EngineStub {
 
-  private static final Logger logger = LoggerFactory.getLogger(EngineStubLocal.class);
+  private final static Logger logger = LoggerFactory.getLogger(EngineStubLocal.class);
   
   private BackendLocal backendLocal;
   private ExecutorService executorService;
@@ -40,22 +40,17 @@ public class EngineStubLocal implements EngineStub {
   
   @Override
   public void start() {
-    new Thread(new Runnable() {
+    transportPlugin.startReceiver(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
-      public void run() {
-        while(true) {
-          ResultPair<Job> result = transportPlugin.receive(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
-            @Override
-            public void handleReceive(Job job) throws TransportPluginException {
-              executorService.start(job, job.getContext().getId());
-            }
-          });
-          if (!result.isSuccess()) {
-            logger.error(result.getMessage(), result.getException());
-          }
-        }
+      public void handleReceive(Job job) throws TransportPluginException {
+        executorService.start(job, job.getContext().getId());
       }
-    }).start();
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
+      }
+    });
     
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override

@@ -7,76 +7,137 @@ import org.rabix.bindings.model.Job.JobStatus;
 
 public class JobData {
 
-  private Job job;
-  private JobStatus status;
-  private Map<String, Object> result;
-  private String message;
-  private boolean important;
-  private boolean terminal;
-  private boolean logsUploaded;
+  public static enum JobDataStatus {
+    PENDING,
+    READY,
+    STARTED,
 
-  public JobData(Job job, JobStatus status, boolean important, boolean terminal) {
+    ABORTING,
+    ABORTED,
+
+    FAILED,
+    COMPLETED,
+    RUNNING;
+
+    public static JobDataStatus convertFromJobStatus(JobStatus status) {
+      switch (status) {
+      case PENDING:
+        return JobDataStatus.PENDING;
+      case READY:
+        return JobDataStatus.READY;
+      case STARTED:
+        return JobDataStatus.STARTED;
+      case ABORTED:
+        return JobDataStatus.ABORTED;
+      case FAILED:
+        return JobDataStatus.FAILED;
+      case COMPLETED:
+        return JobDataStatus.COMPLETED;
+      case RUNNING:
+        return JobDataStatus.RUNNING;
+      default:
+        return null;
+      }
+    }
+
+    public static JobStatus convertToJobStatus(JobDataStatus status) {
+      switch (status) {
+      case PENDING:
+        return JobStatus.PENDING;
+      case READY:
+        return JobStatus.READY;
+      case STARTED:
+        return JobStatus.STARTED;
+      case ABORTED:
+        return JobStatus.ABORTED;
+      case ABORTING:
+        return JobStatus.ABORTED;
+      case FAILED:
+        return JobStatus.FAILED;
+      case COMPLETED:
+        return JobStatus.COMPLETED;
+      case RUNNING:
+        return JobStatus.RUNNING;
+      default:
+        return null;
+      }
+    }
+  }
+  
+  private final Job job;
+  private final JobDataStatus status;
+  private final Map<String, Object> result;
+  private final String message;
+  private final boolean important;
+  private final boolean terminal;
+  private final boolean logsUploaded;
+
+  public JobData(Job job, JobDataStatus status, String message, boolean important, boolean terminal) {
     this.job = job;
     this.status = status;
     this.important = important;
     this.terminal = terminal;
     this.logsUploaded = false;
+    this.result = null;
+    this.message = message;
+  }
+  
+  public JobData(Job job, JobDataStatus status, String message, Map<String, Object> result, boolean important, boolean terminal) {
+    this.job = job;
+    this.status = status;
+    this.important = important;
+    this.terminal = terminal;
+    this.logsUploaded = false;
+    this.result = result;
+    this.message = message;
+  }
+  
+  public static JobData cloneWithJob(JobData jobData, Job job) {
+    return new JobData(job, jobData.status, jobData.message, jobData.result, jobData.important, jobData.terminal);
+  }
+  
+  public static JobData cloneWithResult(JobData jobData, Map<String, Object> result) {
+    return new JobData(jobData.job, jobData.status, jobData.message, result, jobData.important, jobData.terminal);
+  }
+  
+  public static JobData cloneWithStatus(JobData jobData, JobDataStatus status) {
+    return new JobData(jobData.job, status, jobData.message, jobData.important, jobData.terminal);
+  }
+  
+  public static JobData cloneWithStatusAndMessage(JobData jobData, JobDataStatus status, String message) {
+    return new JobData(jobData.job, status, message, jobData.important, jobData.terminal);
   }
 
+  public String getId() {
+    return job.getId();
+  }
+  
   public Job getJob() {
     return job;
   }
 
-  public void setJob(Job job) {
-    this.job = job;
-  }
-
-  public JobStatus getStatus() {
+  public JobDataStatus getStatus() {
     return status;
-  }
-
-  public void setStatus(JobStatus status) {
-    this.status = status;
   }
 
   public Map<String, Object> getResult() {
     return result;
   }
 
-  public void setResult(Map<String, Object> result) {
-    this.result = result;
-  }
-
   public String getMessage() {
     return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
   }
 
   public boolean isImportant() {
     return important;
   }
 
-  public void setImportant(boolean important) {
-    this.important = important;
-  }
-
   public boolean isTerminal() {
     return terminal;
   }
 
-  public void setTerminal(boolean terminal) {
-    this.terminal = terminal;
-  }
-
   public boolean isLogsUploaded() {
     return logsUploaded;
-  }
-
-  public void setLogsUploaded(boolean logsUploaded) {
-    this.logsUploaded = logsUploaded;
   }
 
   @Override

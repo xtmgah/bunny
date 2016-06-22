@@ -2,6 +2,7 @@ package org.rabix.engine.processor.handler;
 
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.Event.EventType;
+import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.impl.ContextStatusEventHandler;
 import org.rabix.engine.processor.handler.impl.InitEventHandler;
 import org.rabix.engine.processor.handler.impl.InputEventHandler;
@@ -25,6 +26,14 @@ public class HandlerFactory {
     this.outputEventHandler = outputEventHandler;
     this.statusEventHandler = statusEventHandler;
     this.contextStatusEventHandler = contextStatusEventHandler;
+  }
+  
+  /**
+   * Initialize some callbacks 
+   */
+  public void initialize(JobStatusCallback jobStatusCallback) {
+    this.statusEventHandler.initialize(jobStatusCallback);
+    this.outputEventHandler.initialize(jobStatusCallback);
   }
   
   @SuppressWarnings("unchecked")

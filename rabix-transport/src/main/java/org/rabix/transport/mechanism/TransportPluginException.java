@@ -15,4 +15,8 @@ public class TransportPluginException extends Exception {
     super(message, t);
   }
 
+  public TransportPluginException(Throwable e) {
+    super(e);
+  }
+
 }

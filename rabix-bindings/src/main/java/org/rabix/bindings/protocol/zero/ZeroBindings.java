@@ -19,6 +19,7 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.bindings.model.requirement.ResourceRequirement;
 import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
 import org.rabix.bindings.protocol.zero.helper.ZeroHelper;
 import org.rabix.common.helper.CloneHelper;
@@ -180,6 +181,11 @@ public class ZeroBindings implements Bindings {
   @Override
   public ProtocolType getProtocolType() {
     return this.protocolType;
+  }
+
+  @Override
+  public ResourceRequirement getResourceRequirement(Job job) throws BindingException {
+    return null;
   }
 
 }

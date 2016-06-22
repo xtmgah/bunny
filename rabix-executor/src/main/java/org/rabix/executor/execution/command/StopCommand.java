@@ -2,21 +2,26 @@ package org.rabix.executor.execution.command;
 
 import javax.inject.Inject;
 
-import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.bindings.BindingException;
 import org.rabix.executor.ExecutorException;
 import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobFitter;
 
 /**
  * Command that stops {@link JobHandler} 
  */
 public class StopCommand extends JobHandlerCommand {
 
+  private JobFitter jobFitter;
+  
   @Inject
-  public StopCommand(JobDataService jobDataService) {
+  public StopCommand(JobDataService jobDataService, JobFitter jobFitter) {
     super(jobDataService);
+    this.jobFitter = jobFitter;
   }
 
   @Override
@@ -26,11 +31,12 @@ public class StopCommand extends JobHandlerCommand {
       handler.stop();
 
       String message = String.format("Job %s aborted successfully.", jobId);
-      jobDataService.save(jobData, message, JobStatus.ABORTED, contextId);
+      jobData = jobDataService.save(jobData, message, JobDataStatus.ABORTED);
       stopped(jobData, message, handler.getEngineStub());
-    } catch (ExecutorException e) {
+      jobFitter.free(jobData.getJob());
+    } catch (ExecutorException | BindingException e) {
       String message = String.format("Failed to stop %s. %s", jobId, e.toString());
-      jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
+      jobData = jobDataService.save(jobData, message, JobDataStatus.FAILED);
     }
     return new Result(true);
   }

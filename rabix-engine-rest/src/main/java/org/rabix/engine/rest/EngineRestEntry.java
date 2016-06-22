@@ -38,7 +38,7 @@ public class EngineRestEntry {
     } catch (ParseException e) {
       logger.error("Encountered exception while parsing using PosixParser.", e);
     } catch (Exception e) {
-      logger.error("Encountered exception while reading a input file.");
+      logger.error("Encountered exception while reading a input file.", e);
     }
   }
   

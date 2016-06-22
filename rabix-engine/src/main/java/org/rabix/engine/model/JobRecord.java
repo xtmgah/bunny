@@ -47,6 +47,10 @@ public class JobRecord {
     this.outputCounters = new ArrayList<>();
   }
   
+  public boolean isRoot() {
+    return externalId.equals(rootId);
+  }
+  
   public String getId() {
     return id;
   }

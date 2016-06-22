@@ -10,6 +10,7 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.bindings.model.requirement.ResourceRequirement;
 
 public interface Bindings {
 
@@ -40,6 +41,8 @@ public interface Bindings {
   List<Requirement> getRequirements(Job job) throws BindingException;
 
   List<Requirement> getHints(Job job) throws BindingException;
+  
+  ResourceRequirement getResourceRequirement(Job job) throws BindingException;
   
   DAGNode translateToDAG(Job job) throws BindingException;
 

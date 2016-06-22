@@ -1,11 +1,10 @@
 package org.rabix.engine.rest.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Context;
@@ -16,10 +15,9 @@ import org.rabix.engine.JobHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.event.impl.JobStatusEvent;
-import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.IterationCallback;
+import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.JobDB;
@@ -61,17 +59,13 @@ public class JobServiceImpl implements JobService {
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
 
-    List<IterationCallback> callbacks = new ArrayList<>();
-    callbacks.add(new EndJobCallback());
-    callbacks.add(new SendJobsCallback());
-    this.eventProcessor.start(callbacks);
+    this.eventProcessor.start(null, new JobStatusCallbackImpl());
   }
   
   @Override
   public void update(Job job) throws JobServiceException {
+    JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
     try {
-      JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
-      
       JobStatusEvent statusEvent = null;
       JobStatus status = job.getStatus();
       switch (status) {
@@ -106,8 +100,8 @@ public class JobServiceImpl implements JobService {
       }
       jobDB.update(job);
     } catch (JobStateValidationException e) {
-      logger.error("Failed to update Job state", e);
-      throw new JobServiceException("Failed to update Job state", e);
+      // TODO handle exception
+      logger.warn("Failed to update Job state from {} to {}", jobRecord.getState(), job.getStatus());
     }
   }
   
@@ -134,11 +128,11 @@ public class JobServiceImpl implements JobService {
       InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
       eventProcessor.send(initEvent);
       return job;
-    } catch (BindingException e) {
-      logger.error("Failed to create Bindings", e);
-      throw new JobServiceException("Failed to create Bindings", e);
     } catch (EventHandlerException e) {
       throw new JobServiceException("Failed to start job", e);
+    } catch (Exception e) {
+      logger.error("Failed to create Bindings", e);
+      throw new JobServiceException("Failed to create Bindings", e);
     }
   }
   
@@ -156,39 +150,37 @@ public class JobServiceImpl implements JobService {
     return new Context(contextId, null);
   }
   
-  private class SendJobsCallback implements IterationCallback {
+  private class JobStatusCallbackImpl implements JobStatusCallback {
+
+    private AtomicInteger failCount = new AtomicInteger(0);
+    private AtomicInteger successCount = new AtomicInteger(0);
+
     @Override
-    public void call(EventProcessor eventProcessor, String contextId, int iteration) throws Exception {
-      Set<Job> jobs = getReady(eventProcessor, contextId);
-      for (Job job : jobs) {
-        jobDB.update(job);
-      }
+    public void onReady(Job job) {
+      jobDB.update(job);
+
+      Set<Job> jobs = new HashSet<>();
+      jobs.add(job);
       backendDispatcher.send(jobs);
     }
-  }
 
-  private class EndJobCallback implements IterationCallback {
     @Override
-    public void call(EventProcessor eventProcessor, String contextId, int iteration) {
-      ContextRecord context = contextRecordService.find(contextId);
-      
-      Job job = null;
-      switch (context.getStatus()) {
-      case COMPLETED:
-        job = jobDB.get(contextId);
-        job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
-        job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
-        jobDB.update(job);
-        break;
-      case FAILED:
-        job = jobDB.get(contextId);
-        job = Job.cloneWithStatus(job, JobStatus.FAILED);
-        jobDB.update(job);
-        break;
-      default:
-        break;
-      }
+    public void onRootCompleted(String rootId) throws Exception {
+      Job job = jobDB.get(rootId);
+      job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
+      job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
+      jobDB.update(job);
+      logger.info("Root Job {} completed. Successfull {}.", job.getId(), successCount.incrementAndGet());
     }
-  }
 
+    @Override
+    public void onRootFailed(String rootId) throws Exception {
+      Job job = jobDB.get(rootId);
+      job = Job.cloneWithStatus(job, JobStatus.FAILED);
+      jobDB.update(job);
+      logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
+    }
+
+  }
+  
 }

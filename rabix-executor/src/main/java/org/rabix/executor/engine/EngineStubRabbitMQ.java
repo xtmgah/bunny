@@ -11,9 +11,8 @@ import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.EngineConfiguration;
-import org.rabix.transport.mechanism.TransportPlugin;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportPluginRabbitMQ;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportQueueRabbitMQ;
@@ -22,13 +21,12 @@ import org.slf4j.LoggerFactory;
 
 public class EngineStubRabbitMQ implements EngineStub {
 
-  private static final Logger logger = LoggerFactory.getLogger(EngineStubRabbitMQ.class);
+  private final static Logger logger = LoggerFactory.getLogger(EngineStubRabbitMQ.class);
   
   private BackendRabbitMQ backendRabbitMQ;
   private ExecutorService executorService;
-  private TransportPlugin<TransportQueueRabbitMQ> transportPlugin;
+  private TransportPluginRabbitMQ transportPlugin;
 
-  private ScheduledExecutorService scheduledService = Executors.newSingleThreadScheduledExecutor();
   private ScheduledExecutorService scheduledHeartbeatService = Executors.newSingleThreadScheduledExecutor();
 
   private TransportQueueRabbitMQ sendToBackendQueue;
@@ -46,38 +44,46 @@ public class EngineStubRabbitMQ implements EngineStub {
     EngineConfiguration engineConfiguration = backendRabbitMQ.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getHeartbeatRoutingKey());
+    
+    initialize();
+  }
+  
+  /**
+   * Try to initialize both exchanges (engine, backend)
+   */
+  private void initialize() {
+    try {
+      transportPlugin.initializeExchange(backendRabbitMQ.getBackendConfiguration().getExchange(), backendRabbitMQ.getBackendConfiguration().getExchangeType());
+      transportPlugin.initializeExchange(backendRabbitMQ.getEngineConfiguration().getExchange(), backendRabbitMQ.getEngineConfiguration().getExchangeType());
+    } catch (TransportPluginException e) {
+      // do nothing
+    }
   }
   
   @Override
   public void start() {
-    new Thread(new Runnable() {
+    transportPlugin.startReceiver(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
-      public void run() {
-        while(true) {
-          ResultPair<Job> result = transportPlugin.receive(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
-            @Override
-            public void handleReceive(Job job) throws TransportPluginException {
-              executorService.start(job, job.getContext().getId());
-            }
-          });
-          if (!result.isSuccess()) {
-            logger.error(result.getMessage(), result.getException());
-          }
-        }
+      public void handleReceive(Job job) throws TransportPluginException {
+        executorService.start(job, job.getContext().getId());
       }
-    }).start();
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
+      }
+    });
     
     scheduledHeartbeatService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
         transportPlugin.send(receiveFromBackendHeartbeatQueue, new HeartbeatInfo(backendRabbitMQ.getId(), System.currentTimeMillis()));
       }
-    }, 0, 10, TimeUnit.SECONDS);
+    }, 0, backendRabbitMQ.getBackendConfiguration().getHeartbeatPeriodMills(), TimeUnit.MILLISECONDS);
   }
 
   @Override
   public void stop() {
-    scheduledService.shutdown();
     scheduledHeartbeatService.shutdown();
   }
 

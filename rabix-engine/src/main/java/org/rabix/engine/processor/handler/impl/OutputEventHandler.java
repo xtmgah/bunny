@@ -14,12 +14,15 @@ import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
+import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -28,11 +31,15 @@ import com.google.inject.Inject;
  */
 public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
 
+  private final static Logger logger = LoggerFactory.getLogger(OutputEventHandler.class);
+  
   private JobRecordService jobService;
   private VariableRecordService variableService;
   private LinkRecordService linkService;
   
   private final EventProcessor eventProcessor;
+  
+  private JobStatusCallback jobStatusCallback;
   
   @Inject
   public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService) {
@@ -42,6 +49,10 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     this.eventProcessor = eventProcessor;
   }
 
+  public void initialize(JobStatusCallback jobStatusCallback) {
+    this.jobStatusCallback = jobStatusCallback;
+  }
+  
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
     JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {
@@ -55,8 +66,14 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     if (sourceJob.isCompleted()) {
       sourceJob.setState(JobState.COMPLETED);
       jobService.update(sourceJob);
-      if (sourceJob.isMaster()) {
+      if (sourceJob.isRoot()) {
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
+        try {
+          jobStatusCallback.onRootCompleted(sourceJob.getExternalId());
+        } catch (Exception e) {
+          logger.error("Failed to call onRootCompleted callback for Job " + sourceJob.getRootId(), e);
+          throw new EventHandlerException("Failed to call onRootCompleted callback for Job " + sourceJob.getRootId(), e);
+        }
       }
     }
     

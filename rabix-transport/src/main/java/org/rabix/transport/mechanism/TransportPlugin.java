@@ -2,14 +2,20 @@ package org.rabix.transport.mechanism;
 
 public interface TransportPlugin<Q extends TransportQueue> {
 
-  public <T> ResultPair<T> send(Q destinationQueue, T entity);
+  <T> ResultPair<T> send(Q destinationQueue, T entity);
 
-  public <T> ResultPair<T> receive(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback);
+  <T> void startReceiver(Q sourceQueue, Class<T> clazz, ReceiveCallback<T> receiveCallback, ErrorCallback errorCallback);
+  
+  void stopReceiver(Q sourceQueue);
   
   TransportPluginType getType();
   
   public static interface ReceiveCallback<T> {
     void handleReceive(T entity) throws TransportPluginException;
+  }
+  
+  public static interface ErrorCallback {
+    void handleError(Exception error);
   }
   
   public static class ResultPair<T> {

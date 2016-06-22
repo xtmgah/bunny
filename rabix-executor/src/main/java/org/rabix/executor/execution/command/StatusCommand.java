@@ -5,11 +5,12 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.rabix.bindings.model.Job;
-import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.executor.execution.JobHandlerCommand;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
+import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +23,12 @@ public class StatusCommand extends JobHandlerCommand {
 
   public final static long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(15);
   
+  private JobFitter jobFitter;
+  
   @Inject
-  public StatusCommand(JobDataService jobDataService) {
+  public StatusCommand(JobDataService jobDataService, JobFitter jobFitter) {
     super(jobDataService);
+    this.jobFitter = jobFitter;
   }
 
   @Override
@@ -32,7 +36,7 @@ public class StatusCommand extends JobHandlerCommand {
     String jobId = jobData.getJob().getId();
     logger.debug("Check status for {} command line tool.", jobId);
 
-    if (!JobStatus.STARTED.equals(jobData.getStatus())) {
+    if (!JobDataStatus.STARTED.equals(jobData.getStatus())) {
       logger.info("Command line tool {} is not started yet.", jobId);
       return new Result(false);
     }
@@ -47,16 +51,17 @@ public class StatusCommand extends JobHandlerCommand {
       job = jobHandler.postprocess(jobData.isTerminal());
       if (!jobHandler.isSuccessful()) {
         message = String.format("Job %s failed with exit code %d.", job.getId(), jobHandler.getExitStatus());
-        jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
+        jobData = jobDataService.save(jobData, message, JobDataStatus.FAILED);
         failed(jobData, message, jobHandler.getEngineStub(), null);
       } else {
         message = String.format("Job %s completed successfully.", job.getId());
-        jobDataService.save(jobData, message, JobStatus.COMPLETED, contextId);
+        jobData = jobDataService.save(jobData, message, JobDataStatus.COMPLETED);
         completed(jobData, message, job.getOutputs(), jobHandler.getEngineStub());
       }
+      jobFitter.free(job);
     } catch (Exception e) {
       String message = String.format("Failed to execute status command for %s. %s", jobId, e.getMessage());
-      jobDataService.save(jobData, message, JobStatus.FAILED, contextId);
+      jobData = jobDataService.save(jobData, message, JobDataStatus.FAILED);
       failed(jobData, message, jobHandler.getEngineStub(), e);
       return new Result(true);
     }

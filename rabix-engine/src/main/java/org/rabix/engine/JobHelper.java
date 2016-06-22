@@ -34,20 +34,24 @@ public class JobHelper {
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
-
-        Map<String, Object> inputs = new HashMap<>();
-        List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
-        for (VariableRecord inputVariable : inputVariables) {
-          inputs.put(inputVariable.getPortId(), inputVariable.getValue());
-        }
-        ContextRecord contextRecord = contextRecordService.find(job.getRootId());
-        Context context = new Context(job.getRootId(), contextRecord.getConfig());
-        String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-        jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context));
+        jobs.add(createReadyJob(job, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
       }
     }
     return jobs;
+  }
+  
+  public static Job createReadyJob(JobRecord job, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
+    DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
+
+    Map<String, Object> inputs = new HashMap<>();
+    List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
+    for (VariableRecord inputVariable : inputVariables) {
+      inputs.put(inputVariable.getPortId(), inputVariable.getValue());
+    }
+    ContextRecord contextRecord = contextRecordService.find(job.getRootId());
+    Context context = new Context(job.getRootId(), contextRecord.getConfig());
+    String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context);
   }
   
   public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {

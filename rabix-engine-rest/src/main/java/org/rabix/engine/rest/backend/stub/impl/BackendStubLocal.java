@@ -12,8 +12,8 @@ import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.impl.BackendLocal;
+import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
-import org.rabix.transport.mechanism.TransportPlugin.ResultPair;
 import org.rabix.transport.mechanism.TransportPluginException;
 import org.rabix.transport.mechanism.impl.local.TransportPluginLocal;
 import org.rabix.transport.mechanism.impl.local.TransportQueueLocal;
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class BackendStubLocal implements BackendStub {
 
   private final static Logger logger = LoggerFactory.getLogger(BackendStubLocal.class);
-
+  
   private final JobService jobService;
   private final BackendLocal backendLocal;
   private final TransportPluginLocal transportPluginLocal;
@@ -46,37 +46,34 @@ public class BackendStubLocal implements BackendStub {
 
   @Override
   public void start(final Map<String, Long> heartbeatInfo) {
-    executorService.submit(new Runnable() {
+    transportPluginLocal.startReceiver(receiveFromBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
-      public void run() {
-        while (true) {
-          ResultPair<Job> result = transportPluginLocal.receive(receiveFromBackendQueue, Job.class, new ReceiveCallback<Job>() {
-            @Override
-            public void handleReceive(Job job) throws TransportPluginException {
-              try {
-                jobService.update(job);
-              } catch (JobServiceException e) {
-                throw new TransportPluginException("Failed to update Job", e);
-              }
-            }
-          });
-          if (!result.isSuccess()) {
-            logger.error(result.getMessage(), result.getException());
-          }
+      public void handleReceive(Job job) throws TransportPluginException {
+        try {
+          jobService.update(job);
+        } catch (JobServiceException e) {
+          throw new TransportPluginException("Failed to update Job", e);
         }
       }
-    });
-    executorService.submit(new Runnable() {
+    }, new ErrorCallback() {
       @Override
-      public void run() {
-        transportPluginLocal.receive(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class, new ReceiveCallback<HeartbeatInfo>() {
+      public void handleError(Exception error) {
+        logger.error("Failed to receive message.", error);
+      }
+    });
+
+    transportPluginLocal.startReceiver(receiveFromBackendHeartbeatQueue, HeartbeatInfo.class,
+        new ReceiveCallback<HeartbeatInfo>() {
           @Override
           public void handleReceive(HeartbeatInfo entity) throws TransportPluginException {
             heartbeatInfo.put(entity.getId(), entity.getTimestamp());
           }
+        }, new ErrorCallback() {
+          @Override
+          public void handleError(Exception error) {
+            logger.error("Failed to receive message.", error);
+          }
         });
-      }
-    });
   }
 
   @Override
