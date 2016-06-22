@@ -209,8 +209,17 @@ public class Draft3Processor implements ProtocolProcessor {
         }
       }
     }
+    if(outputPort.getFormat() != null) {
+      if(result instanceof List) {
+        for(Object elem: (List<Object>) result) {
+          setFormat(elem, outputPort.getFormat(), job);
+        }
+      }
+      else if( result instanceof Map) {
+        setFormat(result, outputPort.getFormat(), job);
+      }
+    }
     return result;
-
   }
 
   /**
@@ -341,6 +350,13 @@ public class Draft3Processor implements ProtocolProcessor {
       }
     }
     return secondaryFileMaps;
+  }
+  
+  @SuppressWarnings("unchecked")
+  private Object setFormat(Object result, Object format, Draft3Job job) throws Draft3ExpressionException {
+    Object resolved = Draft3ExpressionResolver.resolve(format, job, null);
+    ((Map<String, Object>) result).put("format", resolved);
+    return result;
   }
 
 }

@@ -12,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Draft3OutputPort extends ApplicationPort {
 
+  @JsonProperty("format")
+  protected Object format;
   @JsonProperty("outputBinding")
   protected Object outputBinding;
   @JsonProperty("secondaryFiles")
@@ -20,10 +22,13 @@ public class Draft3OutputPort extends ApplicationPort {
   protected Object source;
 
   @JsonCreator
-  public Draft3OutputPort(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue,
-      @JsonProperty("type") Object schema, @JsonProperty("outputBinding") Object outputBinding,
-      @JsonProperty("scatter") Boolean scatter, @JsonProperty("source") Object source, @JsonProperty("secondaryFiles") Object secondaryFiles, @JsonProperty("linkMerge") String linkMerge) {
+  public Draft3OutputPort(@JsonProperty("id") String id, @JsonProperty("format") Object format,
+      @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema,
+      @JsonProperty("outputBinding") Object outputBinding, @JsonProperty("scatter") Boolean scatter,
+      @JsonProperty("source") Object source, @JsonProperty("secondaryFiles") Object secondaryFiles,
+      @JsonProperty("linkMerge") String linkMerge) {
     super(id, defaultValue, schema, scatter, linkMerge);
+    this.format = format;
     this.outputBinding = outputBinding;
     this.source = source;
     this.secondaryFiles = secondaryFiles;
@@ -36,10 +41,15 @@ public class Draft3OutputPort extends ApplicationPort {
   public Object getSource() {
     return source;
   }
-  
+
   public Object getSecondaryFiles() {
     return secondaryFiles;
   }
+  
+  public Object getFormat() {
+    return format;
+  }
+  
 
   @Override
   public String toString() {
