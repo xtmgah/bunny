@@ -17,6 +17,7 @@ import org.rabix.engine.event.impl.InputUpdateEvent;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
+import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.scatter.RowMapping;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.model.scatter.ScatterStrategyFactory;
@@ -131,6 +132,11 @@ public class ScatterHandler {
         variableN.setNumberGlobals(getNumberOfScattered(job, numberOfScattered));
         variableRecordService.create(variableN);
 
+        PortCounter inputPortCounter = job.getInputCounter(inputPort.getId());
+        if (inputPortCounter == null) {
+          continue;
+        }
+        
         if (jobN.getState().equals(JobState.PENDING)) {
           jobN.incrementPortCounter(inputPort, LinkPortType.INPUT);
         }

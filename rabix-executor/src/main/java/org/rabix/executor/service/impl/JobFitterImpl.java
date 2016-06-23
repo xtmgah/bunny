@@ -2,6 +2,7 @@ package org.rabix.executor.service.impl;
 
 import java.lang.management.ManagementFactory;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
@@ -10,6 +11,8 @@ import org.rabix.bindings.model.requirement.ResourceRequirement;
 import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
 
 public class JobFitterImpl implements JobFitter {
 
@@ -20,14 +23,18 @@ public class JobFitterImpl implements JobFitter {
   private Long availableCores;
   private Long availableMemory;
 
+  private boolean isEnabled;
+
   @SuppressWarnings("restriction")
-  public JobFitterImpl() {
+  @Inject
+  public JobFitterImpl(Configuration configuration) {
     com.sun.management.OperatingSystemMXBean operatingSystemMXBean = (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     long totalPhysicalMemorySize = bytesToMeg(operatingSystemMXBean.getTotalPhysicalMemorySize());
     long jvmMaxMemory = bytesToMeg(Runtime.getRuntime().maxMemory());
     
-    availableMemory = totalPhysicalMemorySize - jvmMaxMemory;
-    availableCores = (long) operatingSystemMXBean.getAvailableProcessors();
+    this.availableMemory = totalPhysicalMemorySize - jvmMaxMemory;
+    this.availableCores = (long) operatingSystemMXBean.getAvailableProcessors();
+    this.isEnabled = configuration.getBoolean("resource.fitter.enabled", false);
   }
   
   public static long bytesToMeg(long bytes) {
@@ -36,6 +43,9 @@ public class JobFitterImpl implements JobFitter {
   
   @Override
   public synchronized boolean tryToFit(Job job) throws BindingException {
+    if (!isEnabled) {
+      return true;
+    }
     Bindings bindings = BindingsFactory.create(job);
     if (bindings.canExecute(job)) {
       return true;
@@ -59,6 +69,10 @@ public class JobFitterImpl implements JobFitter {
 
   @Override
   public synchronized void free(Job job) throws BindingException {
+    if (!isEnabled) {
+      return;
+    }
+    
     Bindings bindings = BindingsFactory.create(job);
     if (bindings.canExecute(job)) {
       return;
