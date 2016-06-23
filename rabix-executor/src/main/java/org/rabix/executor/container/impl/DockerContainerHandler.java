@@ -58,9 +58,6 @@ public class DockerContainerHandler implements ContainerHandler {
   public static final String DIRECTORY_MAP_MODE = "rw";
   public static final String COMMAND_FILE = "cmd.log";
   
-  private static final String DEFAULT_USERNAME = "username";
-  private static final String DEFAULT_PASSWORD = "password";
-  
   private String containerId;
   private DockerClient dockerClient;
   
@@ -69,6 +66,8 @@ public class DockerContainerHandler implements ContainerHandler {
 
   private final File workingDir;
   private final Configuration configuration;
+  
+  private boolean isConfigAuthEnabled;
 
   public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) throws ContainerException {
     this.job = job;
@@ -76,21 +75,25 @@ public class DockerContainerHandler implements ContainerHandler {
     this.configuration = configuration;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.dockerClient = createDockerClient();
+    this.isConfigAuthEnabled = configuration.getBoolean("docker.override.auth.enabled", false);
   }
   
   private DockerClient createDockerClient() throws ContainerException {
     DockerClient docker = null;
     try {
-      String username = configuration.getString("docker.username", DEFAULT_USERNAME);
-      String password = configuration.getString("docker.password", DEFAULT_PASSWORD);
-      
-      AuthConfig authConfig = AuthConfig.builder().username(username).password(password).build();
-      docker = DefaultDockerClient
+      DefaultDockerClient.Builder dockerClientBuilder = DefaultDockerClient
           .fromEnv()
           .connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
-          .readTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
-          .authConfig(authConfig)
-          .build();
+          .readTimeoutMillis(TimeUnit.MINUTES.toMillis(1));
+      
+      if (isConfigAuthEnabled) {
+        String username = configuration.getString("docker.username");
+        String password = configuration.getString("docker.password");
+        
+        AuthConfig authConfig = AuthConfig.builder().username(username).password(password).build();
+        dockerClientBuilder.authConfig(authConfig);
+      }
+      docker = dockerClientBuilder.build();
     } catch (DockerCertificateException e) {
       logger.error("Failed to create Docker client", e);
       throw new ContainerException("Failed to create Docker client", e);
@@ -98,36 +101,32 @@ public class DockerContainerHandler implements ContainerHandler {
     return docker;
   }
   
-  private String extractServerName(String image) {
-    if(StringUtils.countMatches(image, "/") <= 1) {
-      return dockerHubServer;
-    }
-    else {
-      return image.substring(0, image.indexOf("/"));
-    }
-  }
-  
   private void pull(String image) throws ContainerException {
     logger.debug("Pulling docker image");
     VerboseLogger.log(String.format("Pulling docker image %s", image));
-    
-    AuthConfig authConfig = null;
+
     try {
-      String serverAddress = extractServerName(image);
-      authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
-    } catch (IOException | RuntimeException e) {
-      logger.debug("Can't find docker config file");
-      try {
-        this.dockerClient.pull(image);
-      } catch (DockerException | InterruptedException e1) {
-        throw new ContainerException("Failed to pull " + image, e1);
+      if (isConfigAuthEnabled) {
+        dockerClient.pull(image);
+      } else {
+        String serverAddress = extractServerName(image);
+        AuthConfig authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
+        this.dockerClient.pull(image, authConfig);
       }
-    }
-    try {
-      this.dockerClient.pull(image, authConfig);
     } catch (DockerException | InterruptedException e) {
+      logger.error("Failed to pull " + image, e);
       throw new ContainerException("Failed to pull " + image, e);
+    } catch (IOException e) {
+      logger.error("Can't find docker config file", e);
+      throw new ContainerException("Can't find docker config file", e);
     }
+  }
+  
+  private String extractServerName(String image) {
+    if (StringUtils.countMatches(image, "/") <= 1) {
+      return dockerHubServer;
+    }
+    return image.substring(0, image.indexOf("/"));
   }
 
   @Override
