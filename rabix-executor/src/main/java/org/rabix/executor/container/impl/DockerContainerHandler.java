@@ -58,10 +58,12 @@ public class DockerContainerHandler implements ContainerHandler {
   public static final String DIRECTORY_MAP_MODE = "rw";
   public static final String COMMAND_FILE = "cmd.log";
   
+  private static final String DEFAULT_USERNAME = "username";
+  private static final String DEFAULT_PASSWORD = "password";
+  
   private String containerId;
   private DockerClient dockerClient;
   
-
   private final Job job;
   private final DockerContainerRequirement dockerResource;
 
@@ -79,7 +81,16 @@ public class DockerContainerHandler implements ContainerHandler {
   private DockerClient createDockerClient() {
     DockerClient docker = null;
     try {
-      docker = DefaultDockerClient.fromEnv().connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1)).readTimeoutMillis(TimeUnit.MINUTES.toMillis(1)).build();
+      String username = configuration.getString("docker.username", DEFAULT_USERNAME);
+      String password = configuration.getString("docker.password", DEFAULT_PASSWORD);
+      
+      AuthConfig authConfig = AuthConfig.builder().username(username).password(password).build();
+      docker = DefaultDockerClient
+          .fromEnv()
+          .connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
+          .readTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
+          .authConfig(authConfig)
+          .build();
     } catch (DockerCertificateException e) {
       e.printStackTrace();
     }
