@@ -206,7 +206,6 @@ public class BackendCommandLine {
       });
       checker.start();
       checker.join();
-
     } catch (ParseException e) {
       logger.error("Encountered an error while parsing using Posix parser.", e);
       System.exit(10);
