@@ -109,16 +109,18 @@ public class DockerContainerHandler implements ContainerHandler {
       if (isConfigAuthEnabled) {
         dockerClient.pull(image);
       } else {
-        String serverAddress = extractServerName(image);
-        AuthConfig authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
-        this.dockerClient.pull(image, authConfig);
+        try {
+          String serverAddress = extractServerName(image);
+          AuthConfig authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
+          this.dockerClient.pull(image, authConfig);
+        } catch (IOException e) {
+          logger.debug("Can't find docker config file", e);
+          dockerClient.pull(image);
+        }
       }
     } catch (DockerException | InterruptedException e) {
       logger.error("Failed to pull " + image, e);
       throw new ContainerException("Failed to pull " + image, e);
-    } catch (IOException e) {
-      logger.error("Can't find docker config file", e);
-      throw new ContainerException("Can't find docker config file", e);
     }
   }
   
