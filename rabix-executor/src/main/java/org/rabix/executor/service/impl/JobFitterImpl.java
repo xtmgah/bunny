@@ -1,13 +1,12 @@
 package org.rabix.executor.service.impl;
 
-import java.lang.management.ManagementFactory;
-
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.ResourceRequirement;
+import org.rabix.common.SystemEnvironmentHelper;
 import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +15,6 @@ import com.google.inject.Inject;
 
 public class JobFitterImpl implements JobFitter {
 
-  private static final long MEGABYTE = 1024L * 1024L;
-
   private static final Logger logger = LoggerFactory.getLogger(JobFitterImpl.class);
   
   private Long availableCores;
@@ -25,21 +22,13 @@ public class JobFitterImpl implements JobFitter {
 
   private boolean isEnabled;
 
-  @SuppressWarnings("restriction")
   @Inject
   public JobFitterImpl(Configuration configuration) {
-    com.sun.management.OperatingSystemMXBean operatingSystemMXBean = (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-    long totalPhysicalMemorySize = bytesToMeg(operatingSystemMXBean.getTotalPhysicalMemorySize());
-    long jvmMaxMemory = bytesToMeg(Runtime.getRuntime().maxMemory());
-    
-    this.availableMemory = totalPhysicalMemorySize - jvmMaxMemory;
-    this.availableCores = (long) operatingSystemMXBean.getAvailableProcessors();
     this.isEnabled = configuration.getBoolean("resource.fitter.enabled", false);
+    
+    this.availableMemory = SystemEnvironmentHelper.getTotalPhysicalMemorySizeInMB();
+    this.availableCores = SystemEnvironmentHelper.getNumberOfCores();
   }
-  
-  public static long bytesToMeg(long bytes) {
-    return bytes / MEGABYTE ;
-   }
   
   @Override
   public synchronized boolean tryToFit(Job job) throws BindingException {

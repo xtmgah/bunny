@@ -4,12 +4,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.bindings.model.Resources;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.common.SystemEnvironmentHelper;
 import org.rabix.engine.JobHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
@@ -48,7 +51,7 @@ public class JobServiceImpl implements JobService {
   private final BackendDispatcher backendDispatcher;
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeDB dagNodeDB, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
     this.jobDB = jobDB;
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
@@ -58,7 +61,8 @@ public class JobServiceImpl implements JobService {
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
 
-    this.eventProcessor.start(null, new JobStatusCallbackImpl());
+    boolean setResources = configuration.getBoolean("local.backend", false);
+    this.eventProcessor.start(null, new JobStatusCallbackImpl(setResources));
   }
   
   @Override
@@ -151,11 +155,24 @@ public class JobServiceImpl implements JobService {
   
   private class JobStatusCallbackImpl implements JobStatusCallback {
 
+    private boolean setResources;
+    
     private AtomicInteger failCount = new AtomicInteger(0);
     private AtomicInteger successCount = new AtomicInteger(0);
 
+    public JobStatusCallbackImpl(boolean setResources) {
+      this.setResources = setResources;
+    }
+    
     @Override
     public void onReady(Job job) {
+      if (setResources) {
+        long numberOfCores = SystemEnvironmentHelper.getNumberOfCores();
+        long memory = SystemEnvironmentHelper.getTotalPhysicalMemorySizeInMB();
+        
+        Resources resources = new Resources(numberOfCores, memory, null, true);
+        job = Job.cloneWithResources(job, resources);
+      }
       jobDB.update(job);
       backendDispatcher.send(job);
     }

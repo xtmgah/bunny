@@ -33,7 +33,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -67,7 +67,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
       Assert.assertNotNull(resultList);
@@ -87,7 +87,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -115,7 +115,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -135,7 +135,7 @@ public class Draft2CommandLineToolTest {
 
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       String commandLine = bindings.buildCommandLine(job);
       
@@ -181,7 +181,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -212,7 +212,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id",encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id",encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -242,7 +242,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -276,7 +276,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -303,7 +303,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -330,7 +330,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -357,7 +357,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 
@@ -384,7 +384,7 @@ public class Draft2CommandLineToolTest {
     List<?> resultList;
     try {
       String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
-      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null);
+      Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
       Bindings bindings = BindingsFactory.create(job);
       resultList = bindings.buildCommandLineParts(job);
 

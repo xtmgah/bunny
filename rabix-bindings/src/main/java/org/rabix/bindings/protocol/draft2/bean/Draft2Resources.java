@@ -11,13 +11,13 @@ public class Draft2Resources {
   @JsonProperty("high_io")
   private final boolean highIO;
   @JsonProperty("cpu")
-  private final Integer cpu;
+  private final Long cpu;
   @JsonProperty("mem")
-  private final Integer memMB;
+  private final Long memMB;
 
   @JsonCreator
-  public Draft2Resources(@JsonProperty("high_io") boolean highIO, @JsonProperty("cpu") Integer cpu,
-      @JsonProperty("mem") Integer memMB) {
+  public Draft2Resources(@JsonProperty("high_io") boolean highIO, @JsonProperty("cpu") Long cpu,
+      @JsonProperty("mem") Long memMB) {
     this.highIO = highIO;
     this.cpu = cpu;
     this.memMB = memMB;
@@ -27,11 +27,11 @@ public class Draft2Resources {
     return highIO;
   }
 
-  public Integer getCpu() {
+  public Long getCpu() {
     return cpu;
   }
 
-  public Integer getMemMB() {
+  public Long getMemMB() {
     return memMB;
   }
 

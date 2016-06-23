@@ -51,7 +51,7 @@ public class JobHelper {
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
     Context context = new Context(job.getRootId(), contextRecord.getConfig());
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context);
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context, null);
   }
   
   public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {
