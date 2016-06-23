@@ -10,7 +10,7 @@ import org.rabix.executor.container.impl.LocalContainerHandler;
 
 public class ContainerHandlerFactory {
 
-  public static ContainerHandler create(Job job, Requirement requirement, Configuration configuration) {
+  public static ContainerHandler create(Job job, Requirement requirement, Configuration configuration) throws ContainerException {
     if (requirement instanceof DockerContainerRequirement) {
       return new DockerContainerHandler(job, (DockerContainerRequirement) requirement, configuration);
     }

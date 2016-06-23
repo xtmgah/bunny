@@ -206,7 +206,6 @@ public class BackendCommandLine {
       });
       checker.start();
       checker.join();
-
     } catch (ParseException e) {
       logger.error("Encountered an error while parsing using Posix parser.", e);
       System.exit(10);
@@ -237,8 +236,8 @@ public class BackendCommandLine {
       Draft2CommandLineTool draft2CommandLineTool = BeanSerializer.deserialize(draft2ResolvedApp, Draft2CommandLineTool.class);
       Draft2Job draft2Job = new Draft2Job(draft2CommandLineTool, (Map<String, Object>) inputs);
       Map<String, Object> draft2AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
-      Integer draft2Cpu = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("cpu") : null;
-      Integer draft2Mem = draft2AllocatedResources != null ? (Integer) draft2AllocatedResources.get("mem") : null;
+      Long draft2Cpu = draft2AllocatedResources != null ? (Long) draft2AllocatedResources.get("cpu") : null;
+      Long draft2Mem = draft2AllocatedResources != null ? (Long) draft2AllocatedResources.get("mem") : null;
       draft2Job.setResources(new Draft2Resources(false, draft2Cpu, draft2Mem));
 
       Draft2CommandLineBuilder draft2CommandLineBuilder = new Draft2CommandLineBuilder();

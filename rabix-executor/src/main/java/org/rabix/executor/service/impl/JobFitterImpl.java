@@ -1,41 +1,40 @@
 package org.rabix.executor.service.impl;
 
-import java.lang.management.ManagementFactory;
-
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.ResourceRequirement;
+import org.rabix.common.SystemEnvironmentHelper;
 import org.rabix.executor.service.JobFitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JobFitterImpl implements JobFitter {
+import com.google.inject.Inject;
 
-  private static final long MEGABYTE = 1024L * 1024L;
+public class JobFitterImpl implements JobFitter {
 
   private static final Logger logger = LoggerFactory.getLogger(JobFitterImpl.class);
   
   private Long availableCores;
   private Long availableMemory;
 
-  @SuppressWarnings("restriction")
-  public JobFitterImpl() {
-    com.sun.management.OperatingSystemMXBean operatingSystemMXBean = (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-    long totalPhysicalMemorySize = bytesToMeg(operatingSystemMXBean.getTotalPhysicalMemorySize());
-    long jvmMaxMemory = bytesToMeg(Runtime.getRuntime().maxMemory());
+  private boolean isEnabled;
+
+  @Inject
+  public JobFitterImpl(Configuration configuration) {
+    this.isEnabled = configuration.getBoolean("resource.fitter.enabled", false);
     
-    availableMemory = totalPhysicalMemorySize - jvmMaxMemory;
-    availableCores = (long) operatingSystemMXBean.getAvailableProcessors();
+    this.availableMemory = SystemEnvironmentHelper.getTotalPhysicalMemorySizeInMB();
+    this.availableCores = SystemEnvironmentHelper.getNumberOfCores();
   }
-  
-  public static long bytesToMeg(long bytes) {
-    return bytes / MEGABYTE ;
-   }
   
   @Override
   public synchronized boolean tryToFit(Job job) throws BindingException {
+    if (!isEnabled) {
+      return true;
+    }
     Bindings bindings = BindingsFactory.create(job);
     if (bindings.canExecute(job)) {
       return true;
@@ -59,6 +58,10 @@ public class JobFitterImpl implements JobFitter {
 
   @Override
   public synchronized void free(Job job) throws BindingException {
+    if (!isEnabled) {
+      return;
+    }
+    
     Bindings bindings = BindingsFactory.create(job);
     if (bindings.canExecute(job)) {
       return;

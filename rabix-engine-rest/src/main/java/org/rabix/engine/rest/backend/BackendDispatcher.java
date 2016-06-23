@@ -60,7 +60,7 @@ public class BackendDispatcher {
         try {
           dispatcherLock.lock();
           if (!backendStubs.isEmpty()) {
-            send(freeJobs);
+            send(freeJobs.toArray(new Job[] {}));
             freeJobs.clear();
           }
         } finally {
@@ -72,25 +72,27 @@ public class BackendDispatcher {
     heartbeatService.scheduleAtFixedRate(new HeartbeatMonitor(), 0, heartbeatPeriod, TimeUnit.MILLISECONDS);
   }
 
-  public boolean send(Set<Job> jobs) {
+  public boolean send(Job... jobs) {
     try {
       dispatcherLock.lock();
-      freeJobs.addAll(jobs);
-      
+      for (Job job : jobs) {
+        freeJobs.add(job);
+      }
+
       if (backendStubs.isEmpty()) {
         return false;
       }
-      
+
       Iterator<Job> freeJobIterator = freeJobs.iterator();
-      while(freeJobIterator.hasNext()) {
+      while (freeJobIterator.hasNext()) {
         Job freeJob = freeJobIterator.next();
-        
+
         if (jobBackendMapping.containsKey(freeJob)) {
           freeJobIterator.remove();
           continue;
         }
         BackendStub backendStub = nextBackend();
-        
+
         freeJobIterator.remove();
         jobBackendMapping.put(freeJob, backendStub.getBackend().getId());
         backendStub.send(freeJob);
