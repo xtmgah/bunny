@@ -70,7 +70,7 @@ public class DockerContainerHandler implements ContainerHandler {
   private final File workingDir;
   private final Configuration configuration;
 
-  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) {
+  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) throws ContainerException {
     this.job = job;
     this.dockerResource = dockerResource;
     this.configuration = configuration;
@@ -78,7 +78,7 @@ public class DockerContainerHandler implements ContainerHandler {
     this.dockerClient = createDockerClient();
   }
   
-  private DockerClient createDockerClient() {
+  private DockerClient createDockerClient() throws ContainerException {
     DockerClient docker = null;
     try {
       String username = configuration.getString("docker.username", DEFAULT_USERNAME);
@@ -92,7 +92,8 @@ public class DockerContainerHandler implements ContainerHandler {
           .authConfig(authConfig)
           .build();
     } catch (DockerCertificateException e) {
-      e.printStackTrace();
+      logger.error("Failed to create Docker client", e);
+      throw new ContainerException("Failed to create Docker client", e);
     }
     return docker;
   }
