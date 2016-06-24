@@ -224,7 +224,7 @@ public class JobRecord {
 
     for (PortCounter pc : counters) {
       if (pc.port.equals(port.getId())) {
-        if (type.equals(LinkPortType.INPUT) || (type.equals(LinkPortType.OUTPUT) && port.isScatter())) {
+        if (type.equals(LinkPortType.INPUT) || (type.equals(LinkPortType.OUTPUT) && (port.isScatter() || isContainer || isScatterWrapper))) {
           pc.counter = pc.counter + 1;
         }
         return;
