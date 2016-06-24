@@ -242,7 +242,6 @@ public class JobHandlerImpl implements JobHandler {
   }
 
   public boolean isRunning() throws ExecutorException {
-    logger.debug("isRunning()");
     if (containerHandler == null) {
       logger.debug("Container hasn't started yet.");
       return false;
