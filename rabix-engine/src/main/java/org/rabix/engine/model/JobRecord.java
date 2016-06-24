@@ -9,9 +9,13 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobRecord {
 
+  private final static Logger logger = LoggerFactory.getLogger(JobRecord.class);
+  
   private final String id;
   private final String externalId;
   private final String rootId;
@@ -254,6 +258,15 @@ public class JobRecord {
         portCounter.counter = portCounter.counter - 1;
       }
     }
+    printInputPortCounters();
+  }
+  
+  private void printInputPortCounters() {
+    StringBuilder builder = new StringBuilder("\n");
+    for (PortCounter inputPortCounter : inputCounters) {
+      builder.append("Input port ").append(inputPortCounter.getPort()).append(", counter=").append(inputPortCounter.counter).append("\n");
+    }
+    logger.debug(builder.toString());
   }
   
   public void resetInputPortCounters(int value) {

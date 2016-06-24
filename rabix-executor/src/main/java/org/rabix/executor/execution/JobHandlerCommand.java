@@ -88,7 +88,7 @@ public abstract class JobHandlerCommand {
     jobDataService.save(jobData);
     engineStub.send(job);
     
-    VerboseLogger.log(String.format("%s. Error: {}", e.getMessage()));
+    VerboseLogger.log(String.format("%s", message));
   }
 
   /**
