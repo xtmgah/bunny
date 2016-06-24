@@ -234,25 +234,6 @@ public class JobRecord {
     counters.add(portCounter);
   }
   
-  public void incrementPortCounterIfThereIsNo(DAGLinkPort port, LinkPortType type) {
-    List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
-
-    boolean exists = false;
-    for (PortCounter pc : counters) {
-      if (pc.port.equals(port.getId())) {
-        exists = true;
-        if (pc.counter < 1) {
-          pc.counter = pc.counter + 1;
-          return;
-        }
-      }
-    }
-    if (!exists) {
-      PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
-      counters.add(portCounter);
-    }
-  }
-  
   public void decrementPortCounter(String portId, LinkPortType type) {
     List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
     for (PortCounter portCounter : counters) {
@@ -261,12 +242,21 @@ public class JobRecord {
       }
     }
     printInputPortCounters();
+    printOutputPortCounters();
   }
   
   private void printInputPortCounters() {
-    StringBuilder builder = new StringBuilder("\n");
+    StringBuilder builder = new StringBuilder("\nJob ").append(id).append(" input counters:\n");
     for (PortCounter inputPortCounter : inputCounters) {
-      builder.append("Input port ").append(inputPortCounter.getPort()).append(", counter=").append(inputPortCounter.counter).append("\n");
+      builder.append(" -- Input port ").append(inputPortCounter.getPort()).append(", counter=").append(inputPortCounter.counter).append("\n");
+    }
+    logger.debug(builder.toString());
+  }
+  
+  private void printOutputPortCounters() {
+    StringBuilder builder = new StringBuilder("\nJob ").append(id).append(" output counters:\n");
+    for (PortCounter inputPortCounter : outputCounters) {
+      builder.append(" -- Output port ").append(inputPortCounter.getPort()).append(", counter=").append(inputPortCounter.counter).append("\n");
     }
     logger.debug(builder.toString());
   }
