@@ -43,9 +43,11 @@ public class Job {
   private final Map<String, Object> inputs;
   @JsonProperty("outputs")
   private final Map<String, Object> outputs;
-  
+  @JsonProperty("resources")
+  private final Resources resources;
+    
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null);
+    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null);
   }
   
   @JsonCreator
@@ -57,7 +59,8 @@ public class Job {
       @JsonProperty("status") JobStatus status, 
       @JsonProperty("inputs") Map<String, Object> inputs, 
       @JsonProperty("outputs") Map<String, Object> outputs,
-      @JsonProperty("context") Context context) {
+      @JsonProperty("context") Context context, 
+      @JsonProperty("resources") Resources resources) {
     this.id = id;
     this.parentId = parentId;
     this.rootId = rootId;
@@ -67,6 +70,7 @@ public class Job {
     this.inputs = inputs;
     this.outputs = outputs;
     this.context = context;
+    this.resources = resources;
   }
   
   public static String generateId() {
@@ -74,35 +78,35 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
   }
 
   public static Job cloneWithIds(Job job, String id, String rootId) {
-    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithRootId(Job job, String rootId) {
-    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithContext(Job job, Context context) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context, job.resources);
   }
   
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, resources);
   }
 
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context, job.resources);
   }
   
   public static boolean isFinished(Job job) {
@@ -157,6 +161,9 @@ public class Job {
     return context;
   }
   
+  public Resources getResources() {
+    return resources;
+  }
   @Override
   public int hashCode() {
     final int prime = 31;

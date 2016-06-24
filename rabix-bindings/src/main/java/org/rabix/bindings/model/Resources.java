@@ -1,33 +1,55 @@
 package org.rabix.bindings.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Resources {
 
-  private final Integer cpu;
-  private final Integer memMB;
-  private final Integer diskSpaceMB;
-  private final Boolean networkAccess;
   
-  public Resources(Integer cpu, Integer memMB, Integer diskSpaceMB, Boolean networkAccess) {
+  
+  @JsonProperty("cpu")
+  private final Long cpu;
+  @JsonProperty("memMB")
+  private final Long memMB;
+  @JsonProperty("diskSpaceMB")
+  private final Long diskSpaceMB;
+  @JsonProperty("networkAccess")
+  private final Boolean networkAccess;
+  @JsonProperty("workingDir")
+  private final String workingDir;
+  
+
+  @JsonCreator
+  public Resources(@JsonProperty("cpu") Long cpu, 
+      @JsonProperty("memMB") Long memMB, 
+      @JsonProperty("diskSpaceMB") Long diskSpaceMB, 
+      @JsonProperty("networkAccess") Boolean networkAccess,
+      @JsonProperty("workingDir") String workingDir) {
     this.cpu = cpu;
     this.memMB = memMB;
     this.diskSpaceMB = diskSpaceMB;
     this.networkAccess = networkAccess;
+    this.workingDir = workingDir;
   }
 
-  public Integer getCpu() {
+  public Long getCpu() {
     return cpu;
   }
 
-  public Integer getMemMB() {
+  public Long getMemMB() {
     return memMB;
   }
 
-  public Integer getDiskSpaceMB() {
+  public Long getDiskSpaceMB() {
     return diskSpaceMB;
   }
 
   public Boolean getNetworkAccess() {
     return networkAccess;
+  }
+
+  public String getWorkingDir() {
+    return workingDir;
   }
 
   @Override
@@ -38,6 +60,7 @@ public class Resources {
     result = prime * result + ((diskSpaceMB == null) ? 0 : diskSpaceMB.hashCode());
     result = prime * result + ((memMB == null) ? 0 : memMB.hashCode());
     result = prime * result + ((networkAccess == null) ? 0 : networkAccess.hashCode());
+    result = prime * result + ((workingDir == null) ? 0 : workingDir.hashCode());
     return result;
   }
 
@@ -70,12 +93,18 @@ public class Resources {
         return false;
     } else if (!networkAccess.equals(other.networkAccess))
       return false;
+    if (workingDir == null) {
+      if (other.workingDir != null)
+        return false;
+    } else if (!workingDir.equals(other.workingDir))
+      return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "Resources [cpu=" + cpu + ", memMB=" + memMB + ", diskSpaceMB=" + diskSpaceMB + ", networkAccess=" + networkAccess + "]";
+    return "Resources [cpu=" + cpu + ", memMB=" + memMB + ", diskSpaceMB=" + diskSpaceMB + ", networkAccess="
+        + networkAccess + ", workingDir=" + workingDir + "]";
   }
 
 }

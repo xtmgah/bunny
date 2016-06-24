@@ -66,12 +66,12 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
     }
     return job;
   }
-
+  
   private void overrideHints(Draft3JobApp parentJob, Draft3JobApp stepJob) {
-    if (parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class) != null) {
-      stepJob.setHint(parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class));
+    if(parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class) != null) {
+    stepJob.setHint(parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class));
+      }
     }
-  }
   
   /**
    * Process Job inputs, outputs and data links

@@ -107,9 +107,9 @@ public class Draft3RequirementProvider implements ProtocolRequirementProvider {
 
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
-    Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
-    Draft3JobApp draft2JobApp = draft2Job.getApp();
-    return convertRequirements(job, draft2JobApp.getHints());
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
+    Draft3JobApp draft3JobApp = draft3Job.getApp();
+    return convertRequirements(job, draft3JobApp.getHints());
   }
 
   private List<Requirement> convertRequirements(Job job, List<Draft3Resource> resources) throws BindingException {
@@ -119,17 +119,17 @@ public class Draft3RequirementProvider implements ProtocolRequirementProvider {
     Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
 
     List<Requirement> result = new ArrayList<>();
-    for (Draft3Resource draft2Resource : resources) {
-      if (draft2Resource instanceof Draft3DockerResource) {
-        result.add(getDockerRequirement((Draft3DockerResource) draft2Resource));
+    for (Draft3Resource draft3Resource : resources) {
+      if (draft3Resource instanceof Draft3DockerResource) {
+        result.add(getDockerRequirement((Draft3DockerResource) draft3Resource));
         continue;
       }
-      if (draft2Resource instanceof Draft3EnvVarRequirement) {
-        result.add(getEnvironmentVariableRequirement(draft2Job, (Draft3EnvVarRequirement) draft2Resource));
+      if (draft3Resource instanceof Draft3EnvVarRequirement) {
+        result.add(getEnvironmentVariableRequirement(draft2Job, (Draft3EnvVarRequirement) draft3Resource));
         continue;
       }
-      if (draft2Resource instanceof Draft3CreateFileRequirement) {
-        result.add(getFileRequirement(draft2Job, (Draft3CreateFileRequirement) draft2Resource));
+      if (draft3Resource instanceof Draft3CreateFileRequirement) {
+        result.add(getFileRequirement(draft2Job, (Draft3CreateFileRequirement) draft3Resource));
         continue;
       }
     }

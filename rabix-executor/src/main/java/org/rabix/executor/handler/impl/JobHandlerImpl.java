@@ -3,7 +3,6 @@ package org.rabix.executor.handler.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -179,6 +178,7 @@ public class JobHandlerImpl implements JobHandler {
       Bindings bindings = BindingsFactory.create(job);
       job = bindings.postprocess(job, workingDir);
 
+      // Move in postprocess
       if (enableHash) {
         Map<String, Object> outputs = job.getOutputs();
         Map<String, Object> outputsWithCheckSum = (Map<String, Object>) populateChecksum(outputs);

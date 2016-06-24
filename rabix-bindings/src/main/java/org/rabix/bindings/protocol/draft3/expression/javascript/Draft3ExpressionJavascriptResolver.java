@@ -22,10 +22,10 @@ public class Draft3ExpressionJavascriptResolver {
 
   public final static String EXPR_CONTEXT_NAME = "inputs";
   public final static String EXPR_SELF_NAME = "self";
-
+  
   public final static int OPTIMIZATION_LEVEL = -1;
   public final static int MAX_STACK_DEPTH = 10;
-
+  
   /**
    * Evaluate JS script (function or statement)
    */
