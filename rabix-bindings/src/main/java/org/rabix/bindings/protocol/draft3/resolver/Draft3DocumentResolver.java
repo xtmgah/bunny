@@ -54,7 +54,7 @@ public class Draft3DocumentResolver {
   public static final String RESOLVER_REFERENCE_INCLUDE_KEY = "$include";
   public static final String GRAPH_KEY = "$graph";
   public static final String SCHEMA_KEY = "$schema";
-  public static final String NAMESPACE_KEY = "$namespace";
+  public static final String NAMESPACES_KEY = "$namespaces";
   public static final String SCHEMADEF_KEY = "SchemaDefRequirement";
   
   public static final String RESOLVER_JSON_POINTER_KEY = "$job";
@@ -66,6 +66,7 @@ public class Draft3DocumentResolver {
   private static ConcurrentMap<String, String> cache = new ConcurrentHashMap<>(); 
   private static boolean graphResolve = false;
   
+  private static Map<String, String> namespace = new HashMap<String, String>();
   private static Map<String, Map<String, Draft3DocumentResolverReference>> referenceCache = new HashMap<>();
   private static Map<String, LinkedHashSet<Draft3DocumentResolverReplacement>> replacements = new HashMap<>();
   
@@ -91,6 +92,12 @@ public class Draft3DocumentResolver {
     if(root.has(GRAPH_KEY)) {
       graphResolve = true;
     }
+    
+    if(root.has(NAMESPACES_KEY)) {
+      populateNamespaces(root);
+      ((ObjectNode) root).remove(NAMESPACES_KEY);
+    }
+    
     traverse(appUrl, root, file, null, root);
 
     for (Draft3DocumentResolverReplacement replacement : getReplacements(appUrl)) {
@@ -135,6 +142,14 @@ public class Draft3DocumentResolver {
     return cache.get(appUrl);
   }
   
+  private static void populateNamespaces(JsonNode root) {
+    Iterator<Entry<String, JsonNode>> fieldIterator = root.get(NAMESPACES_KEY).fields();
+    while (fieldIterator.hasNext()) {
+      Entry<String, JsonNode> fieldEntry = fieldIterator.next();
+      namespace.put(fieldEntry.getKey(), fieldEntry.getValue().asText());
+    }
+  }
+
   private static JsonNode traverse(String appUrl, JsonNode root, File file, JsonNode parentNode, JsonNode currentNode) throws BindingException {
     Preconditions.checkNotNull(currentNode, "current node id is null");
    
@@ -149,11 +164,13 @@ public class Draft3DocumentResolver {
       return null;
     }
     
+    namespace(currentNode);
+    
     boolean isReference = currentNode.has(RESOLVER_REFERENCE_KEY);
     boolean appReference = currentNode.has(APP_STEP_KEY) && currentNode.get(APP_STEP_KEY).isTextual();
     boolean typeReference = currentNode.has(TYPE_KEY) && currentNode.get(TYPE_KEY).isTextual() && isTypeReference(currentNode.get(TYPE_KEY).textValue());
     boolean isJsonPointer = currentNode.has(RESOLVER_JSON_POINTER_KEY) && parentNode != null; // we skip the first level $job
-
+    
     if (isReference || isJsonPointer || appReference || typeReference) {
       String referencePath = null;
       if (isReference) {
@@ -178,14 +195,6 @@ public class Draft3DocumentResolver {
         reference = new Draft3DocumentResolverReference();
         reference.setResolving(true);
         getReferenceCache(appUrl).put(referencePath, reference);
-        
-//        if( !referencePath.startsWith(DOCUMENT_FRAGMENT_SEPARATOR)) {
-//          if(!URIHelper.extractBase(referencePath).equals(appUrl)) {
-//            String input = loadContents(file, referencePath);
-//            root = JSONHelper.readJsonNode(JSONHelper.transformToJSON(input));
-//            referencePath = URIHelper.extractFragment(referencePath);
-//          }
-//        }
         
         JsonNode referenceDocumentRoot = findDocumentRoot(root, file, referencePath, isJsonPointer);
         ParentChild parentChild = findReferencedNode(referenceDocumentRoot, referencePath);
@@ -213,6 +222,18 @@ public class Draft3DocumentResolver {
       }
     }
     return currentNode;
+  }
+
+  private static void namespace(JsonNode currentNode) {
+    Iterator<Entry<String, JsonNode>> fieldIterator = currentNode.fields();
+    while (fieldIterator.hasNext()) {
+      Entry<String, JsonNode> fieldEntry = fieldIterator.next();
+      if(fieldEntry.getValue().isTextual() && namespace.keySet().contains(fieldEntry.getValue().asText().split(":")[0])) {
+        String prefix = namespace.get(fieldEntry.getValue().asText().split(":")[0]);
+        String namespacedValue = fieldEntry.getValue().asText().replace(fieldEntry.getValue().asText().split(":")[0] + ":", prefix);
+        ((ObjectNode) currentNode).put(fieldEntry.getKey(), namespacedValue);
+      }
+    }
   }
 
   private static boolean isTypeReference(String type) {
