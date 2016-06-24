@@ -34,13 +34,13 @@ public class JobHelper {
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        jobs.add(createReadyJob(job, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
+        jobs.add(createJob(job, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
       }
     }
     return jobs;
   }
   
-  public static Job createReadyJob(JobRecord job, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
+  public static Job createJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
     DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
     Map<String, Object> inputs = new HashMap<>();
@@ -51,7 +51,7 @@ public class JobHelper {
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
     Context context = new Context(job.getRootId(), contextRecord.getConfig());
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context, null);
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, context, null);
   }
   
   public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {

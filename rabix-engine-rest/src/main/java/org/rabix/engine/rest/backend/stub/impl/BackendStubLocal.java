@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
+import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -29,6 +30,7 @@ public class BackendStubLocal implements BackendStub {
   private final TransportPluginLocal transportPluginLocal;
 
   private final TransportQueueLocal sendToBackendQueue;
+  private final TransportQueueLocal sendToBackendControlQueue;
   private final TransportQueueLocal receiveFromBackendQueue;
   private final TransportQueueLocal receiveFromBackendHeartbeatQueue;
   
@@ -40,6 +42,7 @@ public class BackendStubLocal implements BackendStub {
     this.transportPluginLocal = new TransportPluginLocal(configuration);
 
     this.sendToBackendQueue = new TransportQueueLocal(backendLocal.getToBackendQueue());
+    this.sendToBackendControlQueue = new TransportQueueLocal(backendLocal.getToBackendControlQueue());
     this.receiveFromBackendQueue = new TransportQueueLocal(backendLocal.getFromBackendQueue());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueLocal(backendLocal.getFromBackendHeartbeatQueue());
   }
@@ -84,6 +87,11 @@ public class BackendStubLocal implements BackendStub {
   @Override
   public void send(Job job) {
     transportPluginLocal.send(sendToBackendQueue, job);
+  }
+  
+  @Override
+  public void send(StopControlMessage controlMessage) {
+    transportPluginLocal.send(sendToBackendControlQueue, controlMessage);
   }
 
   @Override

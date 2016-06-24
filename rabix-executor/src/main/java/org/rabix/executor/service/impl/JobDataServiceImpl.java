@@ -77,8 +77,6 @@ public class JobDataServiceImpl implements JobDataService {
 
     synchronized (jobDataMap) {
       List<JobDataStatus> statusList = Arrays.asList(statuses);
-      logger.debug("find(status={})", statusList);
-
       List<JobData> jobDataByStatus = new ArrayList<>();
       for (Entry<String, Map<String, JobData>> entry : jobDataMap.entrySet()) {
         for (JobData jobData : entry.getValue().values()) {

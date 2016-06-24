@@ -24,7 +24,7 @@ public class JobHTTPServiceImpl implements JobHTTPService {
   @Override
   public Response create(Job job) {
     try {
-      return ok(jobService.create(job));
+      return ok(jobService.start(job));
     } catch (Exception e) {
       return error();
     }

@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.transport.backend.Backend;
 import org.slf4j.Logger;
@@ -103,6 +104,25 @@ public class BackendDispatcher {
       dispatcherLock.unlock();
     }
   }
+  
+  public boolean stop(Job... jobs) {
+    try {
+      dispatcherLock.lock();
+      
+      for (Job job : jobs) {
+        String backendId = jobBackendMapping.get(job);
+        if (backendId != null) {
+          BackendStub backendStub = getBackendStub(backendId);
+          if (backendStub != null) {
+            backendStub.send(new StopControlMessage(job.getId(), job.getRootId()));
+          }
+        }
+      }
+      return true;
+    } finally {
+      dispatcherLock.unlock();
+    }
+  }
 
   public void addBackendStub(BackendStub backendStub) {
     try {
@@ -128,6 +148,15 @@ public class BackendDispatcher {
     BackendStub backendStub = backendStubs.get(position % backendStubs.size());
     position = (position + 1) % backendStubs.size();
     return backendStub;
+  }
+  
+  private BackendStub getBackendStub(String id) {
+    for (BackendStub backendStub : backendStubs) {
+      if (backendStub.getBackend().getId().equals(id)) {
+        return backendStub;
+      }
+    }
+    return null;
   }
 
   private class HeartbeatMonitor implements Runnable {

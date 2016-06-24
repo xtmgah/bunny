@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.rabix.common.helper.CloneHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -113,6 +114,14 @@ public class Job {
     return job.getStatus().equals(JobStatus.COMPLETED) 
         || job.getStatus().equals(JobStatus.ABORTED)
         || job.getStatus().equals(JobStatus.FAILED);
+  }
+  
+  @JsonIgnore
+  public boolean isRoot() {
+    if (id == null) {
+      return false;
+    }
+    return id.equals(rootId);
   }
   
   public String getId() {

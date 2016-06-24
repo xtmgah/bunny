@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
@@ -81,7 +82,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       ready(jobRecord, event.getContextId());
       
       if (!jobRecord.isContainer()) {
-        Job job = JobHelper.createReadyJob(jobRecord, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+        Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
         try {
           jobStatusCallback.onReady(job);
         } catch (Exception e) {
@@ -118,6 +119,14 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         } catch (Exception e) {
           logger.error("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
+        }
+      } else {
+        try {
+          Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+          jobStatusCallback.onFailed(failedJob);
+        } catch (Exception e) {
+          logger.error("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
+          throw new EventHandlerException("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
         }
       }
       break;
