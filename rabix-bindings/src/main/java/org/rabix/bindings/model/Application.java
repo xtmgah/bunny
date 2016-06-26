@@ -8,6 +8,7 @@ import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.common.helper.JSONHelper;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,10 +20,19 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 
 public interface Application {
 
+  @JsonIgnore
   String serialize();
 
+  @JsonIgnore
+  ApplicationPort getInput(String name);
+  
+  @JsonIgnore
+  ApplicationPort getOutput(String name);
+  
+  @JsonIgnore
   List<? extends ApplicationPort> getInputs();
   
+  @JsonIgnore
   List<? extends ApplicationPort> getOutputs();
   
   public static class ApplicationDeserializer extends JsonDeserializer<Application> {
@@ -44,6 +54,5 @@ public interface Application {
       JsonNode node = JSONHelper.readJsonNode(value.serialize());
       gen.writeTree(node);
     }
-    
   }
 }

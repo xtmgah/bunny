@@ -1,8 +1,10 @@
 package org.rabix.bindings.protocol.draft2.bean;
 
 import org.rabix.bindings.model.ApplicationPort;
+import org.rabix.bindings.protocol.draft2.helper.Draft2SchemaHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -26,6 +28,12 @@ public class Draft2OutputPort extends ApplicationPort {
     this.source = source;
   }
 
+  @Override
+  @JsonIgnore
+  public boolean isList() {
+    return Draft2SchemaHelper.isArrayFromSchema(schema);
+  }
+  
   public Object getOutputBinding() {
     return outputBinding;
   }

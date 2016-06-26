@@ -21,6 +21,11 @@ public class ZeroPort extends ApplicationPort {
   public ZeroPort(@JsonProperty("id") String id, @JsonProperty("default") Object defaultValue, @JsonProperty("type") Object schema, @JsonProperty("scatter") Boolean scatter, @JsonProperty("linkMerge") String linkMerge) {
     super(id, defaultValue, schema, scatter, linkMerge);
   }
+
+  @Override
+  public boolean isList() {
+    return false;
+  }
   
   public String getId() {
     return id;

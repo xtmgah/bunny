@@ -1,5 +1,6 @@
 package org.rabix.engine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.rabix.bindings.helper.URIHelper;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
@@ -43,10 +45,21 @@ public class JobHelper {
   public static Job createJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
     DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
+    boolean autoBoxingEnabled = true;   // get from configuration
+    
     Map<String, Object> inputs = new HashMap<>();
     List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
     for (VariableRecord inputVariable : inputVariables) {
-      inputs.put(inputVariable.getPortId(), inputVariable.getValue());
+      Object value = inputVariable.getValue();
+      ApplicationPort port = node.getApp().getInput(inputVariable.getPortId());
+      if (port != null && autoBoxingEnabled) {
+        if (port.isList() && !(value instanceof List)) {
+          List<Object> transformed = new ArrayList<>();
+          transformed.add(value);
+          value = transformed;
+        }
+      }
+      inputs.put(inputVariable.getPortId(), value);
     }
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
     Context context = new Context(job.getRootId(), contextRecord.getConfig());
