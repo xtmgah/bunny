@@ -51,6 +51,19 @@ public class StorageConfig {
     return workingDir;
   }
   
+  public static File getWorkingDirWithoutRootId(Job job, Configuration configuration) {
+    File workingDir = new File("/");
+    String[] idArray = transformLocalIDsToPath(job);
+
+    for (String id : idArray) {
+      workingDir = new File(workingDir, sanitize(id));
+      if (!workingDir.exists()) {
+        workingDir.mkdirs();
+      }
+    }
+    return workingDir;
+  }
+  
   private static String[] transformLocalIDsToPath(Job job) {
     String nodeId = job.getName();
     return nodeId.split("\\" + InternalSchemaHelper.SEPARATOR);

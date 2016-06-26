@@ -224,8 +224,15 @@ public class JobRecord {
 
     for (PortCounter pc : counters) {
       if (pc.port.equals(port.getId())) {
-        if (type.equals(LinkPortType.INPUT) || (type.equals(LinkPortType.OUTPUT) && (port.isScatter() || isContainer || isScatterWrapper))) {
+        if (type.equals(LinkPortType.INPUT)) {
           pc.counter = pc.counter + 1;
+        } else {
+          if (pc.updatedAsSourceCounter > 0) {
+            pc.updatedAsSourceCounter = pc.updatedAsSourceCounter--;
+            return;
+          } else if (type.equals(LinkPortType.OUTPUT) && (port.isScatter() || isContainer || isScatterWrapper)) {
+            pc.counter = pc.counter + 1;
+          }
         }
         return;
       }
@@ -235,6 +242,7 @@ public class JobRecord {
   }
   
   public void decrementPortCounter(String portId, LinkPortType type) {
+    logger.info("JobRecord {}. Decrementing port {}.", id, portId);
     List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
     for (PortCounter portCounter : counters) {
       if (portCounter.port.equals(portId)) {
@@ -289,6 +297,7 @@ public class JobRecord {
   }
   
   public void resetOutputPortCounters(int value) {
+    logger.info("Reset output port counters for {} to {}", id, value);
     if (numberOfGlobalOutputs == value) {
       return;
     }
@@ -359,6 +368,8 @@ public class JobRecord {
     private boolean scatter;
     
     private int incoming;
+    
+    private int updatedAsSourceCounter = 0;
 
     PortCounter(String port, int counter, boolean scatter) {
       this.port = port;
@@ -369,6 +380,10 @@ public class JobRecord {
 
     public void increaseIncoming() {
       this.incoming++;
+    }
+    
+    public void updatedAsSource(int value) {
+      this.updatedAsSourceCounter = updatedAsSourceCounter + value;
     }
     
     public String getPort() {
