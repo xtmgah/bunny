@@ -74,11 +74,15 @@ public class ExecutorServiceImpl implements ExecutorService {
   }
 
   @Override
-  public void stop(String jobId, String contextId) {
-    logger.debug("stop(id={})", jobId);
+  public void stop(List<String> ids, String contextId) {
+    logger.debug("stop(ids={})", ids);
 
-    final JobData jobData = jobDataService.find(jobId, contextId);
-    jobDataService.save(jobData, "Stopping job", JobDataStatus.ABORTING);
+    for (String id : ids) {
+      final JobData jobData = jobDataService.find(id, contextId);
+      if (!isFinished(jobData.getStatus())) {
+        jobDataService.save(jobData, "Stopping job", JobDataStatus.ABORTING);
+      }
+    }
   }
 
   @Override
@@ -109,8 +113,7 @@ public class ExecutorServiceImpl implements ExecutorService {
       }
     }
     stopped.set(true);
-    String message = String.format("Shutdown%s executed. Worker has stopped %d %s.", stopEverything ? " now" : "",
-        abortedJobsCount, abortedJobsCount == 1 ? "job" : "jobs");
+    String message = String.format("Shutdown%s executed. Worker has stopped %d %s.", stopEverything ? " now" : "", abortedJobsCount, abortedJobsCount == 1 ? "job" : "jobs");
     logger.info(message);
   }
 

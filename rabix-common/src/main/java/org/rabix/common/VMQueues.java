@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class VMQueues {
 
   public final static String SEND_TO_BACKEND_QUEUE = "toBackendQueue";
+  public final static String SEND_TO_BACKEND_CONTROL_QUEUE = "toBackendControlQueue";
   public final static String RECEIVE_FROM_BACKEND_QUEUE = "fromBackendQueue";
   public final static String RECEIVE_FROM_BACKEND_HEARTBEAT_QUEUE = "fromBackendHeartbeatQueue";
   

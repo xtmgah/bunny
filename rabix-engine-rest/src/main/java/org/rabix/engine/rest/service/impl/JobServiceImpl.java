@@ -2,6 +2,9 @@ package org.rabix.engine.rest.service.impl;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.configuration.Configuration;
@@ -49,6 +52,8 @@ public class JobServiceImpl implements JobService {
   
   private final EventProcessor eventProcessor;
   private final BackendDispatcher backendDispatcher;
+  
+  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   @Inject
   public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
@@ -61,12 +66,14 @@ public class JobServiceImpl implements JobService {
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
 
-    boolean setResources = configuration.getBoolean("local.backend", false);
-    this.eventProcessor.start(null, new JobStatusCallbackImpl(setResources));
+    boolean isLocalBackend = configuration.getBoolean("local.backend", false);
+    this.eventProcessor.start(null, new JobStatusCallbackImpl(isLocalBackend, isLocalBackend));
   }
   
   @Override
   public void update(Job job) throws JobServiceException {
+    logger.debug("Update Job {}", job.getId());
+    
     JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
     try {
       JobStatusEvent statusEvent = null;
@@ -87,7 +94,6 @@ public class JobServiceImpl implements JobService {
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
         statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null);
         eventProcessor.addToQueue(statusEvent);
-        backendDispatcher.remove(job);
         break;
       case COMPLETED:
         if (JobState.COMPLETED.equals(jobRecord.getState())) {
@@ -96,7 +102,6 @@ public class JobServiceImpl implements JobService {
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
         statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs());
         eventProcessor.addToQueue(statusEvent);
-        backendDispatcher.remove(job);
         break;
       default:
         break;
@@ -109,12 +114,9 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
-  }
-  
-  @Override
-  public Job create(Job job) throws JobServiceException {
+  public Job start(Job job) throws JobServiceException {
+    logger.debug("Start Job {}", job);
+    
     Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
     job = Job.cloneWithIds(job, context.getId(), context.getId());
     job = Job.cloneWithContext(job, context);
@@ -140,6 +142,25 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
+  public void stop(String id) throws JobServiceException {
+    logger.debug("Stop Job {}", id);
+    
+    Job job = jobDB.get(id);
+    
+    if (job.isRoot()) {
+      Set<Job> jobs = jobDB.getJobs(id);
+      backendDispatcher.stop(jobs.toArray(new Job[jobs.size()]));
+    } else {
+      backendDispatcher.stop(job);
+    }
+  }
+  
+  @Override
+  public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
+    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
+  }
+  
+  @Override
   public Set<Job> get() {
     return jobDB.getJobs();
   }
@@ -155,12 +176,14 @@ public class JobServiceImpl implements JobService {
   
   private class JobStatusCallbackImpl implements JobStatusCallback {
 
+    private boolean stopOnFail;
     private boolean setResources;
     
     private AtomicInteger failCount = new AtomicInteger(0);
     private AtomicInteger successCount = new AtomicInteger(0);
 
-    public JobStatusCallbackImpl(boolean setResources) {
+    public JobStatusCallbackImpl(boolean setResources, boolean stopOnFail) {
+      this.stopOnFail = stopOnFail;
       this.setResources = setResources;
     }
     
@@ -178,6 +201,48 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public void onFailed(final Job failedJob) throws Exception {
+      if (stopOnFail) {
+        stop(failedJob.getRootId());
+        executorService.submit(new Runnable() {
+          @Override
+          public void run() {
+            while (true) {
+              try {
+                boolean exit = true;
+                for (Job job : jobDB.getJobs(failedJob.getRootId())) {
+                  if (!job.isRoot() && !isFinished(job.getStatus())) {
+                    exit = false;
+                    break;
+                  }
+                }
+                if (exit) {
+                  onRootFailed(failedJob.getRootId());
+                  break;
+                }
+                Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+              } catch (Exception e) {
+                logger.error("Failed to stop root Job " + failedJob.getRootId(), e);
+                break;
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    private boolean isFinished(JobStatus jobStatus) {
+      switch (jobStatus) {
+      case COMPLETED:
+      case FAILED:
+      case ABORTED:
+        return true;
+      default:
+        return false;
+      }
+    }
+
+    @Override
     public void onRootCompleted(String rootId) throws Exception {
       Job job = jobDB.get(rootId);
       job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
@@ -191,6 +256,8 @@ public class JobServiceImpl implements JobService {
       Job job = jobDB.get(rootId);
       job = Job.cloneWithStatus(job, JobStatus.FAILED);
       jobDB.update(job);
+
+      backendDispatcher.remove(job);
       logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
     }
 

@@ -3,6 +3,7 @@ package org.rabix.engine.rest.backend.stub;
 import java.util.Map;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.transport.backend.Backend;
 
 public interface BackendStub {
@@ -12,6 +13,8 @@ public interface BackendStub {
   void stop();
 
   void send(Job job);
+  
+  void send(StopControlMessage controlMessage);
   
   Backend getBackend();
 

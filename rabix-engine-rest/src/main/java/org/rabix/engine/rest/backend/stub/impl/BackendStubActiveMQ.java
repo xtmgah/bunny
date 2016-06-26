@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
+import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -89,6 +90,11 @@ public class BackendStubActiveMQ implements BackendStub {
   @Override
   public Backend getBackend() {
     return backendActiveMQ;
+  }
+
+  @Override
+  public void send(StopControlMessage controlMessage) {
+    // TODO Auto-generated method stub
   }
 
 }

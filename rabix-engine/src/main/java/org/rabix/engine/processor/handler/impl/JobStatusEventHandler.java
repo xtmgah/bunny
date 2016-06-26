@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.LinkMerge;
 import org.rabix.bindings.model.dag.DAGContainer;
 import org.rabix.bindings.model.dag.DAGLink;
@@ -81,7 +82,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       ready(jobRecord, event.getContextId());
       
       if (!jobRecord.isContainer()) {
-        Job job = JobHelper.createReadyJob(jobRecord, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+        Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
         try {
           jobStatusCallback.onReady(job);
         } catch (Exception e) {
@@ -118,6 +119,14 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         } catch (Exception e) {
           logger.error("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
+        }
+      } else {
+        try {
+          Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+          jobStatusCallback.onFailed(failedJob);
+        } catch (Exception e) {
+          logger.error("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
+          throw new EventHandlerException("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
         }
       }
       break;
@@ -229,15 +238,15 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       LinkRecord childLink = new LinkRecord(contextId, sourceNodeId, link.getSource().getId(), LinkPortType.valueOf(link.getSource().getType().toString()), destinationNodeId, link.getDestination().getId(), LinkPortType.valueOf(link.getDestination().getType().toString()), link.getPosition());
       linkRecordService.create(childLink);
 
-      handleLinkPort(jobRecordService.find(sourceNodeId, contextId), link.getSource());
-      handleLinkPort(jobRecordService.find(destinationNodeId, contextId), link.getDestination());
+      handleLinkPort(jobRecordService.find(sourceNodeId, contextId), link.getSource(), true);
+      handleLinkPort(jobRecordService.find(destinationNodeId, contextId), link.getDestination(), false);
     }
   }
   
   /**
    * Handle links for roll-out 
    */
-  private void handleLinkPort(JobRecord job, DAGLinkPort linkPort) {
+  private void handleLinkPort(JobRecord job, DAGLinkPort linkPort, boolean isSource) {
     if (linkPort.getType().equals(LinkPortType.INPUT)) {
       if (job.getState().equals(JobState.PENDING)) {
         job.incrementPortCounter(linkPort, LinkPortType.INPUT);
@@ -251,6 +260,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       }
     } else {
       job.incrementPortCounter(linkPort, LinkPortType.OUTPUT);
+      if (isSource) {
+        job.getOutputCounter(linkPort.getId()).updatedAsSource(1);
+      }
       job.increaseOutputPortIncoming(linkPort.getId());
     }
     jobRecordService.update(job);

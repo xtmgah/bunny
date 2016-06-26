@@ -30,4 +30,14 @@ public class JobDB {
     }
     return jobSet;
   }
+  
+  public synchronized Set<Job> getJobs(String rootId) {
+    Set<Job> jobSet = new HashSet<>();
+    for (Job job : jobs.values()) {
+      if (job.getRootId().equals(rootId)) {
+        jobSet.add(job);
+      }
+    }
+    return jobSet;
+  }
 }

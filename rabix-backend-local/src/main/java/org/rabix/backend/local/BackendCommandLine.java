@@ -175,7 +175,7 @@ public class BackendCommandLine {
       backendLocal = backendService.create(backendLocal);
       executorService.initialize(backendLocal);
       
-      final Job job = jobService.create(new Job(appUrl, inputs));
+      final Job job = jobService.start(new Job(appUrl, inputs));
       
       Thread checker = new Thread(new Runnable() {
         @Override

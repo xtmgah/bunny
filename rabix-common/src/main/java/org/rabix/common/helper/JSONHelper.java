@@ -32,9 +32,12 @@ import com.fasterxml.jackson.databind.node.TextNode;
 public class JSONHelper {
 
   public static final ObjectMapper mapper = new ObjectMapper();
+  public static final ObjectMapper mapperWithoutIdentation = new ObjectMapper();
   
   static {
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
+    mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+    mapperWithoutIdentation.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
   }
 
   public static String transformToJSON(String data) {
@@ -84,6 +87,9 @@ public class JSONHelper {
   }
 
   public static <T> T readObject(String json, Class<T> clazz) {
+    if (json == null) {
+      return null;
+    }
     try {
       return mapper.readValue(json, clazz);
     } catch (IOException e) {
@@ -167,6 +173,15 @@ public class JSONHelper {
     }
     JsonNode node = JSONHelper.convertToJsonNode(value);
     return readObject(node, List.class);
+  }
+  
+  public static String writeSortedWithoutIdentation(final JsonNode node) {
+    try {
+      final Object obj = mapperWithoutIdentation.treeToValue(node, Object.class);
+      return mapperWithoutIdentation.writeValueAsString(obj);
+    } catch (IOException e) {
+      throw new IllegalStateException("JSON: " + node, e);
+    }
   }
   
   /**

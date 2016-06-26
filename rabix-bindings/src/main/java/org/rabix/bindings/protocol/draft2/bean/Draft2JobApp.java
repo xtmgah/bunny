@@ -194,7 +194,7 @@ public abstract class Draft2JobApp implements Application {
       return null;
     }
     for (Draft2InputPort input : getInputs()) {
-      if (input.getId().toString().equals(id) || input.getId().equals(id)) {
+      if (input.getId().substring(1).equals(id) || input.getId().equals(id)) {
         return input;
       }
     }
@@ -207,7 +207,7 @@ public abstract class Draft2JobApp implements Application {
       return null;
     }
     for (Draft2OutputPort output : getOutputs()) {
-      if (output.getId().toString().equals(id) || output.getId().equals(id)) {
+      if (output.getId().substring(1).equals(id) || output.getId().equals(id)) {
         return output;
       }
     }

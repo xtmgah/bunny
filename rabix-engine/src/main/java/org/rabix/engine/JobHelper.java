@@ -1,5 +1,6 @@
 package org.rabix.engine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,11 +9,13 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.rabix.bindings.helper.URIHelper;
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.common.helper.CloneHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.model.ContextRecord;
@@ -34,24 +37,35 @@ public class JobHelper {
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        jobs.add(createReadyJob(job, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
+        jobs.add(createJob(job, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
       }
     }
     return jobs;
   }
   
-  public static Job createReadyJob(JobRecord job, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
+  public static Job createJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
     DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
+    boolean autoBoxingEnabled = true;   // get from configuration
+    
     Map<String, Object> inputs = new HashMap<>();
     List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
     for (VariableRecord inputVariable : inputVariables) {
-      inputs.put(inputVariable.getPortId(), inputVariable.getValue());
+      Object value = CloneHelper.deepCopy(inputVariable.getValue());
+      ApplicationPort port = node.getApp().getInput(inputVariable.getPortId());
+      if (port != null && autoBoxingEnabled) {
+        if (port.isList() && !(value instanceof List)) {
+          List<Object> transformed = new ArrayList<>();
+          transformed.add(value);
+          value = transformed;
+        }
+      }
+      inputs.put(inputVariable.getPortId(), value);
     }
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
     Context context = new Context(job.getRootId(), contextRecord.getConfig());
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context, null);
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, context, null);
   }
   
   public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {

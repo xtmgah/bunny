@@ -66,7 +66,6 @@ public class JobDataServiceImpl implements JobDataService {
   public JobData find(String id, String contextId) {
     Preconditions.checkNotNull(id);
     synchronized (jobDataMap) {
-      logger.debug("find(id={})", id);
       return getJobDataMap(contextId).get(id);
     }
   }
@@ -77,8 +76,6 @@ public class JobDataServiceImpl implements JobDataService {
 
     synchronized (jobDataMap) {
       List<JobDataStatus> statusList = Arrays.asList(statuses);
-      logger.debug("find(status={})", statusList);
-
       List<JobData> jobDataByStatus = new ArrayList<>();
       for (Entry<String, Map<String, JobData>> entry : jobDataMap.entrySet()) {
         for (JobData jobData : entry.getValue().values()) {
@@ -95,7 +92,6 @@ public class JobDataServiceImpl implements JobDataService {
   public void save(JobData jobData) {
     Preconditions.checkNotNull(jobData);
     synchronized (jobDataMap) {
-      logger.debug("save(jobData={})", jobData);
       getJobDataMap(jobData.getJob().getRootId()).put(jobData.getId(), jobData);
     }
   }
@@ -104,7 +100,6 @@ public class JobDataServiceImpl implements JobDataService {
   public JobData save(JobData jobData, String message, JobDataStatus status) {
     Preconditions.checkNotNull(jobData);
     synchronized (jobDataMap) {
-      logger.debug("save(jobData={}, message={}, status={})", jobData, message, status);
       jobData = JobData.cloneWithStatusAndMessage(jobData, status, message);
       save(jobData);
       return jobData;
