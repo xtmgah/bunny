@@ -43,6 +43,7 @@ import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Runtime;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement.Draft3FileRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
 import org.rabix.bindings.protocol.draft3.expression.Draft3ExpressionException;
 import org.rabix.bindings.protocol.draft3.resolver.Draft3DocumentResolver;
 import org.rabix.common.config.ConfigModule;
@@ -279,17 +280,19 @@ public class BackendCommandLine {
       }
 
       Draft3CommandLineTool draft3CommandLineTool = BeanSerializer.deserialize(draft3ResolvedApp, Draft3CommandLineTool.class);
+      Draft3ResourceRequirement resourceRequirement = draft3CommandLineTool.getResourceRequirement();
       
-      Map<String, Object> draft3AllocatedResources = (Map<String, Object>) inputs.get("allocatedResources");
-      Long draft3Cpu = draft3AllocatedResources != null ? (Long) draft3AllocatedResources.get("cpu") : null;
-      Long draft3Mem = draft3AllocatedResources != null ? (Long) draft3AllocatedResources.get("mem") : null;
       job = new Job(appURI, inputs);
       job = bindings.mapInputFilePaths(job, new BackendCommandLine().new ConformanceFileMapper(inputsDir));
       inputs = job.getInputs();
-      inputs.put("allocatedResources", draft3AllocatedResources);
       Draft3Job draft3Job = new Draft3Job(draft3CommandLineTool, (Map<String, Object>) inputs);
-      draft3Job.setRuntime(new Draft3Runtime(draft3Cpu, draft3Mem, null, null, null, null));
-      
+      try {
+        if(resourceRequirement != null) {
+          draft3Job.setRuntime(resourceRequirement.build(draft3Job));
+        }
+      } catch (Draft3ExpressionException e1) {
+        throw new BindingException(e1);
+      }
       Draft3CommandLineBuilder draft3CommandLineBuilder = new Draft3CommandLineBuilder();
       List<Object> draft3CommandLineParts = draft3CommandLineBuilder.buildCommandLineParts(draft3Job);
       String draft3Stdin;
