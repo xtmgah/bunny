@@ -121,7 +121,7 @@ public class Draft3Processor implements ProtocolProcessor {
           throw new BindingException("Failed to populate outputs", e);
         }
       } else {
-        outputs = collectOutputs(draft3Job, workingDir, null);
+        outputs = collectOutputs(draft3Job, workingDir, null, false, false, null, false, false);
       }
       return Job.cloneWithOutputs(job, outputs);
     } catch (Draft3GlobException | Draft3ExpressionException | IOException e) {
@@ -129,7 +129,30 @@ public class Draft3Processor implements ProtocolProcessor {
     }
   }
   
-  private Map<String, Object> collectOutputs(Draft3Job job, File workingDir, HashAlgorithm hashAlgorithm) throws Draft3GlobException, Draft3ExpressionException, IOException, BindingException {
+  @Override
+  @SuppressWarnings("unchecked")
+  public Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws BindingException {
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
+    try {
+      Map<String, Object> outputs = null;
+
+      if (draft3Job.getApp().isExpressionTool()) {
+        Draft3ExpressionTool expressionTool = (Draft3ExpressionTool) draft3Job.getApp();
+        try {
+          outputs = (Map<String, Object>) Draft3ExpressionJavascriptResolver.evaluate(draft3Job.getInputs(), null, (String) expressionTool.getScript(), null);
+        } catch (Draft3ExpressionException e) {
+          throw new BindingException("Failed to populate outputs", e);
+        }
+      } else {
+        outputs = collectOutputs(draft3Job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize);
+      }
+      return Job.cloneWithOutputs(job, outputs);
+    } catch (Draft3GlobException | Draft3ExpressionException | IOException e) {
+      throw new BindingException(e);
+    }
+  }
+  
+  private Map<String, Object> collectOutputs(Draft3Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws Draft3GlobException, Draft3ExpressionException, IOException, BindingException {
     File resultFile = new File(workingDir, resultFilename);
     
     if (resultFile.exists()) {
@@ -140,7 +163,7 @@ public class Draft3Processor implements ProtocolProcessor {
     Map<String, Object> result = new TreeMap<>();
     Draft3CommandLineTool commandLineTool = (Draft3CommandLineTool) job.getApp();
     for (Draft3OutputPort outputPort : commandLineTool.getOutputs()) {
-      Object singleResult = collectOutput(job, workingDir, hashAlgorithm, outputPort.getSchema(), outputPort.getOutputBinding(), outputPort);
+      Object singleResult = collectOutput(job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize, outputPort.getSchema(), outputPort.getOutputBinding(), outputPort);
       if (singleResult != null) {
         result.put(Draft3SchemaHelper.normalizeId(outputPort.getId()), singleResult);
       }
@@ -150,7 +173,7 @@ public class Draft3Processor implements ProtocolProcessor {
   }
 
   @SuppressWarnings("unchecked")
-  private Object collectOutput(Draft3Job job, File workingDir, HashAlgorithm hashAlgorithm, Object schema, Object binding, Draft3OutputPort outputPort) throws Draft3GlobException, Draft3ExpressionException, BindingException {
+  private Object collectOutput(Draft3Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize, Object schema, Object binding, Draft3OutputPort outputPort) throws Draft3GlobException, Draft3ExpressionException, BindingException {
     if (binding == null) {
       binding = Draft3SchemaHelper.getOutputBinding(schema);
     }
@@ -173,9 +196,9 @@ public class Draft3Processor implements ProtocolProcessor {
         if (itemBinding != null) {
           binding = itemBinding;
         }
-        result = globFiles(job, workingDir, hashAlgorithm, outputPort, binding);
+        result = globFiles(job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize, outputPort, binding);
       } else {
-        result = collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
+        result = collectOutput(job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize, itemSchema, binding, outputPort);
       }
     } else if (Draft3SchemaHelper.isRecordFromSchema(schema)) {
       Map<String, Object> record = new HashMap<>();
@@ -192,7 +215,7 @@ public class Draft3Processor implements ProtocolProcessor {
           if (fieldBinding != null) {
             binding = fieldBinding;
           }
-          Object singleResult = collectOutput(job, workingDir, hashAlgorithm, fieldSchema, binding, outputPort);
+          Object singleResult = collectOutput(job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize, fieldSchema, binding, outputPort);
           if (singleResult != null) {
             record.put(id, singleResult);
           }
@@ -200,7 +223,7 @@ public class Draft3Processor implements ProtocolProcessor {
       }
       result = record;
     } else {
-      result = globFiles(job, workingDir, hashAlgorithm, outputPort, binding);
+      result = globFiles(job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize, outputPort, binding);
     }
     Object outputEval = Draft3BindingHelper.getOutputEval(binding);
     if (outputEval != null) {
@@ -237,7 +260,7 @@ public class Draft3Processor implements ProtocolProcessor {
   /**
    * Extracts files from a directory based on GLOB expression
    */
-  private List<Map<String, Object>> globFiles(final Draft3Job job, final File workingDir, HashAlgorithm hashAlgorithm, final Draft3OutputPort outputPort, Object outputBinding) throws Draft3GlobException {
+  private List<Map<String, Object>> globFiles(final Draft3Job job, final File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize, final Draft3OutputPort outputPort, Object outputBinding) throws Draft3GlobException {
     if (outputPort.getOutputBinding() != null) {
       outputBinding = outputPort.getOutputBinding(); // override
     }
@@ -266,16 +289,18 @@ public class Draft3Processor implements ProtocolProcessor {
         File file = path;
         Map<String, Object> fileData = new HashMap<>();
         Draft3FileValueHelper.setFileType(fileData);
+        Draft3FileValueHelper.setPath(file.getAbsolutePath(), fileData);
         if (hashAlgorithm != null) {
           Draft3FileValueHelper.setChecksum(file, fileData, hashAlgorithm);
         }
-        Draft3FileValueHelper.setSize(file.length(), fileData);
-//      if (setName != null) {  
-//        Draft3FileValueHelper.setName(file.getName(), fileData);
-//      }
-        Draft3FileValueHelper.setPath(file.getAbsolutePath(), fileData);
+        if(setSize) {
+          Draft3FileValueHelper.setSize(file.length(), fileData);
+        }
+        if (setFilename) {  
+          Draft3FileValueHelper.setName(file.getName(), fileData);
+        }
 
-        List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputPort.getSecondaryFiles());
+        List<?> secondaryFiles = getSecondaryFiles(job, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize, fileData, file.getAbsolutePath(), outputPort.getSecondaryFiles());
         if (secondaryFiles != null && !secondaryFiles.isEmpty()) {
           Draft3FileValueHelper.setSecondaryFiles(secondaryFiles, fileData);
         }
@@ -310,7 +335,7 @@ public class Draft3Processor implements ProtocolProcessor {
    * Gets secondary files (absolute paths)
    */
   @SuppressWarnings("unchecked")
-  private List<Map<String, Object>> getSecondaryFiles(Draft3Job job, HashAlgorithm hashAlgorithm, Map<String, Object> fileValue, String fileName, Object secondaryFilesObj) throws Draft3ExpressionException {
+  private List<Map<String, Object>> getSecondaryFiles(Draft3Job job, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, Map<String, Object> fileValue, String fileName, Object secondaryFilesObj) throws Draft3ExpressionException {
 
     if (secondaryFilesObj == null) {
       return null;
@@ -348,8 +373,12 @@ public class Draft3Processor implements ProtocolProcessor {
         if (secondaryFile.exists()) {
           Draft3FileValueHelper.setFileType(secondaryFileMap);
           Draft3FileValueHelper.setPath(secondaryFile.getAbsolutePath(), secondaryFileMap);
-          //Draft3FileValueHelper.setSize(secondaryFile.length(), secondaryFileMap);
-          //Draft3FileValueHelper.setName(secondaryFile.getName(), secondaryFileMap);
+          if(setSize) {
+            Draft3FileValueHelper.setSize(secondaryFile.length(), secondaryFileMap);
+          }
+          if(setFilename) {
+            Draft3FileValueHelper.setName(secondaryFile.getName(), secondaryFileMap);
+          }
           if (hashAlgorithm != null) {
             Draft3FileValueHelper.setChecksum(secondaryFile, secondaryFileMap, hashAlgorithm);
           }

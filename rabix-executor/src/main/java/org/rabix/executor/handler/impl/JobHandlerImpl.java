@@ -58,9 +58,16 @@ public class JobHandlerImpl implements JobHandler {
   private final JobDataService jobDataService;
 
   private final SimpleFTPClient ftpClient;
+  
   private final boolean enableHash;
   private final boolean addFilename;
+  private final boolean setSize;
   private final HashAlgorithm hashAlgorithm;
+  
+  private final boolean secondaryFilesEnableHash;
+  private final boolean secondaryFilesSetFilename;
+  private final boolean secondaryFilesSetSize;
+  private final HashAlgorithm secondaryFilesHashAlgorithm;
 
   private Job job;
   private EngineStub engineStub;
@@ -78,8 +85,13 @@ public class JobHandlerImpl implements JobHandler {
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
-    this.addFilename = FileConfig.addFilename(configuration);
+    this.addFilename = FileConfig.setFilename(configuration);
+    this.setSize = FileConfig.setSize(configuration);
     this.hashAlgorithm = FileConfig.checksumAlgorithm(configuration);
+    this.secondaryFilesEnableHash = FileConfig.secondaryFilesCalculateFileChecksum(configuration);
+    this.secondaryFilesSetFilename = FileConfig.secondaryFilesSetFilename(configuration);
+    this.secondaryFilesSetSize = FileConfig.secondaryFilesSetSize(configuration);
+    this.secondaryFilesHashAlgorithm = FileConfig.secondaryFilesChecksumAlgorithm(configuration);
   }
 
   @Override
@@ -164,7 +176,6 @@ public class JobHandlerImpl implements JobHandler {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Job postprocess(boolean isTerminal) throws ExecutorException {
     logger.debug("postprocess(id={})", job.getId());
     try {
@@ -174,16 +185,9 @@ public class JobHandlerImpl implements JobHandler {
         upload(workingDir);
         return job;
       }
-
+      
       Bindings bindings = BindingsFactory.create(job);
-      job = bindings.postprocess(job, workingDir);
-
-      // Move in postprocess
-      if (enableHash) {
-        Map<String, Object> outputs = job.getOutputs();
-        Map<String, Object> outputsWithCheckSum = (Map<String, Object>) populateChecksum(outputs);
-        job = Job.cloneWithOutputs(job, outputsWithCheckSum);
-      }
+      job = bindings.postprocess(job, workingDir, enableHash ? hashAlgorithm: null, addFilename, setSize, secondaryFilesEnableHash ? secondaryFilesHashAlgorithm: null, secondaryFilesSetFilename, secondaryFilesSetSize);
 
       job = bindings.mapOutputFilePaths(job, new OutputFileMapper());
       upload(workingDir);
@@ -275,7 +279,7 @@ public class JobHandlerImpl implements JobHandler {
     int processExitStatus = getExitStatus();
     return isSuccessful(processExitStatus);
   }
-
+  
   @SuppressWarnings("unchecked")
   private void calculateChecksum(Object file) {
     Map<String, Object> fileMap = (Map<String, Object>) file;

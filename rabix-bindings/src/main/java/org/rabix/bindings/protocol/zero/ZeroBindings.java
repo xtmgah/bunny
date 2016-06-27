@@ -21,6 +21,7 @@ import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.bindings.protocol.zero.bean.ZeroJobApp;
 import org.rabix.bindings.protocol.zero.helper.ZeroHelper;
+import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 import org.rabix.common.helper.CloneHelper;
 
 public class ZeroBindings implements Bindings {
@@ -69,6 +70,11 @@ public class ZeroBindings implements Bindings {
     Map<String, Object> outputs = new HashMap<String, Object>();
     outputs.put(outputFile, ZeroHelper.getOutputPath(fileName, workingDir.getPath()));
     return Job.cloneWithOutputs(job, outputs);
+  }
+  
+  @Override
+  public Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws BindingException {
+    return postprocess(job, workingDir);
   }
 
   @Override

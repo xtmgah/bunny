@@ -18,9 +18,9 @@ public class Draft3FilePathMapper implements ProtocolFilePathMapper {
   public Job mapInputFilePaths(final Job job, final FileMapper fileMapper) throws BindingException {
     Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
     
-    Draft3PortProcessor draft2PortProcessor = new Draft3PortProcessor(draft2Job);
+    Draft3PortProcessor draft3PortProcessor = new Draft3PortProcessor(draft2Job);
     try {
-      Map<String, Object> inputs = draft2PortProcessor.processInputs(job.getInputs(), new Draft3FilePathMapProcessorCallback(fileMapper));
+      Map<String, Object> inputs = draft3PortProcessor.processInputs(job.getInputs(), new Draft3FilePathMapProcessorCallback(fileMapper));
       return Job.cloneWithInputs(job, inputs);
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);

@@ -61,6 +61,7 @@ import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
+import org.rabix.executor.config.FileConfig;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.ftp.SimpleFTPModule;
 import org.rabix.transport.backend.impl.BackendLocal;
@@ -80,7 +81,7 @@ public class BackendCommandLine {
 
   private static final Logger logger = LoggerFactory.getLogger(BackendCommandLine.class);
   private static String configDir = "/.bunny/config";
-
+  
   public static void main(String[] commandLineArguments) {
     final CommandLineParser commandLineParser = new DefaultParser();
     final Options posixOptions = createOptions();
@@ -154,9 +155,9 @@ public class BackendCommandLine {
           });
 
       Configuration configuration = configModule.provideConfig();
-      Boolean conformance = configuration.getString("rabix.conformance") != null;
+      Boolean conformance = configuration.getString(FileConfig.BUNNY_CONFORMANCE) != null;
       if(conformance) {
-        BindingsFactory.setProtocol(configuration.getString("rabix.conformance"));
+        BindingsFactory.setProtocol(configuration.getString(FileConfig.BUNNY_CONFORMANCE));
       }
 
       String appUrl = URIHelper.createURI(URIHelper.FILE_URI_SCHEME, appPath);

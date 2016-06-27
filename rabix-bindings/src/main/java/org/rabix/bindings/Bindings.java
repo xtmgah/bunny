@@ -10,6 +10,7 @@ import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
+import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 
 public interface Bindings {
 
@@ -24,6 +25,8 @@ public interface Bindings {
   Job preprocess(Job job, File workingDir) throws BindingException;
   
   Job postprocess(Job job, File workingDir) throws BindingException;
+  
+  Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws BindingException;
 
   String buildCommandLine(Job job) throws BindingException;
 

@@ -21,6 +21,7 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
+import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 
 public class Draft3Bindings implements Bindings {
 
@@ -79,6 +80,11 @@ public class Draft3Bindings implements Bindings {
   @Override
   public Job postprocess(Job job, File workingDir) throws BindingException {
     return processor.postprocess(job, workingDir);
+  }
+  
+  @Override
+  public Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws BindingException {
+    return processor.postprocess(job, workingDir, hashAlgorithm, setFilename, setSize, secondaryFilesHashAlgorithm, secondaryFilesSetFilename, secondaryFilesSetSize);
   }
 
   @Override

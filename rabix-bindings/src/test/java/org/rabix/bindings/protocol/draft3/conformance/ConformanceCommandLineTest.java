@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 @Test(groups = { "functional" })
 public class ConformanceCommandLineTest {
 
-  @Test
+  @Test(enabled = false)
   public void testCmdLine1() throws IOException {
     try {
       String inputsStr = ResourceHelper.readResource(this.getClass(), "bwa-mem-job.json");
@@ -75,7 +75,7 @@ public class ConformanceCommandLineTest {
     }
   }
   
-  @Test
+  @Test(enabled = false)
   public void testCmdLine3() throws IOException {
     try {
       String inputsStr = ResourceHelper.readResource(this.getClass(), "cat-job.json");
@@ -97,7 +97,7 @@ public class ConformanceCommandLineTest {
     }
   }
   
-  @Test
+  @Test(enabled = false)
   public void testCmdLine4() throws IOException {
     try {
       String inputsStr = ResourceHelper.readResource(this.getClass(), "cat-n-job.json");
@@ -120,7 +120,7 @@ public class ConformanceCommandLineTest {
     }
   }
   
-  @Test
+  @Test(enabled = false)
   public void testCmdLine5() throws IOException {
     try {
       String inputsStr = ResourceHelper.readResource(this.getClass(), "cat-job.json");
@@ -141,7 +141,7 @@ public class ConformanceCommandLineTest {
     }
   }
   
-  @Test
+  @Test(enabled = false)
   public void testCmdLine6() throws IOException {
     try {
       String inputsStr = ResourceHelper.readResource(this.getClass(), "cat-job.json");
@@ -158,7 +158,7 @@ public class ConformanceCommandLineTest {
     }
   }
   
-  @Test
+  @Test(enabled = false)
   public void testCmdLine7() throws IOException {
     try {
       String inputsStr = ResourceHelper.readResource(this.getClass(), "cat-job.json");
