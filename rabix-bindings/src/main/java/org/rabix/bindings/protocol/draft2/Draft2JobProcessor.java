@@ -180,9 +180,15 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
       
       String scatter = null;
       if (job.getId().contains(Draft2SchemaHelper.PORT_ID_SEPARATOR)) {
-        String mod = job.getId().substring(job.getId().indexOf(".") + 1);
+        String remaining = job.getId().substring(job.getId().lastIndexOf(".") + 1);
+        String mod = job.getId().substring(0, job.getId().lastIndexOf("."));
+        if (mod.contains(".")) {
+          mod = mod.substring(mod.lastIndexOf(".") + 1);
+        }
         if (strip) {
-          mod = mod.substring(mod.indexOf(Draft2SchemaHelper.PORT_ID_SEPARATOR) + 1);
+          mod = remaining;
+        } else {
+          mod = mod + remaining;
         }
         scatter = Draft2SchemaHelper.ID_START + mod + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.normalizeId(port.getId());
       } else {
