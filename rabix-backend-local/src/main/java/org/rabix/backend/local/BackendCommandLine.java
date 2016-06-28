@@ -44,6 +44,7 @@ import org.rabix.bindings.protocol.draft3.resolver.Draft3DocumentResolver;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.json.BeanSerializer;
+import org.rabix.common.logging.VerboseLogger;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.BackendHTTPService;
 import org.rabix.engine.rest.api.JobHTTPService;
@@ -200,6 +201,7 @@ public class BackendCommandLine {
               System.exit(10);
             }
           } else {
+            VerboseLogger.log("Failed to execute a Job");
             System.exit(10);
           }
         }
