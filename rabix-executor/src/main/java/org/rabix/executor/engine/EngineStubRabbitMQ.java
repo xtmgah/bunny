@@ -1,11 +1,15 @@
 package org.rabix.executor.engine;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlMessage;
+import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
@@ -30,6 +34,7 @@ public class EngineStubRabbitMQ implements EngineStub {
   private ScheduledExecutorService scheduledHeartbeatService = Executors.newSingleThreadScheduledExecutor();
 
   private TransportQueueRabbitMQ sendToBackendQueue;
+  private TransportQueueRabbitMQ sendToBackendControlQueue;
   private TransportQueueRabbitMQ receiveFromBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendHeartbeatQueue;
   
@@ -40,6 +45,7 @@ public class EngineStubRabbitMQ implements EngineStub {
     
     BackendConfiguration backendConfiguration = backendRabbitMQ.getBackendConfiguration();
     this.sendToBackendQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
+    this.sendToBackendControlQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveControlRoutingKey());
     
     EngineConfiguration engineConfiguration = backendRabbitMQ.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
@@ -71,6 +77,26 @@ public class EngineStubRabbitMQ implements EngineStub {
       @Override
       public void handleError(Exception error) {
         logger.error("Failed to receive message.", error);
+      }
+    });
+    
+    transportPlugin.startReceiver(sendToBackendControlQueue, EngineControlMessage.class, new ReceiveCallback<EngineControlMessage>() {
+      @Override
+      public void handleReceive(EngineControlMessage controlMessage) throws TransportPluginException {
+        switch (controlMessage.getType()) {
+        case STOP:
+          List<String> ids = new ArrayList<>();
+          ids.add(((EngineControlStopMessage)controlMessage).getId());
+          executorService.stop(ids, controlMessage.getRootId());
+          break;
+        default:
+          break;
+        }
+      }
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to execute control message.", error);
       }
     });
     

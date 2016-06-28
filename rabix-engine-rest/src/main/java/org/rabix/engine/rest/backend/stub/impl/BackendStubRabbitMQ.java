@@ -6,8 +6,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlMessage;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
-import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -32,6 +32,7 @@ public class BackendStubRabbitMQ implements BackendStub {
   private TransportPluginRabbitMQ transportPluginMQ;
 
   private TransportQueueRabbitMQ sendToBackendQueue;
+  private TransportQueueRabbitMQ sendToBackendControlQueue;
   private TransportQueueRabbitMQ receiveFromBackendQueue;
   private TransportQueueRabbitMQ receiveFromBackendHeartbeatQueue;
 
@@ -45,7 +46,8 @@ public class BackendStubRabbitMQ implements BackendStub {
 
     BackendConfiguration backendConfiguration = backend.getBackendConfiguration();
     this.sendToBackendQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
-
+    this.sendToBackendControlQueue = new TransportQueueRabbitMQ(backendConfiguration.getReceiveControlRoutingKey(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
+    
     EngineConfiguration engineConfiguration = backend.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getHeartbeatRoutingKey());
@@ -119,8 +121,8 @@ public class BackendStubRabbitMQ implements BackendStub {
   }
 
   @Override
-  public void send(StopControlMessage controlMessage) {
-    // TODO Auto-generated method stub
+  public void send(EngineControlMessage controlMessage) {
+    transportPluginMQ.send(sendToBackendControlQueue, controlMessage);
   }
 
 }

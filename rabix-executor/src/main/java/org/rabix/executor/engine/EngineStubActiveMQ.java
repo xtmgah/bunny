@@ -1,11 +1,15 @@
 package org.rabix.executor.engine;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlMessage;
+import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendActiveMQ;
@@ -29,6 +33,7 @@ public class EngineStubActiveMQ implements EngineStub {
   private ScheduledExecutorService scheduledHeartbeatService = Executors.newSingleThreadScheduledExecutor();
 
   private TransportQueueActiveMQ sendToBackendQueue;
+  private TransportQueueActiveMQ sendToBackendControlQueue;
   private TransportQueueActiveMQ receiveFromBackendQueue;
   private TransportQueueActiveMQ receiveFromBackendHeartbeatQueue;
   
@@ -38,6 +43,7 @@ public class EngineStubActiveMQ implements EngineStub {
     this.transportPlugin = new TransportPluginActiveMQ(configuration);
     
     this.sendToBackendQueue = new TransportQueueActiveMQ(backendActiveMQ.getToBackendQueue());
+    this.sendToBackendControlQueue = new TransportQueueActiveMQ(backendActiveMQ.getToBackendControlQueue());
     this.receiveFromBackendQueue = new TransportQueueActiveMQ(backendActiveMQ.getFromBackendQueue());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueActiveMQ(backendActiveMQ.getFromBackendHeartbeatQueue());
   }
@@ -53,6 +59,26 @@ public class EngineStubActiveMQ implements EngineStub {
       @Override
       public void handleError(Exception error) {
         logger.error("Failed to receive message.", error);
+      }
+    });
+    
+    transportPlugin.startReceiver(sendToBackendControlQueue, EngineControlMessage.class, new ReceiveCallback<EngineControlMessage>() {
+      @Override
+      public void handleReceive(EngineControlMessage controlMessage) throws TransportPluginException {
+        switch (controlMessage.getType()) {
+        case STOP:
+          List<String> ids = new ArrayList<>();
+          ids.add(((EngineControlStopMessage)controlMessage).getId());
+          executorService.stop(ids, controlMessage.getRootId());
+          break;
+        default:
+          break;
+        }
+      }
+    }, new ErrorCallback() {
+      @Override
+      public void handleError(Exception error) {
+        logger.error("Failed to execute control message.", error);
       }
     });
     

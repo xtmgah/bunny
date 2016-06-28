@@ -19,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
-import org.rabix.engine.rest.backend.control.StopControlMessage;
+import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.transport.backend.Backend;
 import org.slf4j.Logger;
@@ -114,7 +114,7 @@ public class BackendDispatcher {
         if (backendId != null) {
           BackendStub backendStub = getBackendStub(backendId);
           if (backendStub != null) {
-            backendStub.send(new StopControlMessage(job.getId(), job.getRootId()));
+            backendStub.send(new EngineControlStopMessage(job.getId(), job.getRootId()));
           }
         }
       }

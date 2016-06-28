@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlMessage;
+import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.backend.impl.BackendLocal;
@@ -19,8 +21,6 @@ import org.rabix.transport.mechanism.impl.local.TransportPluginLocal;
 import org.rabix.transport.mechanism.impl.local.TransportQueueLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EngineStubLocal implements EngineStub {
 
@@ -57,12 +57,18 @@ public class EngineStubLocal implements EngineStub {
       }
     });
 
-    transportPlugin.startReceiver(sendToBackendControlQueue, StopControlMessage.class, new ReceiveCallback<StopControlMessage>() {
+    transportPlugin.startReceiver(sendToBackendControlQueue, EngineControlMessage.class, new ReceiveCallback<EngineControlMessage>() {
       @Override
-      public void handleReceive(StopControlMessage controlMessage) throws TransportPluginException {
-        List<String> ids = new ArrayList<>();
-        ids.add(controlMessage.getId());
-        executorService.stop(ids, controlMessage.getRootId());
+      public void handleReceive(EngineControlMessage controlMessage) throws TransportPluginException {
+        switch (controlMessage.getType()) {
+        case STOP:
+          List<String> ids = new ArrayList<>();
+          ids.add(((EngineControlStopMessage)controlMessage).getId());
+          executorService.stop(ids, controlMessage.getRootId());
+          break;
+        default:
+          break;
+        }
       }
     }, new ErrorCallback() {
       @Override
@@ -90,19 +96,4 @@ public class EngineStubLocal implements EngineStub {
     transportPlugin.send(receiveFromBackendQueue, job);
   }
   
-  private static class StopControlMessage {
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("rootId")
-    private String rootId;
-    
-    public String getId() {
-      return id;
-    }
-    
-    public String getRootId() {
-      return rootId;
-    }
-  }
-
 }

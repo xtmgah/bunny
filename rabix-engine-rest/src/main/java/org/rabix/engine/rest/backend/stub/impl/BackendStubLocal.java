@@ -6,8 +6,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlMessage;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
-import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -90,7 +90,7 @@ public class BackendStubLocal implements BackendStub {
   }
   
   @Override
-  public void send(StopControlMessage controlMessage) {
+  public void send(EngineControlMessage controlMessage) {
     transportPluginLocal.send(sendToBackendControlQueue, controlMessage);
   }
 

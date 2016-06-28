@@ -6,8 +6,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlMessage;
 import org.rabix.engine.rest.backend.HeartbeatInfo;
-import org.rabix.engine.rest.backend.control.StopControlMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
@@ -30,6 +30,7 @@ public class BackendStubActiveMQ implements BackendStub {
   private TransportPluginActiveMQ transportPluginMQ;
 
   private TransportQueueActiveMQ sendToBackendQueue;
+  private TransportQueueActiveMQ sendToBackendControlQueue;
   private TransportQueueActiveMQ receiveFromBackendQueue;
   private TransportQueueActiveMQ receiveFromBackendHeartbeatQueue;
 
@@ -41,6 +42,7 @@ public class BackendStubActiveMQ implements BackendStub {
     this.transportPluginMQ = new TransportPluginActiveMQ(configuration);
 
     this.sendToBackendQueue = new TransportQueueActiveMQ(backend.getToBackendQueue());
+    this.sendToBackendControlQueue = new TransportQueueActiveMQ(backend.getToBackendControlQueue());
     this.receiveFromBackendQueue = new TransportQueueActiveMQ(backend.getFromBackendQueue());
     this.receiveFromBackendHeartbeatQueue = new TransportQueueActiveMQ(backend.getFromBackendHeartbeatQueue());
   }
@@ -93,8 +95,8 @@ public class BackendStubActiveMQ implements BackendStub {
   }
 
   @Override
-  public void send(StopControlMessage controlMessage) {
-    // TODO Auto-generated method stub
+  public void send(EngineControlMessage controlMessage) {
+    transportPluginMQ.send(sendToBackendControlQueue, controlMessage);
   }
 
 }
