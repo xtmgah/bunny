@@ -49,6 +49,9 @@ public interface JobHandler {
    */
   boolean isSuccessful() throws ExecutorException;
 
-  EngineStub getEngineStub();
+  /**
+   * Get dedicated {@link EngineStub} 
+   */
+  EngineStub<?,?,?> getEngineStub();
   
 }

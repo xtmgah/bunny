@@ -62,13 +62,13 @@ public class JobHandlerImpl implements JobHandler {
   private final HashAlgorithm hashAlgorithm;
 
   private Job job;
-  private EngineStub engineStub;
+  private EngineStub<?,?,?> engineStub;
 
   private Configuration configuration;
   private ContainerHandler containerHandler;
   
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?,?,?> engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, SimpleFTPClient ftpClient) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
@@ -321,7 +321,7 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  public EngineStub getEngineStub() {
+  public EngineStub<?,?,?> getEngineStub() {
     return engineStub;
   }
   

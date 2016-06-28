@@ -33,7 +33,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
-  private EngineStub engineStub;
+  private EngineStub<?,?,?> engineStub;
   private Configuration configuration;
 
   @Inject
