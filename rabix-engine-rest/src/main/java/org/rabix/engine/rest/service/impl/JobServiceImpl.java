@@ -1,5 +1,6 @@
 package org.rabix.engine.rest.service.impl;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -146,7 +147,6 @@ public class JobServiceImpl implements JobService {
     logger.debug("Stop Job {}", id);
     
     Job job = jobDB.get(id);
-    
     if (job.isRoot()) {
       Set<Job> jobs = jobDB.getJobs(id);
       backendDispatcher.stop(jobs.toArray(new Job[jobs.size()]));
@@ -182,6 +182,8 @@ public class JobServiceImpl implements JobService {
     private AtomicInteger failCount = new AtomicInteger(0);
     private AtomicInteger successCount = new AtomicInteger(0);
 
+    private Set<String> stoppingRootIds = new HashSet<>();
+    
     public JobStatusCallbackImpl(boolean setResources, boolean stopOnFail) {
       this.stopOnFail = stopOnFail;
       this.setResources = setResources;
@@ -203,31 +205,38 @@ public class JobServiceImpl implements JobService {
     @Override
     public void onFailed(final Job failedJob) throws Exception {
       if (stopOnFail) {
-        stop(failedJob.getRootId());
-        executorService.submit(new Runnable() {
-          @Override
-          public void run() {
-            while (true) {
-              try {
-                boolean exit = true;
-                for (Job job : jobDB.getJobs(failedJob.getRootId())) {
-                  if (!job.isRoot() && !isFinished(job.getStatus())) {
-                    exit = false;
+        synchronized (stoppingRootIds) {
+          if (stoppingRootIds.contains(failedJob.getRootId())) {
+            return;
+          }
+          stoppingRootIds.add(failedJob.getRootId());
+          
+          stop(failedJob.getRootId());
+          executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+              while (true) {
+                try {
+                  boolean exit = true;
+                  for (Job job : jobDB.getJobs(failedJob.getRootId())) {
+                    if (!job.isRoot() && !isFinished(job.getStatus())) {
+                      exit = false;
+                      break;
+                    }
+                  }
+                  if (exit) {
+                    onRootFailed(failedJob.getRootId());
                     break;
                   }
-                }
-                if (exit) {
-                  onRootFailed(failedJob.getRootId());
+                  Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+                } catch (Exception e) {
+                  logger.error("Failed to stop root Job " + failedJob.getRootId(), e);
                   break;
                 }
-                Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-              } catch (Exception e) {
-                logger.error("Failed to stop root Job " + failedJob.getRootId(), e);
-                break;
               }
             }
-          }
-        });
+          });
+        }
       }
     }
     
@@ -253,12 +262,15 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void onRootFailed(String rootId) throws Exception {
-      Job job = jobDB.get(rootId);
-      job = Job.cloneWithStatus(job, JobStatus.FAILED);
-      jobDB.update(job);
+      synchronized (stoppingRootIds) {
+        Job job = jobDB.get(rootId);
+        job = Job.cloneWithStatus(job, JobStatus.FAILED);
+        jobDB.update(job);
 
-      backendDispatcher.remove(job);
-      logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
+        backendDispatcher.remove(job);
+        stoppingRootIds.remove(rootId);
+        logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
+      }
     }
 
   }
