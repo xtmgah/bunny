@@ -6,10 +6,10 @@ import java.util.concurrent.Executors;
 
 import org.rabix.bindings.model.Job;
 import org.rabix.common.engine.control.EngineControlMessage;
-import org.rabix.engine.rest.backend.HeartbeatInfo;
 import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.transport.backend.Backend;
+import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.mechanism.TransportPlugin;
 import org.rabix.transport.mechanism.TransportPlugin.ErrorCallback;
 import org.rabix.transport.mechanism.TransportPlugin.ReceiveCallback;
