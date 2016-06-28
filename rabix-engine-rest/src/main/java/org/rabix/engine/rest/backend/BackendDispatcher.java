@@ -33,7 +33,7 @@ public class BackendDispatcher {
 
   private final static long DEFAULT_HEARTBEAT_PERIOD = TimeUnit.MINUTES.toMillis(2);
   
-  private final List<BackendStub> backendStubs = new ArrayList<>();
+  private final List<BackendStub<?,?,?>> backendStubs = new ArrayList<>();
   private final Map<String, Long> heartbeatInfo = new HashMap<>();
 
   private final Set<Job> freeJobs = new HashSet<>();
@@ -92,7 +92,7 @@ public class BackendDispatcher {
           freeJobIterator.remove();
           continue;
         }
-        BackendStub backendStub = nextBackend();
+        BackendStub<?,?,?> backendStub = nextBackend();
 
         freeJobIterator.remove();
         jobBackendMapping.put(freeJob, backendStub.getBackend().getId());
@@ -112,7 +112,7 @@ public class BackendDispatcher {
       for (Job job : jobs) {
         String backendId = jobBackendMapping.get(job);
         if (backendId != null) {
-          BackendStub backendStub = getBackendStub(backendId);
+          BackendStub<?,?,?> backendStub = getBackendStub(backendId);
           if (backendStub != null) {
             backendStub.send(new EngineControlStopMessage(job.getId(), job.getRootId()));
           }
@@ -124,7 +124,7 @@ public class BackendDispatcher {
     }
   }
 
-  public void addBackendStub(BackendStub backendStub) {
+  public void addBackendStub(BackendStub<?,?,?> backendStub) {
     try {
       dispatcherLock.lock();
       backendStub.start(heartbeatInfo);
@@ -144,14 +144,14 @@ public class BackendDispatcher {
     }
   }
 
-  private BackendStub nextBackend() {
-    BackendStub backendStub = backendStubs.get(position % backendStubs.size());
+  private BackendStub<?,?,?> nextBackend() {
+    BackendStub<?,?,?> backendStub = backendStubs.get(position % backendStubs.size());
     position = (position + 1) % backendStubs.size();
     return backendStub;
   }
   
-  private BackendStub getBackendStub(String id) {
-    for (BackendStub backendStub : backendStubs) {
+  private BackendStub<?,?,?> getBackendStub(String id) {
+    for (BackendStub<?,?,?> backendStub : backendStubs) {
       if (backendStub.getBackend().getId().equals(id)) {
         return backendStub;
       }
@@ -167,7 +167,7 @@ public class BackendDispatcher {
         logger.info("Checking Backend heartbeats...");
         
         long currentTime = System.currentTimeMillis();
-        for (BackendStub backendStub : backendStubs) {
+        for (BackendStub<?,?,?> backendStub : backendStubs) {
           Backend backend = backendStub.getBackend();
 
           if (currentTime - heartbeatInfo.get(backend.getId()) > heartbeatPeriod) {
