@@ -71,6 +71,11 @@ public class ScatterHandler {
       return;
     }
 
+    if (value == null) {
+      createScatteredJobs(job, portId, value, node, 1, position);
+      return;
+    }
+    
     List<Object> values = null;
     boolean usePositionFromEvent = true;
     if (isFromEvent || !(value instanceof List<?>)) {
