@@ -351,7 +351,7 @@ public class BackendCommandLine {
    * Prints command line usage
    */
   private static void printUsageAndExit(Options options) {
-    new HelpFormatter().printHelp("rabix.sh <tool> <job> [OPTION]...", options);
+    new HelpFormatter().printHelp("rabix <tool> <job> [OPTION]...", options);
     System.exit(10);
   }
   
