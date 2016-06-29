@@ -191,7 +191,7 @@ public class DockerContainerHandler implements ContainerHandler {
     } catch (IOException e) {
       logger.error("Failed to create cmd.log file.", e);
       throw new ContainerException("Failed to create cmd.log file.");
-    } catch (BindingException e) {
+    } catch (Exception e) {
       logger.error("Failed to start container.", e);
       throw new ContainerException("Failed to start container.", e);
     }
