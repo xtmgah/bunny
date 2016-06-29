@@ -34,6 +34,7 @@ import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
 import org.rabix.executor.container.impl.CompletedContainerHandler;
+import org.rabix.executor.container.impl.DockerContainerHandler.DockerClientLockDecorator;
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
@@ -66,14 +67,16 @@ public class JobHandlerImpl implements JobHandler {
 
   private Configuration configuration;
   private ContainerHandler containerHandler;
+  private DockerClientLockDecorator dockerClient;
   
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?,?,?> engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?,?,?> engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient, SimpleFTPClient ftpClient) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
     this.downloadFileService = downloadFileService;
     this.jobDataService = jobDataService;
+    this.dockerClient = dockerClient;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
@@ -103,7 +106,7 @@ public class JobHandlerImpl implements JobHandler {
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, configuration);
       }
       containerHandler.start();
     } catch (Exception e) {

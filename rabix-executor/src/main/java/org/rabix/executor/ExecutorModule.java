@@ -1,6 +1,7 @@
 package org.rabix.executor;
 
 import org.rabix.common.config.ConfigModule;
+import org.rabix.executor.container.impl.DockerContainerHandler.DockerClientLockDecorator;
 import org.rabix.executor.execution.JobHandlerCommandDispatcher;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.handler.JobHandlerFactory;
@@ -31,6 +32,7 @@ public class ExecutorModule extends AbstractModule {
     install(configModule);
     install(new FactoryModuleBuilder().implement(JobHandler.class, JobHandlerImpl.class).build(JobHandlerFactory.class));
 
+    bind(DockerClientLockDecorator.class).in(Scopes.SINGLETON);
     bind(DownloadFileService.class).to(DownloadServiceImpl.class).in(Scopes.SINGLETON);
 
     bind(JobFitter.class).to(JobFitterImpl.class).in(Scopes.SINGLETON);
