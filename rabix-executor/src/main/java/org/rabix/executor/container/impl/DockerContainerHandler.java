@@ -85,8 +85,8 @@ public class DockerContainerHandler implements ContainerHandler {
     try {
       DefaultDockerClient.Builder dockerClientBuilder = DefaultDockerClient
           .fromEnv()
-          .connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
-          .readTimeoutMillis(TimeUnit.MINUTES.toMillis(1));
+          .connectTimeoutMillis(TimeUnit.MINUTES.toMillis(5))
+          .readTimeoutMillis(TimeUnit.MINUTES.toMillis(5));
       
       if (isConfigAuthEnabled) {
         String username = configuration.getString("docker.username");
