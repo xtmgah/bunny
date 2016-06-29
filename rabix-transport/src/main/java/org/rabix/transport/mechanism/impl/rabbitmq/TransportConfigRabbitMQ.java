@@ -60,6 +60,10 @@ public class TransportConfigRabbitMQ {
     return configuration.getString("rabbitmq.backend.receiveRoutingKey");
   }
   
+  public static String getBackendReceiveControlRoutingKey(Configuration configuration) {
+    return configuration.getString("rabbitmq.backend.receiveControlRoutingKey");
+  }
+  
   public static Long getBackendHeartbeatTimeMills(Configuration configuration) {
     return configuration.getLong("rabbitmq.backend.heartbeatTimeMills");
   }

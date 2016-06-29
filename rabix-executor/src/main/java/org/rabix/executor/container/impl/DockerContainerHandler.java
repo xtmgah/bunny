@@ -68,6 +68,8 @@ public class DockerContainerHandler implements ContainerHandler {
   private final Configuration configuration;
   
   private boolean isConfigAuthEnabled;
+  
+  private Integer overrideResultStatus = null;
 
   public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) throws ContainerException {
     this.job = job;
@@ -153,6 +155,11 @@ public class DockerContainerHandler implements ContainerHandler {
       Bindings bindings = BindingsFactory.create(job);
       String commandLine = bindings.buildCommandLine(job);
 
+      if (StringUtils.isEmpty(commandLine.trim())) {
+        overrideResultStatus = 0;   // default is success
+        return;
+      }
+      
       File commandLineFile = new File(workingDir, COMMAND_FILE);
       FileUtils.writeStringToFile(commandLineFile, commandLine);
       builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
@@ -184,7 +191,7 @@ public class DockerContainerHandler implements ContainerHandler {
     } catch (IOException e) {
       logger.error("Failed to create cmd.log file.", e);
       throw new ContainerException("Failed to create cmd.log file.");
-    } catch (BindingException e) {
+    } catch (Exception e) {
       logger.error("Failed to start container.", e);
       throw new ContainerException("Failed to start container.", e);
     }
@@ -210,6 +217,9 @@ public class DockerContainerHandler implements ContainerHandler {
 
   @Override
   public void stop() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return;
+    }
     try {
       dockerClient.stopContainer(containerId, 0);
     } catch (Exception e) {
@@ -220,6 +230,9 @@ public class DockerContainerHandler implements ContainerHandler {
 
   @JsonIgnore
   public boolean isStarted() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return true;
+    }
     ContainerInfo containerInfo;
     try {
       containerInfo = dockerClient.inspectContainer(containerId);
@@ -235,6 +248,9 @@ public class DockerContainerHandler implements ContainerHandler {
   @Override
   @JsonIgnore
   public boolean isRunning() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return false;
+    }
     ContainerInfo containerInfo;
     try {
       containerInfo = dockerClient.inspectContainer(containerId);
@@ -249,6 +265,9 @@ public class DockerContainerHandler implements ContainerHandler {
   @Override
   @JsonIgnore
   public int getProcessExitStatus() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return overrideResultStatus;
+    }
     ContainerInfo containerInfo;
     try {
       containerInfo = dockerClient.inspectContainer(containerId);
@@ -265,6 +284,9 @@ public class DockerContainerHandler implements ContainerHandler {
    */
   @Override
   public void dumpContainerLogs(final File logFile) throws ContainerException {
+    if (overrideResultStatus != null) {
+      return;
+    }
     logger.debug("Saving standard error files for id={}", job.getId());
 
     if (logFile != null) {

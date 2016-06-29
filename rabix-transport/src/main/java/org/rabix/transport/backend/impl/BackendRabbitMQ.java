@@ -138,14 +138,21 @@ public class BackendRabbitMQ extends Backend {
     private String exchangeType;
     @JsonProperty("receive_routing_key")
     private String receiveRoutingKey;
+    @JsonProperty("receive_control_routing_key")
+    private String receiveControlRoutingKey;
     @JsonProperty("heartbeat_period_mills")
     private Long heartbeatPeriodMills;
     
     @JsonCreator
-    public BackendConfiguration(@JsonProperty("exchange") String exchange, @JsonProperty("exchange_type") String exchangeType, @JsonProperty("receive_routing_key") String receiveRoutingKey, @JsonProperty("heartbeat_period_mills") Long heartbeatPeriodMills) {
+    public BackendConfiguration(@JsonProperty("exchange") String exchange,
+        @JsonProperty("exchange_type") String exchangeType,
+        @JsonProperty("receive_routing_key") String receiveRoutingKey,
+        @JsonProperty("receive_control_routing_key") String receiveControlRoutingKey,
+        @JsonProperty("heartbeat_period_mills") Long heartbeatPeriodMills) {
       this.exchange = exchange;
       this.exchangeType = exchangeType;
       this.receiveRoutingKey = receiveRoutingKey;
+      this.receiveControlRoutingKey = receiveControlRoutingKey;
       this.heartbeatPeriodMills = heartbeatPeriodMills;
     }
 
@@ -160,12 +167,15 @@ public class BackendRabbitMQ extends Backend {
     public String getReceiveRoutingKey() {
       return receiveRoutingKey;
     }
+
+    public String getReceiveControlRoutingKey() {
+      return receiveControlRoutingKey;
+    }
     
     public Long getHeartbeatPeriodMills() {
       return heartbeatPeriodMills;
     }
-
-    @Override
+    
     public int hashCode() {
       final int prime = 31;
       int result = 1;
@@ -204,9 +214,9 @@ public class BackendRabbitMQ extends Backend {
 
     @Override
     public String toString() {
-      return "BackendConfiguration [exchange=" + exchange + ", exchangeType=" + exchangeType + ", receiveRoutingKey=" + receiveRoutingKey + "]";
+      return "BackendConfiguration [exchange=" + exchange + ", exchangeType=" + exchangeType + ", receiveRoutingKey=" + receiveRoutingKey + ", receiveControlRoutingKey=" + receiveControlRoutingKey + ", heartbeatPeriodMills=" + heartbeatPeriodMills + "]";
     }
-    
+
   }
   
   @Override

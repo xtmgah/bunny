@@ -55,7 +55,7 @@ public class JobHandlerCommandDispatcher {
   /**
    * Dispatch commands to appropriate runnable threads
    */
-  public void dispatch(JobData jobData, JobHandlerCommand command, EngineStub engineStub) {
+  public void dispatch(JobData jobData, JobHandlerCommand command, EngineStub<?,?,?> engineStub) {
     synchronized (jobHandlerRunnables) {
       String contextId = jobData.getJob().getRootId();
       JobHandlerRunnable jobHandlerRunnable = getJobs(contextId).get(jobData.getJob().getId());

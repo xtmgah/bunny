@@ -8,7 +8,7 @@ import org.rabix.executor.model.JobData.JobDataStatus;
 
 public interface JobDataService {
 
-  void initialize(EngineStub engineStub);
+  void initialize(EngineStub<?,?,?> engineStub);
   
   void save(JobData data);
 

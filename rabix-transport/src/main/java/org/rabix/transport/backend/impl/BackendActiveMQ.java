@@ -11,15 +11,18 @@ public class BackendActiveMQ extends Backend {
   private String broker;
   @JsonProperty("toBackendQueue")
   private String toBackendQueue;
+  @JsonProperty("toBackendControlQueue")
+  private String toBackendControlQueue;
   @JsonProperty("fromBackendQueue")
   private String fromBackendQueue;
   @JsonProperty("fromBackendHeartbeatQueue")
   private String fromBackendHeartbeatQueue;
   
-  public BackendActiveMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
+  public BackendActiveMQ(@JsonProperty("id") String id, @JsonProperty("broker") String broker, @JsonProperty("toBackendQueue") String toBackendQueue, @JsonProperty("toBackendControlQueue") String toBackendControlQueue, @JsonProperty("fromBackendQueue") String fromBackendQueue, @JsonProperty("fromBackendHeartbeatQueue") String fromBackendHeartbeatQueue) {
     this.id = id;
     this.broker = broker;
     this.toBackendQueue = toBackendQueue;
+    this.toBackendControlQueue = toBackendControlQueue;
     this.fromBackendQueue = fromBackendQueue;
     this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
   }
@@ -54,6 +57,14 @@ public class BackendActiveMQ extends Backend {
 
   public void setFromBackendHeartbeatQueue(String fromBackendHeartbeatQueue) {
     this.fromBackendHeartbeatQueue = fromBackendHeartbeatQueue;
+  }
+
+  public String getToBackendControlQueue() {
+    return toBackendControlQueue;
+  }
+
+  public void setToBackendControlQueue(String toBackendControlQueue) {
+    this.toBackendControlQueue = toBackendControlQueue;
   }
 
   @Override
@@ -107,7 +118,7 @@ public class BackendActiveMQ extends Backend {
 
   @Override
   public String toString() {
-    return "BackendActiveMQ [broker=" + broker + ", toBackendQueue=" + toBackendQueue + ", fromBackendQueue=" + fromBackendQueue + ", fromBackendHeartbeatQueue=" + fromBackendHeartbeatQueue + ", id=" + id + "]";
+    return "BackendActiveMQ [broker=" + broker + ", toBackendQueue=" + toBackendQueue + ", toBackendControlQueue=" + toBackendControlQueue + ", fromBackendQueue=" + fromBackendQueue + ", fromBackendHeartbeatQueue=" + fromBackendHeartbeatQueue + "]";
   }
 
 }

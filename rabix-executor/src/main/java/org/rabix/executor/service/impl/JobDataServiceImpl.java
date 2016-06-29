@@ -39,7 +39,7 @@ public class JobDataServiceImpl implements JobDataService {
   
   private JobHandlerCommandDispatcher jobHandlerCommandDispatcher;
 
-  private EngineStub engineStub;
+  private EngineStub<?,?,?> engineStub;
   
   private ScheduledExecutorService starter = Executors.newSingleThreadScheduledExecutor();
 
@@ -57,7 +57,7 @@ public class JobDataServiceImpl implements JobDataService {
   }
   
   @Override
-  public void initialize(EngineStub engineStub) {
+  public void initialize(EngineStub<?,?,?> engineStub) {
     this.engineStub = engineStub;
     this.starter.scheduleAtFixedRate(new JobStatusHandler(), 0, 1, TimeUnit.SECONDS);
   }

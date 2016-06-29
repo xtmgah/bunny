@@ -28,17 +28,20 @@ public class BackendPopulator {
         String backendExchange = TransportConfigRabbitMQ.getBackendExchange(configuration);
         String backendExchangeType = TransportConfigRabbitMQ.getBackendExchangeType(configuration);
         String backendReceiveRoutingKey = TransportConfigRabbitMQ.getBackendReceiveRoutingKey(configuration);
+        String backendReceiveControlRoutingKey = TransportConfigRabbitMQ.getBackendReceiveControlRoutingKey(configuration);
         Long heartbeatPeriodMills = TransportConfigRabbitMQ.getBackendHeartbeatTimeMills(configuration);
 
         backendExchange = backendExchange + "_" + backend.getId();
-        BackendConfiguration backendConfiguration = new BackendConfiguration(backendExchange, backendExchangeType, backendReceiveRoutingKey, heartbeatPeriodMills);
+        BackendConfiguration backendConfiguration = new BackendConfiguration(backendExchange, backendExchangeType, backendReceiveRoutingKey, backendReceiveControlRoutingKey, heartbeatPeriodMills);
         ((BackendRabbitMQ) backend).setBackendConfiguration(backendConfiguration);
         return backend;
       }
       break;
     case ACTIVE_MQ:
+      // TODO implement
       break;
     case LOCAL:
+      // TODO implement
       break;
     default:
       break;
