@@ -110,7 +110,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         for (LinkRecord link : containerLinks) {
           VariableRecord sourceVariable = variableRecordService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, contextId);
           VariableRecord destinationVariable = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, contextId);
-          
+//          if(destinationVariable == null) {
+//            continue;
+//          }
           Event updateEvent = new InputUpdateEvent(contextId, destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
           eventProcessor.send(updateEvent);
         }
@@ -151,13 +153,12 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       jobRecordService.create(childJob);
 
       for (DAGLinkPort port : node.getInputPorts()) {
-        Object defaultValue = node.getDefaults().get(port.getId());
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(port.getId(), port.getType()));
+        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.INPUT, port.getDefaultValue(), node.getLinkMerge(port.getId(), port.getType()), port.getTransform());
         variableRecordService.create(childVariable);
       }
 
       for (DAGLinkPort port : node.getOutputPorts()) {
-        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(port.getId(), port.getType()));
+        VariableRecord childVariable = new VariableRecord(contextId, newJobId, port.getId(), LinkPortType.OUTPUT, null, node.getLinkMerge(port.getId(), port.getType()), port.getTransform());
         variableRecordService.create(childVariable);
       }
     }

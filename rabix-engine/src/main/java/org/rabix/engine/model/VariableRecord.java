@@ -23,14 +23,16 @@ public class VariableRecord {
   private int numberOfTimesUpdated = 0;
   
   private boolean isDefault = true;
+  private Object transform;
 
-  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge) {
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge, Object transform) {
     this.jobId = jobId;
     this.portId = portId;
     this.type = type;
     this.value = value;
     this.contextId = contextId;
     this.linkMerge = linkMerge;
+    this.transform = transform;
   }
 
   public String getContextId() {
@@ -170,10 +172,19 @@ public class VariableRecord {
     this.numberOfGlobals = numberOfGlobals;
   }
 
+  public Object getTransform() {
+    return transform;
+  }
+
+  public void setTransform(Object transform) {
+    this.transform = transform;
+  }
+
   @Override
   public String toString() {
     return "VariableRecord [contextId=" + contextId + ", jobId=" + jobId + ", portId=" + portId + ", type=" + type
-        + ", value=" + value + ", isWrapped=" + isWrapped + ", numberOfGlobals=" + numberOfGlobals + ", linkMerge=" + linkMerge + "]";
+        + ", value=" + value + ", linkMerge=" + linkMerge + ", isWrapped=" + isWrapped + ", numberOfGlobals="
+        + numberOfGlobals + ", numberOfTimesUpdated=" + numberOfTimesUpdated + ", isDefault=" + isDefault
+        + ", transform=" + transform + "]";
   }
-
 }

@@ -131,6 +131,11 @@ public class Draft3Bindings implements Bindings {
   public DAGNode translateToDAG(Job job) throws BindingException {
     return translator.translateToDAG(job);
   }
+  
+  @Override
+  public Object transformInputs(Object value, Job job, Object transform) throws BindingException {
+    return processor.transformInputs(value, job, transform);
+  }
 
   @Override
   public void validate(Job job) throws BindingException {

@@ -135,6 +135,11 @@ public class Draft2Processor implements ProtocolProcessor {
     }
   }
   
+  @Override
+  public Object transformInputs(Object value, Job job, Object transform) throws BindingException {
+    return value;
+  }
+  
   private Map<String, Object> collectOutputs(Draft2Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws Draft2GlobException, Draft2ExpressionException, IOException, BindingException {
     File resultFile = new File(workingDir, resultFilename);
     

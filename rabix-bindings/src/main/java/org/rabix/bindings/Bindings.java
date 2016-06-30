@@ -45,6 +45,8 @@ public interface Bindings {
   List<Requirement> getHints(Job job) throws BindingException;
   
   DAGNode translateToDAG(Job job) throws BindingException;
+  
+  Object transformInputs(Object value, Job job, Object transform) throws BindingException;
 
   void validate(Job job) throws BindingException;
   

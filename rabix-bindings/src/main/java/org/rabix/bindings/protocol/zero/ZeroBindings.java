@@ -76,6 +76,11 @@ public class ZeroBindings implements Bindings {
   public Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws BindingException {
     return postprocess(job, workingDir);
   }
+  
+  @Override
+  public Object transformInputs(Object value, Job job, Object transform) throws BindingException {
+    return value;
+  }
 
   @Override
   public String buildCommandLine(Job job) throws BindingException {

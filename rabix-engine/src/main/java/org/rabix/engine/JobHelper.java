@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.rabix.bindings.BindingException;
+import org.rabix.bindings.Bindings;
+import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
@@ -22,6 +25,8 @@ import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
+import ch.qos.logback.core.helpers.Transform;
+
 public class JobHelper {
 
   public static String generateId() {
@@ -36,15 +41,35 @@ public class JobHelper {
       for (JobRecord job : jobRecords) {
         DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), contextId);
 
+        Map<String, Object> preprocesedInputs = new HashMap<>();
         Map<String, Object> inputs = new HashMap<>();
         List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
+          
         for (VariableRecord inputVariable : inputVariables) {
-          inputs.put(inputVariable.getPortId(), inputVariable.getValue());
+          Object value = inputVariable.getValue();
+          preprocesedInputs.put(inputVariable.getPortId(), value);
         }
+        
         ContextRecord contextRecord = contextRecordService.find(job.getRootId());
         Context context = new Context(job.getRootId(), contextRecord.getConfig());
         String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-        jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context, null));
+        Job newJob = new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, preprocesedInputs, null, context, null);
+        
+        try {
+          Bindings bindings = BindingsFactory.create(encodedApp);
+          
+          for (VariableRecord inputVariable : inputVariables) {
+            Object transform = inputVariable.getTransform();
+            Object value = inputVariable.getValue();
+            if(transform != null) {
+              value = bindings.transformInputs(value, newJob, transform);
+            }
+          inputs.put(inputVariable.getPortId(), value);
+          }
+          jobs.add(new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, inputs, null, context, null));
+        } catch (BindingException e) {
+          e.printStackTrace();
+        }
       }
     }
     return jobs;

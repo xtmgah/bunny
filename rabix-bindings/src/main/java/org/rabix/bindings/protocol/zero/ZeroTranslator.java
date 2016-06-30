@@ -26,14 +26,12 @@ public class ZeroTranslator {
     List<DAGLinkPort> inputPorts = new ArrayList<>();
 
     for (ZeroPort port : job.getApp().getInputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(port.getId(), job.getId(), LinkPortType.INPUT, LinkMerge.merge_nested,
-          false);
+      DAGLinkPort linkPort = new DAGLinkPort(port.getId(), job.getId(), LinkPortType.INPUT, LinkMerge.merge_nested, false, null, null);
       inputPorts.add(linkPort);
     }
     List<DAGLinkPort> outputPorts = new ArrayList<>();
     for (ZeroPort port : job.getApp().getOutputs()) {
-      DAGLinkPort linkPort = new DAGLinkPort(port.getId(), job.getId(), LinkPortType.OUTPUT, LinkMerge.merge_nested,
-          false);
+      DAGLinkPort linkPort = new DAGLinkPort(port.getId(), job.getId(), LinkPortType.OUTPUT, LinkMerge.merge_nested, false, null, null);
       outputPorts.add(linkPort);
     }
     return new DAGNode(job.getId(), inputPorts, outputPorts, null, job.getApp(), job.getInputs());

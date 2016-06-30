@@ -87,6 +87,8 @@ public class Draft3Processor implements ProtocolProcessor {
     }
   }
   
+  
+  
   @Override
   public boolean isSuccessful(Job job, int statusCode) throws BindingException {
     Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
@@ -150,6 +152,18 @@ public class Draft3Processor implements ProtocolProcessor {
     } catch (Draft3GlobException | Draft3ExpressionException | IOException e) {
       throw new BindingException(e);
     }
+  }
+  
+  @Override
+  public Object transformInputs(Object value, Job job, Object transform) throws BindingException {
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
+    Object result = null;
+    try {
+      result = Draft3ExpressionResolver.resolve(transform, draft3Job, value);
+    } catch (Draft3ExpressionException e) {
+      throw new BindingException(e);
+    }
+    return result;
   }
   
   private Map<String, Object> collectOutputs(Draft3Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws Draft3GlobException, Draft3ExpressionException, IOException, BindingException {
