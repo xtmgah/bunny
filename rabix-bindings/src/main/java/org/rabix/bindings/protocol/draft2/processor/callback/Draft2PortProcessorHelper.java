@@ -85,6 +85,14 @@ public class Draft2PortProcessorHelper {
       throw new Draft2PortProcessorException("Failed to set input file size", e);
     }
   }
+  
+  public Map<String, Object> fixOutputMetadata(Map<String, Object> inputs, Map<String, Object> outputs) throws Draft2PortProcessorException {
+    try {
+      return portProcessor.processOutputs(outputs, new Draft2MetadataCallback(inputs));
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to fix metadata", e);
+    }
+  }
 
   public Map<String, Object> loadInputContents(Map<String, Object> inputs) throws Draft2PortProcessorException {
     try {

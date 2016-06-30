@@ -107,8 +107,9 @@ public class Draft2Processor implements ProtocolProcessor {
       } else {
         outputs = collectOutputs(draft2Job, workingDir, null);
       }
+      outputs = new Draft2PortProcessorHelper(draft2Job).fixOutputMetadata(draft2Job.getInputs(), outputs);
       return Job.cloneWithOutputs(job, outputs);
-    } catch (Draft2GlobException | Draft2ExpressionException | IOException e) {
+    } catch (Draft2GlobException | Draft2ExpressionException | IOException | Draft2PortProcessorException e) {
       throw new BindingException(e);
     }
   }
