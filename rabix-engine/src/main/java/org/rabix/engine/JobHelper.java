@@ -24,9 +24,13 @@ import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobHelper {
 
+  private static Logger logger = LoggerFactory.getLogger(JobHelper.class);
+  
   public static String generateId() {
     return UUID.randomUUID().toString();
   }
@@ -48,6 +52,8 @@ public class JobHelper {
 
     boolean autoBoxingEnabled = true;   // get from configuration
     
+    StringBuilder inputsLogBuilder = new StringBuilder("\n ---- JobRecord ").append(job.getId()).append("\n");
+    
     Map<String, Object> inputs = new HashMap<>();
     List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
     for (VariableRecord inputVariable : inputVariables) {
@@ -60,8 +66,11 @@ public class JobHelper {
           value = transformed;
         }
       }
+      inputsLogBuilder.append(" ---- Input ").append(inputVariable.getPortId()).append(", value ").append(value).append("\n");
       inputs.put(inputVariable.getPortId(), value);
     }
+    logger.debug(inputsLogBuilder.toString());
+    
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
     Context context = new Context(job.getRootId(), contextRecord.getConfig());
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
