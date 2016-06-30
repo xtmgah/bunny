@@ -110,9 +110,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         for (LinkRecord link : containerLinks) {
           VariableRecord sourceVariable = variableRecordService.find(link.getSourceJobId(), link.getSourceJobPort(), LinkPortType.INPUT, contextId);
           VariableRecord destinationVariable = variableRecordService.find(link.getDestinationJobId(), link.getDestinationJobPort(), LinkPortType.INPUT, contextId);
-//          if(destinationVariable == null) {
-//            continue;
-//          }
+          if(destinationVariable == null) {
+            continue;
+          }
           Event updateEvent = new InputUpdateEvent(contextId, destinationVariable.getJobId(), destinationVariable.getPortId(), sourceVariable.getValue(), link.getPosition());
           eventProcessor.send(updateEvent);
         }

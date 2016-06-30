@@ -17,6 +17,7 @@ import org.rabix.bindings.protocol.draft3.bean.Draft3Step;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Workflow;
 import org.rabix.bindings.protocol.draft3.bean.resource.Draft3ResourceType;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3EnvVarRequirement;
+import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3InlineJavascriptRequirement;
 import org.rabix.bindings.protocol.draft3.helper.Draft3BindingHelper;
 import org.rabix.bindings.protocol.draft3.helper.Draft3SchemaHelper;
 import org.rabix.common.json.processor.BeanProcessor;
@@ -69,9 +70,12 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
   
   private void overrideHints(Draft3JobApp parentJob, Draft3JobApp stepJob) {
     if(parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class) != null) {
-    stepJob.setHint(parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class));
-      }
+      stepJob.setHint(parentJob.getRequirement(Draft3ResourceType.ENV_VAR_REQUIREMENT, Draft3EnvVarRequirement.class));
     }
+    if(parentJob.getRequirement(Draft3ResourceType.INLINE_JAVASCRIPT_REQUIREMENT, Draft3InlineJavascriptRequirement.class) != null) {
+      stepJob.setRequirement(parentJob.getRequirement(Draft3ResourceType.INLINE_JAVASCRIPT_REQUIREMENT, Draft3InlineJavascriptRequirement.class));
+    }
+  }
   
   /**
    * Process Job inputs, outputs and data links

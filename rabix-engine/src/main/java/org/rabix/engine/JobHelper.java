@@ -25,8 +25,6 @@ import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.VariableRecordService;
 
-import ch.qos.logback.core.helpers.Transform;
-
 public class JobHelper {
 
   public static String generateId() {
