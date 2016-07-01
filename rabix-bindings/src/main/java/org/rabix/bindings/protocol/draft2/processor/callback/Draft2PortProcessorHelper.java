@@ -90,7 +90,7 @@ public class Draft2PortProcessorHelper {
     try {
       Draft2MetadataCallback callback = new Draft2MetadataCallback(inputs);
       Map<String, Object> fixedOutputs = portProcessor.processOutputs(outputs, callback);
-      fixedOutputs = portProcessor.processOutputs(outputs, callback); // call twice on purpose
+      fixedOutputs = portProcessor.processOutputs(fixedOutputs, callback); // call twice on purpose
       return fixedOutputs;
     } catch (Draft2PortProcessorException e) {
       throw new Draft2PortProcessorException("Failed to fix metadata", e);
