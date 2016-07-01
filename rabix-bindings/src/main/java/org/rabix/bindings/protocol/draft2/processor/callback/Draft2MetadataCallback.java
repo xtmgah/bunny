@@ -14,6 +14,7 @@ import org.rabix.common.helper.CloneHelper;
 public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
 
   private Map<String, Map<String, Object>> pathToMetadata = new HashMap<>();
+  private Map<String, Map<String, Object>> outputMetadata = new HashMap<>();
   
   public Draft2MetadataCallback(Map<String, Object> inputs) {
     mapPathsToMetadata(inputs);
@@ -62,6 +63,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
           Draft2FileValueHelper.setMetadata(pathToMetadata.get(path), clonedValue);
         }
       }
+      outputMetadata.put(path, Draft2FileValueHelper.getMetadata(clonedValue));
 
       List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(clonedValue);
       if (secondaryFiles != null) {
@@ -70,7 +72,11 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
           if (pathToMetadata.containsKey(subpath)) {
             Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
             if (metadata == null || metadata.isEmpty()) {
-              Draft2FileValueHelper.setMetadata(pathToMetadata.get(subpath), secondaryFileValue);
+              if (outputMetadata.containsKey(subpath)) {
+                Draft2FileValueHelper.setMetadata(outputMetadata.get(subpath), secondaryFileValue);
+              } else {
+                Draft2FileValueHelper.setMetadata(pathToMetadata.get(subpath), secondaryFileValue);
+              }
             }
           }
         }
