@@ -59,7 +59,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       if (pathToMetadata.containsKey(path)) {
         Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(clonedValue);
         if (metadata == null || metadata.isEmpty()) {
-          Draft2FileValueHelper.setMetadata(clonedValue, pathToMetadata.get(path));
+          Draft2FileValueHelper.setMetadata(pathToMetadata.get(path), clonedValue);
         }
       }
 
@@ -70,7 +70,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
           if (pathToMetadata.containsKey(subpath)) {
             Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
             if (metadata == null || metadata.isEmpty()) {
-              Draft2FileValueHelper.setMetadata(secondaryFileValue, pathToMetadata.get(subpath));
+              Draft2FileValueHelper.setMetadata(pathToMetadata.get(subpath), secondaryFileValue);
             }
           }
         }
