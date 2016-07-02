@@ -69,15 +69,15 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       if (secondaryFiles != null) {
         for (Map<String, Object> secondaryFileValue : secondaryFiles) {
           String subpath = Draft2FileValueHelper.getPath(secondaryFileValue);
+          Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
+
           if (pathToMetadata.containsKey(subpath)) {
-            Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
             if (metadata == null || metadata.isEmpty()) {
-              if (outputMetadata.containsKey(subpath)) {
-                Draft2FileValueHelper.setMetadata(outputMetadata.get(subpath), secondaryFileValue);
-              } else {
-                Draft2FileValueHelper.setMetadata(pathToMetadata.get(subpath), secondaryFileValue);
-              }
+              Draft2FileValueHelper.setMetadata(pathToMetadata.get(subpath), secondaryFileValue);
             }
+          }
+          if ((metadata == null || metadata.isEmpty()) && outputMetadata.containsKey(subpath)) {
+            Draft2FileValueHelper.setMetadata(outputMetadata.get(subpath), secondaryFileValue);
           }
         }
       }
