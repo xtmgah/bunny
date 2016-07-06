@@ -14,6 +14,7 @@ import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.InternalSchemaHelper;
@@ -42,12 +43,11 @@ public class JobHelper {
         Map<String, Object> preprocesedInputs = new HashMap<>();
         Map<String, Object> inputs = new HashMap<>();
         List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
-          
-        for (VariableRecord inputVariable : inputVariables) {
-          Object value = inputVariable.getValue();
-          preprocesedInputs.put(inputVariable.getPortId(), value);
-        }
         
+        for (VariableRecord inputVariable : inputVariables) {
+          preprocesedInputs.put(inputVariable.getPortId(), inputVariable.getValue());
+        }
+
         ContextRecord contextRecord = contextRecordService.find(job.getRootId());
         Context context = new Context(job.getRootId(), contextRecord.getConfig());
         String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
@@ -56,11 +56,19 @@ public class JobHelper {
         try {
           Bindings bindings = BindingsFactory.create(encodedApp);
           
+          
           for (VariableRecord inputVariable : inputVariables) {
-            Object transform = inputVariable.getTransform();
             Object value = inputVariable.getValue();
-            if(transform != null) {
-              value = bindings.transformInputs(value, newJob, transform);
+            for (DAGLinkPort port: node.getInputPorts()) {
+              if(port.getId() == inputVariable.getPortId()) {
+                if (port.getTransform() != null) {
+                  Object transform = port.getTransform();
+                  
+                  if(transform != null) {
+                    value = bindings.transformInputs(value, newJob, transform);
+                  }
+                }
+              }
             }
           inputs.put(inputVariable.getPortId(), value);
           }

@@ -25,14 +25,13 @@ public class VariableRecord {
   private boolean isDefault = true;
   private Object transform;
 
-  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge, Object transform) {
+  public VariableRecord(String contextId, String jobId, String portId, LinkPortType type, Object value, LinkMerge linkMerge) {
     this.jobId = jobId;
     this.portId = portId;
     this.type = type;
     this.value = value;
     this.contextId = contextId;
     this.linkMerge = linkMerge;
-    this.transform = transform;
   }
 
   public String getContextId() {

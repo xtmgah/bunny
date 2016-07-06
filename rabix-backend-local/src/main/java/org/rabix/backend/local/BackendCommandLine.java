@@ -40,7 +40,6 @@ import org.rabix.bindings.protocol.draft3.Draft3CommandLineBuilder;
 import org.rabix.bindings.protocol.draft3.bean.Draft3CommandLineTool;
 import org.rabix.bindings.protocol.draft3.bean.Draft3Job;
 import org.rabix.bindings.protocol.draft3.bean.Draft3JobApp;
-import org.rabix.bindings.protocol.draft3.bean.Draft3Runtime;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3CreateFileRequirement.Draft3FileRequirement;
 import org.rabix.bindings.protocol.draft3.bean.resource.requirement.Draft3ResourceRequirement;
