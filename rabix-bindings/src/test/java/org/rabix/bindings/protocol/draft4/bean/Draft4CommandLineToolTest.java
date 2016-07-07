@@ -28,6 +28,7 @@ public class Draft4CommandLineToolTest {
     Bindings bindings = BindingsFactory.create(job);
     
     Application application = bindings.loadAppObject(encodedApp);
+    // TODO implement
   }
 
 }

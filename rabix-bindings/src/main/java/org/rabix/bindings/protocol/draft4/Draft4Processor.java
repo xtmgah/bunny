@@ -22,6 +22,7 @@ import org.rabix.bindings.protocol.draft4.expression.Draft4ExpressionException;
 import org.rabix.bindings.protocol.draft4.expression.Draft4ExpressionResolver;
 import org.rabix.bindings.protocol.draft4.expression.javascript.Draft4ExpressionJavascriptResolver;
 import org.rabix.bindings.protocol.draft4.helper.Draft4BindingHelper;
+import org.rabix.bindings.protocol.draft4.helper.Draft4DirectoryValueHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4FileValueHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4JobHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4SchemaHelper;
@@ -155,7 +156,8 @@ public class Draft4Processor implements ProtocolProcessor {
         return null;
       }
 
-      if (itemSchema.equals(Draft4SchemaHelper.TYPE_JOB_FILE) || Draft4SchemaHelper.isFileFromSchema(itemSchema)) {
+      if (itemSchema.equals(Draft4SchemaHelper.TYPE_JOB_FILE) || Draft4SchemaHelper.isFileFromSchema(itemSchema) 
+          || itemSchema.equals(Draft4SchemaHelper.TYPE_JOB_DIRECTORY) || Draft4SchemaHelper.isDirectoryFromSchema(itemSchema)) {
         Object itemBinding = Draft4SchemaHelper.getOutputBinding(itemSchema);
         if (itemBinding != null) {
           binding = itemBinding;
@@ -240,40 +242,7 @@ public class Draft4Processor implements ProtocolProcessor {
     final List<Map<String, Object>> result = new ArrayList<>();
     for (File path : paths) {
       try {
-        logger.info("Processing {}.", path);
-        File file = path;
-        Map<String, Object> fileData = new HashMap<>();
-        Draft4FileValueHelper.setFileType(fileData);
-        if (hashAlgorithm != null) {
-          Draft4FileValueHelper.setChecksum(file, fileData, hashAlgorithm);
-        }
-        Draft4FileValueHelper.setSize(file.length(), fileData);
-        Draft4FileValueHelper.setName(file.getName(), fileData);
-        Draft4FileValueHelper.setPath(file.getAbsolutePath(), fileData);
-
-        List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputBinding);
-        if (secondaryFiles != null) {
-          Draft4FileValueHelper.setSecondaryFiles(secondaryFiles, fileData);
-        }
-        Object metadata = Draft4BindingHelper.getMetadata(outputBinding);
-        metadata = metadataService.evaluateMetadataExpressions(job, fileData, metadata);
-        logger.info("Metadata expressions evaluated. Metadata is {}.", metadata);
-        if (metadata != null) {
-          Draft4FileValueHelper.setMetadata(metadata, fileData);
-        }
-        metadata = metadataService.processMetadata(job, fileData, outputPort, outputBinding);
-        if (metadata != null) {
-          logger.info("Metadata for {} resolved. Metadata is {}", outputPort.getId(), metadata);
-          Draft4FileValueHelper.setMetadata(metadata, fileData);
-        } else {
-          logger.info("Metadata for {} output is empty.", outputPort.getId());
-        }
-        result.add(fileData);
-
-        boolean loadContents = Draft4BindingHelper.loadContents(outputBinding);
-        if (loadContents) {
-          Draft4FileValueHelper.setContents(fileData);
-        }
+        result.add(formFileValue(path, job, outputBinding, outputPort, hashAlgorithm));
       } catch (Exception e) {
         logger.error("Failed to extract outputs", e);
         throw new Draft4GlobException("Failed to extract outputs.", e);
@@ -281,7 +250,61 @@ public class Draft4Processor implements ProtocolProcessor {
     }
     return result;
   }
+  
+  public Map<String, Object> formFileValue(File file, Draft4Job job, Object outputBinding, Draft4OutputPort outputPort, HashAlgorithm hashAlgorithm) throws Draft4ExpressionException, IOException {
+    if (file.isDirectory()) {
+      logger.info("Processing directory {}.", file);
+      
+      Map<String, Object> directory = new HashMap<>();
+      Draft4DirectoryValueHelper.setDirectoryType(directory);
+      Draft4DirectoryValueHelper.setSize(file.length(), directory);
+      Draft4DirectoryValueHelper.setName(file.getName(), directory);
+      Draft4DirectoryValueHelper.setPath(file.getAbsolutePath(), directory);
+      
+      File[] list = file.listFiles();
+      
+      List<Object> listing = new ArrayList<>();
+      for (File subfile : list) {
+        listing.add(formFileValue(subfile, job, outputBinding, outputPort, hashAlgorithm));
+      }
+      Draft4DirectoryValueHelper.setListing(listing, directory);
+      return directory;
+    }
+    
+    logger.info("Processing file {}.", file);
+    Map<String, Object> fileData = new HashMap<>();
+    Draft4FileValueHelper.setFileType(fileData);
+    if (hashAlgorithm != null) {
+      Draft4FileValueHelper.setChecksum(file, fileData, hashAlgorithm);
+    }
+    Draft4FileValueHelper.setSize(file.length(), fileData);
+    Draft4FileValueHelper.setName(file.getName(), fileData);
+    Draft4FileValueHelper.setPath(file.getAbsolutePath(), fileData);
 
+    List<?> secondaryFiles = getSecondaryFiles(job, hashAlgorithm, fileData, file.getAbsolutePath(), outputBinding);
+    if (secondaryFiles != null) {
+      Draft4FileValueHelper.setSecondaryFiles(secondaryFiles, fileData);
+    }
+    Object metadata = Draft4BindingHelper.getMetadata(outputBinding);
+    metadata = metadataService.evaluateMetadataExpressions(job, fileData, metadata);
+    logger.info("Metadata expressions evaluated. Metadata is {}.", metadata);
+    if (metadata != null) {
+      Draft4FileValueHelper.setMetadata(metadata, fileData);
+    }
+    metadata = metadataService.processMetadata(job, fileData, outputPort, outputBinding);
+    if (metadata != null) {
+      logger.info("Metadata for {} resolved. Metadata is {}", outputPort.getId(), metadata);
+      Draft4FileValueHelper.setMetadata(metadata, fileData);
+    } else {
+      logger.info("Metadata for {} output is empty.", outputPort.getId());
+    }
+    boolean loadContents = Draft4BindingHelper.loadContents(outputBinding);
+    if (loadContents) {
+      Draft4FileValueHelper.setContents(fileData);
+    }
+    return fileData;
+  }
+  
   /**
    * Gets secondary files (absolute paths)
    */

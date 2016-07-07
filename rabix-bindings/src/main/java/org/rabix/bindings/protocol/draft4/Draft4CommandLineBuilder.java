@@ -12,12 +12,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolCommandLineBuilder;
 import org.rabix.bindings.model.Job;
+import org.rabix.bindings.protocol.draft3.helper.Draft3SchemaHelper;
 import org.rabix.bindings.protocol.draft4.bean.Draft4CommandLineTool;
 import org.rabix.bindings.protocol.draft4.bean.Draft4InputPort;
 import org.rabix.bindings.protocol.draft4.bean.Draft4Job;
 import org.rabix.bindings.protocol.draft4.expression.Draft4ExpressionException;
 import org.rabix.bindings.protocol.draft4.expression.Draft4ExpressionResolver;
 import org.rabix.bindings.protocol.draft4.helper.Draft4BindingHelper;
+import org.rabix.bindings.protocol.draft4.helper.Draft4DirectoryValueHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4FileValueHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4JobHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4SchemaHelper;
@@ -198,6 +200,11 @@ public class Draft4CommandLineBuilder implements ProtocolCommandLineBuilder {
     boolean isFile = Draft4SchemaHelper.isFileFromValue(value);
     if (isFile) {
       value = Draft4FileValueHelper.getPath(value);
+    }
+    
+    boolean isDirectory = Draft3SchemaHelper.isDirectoryFromValue(value);
+    if (isDirectory) {
+      value = Draft4DirectoryValueHelper.getPath(value);
     }
 
     if (value == null) {

@@ -29,6 +29,7 @@ public class Draft4SchemaHelper extends Draft4BeanHelper {
   public static final String KEY_JOB_TYPE = "class";
   
   public static final String TYPE_JOB_FILE = "File";
+  public static final String TYPE_JOB_DIRECTORY = "Directory";
   public static final String TYPE_JOB_EXPRESSION = "Expression";
   public static final String TYPE_JOB_ARRAY = "array";
   public static final String TYPE_JOB_RECORD = "record";
@@ -38,7 +39,7 @@ public class Draft4SchemaHelper extends Draft4BeanHelper {
   
   public static final String OPTIONAL_SHORTENED = "?";
   public static final String ARRAY_SHORTENED = "[]";
-  
+
   public static String normalizeId(String id) {
     if (id == null) {
       return null;
@@ -83,6 +84,10 @@ public class Draft4SchemaHelper extends Draft4BeanHelper {
   
   public static boolean isFileFromSchema(Object schema) {
     return isTypeFromSchema(schema, TYPE_JOB_FILE);
+  }
+  
+  public static boolean isDirectoryFromSchema(Object schema) {
+    return isTypeFromSchema(schema, TYPE_JOB_DIRECTORY);
   }
 
   public static boolean isArrayFromSchema(Object schema) {
