@@ -8,11 +8,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.rabix.bindings.BindingException;
+import org.rabix.bindings.Bindings;
+import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.bindings.model.dag.DAGLinkPort;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.common.helper.CloneHelper;
@@ -41,21 +45,55 @@ public class JobHelper {
 
     if (!jobRecords.isEmpty()) {
       for (JobRecord job : jobRecords) {
-        jobs.add(createJob(job, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB));
+        jobs.add(createJob(job, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId));
       }
     }
     return jobs;
   }
   
-  public static Job createJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
+  public static Job createJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB, String contextId) {
     DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
+    Map<String, Object> preprocesedInputs = new HashMap<>();
+    Map<String, Object> inputs = new HashMap<>();
+    List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, contextId);
+    
+    for (VariableRecord inputVariable : inputVariables) {
+    	preprocesedInputs.put(inputVariable.getPortId(), inputVariable.getValue());
+    }
+    
+    ContextRecord contextRecord = contextRecordService.find(job.getRootId());
+    Context context = new Context(job.getRootId(), contextRecord.getConfig());
+    String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
+    Job newJob = new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, JobStatus.READY, preprocesedInputs, null, context, null);
+    
+    try {
+          Bindings bindings = BindingsFactory.create(encodedApp);
+          
+          
+          for (VariableRecord inputVariable : inputVariables) {
+            Object value = inputVariable.getValue();
+            for (DAGLinkPort port: node.getInputPorts()) {
+              if(port.getId() == inputVariable.getPortId()) {
+                if (port.getTransform() != null) {
+                  Object transform = port.getTransform();
+                  
+                  if(transform != null) {
+                    value = bindings.transformInputs(value, newJob, transform);
+                  }
+                }
+              }
+            }
+          inputs.put(inputVariable.getPortId(), value);
+    	} 
+    } catch (BindingException e) {
+    	e.printStackTrace();
+    }
+    
     boolean autoBoxingEnabled = true;   // get from configuration
     
     StringBuilder inputsLogBuilder = new StringBuilder("\n ---- JobRecord ").append(job.getId()).append("\n");
     
-    Map<String, Object> inputs = new HashMap<>();
-    List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
     for (VariableRecord inputVariable : inputVariables) {
       Object value = CloneHelper.deepCopy(inputVariable.getValue());
       ApplicationPort port = node.getApp().getInput(inputVariable.getPortId());
@@ -65,15 +103,16 @@ public class JobHelper {
           transformed.add(value);
           value = transformed;
         }
+
       }
       inputsLogBuilder.append(" ---- Input ").append(inputVariable.getPortId()).append(", value ").append(value).append("\n");
       inputs.put(inputVariable.getPortId(), value);
     }
     logger.debug(inputsLogBuilder.toString());
     
-    ContextRecord contextRecord = contextRecordService.find(job.getRootId());
-    Context context = new Context(job.getRootId(), contextRecord.getConfig());
-    String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
+//    ContextRecord contextRecord = contextRecordService.find(job.getRootId());
+//    Context context = new Context(job.getRootId(), contextRecord.getConfig());
+//    String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
     return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, context, null);
   }
   

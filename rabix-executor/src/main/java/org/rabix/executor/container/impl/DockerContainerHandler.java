@@ -139,8 +139,21 @@ public class DockerContainerHandler implements ContainerHandler {
 
       File commandLineFile = new File(workingDir, COMMAND_FILE);
       FileUtils.writeStringToFile(commandLineFile, commandLine);
-      builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
-
+      
+      if(commandLine.startsWith("/bin/bash -c")) {
+        commandLine = commandLine.replace("/bin/bash -c", "");
+        builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("/bin/bash", "-c", commandLine);
+      }
+      else if (commandLine.startsWith("/bin/sh -c")) {
+        commandLine = commandLine.replace("/bin/sh -c", "");
+        builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("/bin/sh", "-c", commandLine);
+      }
+      else {
+        builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("/bin/bash", "-c", commandLine);
+      }
+      
+      
+      
       List<Requirement> combinedRequirements = new ArrayList<>();
       combinedRequirements.addAll(bindings.getHints(job));
       combinedRequirements.addAll(bindings.getRequirements(job));

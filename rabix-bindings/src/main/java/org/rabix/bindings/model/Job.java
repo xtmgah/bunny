@@ -46,7 +46,7 @@ public class Job {
   private final Map<String, Object> outputs;
   @JsonProperty("resources")
   private final Resources resources;
-  
+    
   public Job(String app, Map<String, Object> inputs) {
     this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null);
   }

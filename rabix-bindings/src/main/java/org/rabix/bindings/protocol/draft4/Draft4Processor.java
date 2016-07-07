@@ -352,4 +352,18 @@ public class Draft4Processor implements ProtocolProcessor {
     return secondaryFileMaps;
   }
 
+  @Override
+  public Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize,
+      HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize)
+          throws BindingException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Object transformInputs(Object value, Job job, Object transform) throws BindingException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
 }

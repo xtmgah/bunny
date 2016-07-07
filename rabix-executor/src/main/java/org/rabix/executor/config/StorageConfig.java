@@ -87,7 +87,6 @@ public class StorageConfig {
     if (backendStore == null || backendStore.isEmpty()) {
       backendStore = BackendStore.LOCAL.name();
     }
-    
     for (BackendStore backendStoreEnum : BackendStore.values()) {
       if (backendStore.trim().equalsIgnoreCase(backendStoreEnum.name())) {
         return backendStoreEnum;

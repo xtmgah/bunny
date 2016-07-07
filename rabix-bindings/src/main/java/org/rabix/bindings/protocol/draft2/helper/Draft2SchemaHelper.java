@@ -12,29 +12,29 @@ import com.google.common.base.Preconditions;
 public class Draft2SchemaHelper extends Draft2BeanHelper {
 
   public static final String MASTER_JOB_ID = "root";
-  
+
   public static final String ID_START = "#";
   public static final String ID_SEPARATOR = "/";
   public static final String PORT_ID_SEPARATOR = ".";
 
   public static final String STEP_PORT_ID = "id";
-  
+
   public static final String KEY_SCHEMA_TYPE = "type";
   public static final String KEY_SCHEMA_NAME = "name";
   public static final String KEY_SCHEMA_ITEMS = "items";
   public static final String KEY_INPUT_BINDING_ADAPTER = "inputBinding";
   public static final String KEY_OUTPUT_BINDING_ADAPTER = "outputBinding";
   public static final String KEY_SCHEMA_FIELDS = "fields";
-  
+
   public static final String KEY_JOB_TYPE = "class";
-  
+
   public static final String TYPE_JOB_FILE = "File";
   public static final String TYPE_JOB_EXPRESSION = "Expression";
   public static final String TYPE_JOB_ARRAY = "array";
   public static final String TYPE_JOB_RECORD = "record";
-  
+
   public static final String SCHEMA_NULL = "null";
-  
+
   public static final String OPTIONAL_SHORTENED = "?";
   public static final String ARRAY_SHORTENED = "[]";
   
@@ -44,14 +44,14 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
     }
     return id.startsWith(ID_START) ? id.substring(1) : id;
   }
-  
+
   public static String denormalizeId(String id) {
     if (id == null) {
       return null;
     }
     return id.startsWith(ID_START) ? id : ID_START + id;
   }
-  
+
   public static Object getFields(Object raw) {
     return getValue(KEY_SCHEMA_FIELDS, raw);
   }

@@ -14,9 +14,9 @@ import org.rabix.bindings.protocol.draft3.processor.callback.Draft3PortProcessor
 public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
 
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
-    Draft3Job draft2Job = Draft3JobHelper.getDraft3Job(job);
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
     try {
-      return new Draft3PortProcessorHelper(draft2Job).flattenInputFiles(job.getInputs());
+      return new Draft3PortProcessorHelper(draft3Job).flattenInputFiles(job.getInputs());
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);
     }
