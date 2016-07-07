@@ -22,9 +22,9 @@ public class FileConfig {
   }
 
   public static boolean setFilename(Configuration configuration) {
-    if (configuration.getString(BUNNY_CONFORMANCE) != null) {
-      return false;
-    }
+//    if (configuration.getString(BUNNY_CONFORMANCE) != null) {
+//      return false;
+//    }
     return configuration.getBoolean(SET_FILENAME, true);
   }
 

@@ -61,10 +61,10 @@ public class StorageConfig {
   }
   
   public static BackendStore getBackendStore(Configuration configuration) {
-    Boolean conformance = configuration.getString(FileConfig.BUNNY_CONFORMANCE) != null;
-    if(conformance) {
-      return BackendStore.CONFORMANCE;
-    }
+//    Boolean conformance = configuration.getString(FileConfig.BUNNY_CONFORMANCE) != null;
+//    if(conformance) {
+//      return BackendStore.CONFORMANCE;
+//    }
     String backendStore = configuration.getString("backend.store");
     if (backendStore == null || backendStore.isEmpty()) {
       backendStore = BackendStore.LOCAL.name();

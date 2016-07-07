@@ -262,9 +262,15 @@ public class BackendCommandLine {
         }
         Map<String, Object> draft2Result = new HashMap<>();
         draft2Result.put("args", commandLineToString(draft2CommandLineParts));
-        draft2Result.put("stdin", draft2Stdin);
-        draft2Result.put("stdout", draft2Stdout);
-        draft2Result.put("createfiles", draft2CreatedFiles);
+        if(draft2Stdin != null) {
+          draft2Result.put("stdin", draft2Stdin);
+        }
+        if(draft2Stdout != null) {
+          draft2Result.put("stdout", draft2Stdout);
+        }
+        if(draft2CreatedFiles != null) {
+          draft2Result.put("createfiles", draft2CreatedFiles);
+        }
         return draft2Result;
       } catch (Draft2ExpressionException e) {
         throw new BindingException(e);
@@ -309,9 +315,15 @@ public class BackendCommandLine {
         }
         Map<String, Object> result = new HashMap<>();
         result.put("args", commandLineToString(draft3CommandLineParts));
-        result.put("stdin", draft3Stdin);
-        result.put("stdout", draft3Stdout);
-        result.put("createfiles", draft3CreatedFiles);
+        if(draft3Stdin != null) {
+          result.put("stdin", draft3Stdin);
+        }
+        if(draft3Stdout != null) {
+          result.put("stdout", draft3Stdout);
+        }
+        if(draft3CreatedFiles != null) {
+          result.put("createfiles", draft3CreatedFiles);
+        }
         return result;
       } catch (Draft3ExpressionException e) {
         throw new BindingException(e);
