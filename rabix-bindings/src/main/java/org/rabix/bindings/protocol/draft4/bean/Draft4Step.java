@@ -1,16 +1,26 @@
 package org.rabix.bindings.protocol.draft4.bean;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.protocol.draft4.helper.Draft4BindingHelper;
 import org.rabix.bindings.protocol.draft4.helper.Draft4SchemaHelper;
+import org.rabix.common.helper.JSONHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Draft4Step {
@@ -22,9 +32,11 @@ public class Draft4Step {
   private Draft4JobApp app;
 
   @JsonProperty("inputs")
+  @JsonDeserialize(using = StepPortsDeserializer.class)
   private List<Map<String, Object>> inputs;
 
   @JsonProperty("outputs")
+  @JsonDeserialize(using = StepPortsDeserializer.class)
   private List<Map<String, Object>> outputs;
 
   @JsonProperty("scatter")
@@ -176,11 +188,37 @@ public class Draft4Step {
       return false;
     return true;
   }
+  
+  /**
+   * Custom deserializer that deserializes Maps of ports into Lists of ports 
+   */
+  private static class StepPortsDeserializer extends JsonDeserializer<List<Map<String, Object>>> {
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+      JsonNode node = p.getCodec().readTree(p);
+      
+      if (node.isArray()) {
+        return (List<Map<String, Object>>) JSONHelper.transform(node);
+      } else if (node.isObject()) {
+        List<Map<String, Object>> inputs = new ArrayList<>();
+        
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        while (iterator.hasNext()) {
+          Map.Entry<String, JsonNode> subnodeEntry = iterator.next();
+          Map<String, Object> map = JSONHelper.readMap(subnodeEntry.getValue());
+          map.put(Draft4SchemaHelper.STEP_PORT_ID, subnodeEntry.getKey());
+          inputs.add(map);
+          return inputs;
+        }
+      }
+      return null;
+    }
+  }
 
   @Override
   public String toString() {
-    return "Draft4Step [id=" + id + ", app=" + app + ", inputs=" + inputs + ", outputs=" + outputs + ", scatter="
-        + scatter + ", scatterMethod=" + scatterMethod + ", job=" + job + "]";
+    return "Draft4Step [id=" + id + ", app=" + app + ", inputs=" + inputs + ", outputs=" + outputs + ", scatter=" + scatter + ", scatterMethod=" + scatterMethod + ", job=" + job + "]";
   }
 
 }

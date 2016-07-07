@@ -58,7 +58,7 @@ public class Draft4Bindings implements Bindings {
   public Application loadAppObject(String uri) throws BindingException {
     Draft4JobApp application = (Draft4JobApp) appProcessor.loadAppObject(uri);
     if (!Draft4JobApp.DRAFT_4_VERSION.equals(application.getCwlVersion())) {
-      throw new BindingException(uri + " is not an CWL Draft-3 application");
+      throw new BindingException(uri + " is not an CWL Draft-4 application");
     }
     return application;
   }
