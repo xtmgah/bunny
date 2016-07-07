@@ -38,7 +38,7 @@ public class Draft4Bindings implements Bindings {
   private final ProtocolRequirementProvider requirementProvider;
   
   public Draft4Bindings() throws BindingException {
-    this.protocolType = ProtocolType.DRAFT3;
+    this.protocolType = ProtocolType.DRAFT4;
     this.filePathMapper = new Draft4FilePathMapper();
     this.processor = new Draft4Processor();
     this.commandLineBuilder = new Draft4CommandLineBuilder();

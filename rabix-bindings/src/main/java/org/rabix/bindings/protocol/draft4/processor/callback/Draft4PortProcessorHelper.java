@@ -13,8 +13,8 @@ public class Draft4PortProcessorHelper {
 
   private final Draft4PortProcessor portProcessor;
 
-  public Draft4PortProcessorHelper(Draft4Job draft3Job) {
-    this.portProcessor = new Draft4PortProcessor(draft3Job);
+  public Draft4PortProcessorHelper(Draft4Job draft4Job) {
+    this.portProcessor = new Draft4PortProcessor(draft4Job);
   }
 
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft4PortProcessorException {

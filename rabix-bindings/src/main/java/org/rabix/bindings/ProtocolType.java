@@ -5,8 +5,9 @@ import org.rabix.bindings.protocol.draft3.Draft3Bindings;
 import org.rabix.bindings.protocol.zero.ZeroBindings;
 
 public enum ProtocolType {
-  DRAFT2(Draft2Bindings.class, 2),
-  DRAFT3(Draft3Bindings.class, 1),
+  DRAFT2(Draft2Bindings.class, 3),
+  DRAFT3(Draft3Bindings.class, 2),
+  DRAFT4(Draft3Bindings.class, 1),
   ZERO(ZeroBindings.class, 0);
 
   public final int order;

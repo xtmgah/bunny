@@ -32,14 +32,14 @@ import org.rabix.bindings.protocol.draft4.helper.Draft4SchemaHelper;
 
 public class Draft4RequirementProvider implements ProtocolRequirementProvider {
 
-  private DockerContainerRequirement getDockerRequirement(Draft4DockerResource draft3DockerResource) {
-    if (draft3DockerResource == null) {
+  private DockerContainerRequirement getDockerRequirement(Draft4DockerResource draft4DockerResource) {
+    if (draft4DockerResource == null) {
       return null;
     }
-    return new DockerContainerRequirement(draft3DockerResource.getDockerPull(), draft3DockerResource.getImageId());
+    return new DockerContainerRequirement(draft4DockerResource.getDockerPull(), draft4DockerResource.getImageId());
   }
 
-  private EnvironmentVariableRequirement getEnvironmentVariableRequirement(Draft4Job draft3Job,
+  private EnvironmentVariableRequirement getEnvironmentVariableRequirement(Draft4Job draft4Job,
       Draft4EnvVarRequirement envVarRequirement) throws BindingException {
     if (envVarRequirement == null) {
       return null;
@@ -55,7 +55,7 @@ public class Draft4RequirementProvider implements ProtocolRequirementProvider {
       Object value = envDef.getValue();
 
       try {
-        value = Draft4ExpressionResolver.resolve(value, draft3Job, null);
+        value = Draft4ExpressionResolver.resolve(value, draft4Job, null);
       } catch (Draft4ExpressionException e) {
         throw new BindingException(e);
       }
@@ -68,7 +68,7 @@ public class Draft4RequirementProvider implements ProtocolRequirementProvider {
 
   }
 
-  private FileRequirement getFileRequirement(Draft4Job draft3Job, Draft4CreateFileRequirement createFileRequirement)
+  private FileRequirement getFileRequirement(Draft4Job draft4Job, Draft4CreateFileRequirement createFileRequirement)
       throws BindingException {
     if (createFileRequirement == null) {
       return null;
@@ -83,9 +83,9 @@ public class Draft4RequirementProvider implements ProtocolRequirementProvider {
     List<SingleFileRequirement> result = new ArrayList<>();
     for (Draft4CreateFileRequirement.Draft4FileRequirement fileRequirement : fileRequirements) {
       try {
-        String filename = (String) fileRequirement.getFilename(draft3Job);
+        String filename = (String) fileRequirement.getFilename(draft4Job);
 
-        Object content = fileRequirement.getContent(draft3Job);
+        Object content = fileRequirement.getContent(draft4Job);
 
         if (Draft4SchemaHelper.isFileFromValue(content)) {
           FileValue fileValue = Draft4FileValueHelper.createFileValue(content);
@@ -102,36 +102,36 @@ public class Draft4RequirementProvider implements ProtocolRequirementProvider {
 
   @Override
   public List<Requirement> getRequirements(Job job) throws BindingException {
-    Draft4Job draft3Job = Draft4JobHelper.getDraft4Job(job);
-    Draft4JobApp draft3JobApp = draft3Job.getApp();
-    return convertRequirements(job, draft3JobApp.getRequirements());
+    Draft4Job draft4Job = Draft4JobHelper.getDraft4Job(job);
+    Draft4JobApp draft4JobApp = draft4Job.getApp();
+    return convertRequirements(job, draft4JobApp.getRequirements());
   }
 
   @Override
   public List<Requirement> getHints(Job job) throws BindingException {
-    Draft4Job draft3Job = Draft4JobHelper.getDraft4Job(job);
-    Draft4JobApp draft3JobApp = draft3Job.getApp();
-    return convertRequirements(job, draft3JobApp.getHints());
+    Draft4Job draft4Job = Draft4JobHelper.getDraft4Job(job);
+    Draft4JobApp draft4JobApp = draft4Job.getApp();
+    return convertRequirements(job, draft4JobApp.getHints());
   }
 
   private List<Requirement> convertRequirements(Job job, List<Draft4Resource> resources) throws BindingException {
     if (resources == null) {
       return Collections.<Requirement> emptyList();
     }
-    Draft4Job draft3Job = Draft4JobHelper.getDraft4Job(job);
+    Draft4Job draft4Job = Draft4JobHelper.getDraft4Job(job);
 
     List<Requirement> result = new ArrayList<>();
-    for (Draft4Resource draft3Resource : resources) {
-      if (draft3Resource instanceof Draft4DockerResource) {
-        result.add(getDockerRequirement((Draft4DockerResource) draft3Resource));
+    for (Draft4Resource draft4Resource : resources) {
+      if (draft4Resource instanceof Draft4DockerResource) {
+        result.add(getDockerRequirement((Draft4DockerResource) draft4Resource));
         continue;
       }
-      if (draft3Resource instanceof Draft4EnvVarRequirement) {
-        result.add(getEnvironmentVariableRequirement(draft3Job, (Draft4EnvVarRequirement) draft3Resource));
+      if (draft4Resource instanceof Draft4EnvVarRequirement) {
+        result.add(getEnvironmentVariableRequirement(draft4Job, (Draft4EnvVarRequirement) draft4Resource));
         continue;
       }
-      if (draft3Resource instanceof Draft4CreateFileRequirement) {
-        result.add(getFileRequirement(draft3Job, (Draft4CreateFileRequirement) draft3Resource));
+      if (draft4Resource instanceof Draft4CreateFileRequirement) {
+        result.add(getFileRequirement(draft4Job, (Draft4CreateFileRequirement) draft4Resource));
         continue;
       }
     }
@@ -140,15 +140,15 @@ public class Draft4RequirementProvider implements ProtocolRequirementProvider {
 
   @Override
   public ResourceRequirement getResourceRequirement(Job job) throws BindingException {
-    Draft4Job draft3Job = Draft4JobHelper.getDraft4Job(job);
+    Draft4Job draft4Job = Draft4JobHelper.getDraft4Job(job);
     
-    Draft4ResourceRequirement draft3ResourceRequirement = draft3Job.getApp().getResourceRequirement();
+    Draft4ResourceRequirement draft4ResourceRequirement = draft4Job.getApp().getResourceRequirement();
 
-    if (draft3ResourceRequirement == null) {
+    if (draft4ResourceRequirement == null) {
       return null;
     }
     try {
-      return new ResourceRequirement(draft3ResourceRequirement.getCoresMin(draft3Job), null, draft3ResourceRequirement.getRamMin(draft3Job), null, null, null, null);
+      return new ResourceRequirement(draft4ResourceRequirement.getCoresMin(draft4Job), null, draft4ResourceRequirement.getRamMin(draft4Job), null, null, null, null);
     } catch (Draft4ExpressionException e) {
       throw new BindingException(e);
     }

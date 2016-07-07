@@ -27,8 +27,8 @@ public class Draft4Translator implements ProtocolTranslator {
 
   @Override
   public DAGNode translateToDAG(Job job) throws BindingException {
-    Draft4Job draft3Job = Draft4JobHelper.getDraft4Job(job);
-    DAGNode dagNode = processBatchInfo(draft3Job, transformToGeneric(draft3Job.getId(), draft3Job));
+    Draft4Job draft4Job = Draft4JobHelper.getDraft4Job(job);
+    DAGNode dagNode = processBatchInfo(draft4Job, transformToGeneric(draft4Job.getId(), draft4Job));
     DAGValidationHelper.detectLoop(dagNode);
     processPorts(dagNode);
     return dagNode;

@@ -1,12 +1,12 @@
 package org.rabix.bindings.protocol.draft4;
 
-import org.rabix.bindings.protocol.draft3.helper.Draft3SchemaHelper;
+import org.rabix.bindings.protocol.draft4.helper.Draft4SchemaHelper;
 
 public class Draft2ToDraft4Converter {
 
   public static String convertStepID(String id) {
     if (id.startsWith("#")) {
-      return Draft3SchemaHelper.getLastInputId(id.substring(1));
+      return Draft4SchemaHelper.getLastInputId(id.substring(1));
     }
     return id;
   }
@@ -23,6 +23,6 @@ public class Draft2ToDraft4Converter {
   }
 
   public static String convertDestinationId(String destination) {
-    return Draft3SchemaHelper.getLastInputId(destination);
+    return Draft4SchemaHelper.getLastInputId(destination);
   }
 }
