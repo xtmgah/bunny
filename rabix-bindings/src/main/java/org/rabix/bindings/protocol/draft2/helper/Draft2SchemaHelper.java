@@ -35,6 +35,9 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   
   public static final String SCHEMA_NULL = "null";
   
+  public static final String OPTIONAL_SHORTENED = "?";
+  public static final String ARRAY_SHORTENED = "[]";
+  
   public static String normalizeId(String id) {
     if (id == null) {
       return null;
@@ -53,8 +56,12 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
     return getValue(KEY_SCHEMA_FIELDS, raw);
   }
   
-  public static Object getItems(Object raw) {
-    return getValue(KEY_SCHEMA_ITEMS, raw);
+  public static Object getItems(Object schema) {
+    String shortenedSchema = getArrayShortenedType(schema);
+    if (shortenedSchema != null) {
+      return shortenedSchema;
+    }
+    return getValue(KEY_SCHEMA_ITEMS, schema);
   }
   
   public static String getName(Object raw) {
@@ -78,7 +85,37 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   }
 
   public static boolean isArrayFromSchema(Object schema) {
+    String shortenedSchema = getArrayShortenedType(schema);
+    if (shortenedSchema != null) {
+      return true;
+    }
     return isTypeFromSchema(schema, TYPE_JOB_ARRAY);
+  }
+
+  private static String getOptionalShortenedType(Object schema) {
+    if (!(schema instanceof String)) {
+      return null;
+    }
+    String schemaStr = ((String) schema).trim();
+    if (schemaStr.endsWith(OPTIONAL_SHORTENED)) {
+      return schemaStr.substring(0, schemaStr.length() - 1);
+    }
+    return null;
+  }
+  
+  private static String getArrayShortenedType(Object schema) {
+    if (!(schema instanceof String)) {
+      return null;
+    }
+    String schemaStr = ((String) schema).trim();
+    String optionalShortenedType = getOptionalShortenedType(schemaStr);
+    if (optionalShortenedType != null) {
+      schemaStr = optionalShortenedType;
+    }
+    if (schemaStr.endsWith(ARRAY_SHORTENED)) {
+      return schemaStr.substring(0, schemaStr.length() - ARRAY_SHORTENED.length());
+    }
+    return null;
   }
 
   public static boolean isRecordFromSchema(Object schema) {
@@ -87,6 +124,10 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   
   @SuppressWarnings("unchecked")
   public static boolean isRequired(Object schema) {
+    String shortenedSchema = getOptionalShortenedType(schema);
+    if (shortenedSchema != null) {
+      return false;
+    }
     try {
       Object clonedSchema = CloneHelper.deepCopy(schema);
       while (clonedSchema instanceof Map<?, ?> && ((Map<?, ?>) clonedSchema).containsKey("type")) {
@@ -229,6 +270,15 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   
   @SuppressWarnings("unchecked")
   public static Object getSchemaForArrayItem(List<Map<String, Object>> schemaDefs, Object arraySchema) {
+    String shortenedSchema = getArrayShortenedType(arraySchema);
+    if (shortenedSchema != null) {
+      Object shortenedSchemaObj = findSchema(schemaDefs, shortenedSchema);
+      if (shortenedSchemaObj != null) {
+        return shortenedSchemaObj;
+      }
+      return shortenedSchema;
+    }
+    
     if (arraySchema == null) {
       return null;
     }

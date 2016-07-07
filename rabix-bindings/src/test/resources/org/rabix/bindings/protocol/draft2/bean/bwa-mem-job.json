@@ -86,12 +86,7 @@
 
 			{
 				"id": "#reads",
-				"type": 
-				{
-					"type": "array",
-					"items": "File"
-				},
-
+				"type": "File",
 				"inputBinding": 
 				{
 					"position": 3
