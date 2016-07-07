@@ -38,12 +38,12 @@ public interface Application {
   public static class ApplicationDeserializer extends JsonDeserializer<Application> {
     @Override
     public Application deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-      JsonNode tree = p.getCodec().readTree(p);
-      String appUrl = URIHelper.createDataURI(JSONHelper.writeObject(tree));
+      JsonNode node = p.getCodec().readTree(p);
+      String appUrl = URIHelper.createDataURI(JSONHelper.writeObject(node));
       try {
         return BindingsFactory.create(appUrl).loadAppObject(appUrl);
       } catch (BindingException e) {
-        throw new IOException("Failed to deserialize Application " + tree);
+        throw new IOException("Failed to deserialize Application " + node);
       }
     }
   }

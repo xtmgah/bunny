@@ -7,6 +7,8 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.model.Application;
 import org.rabix.bindings.model.ApplicationPort;
+import org.rabix.bindings.protocol.draft4.bean.Draft4InputPort.Draft4InputPortListDeserializer;
+import org.rabix.bindings.protocol.draft4.bean.Draft4OutputPort.Draft4OutputPortListDeserializer;
 import org.rabix.bindings.protocol.draft4.bean.resource.Draft4Resource;
 import org.rabix.bindings.protocol.draft4.bean.resource.Draft4ResourceType;
 import org.rabix.bindings.protocol.draft4.bean.resource.requirement.Draft4CreateFileRequirement;
@@ -26,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class", defaultImpl = Draft4EmbeddedApp.class)
 @JsonSubTypes({ 
@@ -55,8 +58,10 @@ public abstract class Draft4JobApp implements Application {
   protected List<String> owner = new ArrayList<>();
 
   @JsonProperty("inputs")
+  @JsonDeserialize(using = Draft4InputPortListDeserializer.class)
   protected List<Draft4InputPort> inputs = new ArrayList<>();
   @JsonProperty("outputs")
+  @JsonDeserialize(using = Draft4OutputPortListDeserializer.class)
   protected List<Draft4OutputPort> outputs = new ArrayList<>();
 
   @JsonProperty("hints")
@@ -322,9 +327,7 @@ public abstract class Draft4JobApp implements Application {
 
   @Override
   public String toString() {
-    return "JobApp [id=" + id + ", context=" + context + ", description=" + description + ", label=" + label
-        + ", contributor=" + contributor + ", owner=" + owner + ", hints=" + hints + ", inputs=" + inputs + ", outputs="
-        + outputs + ", requirements=" + requirements + "]";
+    return "JobApp [id=" + id + ", context=" + context + ", description=" + description + ", label=" + label + ", contributor=" + contributor + ", owner=" + owner + ", hints=" + hints + ", inputs=" + inputs + ", outputs=" + outputs + ", requirements=" + requirements + "]";
   }
 
 }
