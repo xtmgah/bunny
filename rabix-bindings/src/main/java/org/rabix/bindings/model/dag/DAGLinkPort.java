@@ -13,15 +13,19 @@ public class DAGLinkPort {
   private final String dagNodeId;
   private final LinkPortType type;
   private boolean scatter;
+  private Object defaultValue;
+  private Object transform;
   
   private LinkMerge linkMerge;
     
-  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, LinkMerge linkMerge, boolean scatter) {
+  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, LinkMerge linkMerge, boolean scatter, Object defaultValue, Object transform) {
     this.id = id;
     this.type = type;
     this.scatter = scatter;
     this.linkMerge = linkMerge;
     this.dagNodeId = dagNodeId;
+    this.defaultValue = defaultValue;
+    this.transform = transform;
   }
   
   public String getId() {
@@ -50,6 +54,22 @@ public class DAGLinkPort {
   
   public LinkPortType getType() {
     return type;
+  }
+
+  public Object getDefaultValue() {
+    return defaultValue;
+  }
+
+  public void setDefaultValue(Object defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+
+  public Object getTransform() {
+    return transform;
+  }
+
+  public void setTransform(Object transform) {
+    this.transform = transform;
   }
 
   @Override
@@ -83,9 +103,11 @@ public class DAGLinkPort {
     return true;
   }
 
+  
+  
   @Override
   public String toString() {
-    return "DAGLinkPort [id=" + id + ", dagNodeId=" + dagNodeId + ", type=" + type + ", scatter=" + scatter + ", linkMerge=" + linkMerge + "]";
+    return "DAGLinkPort [id=" + id + ", dagNodeId=" + dagNodeId + ", type=" + type + ", scatter=" + scatter + ", default=" + defaultValue + ", transform=" + transform + ", linkMerge=" + linkMerge + "]";
   }
   
 }

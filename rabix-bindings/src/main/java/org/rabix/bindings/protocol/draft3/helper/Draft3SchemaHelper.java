@@ -125,7 +125,7 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
       throw new RuntimeException("Failed to clone schema " + schema);
     }
   }
-  
+
   private static String getOptionalShortenedType(Object schema) {
     if (schema == null) {
       return null;

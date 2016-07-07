@@ -22,6 +22,7 @@ import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.bindings.model.requirement.ResourceRequirement;
 import org.rabix.bindings.protocol.draft4.bean.Draft4JobApp;
+import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 
 public class Draft4Bindings implements Bindings {
 
@@ -140,6 +141,20 @@ public class Draft4Bindings implements Bindings {
   @Override
   public ProtocolType getProtocolType() {
     return protocolType;
+  }
+
+  @Override
+  public Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize,
+      HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize)
+          throws BindingException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Object transformInputs(Object value, Job job, Object transform) throws BindingException {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

@@ -125,8 +125,33 @@ public abstract class Draft2JobApp implements Application {
   public Draft2EnvVarRequirement getEnvVarRequirement() {
     return lookForResource(Draft2ResourceType.ENV_VAR_REQUIREMENT, Draft2EnvVarRequirement.class);
   }
+  
+  public <T extends Draft2Resource> T getRequirement(Draft2ResourceType type, Class<T> clazz) {
+    List<T> resources = getRequirements(type, clazz);
+    if (resources != null && !resources.isEmpty()) {
+      return resources.get(0);
+    }
+    return null;
+  }
+  
+  public <T extends Draft2Resource> T getHint(Draft2ResourceType type, Class<T> clazz) {
+    List<T> resources = getHints(type, clazz);
+    if(resources != null && !resources.isEmpty()) {
+      return resources.get(0);
+    }
+    return null;
+  }
+  
+  public <T> void setHint(Draft2Resource resource) {
+    for (Draft2Resource hint : hints) {
+      if (resource.getType().equals(hint.getType())) {
+        hints.remove(hint);
+        hints.add(resource);
+        break;
+      }
+    }
+  }
 
-  @JsonIgnore
   public Draft2CreateFileRequirement getCreateFileRequirement() {
     return lookForResource(Draft2ResourceType.CREATE_FILE_REQUIREMENT, Draft2CreateFileRequirement.class);
   }

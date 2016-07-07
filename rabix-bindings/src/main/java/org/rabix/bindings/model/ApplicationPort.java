@@ -91,6 +91,5 @@ public abstract class ApplicationPort {
   
   public void setLinkMerge(String linkMerge) {
     this.linkMerge = linkMerge;
-  }
-  
+  } 
 }

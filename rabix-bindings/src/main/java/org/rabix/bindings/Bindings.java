@@ -11,6 +11,7 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.bindings.model.requirement.ResourceRequirement;
+import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 
 public interface Bindings {
 
@@ -25,6 +26,8 @@ public interface Bindings {
   Job preprocess(Job job, File workingDir) throws BindingException;
   
   Job postprocess(Job job, File workingDir) throws BindingException;
+  
+  Job postprocess(Job job, File workingDir, HashAlgorithm hashAlgorithm, boolean setFilename, boolean setSize, HashAlgorithm secondaryFilesHashAlgorithm, boolean secondaryFilesSetFilename, boolean secondaryFilesSetSize) throws BindingException;
 
   String buildCommandLine(Job job) throws BindingException;
 
@@ -45,6 +48,8 @@ public interface Bindings {
   ResourceRequirement getResourceRequirement(Job job) throws BindingException;
   
   DAGNode translateToDAG(Job job) throws BindingException;
+  
+  Object transformInputs(Object value, Job job, Object transform) throws BindingException;
 
   void validate(Job job) throws BindingException;
   
