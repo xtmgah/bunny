@@ -36,6 +36,9 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
   
   public static final String SCHEMA_NULL = "null";
   
+  public static final String OPTIONAL_SHORTENED = "?";
+  public static final String ARRAY_SHORTENED = "[]";
+  
   public static String normalizeId(String id) {
     if (id == null) {
       return null;
@@ -54,8 +57,12 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
     return getValue(KEY_SCHEMA_FIELDS, raw);
   }
   
-  public static Object getItems(Object raw) {
-    return getValue(KEY_SCHEMA_ITEMS, raw);
+  public static Object getItems(Object schema) {
+    String shortenedSchema = getArrayShortenedType(schema);
+    if (shortenedSchema != null) {
+      return shortenedSchema;
+    }
+    return getValue(KEY_SCHEMA_ITEMS, schema);
   }
   
   public static String getName(Object raw) {
@@ -79,6 +86,10 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
   }
 
   public static boolean isArrayFromSchema(Object schema) {
+    String shortenedSchema = getArrayShortenedType(schema);
+    if (shortenedSchema != null) {
+      return true;
+    }
     return isTypeFromSchema(schema, TYPE_JOB_ARRAY);
   }
   
@@ -92,6 +103,10 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
   
   @SuppressWarnings("unchecked")
   public static boolean isRequired(Object schema) {
+    String shortenedSchema = getOptionalShortenedType(schema);
+    if (shortenedSchema != null) {
+      return false;
+    }
     try {
       Object clonedSchema = CloneHelper.deepCopy(schema);
       while (clonedSchema instanceof Map<?, ?> && ((Map<?, ?>) clonedSchema).containsKey("type")) {
@@ -110,6 +125,39 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
       throw new RuntimeException("Failed to clone schema " + schema);
     }
   }
+  
+  private static String getOptionalShortenedType(Object schema) {
+    if (schema == null) {
+      return null;
+    }
+    if (!(schema instanceof String)) {
+      return null;
+    }
+    String schemaStr = ((String) schema).trim();
+    if (schemaStr.endsWith(OPTIONAL_SHORTENED)) {
+      return schemaStr.substring(0, schemaStr.length() - 1);
+    }
+    return null;
+  }
+  
+  private static String getArrayShortenedType(Object schema) {
+    if (schema == null) {
+      return null;
+    }
+    if (!(schema instanceof String)) {
+      return null;
+    }
+    String schemaStr = ((String) schema).trim();
+    String optionalShortenedType = getOptionalShortenedType(schemaStr);
+    if (optionalShortenedType != null) {
+      schemaStr = optionalShortenedType;
+    }
+    if (schemaStr.endsWith(ARRAY_SHORTENED)) {
+      return schemaStr.substring(0, schemaStr.length() - ARRAY_SHORTENED.length());
+    }
+    return null;
+  }
+
   
   @SuppressWarnings("unchecked")
   private static boolean isTypeFromSchema(Object schema, String type) {
@@ -234,6 +282,15 @@ public class Draft3SchemaHelper extends Draft3BeanHelper {
   
   @SuppressWarnings("unchecked")
   public static Object getSchemaForArrayItem(List<Map<String, Object>> schemaDefs, Object arraySchema) {
+    String shortenedSchema = getArrayShortenedType(arraySchema);
+    if (shortenedSchema != null) {
+      Object shortenedSchemaObj = findSchema(schemaDefs, shortenedSchema);
+      if (shortenedSchemaObj != null) {
+        return shortenedSchemaObj;
+      }
+      return shortenedSchema;
+    }
+    
     if (arraySchema == null) {
       return null;
     }

@@ -93,6 +93,9 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   }
 
   private static String getOptionalShortenedType(Object schema) {
+    if (schema == null) {
+      return null;
+    }
     if (!(schema instanceof String)) {
       return null;
     }
@@ -104,6 +107,9 @@ public class Draft2SchemaHelper extends Draft2BeanHelper {
   }
   
   private static String getArrayShortenedType(Object schema) {
+    if (schema == null) {
+      return null;
+    }
     if (!(schema instanceof String)) {
       return null;
     }
