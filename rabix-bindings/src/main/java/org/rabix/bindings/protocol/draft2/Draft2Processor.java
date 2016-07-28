@@ -192,7 +192,7 @@ public class Draft2Processor implements ProtocolProcessor {
       result = Draft2BindingHelper.evaluateOutputEval(job, result, binding);
       logger.info("OutputEval transformed result into {}.", result);
     }
-    if (Draft2SchemaHelper.isFileFromSchema(schema)) {
+    if (Draft2SchemaHelper.isFileFromValue(result)) {
       if (result instanceof List<?>) {
         switch (((List<?>) result).size()) {
         case 0:
