@@ -25,6 +25,7 @@ import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.logging.VerboseLogger;
+import org.rabix.common.retry.Retry;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -53,11 +54,12 @@ import com.spotify.docker.client.messages.HostConfig;
 public class DockerContainerHandler implements ContainerHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(DockerContainerHandler.class);
+  
   private static final String dockerHubServer = "https://index.docker.io/v1/";
 
   public static final String DIRECTORY_MAP_MODE = "rw";
   public static final String COMMAND_FILE = "cmd.log";
-
+  
   private String containerId;
   private DockerClientLockDecorator dockerClient;
 
@@ -327,6 +329,14 @@ public class DockerContainerHandler implements ContainerHandler {
 
   public static class DockerClientLockDecorator {
 
+    public final static int RETRY_TIMES = 5;
+    
+    public final static long SECOND = 1000L;
+    public final static long MINUTE = 60 * SECOND;
+    public final static long METHOD_TIMEOUT = 10 * MINUTE; // maximize time (it's mostly because of big Docker images)
+    public final static long DEFAULT_DOCKER_CLIENT_TIMEOUT = 1000 * SECOND;
+    public final static long SLEEP_TIME = 30 * SECOND;
+    
     private DockerClient dockerClient;
 
     @Inject
@@ -334,30 +344,37 @@ public class DockerContainerHandler implements ContainerHandler {
       this.dockerClient = createDockerClient(configuration);
     }
 
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true, sleepTimeMillis = SLEEP_TIME)
     public synchronized void pull(String image) throws DockerException, InterruptedException {
       dockerClient.pull(image);
     }
     
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true, sleepTimeMillis = SLEEP_TIME)
     public synchronized void pull(String image, AuthConfig authConfig) throws DockerException, InterruptedException {
       dockerClient.pull(image, authConfig);
     }
     
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
     public synchronized ContainerCreation createContainer(ContainerConfig containerConfig) throws DockerException, InterruptedException {
       return dockerClient.createContainer(containerConfig);
     }
     
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
     public synchronized void startContainer(String containerId) throws DockerException, InterruptedException {
       dockerClient.startContainer(containerId);
     }
     
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
     public synchronized void stopContainer(String containerId, int timeToWait) throws DockerException, InterruptedException {
       dockerClient.stopContainer(containerId, timeToWait);
     }
     
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
     public synchronized ContainerInfo inspectContainer(String containerId) throws DockerException, InterruptedException {
       return dockerClient.inspectContainer(containerId);
     }
     
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
     public synchronized LogStream logs(String containerId, LogsParam... params) throws DockerException, InterruptedException {
       return dockerClient.logs(containerId, params);
     }

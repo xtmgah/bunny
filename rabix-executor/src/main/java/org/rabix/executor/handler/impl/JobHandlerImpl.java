@@ -40,7 +40,6 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.DownloadFileService;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.service.impl.LocalMemoizationService;
 import org.rabix.ftp.SimpleFTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,17 +69,14 @@ public class JobHandlerImpl implements JobHandler {
   private ContainerHandler containerHandler;
   private DockerClientLockDecorator dockerClient;
   
-  private LocalMemoizationService localMemoizationService;
-  
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?,?,?> engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient, LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?,?,?> engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient, SimpleFTPClient ftpClient) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
     this.downloadFileService = downloadFileService;
     this.jobDataService = jobDataService;
     this.dockerClient = dockerClient;
-    this.localMemoizationService = localMemoizationService;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
@@ -91,13 +87,6 @@ public class JobHandlerImpl implements JobHandler {
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
-      Map<String, Object> results = localMemoizationService.tryToFindResults(job);
-      if (results != null) {
-        containerHandler = new CompletedContainerHandler(job);
-        containerHandler.start();
-        return;
-      }
-      
       Bindings bindings = BindingsFactory.create(job);
       downloadFileService.download(job, bindings.getInputFiles(job));
 
@@ -180,11 +169,6 @@ public class JobHandlerImpl implements JobHandler {
   public Job postprocess(boolean isTerminal) throws ExecutorException {
     logger.debug("postprocess(id={})", job.getId());
     try {
-      Map<String, Object> results = localMemoizationService.tryToFindResults(job);
-      if (results != null) {
-        job = Job.cloneWithOutputs(job, results);
-        return job;
-      }
       containerHandler.dumpContainerLogs(new File(workingDir, ERROR_LOG));
 
       if (!isSuccessful()) {
