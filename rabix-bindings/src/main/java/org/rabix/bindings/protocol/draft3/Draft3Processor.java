@@ -195,7 +195,7 @@ public class Draft3Processor implements ProtocolProcessor {
       logger.info("OutputEval transformed result into {}.", result);
     }
     if (result instanceof List<?>) {
-      if (Draft3SchemaHelper.isFileFromSchema(schema) || Draft3SchemaHelper.isFileFromValue(((List<?>)result).get(0))) {
+      if (Draft3SchemaHelper.isFileFromSchema(schema)) {
         switch (((List<?>) result).size()) {
         case 0:
           result = null;
