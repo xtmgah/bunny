@@ -82,8 +82,10 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     if (sourceJob.isScatterWrapper()) {
       ScatterStrategy scatterStrategy = sourceJob.getScatterStrategy();
       
+      boolean isValueFromScatterStrategy = false;
       if (scatterStrategy.isBlocking()) {
         if (sourceJob.isOutputPortReady(event.getPortId())) {
+          isValueFromScatterStrategy = true;
           value = scatterStrategy.values(sourceJob.getId(), event.getPortId(), event.getContextId());
         } else {
           return;
@@ -92,6 +94,9 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
       
       List<LinkRecord> links = linkService.findBySource(sourceVariable.getJobId(), sourceVariable.getPortId(), event.getContextId());
       for (LinkRecord link : links) {
+        if (!isValueFromScatterStrategy) {
+          value = null; // reset
+        }
         List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
 
         JobRecord destinationJob = null;
