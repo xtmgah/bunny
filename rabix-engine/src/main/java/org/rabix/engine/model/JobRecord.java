@@ -296,6 +296,28 @@ public class JobRecord {
     this.numberOfGlobalOutputs = numberOfGlobalOutputs;
   }
   
+  public void resetOutputPortCounter(int value, String port) {
+    for (PortCounter pc : outputCounters) {
+      if (pc.port.equals(port)) {
+        int oldValue = pc.globalCounter;
+        if (numberOfGlobalOutputs < value) {
+          numberOfGlobalOutputs = value;
+
+          if (pc.counter == 0) {
+            continue;
+          }
+          if (pc.counter != value) {
+            if (oldValue != 0) {
+              pc.counter = numberOfGlobalOutputs - (oldValue - pc.counter);
+            } else {
+              pc.counter = numberOfGlobalOutputs;
+            }
+          }
+        }
+      }
+    }
+  }
+  
   public void resetOutputPortCounters(int value) {
     logger.info("Reset output port counters for {} to {}", id, value);
     if (numberOfGlobalOutputs == value) {
@@ -370,6 +392,7 @@ public class JobRecord {
     private int incoming;
     
     private int updatedAsSourceCounter = 0;
+    private int globalCounter = 0;
 
     PortCounter(String port, int counter, boolean scatter) {
       this.port = port;
@@ -386,6 +409,10 @@ public class JobRecord {
       this.updatedAsSourceCounter = updatedAsSourceCounter + value;
     }
     
+    public void setGlobalCounter(int globalCounter) {
+      this.globalCounter = globalCounter;
+    }
+    
     public String getPort() {
       return port;
     }
@@ -394,6 +421,10 @@ public class JobRecord {
       this.port = port;
     }
 
+    public int getGlobalCounter() {
+      return globalCounter;
+    }
+    
     public int getCounter() {
       return counter;
     }
