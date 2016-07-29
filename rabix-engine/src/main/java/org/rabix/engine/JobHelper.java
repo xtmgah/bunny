@@ -50,7 +50,7 @@ public class JobHelper {
   public static Job createJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB) {
     DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
 
-    boolean autoBoxingEnabled = true;   // get from configuration
+    boolean autoBoxingEnabled = false;   // get from configuration
     
     StringBuilder inputsLogBuilder = new StringBuilder("\n ---- JobRecord ").append(job.getId()).append("\n");
     
