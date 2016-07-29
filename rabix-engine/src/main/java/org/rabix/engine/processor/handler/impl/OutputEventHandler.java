@@ -124,11 +124,11 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             if (!(destinationJob.getOutputPortIncoming(event.getPortId()) > 1)) {
               value = value != null? value : event.getValue();
               int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
-              if (scatterStrategy.isBlocking() || isValueFromScatterStrategy) {
-                Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, false, 1, 1);
+              if (destinationJob.isScatterWrapper()) {
+                Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
                 eventProcessor.send(updateOutputEvent);
               } else {
-                Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
+                Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, false, 1, 1);
                 eventProcessor.send(updateOutputEvent);
               }
             } else {
