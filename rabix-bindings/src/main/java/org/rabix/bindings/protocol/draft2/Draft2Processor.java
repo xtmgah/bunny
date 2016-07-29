@@ -192,8 +192,20 @@ public class Draft2Processor implements ProtocolProcessor {
       result = Draft2BindingHelper.evaluateOutputEval(job, result, binding);
       logger.info("OutputEval transformed result into {}.", result);
     }
-    if (Draft2SchemaHelper.isFileFromValue(result)) {
-      if (result instanceof List<?>) {
+    if (Draft2SchemaHelper.isFileFromSchema(schema) || Draft2SchemaHelper.isFileFromValue(((List<?>)result).get(0))) {
+      switch (((List<?>) result).size()) {
+      case 0:
+        result = null;
+        break;
+      case 1:
+        result = ((List<?>) result).get(0);
+        break;
+      default:
+        throw new BindingException("Invalid file format " + result);
+      }
+    }
+    if (result instanceof List<?>) {
+      if (Draft2SchemaHelper.isFileFromSchema(schema) || Draft2SchemaHelper.isFileFromValue(((List<?>)result).get(0))) {
         switch (((List<?>) result).size()) {
         case 0:
           result = null;
