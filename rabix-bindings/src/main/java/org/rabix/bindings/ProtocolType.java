@@ -1,18 +1,14 @@
 package org.rabix.bindings;
 
-import org.rabix.bindings.protocol.draft2.Draft2Bindings;
-import org.rabix.bindings.protocol.draft3.Draft3Bindings;
-import org.rabix.bindings.protocol.zero.ZeroBindings;
 
 public enum ProtocolType {
-  DRAFT2(Draft2Bindings.class, 2),
-  DRAFT3(Draft3Bindings.class, 1),
-  ZERO(ZeroBindings.class, 0);
+  DRAFT2("org.rabix.bindings.draft2.Draft2Bindings", 2),
+  DRAFT3("org.rabix.bindings.protocol.draft3.Draft3Bindings", 1);
 
   public final int order;
-  public final Class<? extends Bindings> bindingsClass;
+  public final String bindingsClass;
 
-  private ProtocolType(Class<? extends Bindings> bindingsClass, int order) {
+  private ProtocolType(String bindingsClass, int order) {
     this.order = order;
     this.bindingsClass = bindingsClass;
   }

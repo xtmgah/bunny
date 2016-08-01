@@ -22,7 +22,11 @@ public class BindingsFactory {
   static {
     try {
       for (ProtocolType type : ProtocolType.values()) {
-        bindings.add(type.bindingsClass.newInstance());
+        Class<?> clazz = Class.forName(type.bindingsClass);
+        if (clazz == null) {
+          continue;
+        }
+        bindings.add((Bindings) clazz.newInstance());
       }
     } catch (Exception e) {
       logger.error("Failed to initialize bindings", e);
