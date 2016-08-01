@@ -40,6 +40,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
+			<artifactId>rabix-bindings-draft3</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.rabix</groupId>
 			<artifactId>rabix-ftp</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

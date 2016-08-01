@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
-import org.rabix.bindings.BindingsFactory;
+import org.rabix.bindings.draft2.Draft2Bindings;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.common.helper.ResourceHelper;
@@ -25,7 +25,7 @@ public class Draft2ValidationTest {
 
       String appURI = URIHelper.createDataURI(appText);
 
-      Bindings bindings = BindingsFactory.create(appURI);
+      Bindings bindings = new Draft2Bindings();
 
       Map<String, Object> inputs = new HashMap<>();
 
@@ -56,7 +56,7 @@ public class Draft2ValidationTest {
 
       String appURI = URIHelper.createDataURI(appText);
 
-      Bindings bindings = BindingsFactory.create(appURI);
+      Bindings bindings = new Draft2Bindings();
 
       Map<String, Object> inputs = new HashMap<>();
       inputs.put("reference", createFile("path_0"));

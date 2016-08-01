@@ -39,6 +39,9 @@ public interface Application {
     @Override
     public Application deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
       JsonNode tree = p.getCodec().readTree(p);
+      if (tree.isNull()) {
+        return null;
+      }
       String appUrl = URIHelper.createDataURI(JSONHelper.writeObject(tree));
       try {
         return BindingsFactory.create(appUrl).loadAppObject(appUrl);
@@ -51,6 +54,9 @@ public interface Application {
   public static class ApplicationSerializer extends JsonSerializer<Application> {
     @Override
     public void serialize(Application value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
+      if (value == null) {
+        gen.writeNull();
+      }
       JsonNode node = JSONHelper.readJsonNode(value.serialize());
       gen.writeTree(node);
     }

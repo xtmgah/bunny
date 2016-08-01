@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.rabix.bindings.Bindings;
-import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.draft2.bean.Draft2Job;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
@@ -52,7 +51,7 @@ public class Draft2ResultCollectionServiceTest {
     String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
     Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
     
-    Bindings bindings = BindingsFactory.create(job);
+    Bindings bindings = new Draft2Bindings();
     job = bindings.postprocess(job, workingDir);
     
     Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);
@@ -69,7 +68,7 @@ public class Draft2ResultCollectionServiceTest {
     String encodedApp = URIHelper.createDataURI(BeanSerializer.serializeFull(draft2Job.getApp()));
     Job job = new Job("id", "id", "id", "id", encodedApp, null, draft2Job.getInputs(), null, null, null);
     
-    Bindings bindings = BindingsFactory.create(job);
+    Bindings bindings = new Draft2Bindings();
     job = bindings.postprocess(job, workingDir);
     
     Assert.assertTrue(job.getOutputs() instanceof Map<?,?>);

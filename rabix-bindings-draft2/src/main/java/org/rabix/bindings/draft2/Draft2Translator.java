@@ -118,10 +118,11 @@ public class Draft2Translator implements ProtocolTranslator {
         destinationNodeId = job.getId() + InternalSchemaHelper.SEPARATOR + destination.substring(1, destination.indexOf(InternalSchemaHelper.SEPARATOR));
         destinationPortId = destination.substring(destination.indexOf(InternalSchemaHelper.SEPARATOR) + 1);
       }
-      boolean isSourceFromWorkflow = !dataLink.getSource().contains(InternalSchemaHelper.SEPARATOR);
+      boolean isSourceFromWorkflow = dataLink.getSource().contains(InternalSchemaHelper.SEPARATOR);
+      boolean isDestinationFromWorkflow = dataLink.getDestination().contains(InternalSchemaHelper.SEPARATOR);
 
-      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.INPUT : LinkPortType.OUTPUT, LinkMerge.merge_nested, false);
-      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, LinkPortType.INPUT, dataLink.getLinkMerge(), dataLink.getScattered() != null ? dataLink.getScattered() : false);
+      DAGLinkPort sourceLinkPort = new DAGLinkPort(sourcePortId, sourceNodeId, isSourceFromWorkflow ? LinkPortType.OUTPUT : LinkPortType.INPUT, LinkMerge.merge_nested, false);
+      DAGLinkPort destinationLinkPort = new DAGLinkPort(destinationPortId, destinationNodeId, isDestinationFromWorkflow? LinkPortType.INPUT : LinkPortType.OUTPUT, dataLink.getLinkMerge(), dataLink.getScattered() != null ? dataLink.getScattered() : false);
 
       int position = dataLink.getPosition() != null ? dataLink.getPosition() : 1;
       links.add(new DAGLink(sourceLinkPort, destinationLinkPort, dataLink.getLinkMerge(), position));
