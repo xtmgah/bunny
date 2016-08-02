@@ -72,13 +72,11 @@ public class Draft2GlobServiceImpl implements Draft2GlobService {
         globDirs.add(workingDir);
         for (int i = 0; i < splitGlob.length - 1; i++) {
           if (splitGlob[i].equals("..")) {
-            if (globDirs.size() == 1) {
-              File newDir = globDirs.get(0).getParentFile();
-              globDirs.clear();
-              globDirs.add(newDir);
-            } else {
-              throw new Draft2GlobException("Can't evaluate glob: " + singleGlob, null);
+            List<File> newGlobDirs = new ArrayList<File>();
+            for(File dir: globDirs) {
+              newGlobDirs.add(dir.getParentFile());
             }
+            globDirs = newGlobDirs;
           } else {
             Set<File> newGlobDirs = listDir(splitGlob[i], true, globDirs);
             globDirs.clear();
