@@ -46,7 +46,8 @@ public class LocalMemoizationService {
       String newHash = ChecksumHelper.checksum(serializedApp, HashAlgorithm.SHA1);
       
       String oldJobJson = FileUtils.readFileToString(new File(workingDir, "job.json"));
-      JsonNode oldAppJsonNode = JSONHelper.readJsonNode(oldJobJson).get("app");
+      JsonNode oldJobJsonNode = JSONHelper.readJsonNode(oldJobJson);
+      JsonNode oldAppJsonNode = oldJobJsonNode.get("app");
       
       String oldSerializedApp = JSONHelper.writeSortedWithoutIdentation(oldAppJsonNode);
       String oldHash = ChecksumHelper.checksum(oldSerializedApp, HashAlgorithm.SHA1);
@@ -59,7 +60,7 @@ public class LocalMemoizationService {
       case DRAFT2:
         File resultFile = new File(workingDir, "cwl.output.json");
         if (resultFile.exists()) {
-          Map<String, Object> inputs = JSONHelper.readMap(oldAppJsonNode.get("inputs"));
+          Map<String, Object> inputs = JSONHelper.readMap(oldJobJsonNode.get("inputs"));
           Job newJob = Job.cloneWithInputs(job, inputs);
           return bindings.postprocess(newJob, workingDir).getOutputs();
         }
