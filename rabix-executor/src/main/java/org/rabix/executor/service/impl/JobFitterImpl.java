@@ -21,6 +21,7 @@ public class JobFitterImpl implements JobFitter {
   private Long availableMemory;
 
   private boolean isEnabled;
+  private int runningProcesses = 0;
 
   @Inject
   public JobFitterImpl(Configuration configuration) {
@@ -41,18 +42,26 @@ public class JobFitterImpl implements JobFitter {
     }
     ResourceRequirement resourceRequirement = bindings.getResourceRequirement(job);
 
+    boolean cpuFits = true;
     Long cpu = resourceRequirement.getCpuMin();
     if (cpu != null && cpu > availableCores) {
-      return false;
+      cpuFits = false;
     }
 
+    boolean memoryFits = true;
     Long memory = resourceRequirement.getMemMinMB();
     if (memory != null && memory > availableMemory) {
+      memoryFits = false;
+    }
+    
+    if ((!cpuFits || !memoryFits) && runningProcesses > 0) {
       return false;
     }
+    
+    runningProcesses++;
     availableCores -= cpu != null ? cpu : 0;
     availableMemory -= memory != null ? memory : 0;
-    logger.info("Job {} fits. Starting execution...", job.getId());
+    logger.info("Job {} fits. Number of running processes {}.", job.getId(), runningProcesses);
     return true;
   }
 
@@ -61,7 +70,7 @@ public class JobFitterImpl implements JobFitter {
     if (!isEnabled) {
       return;
     }
-    
+
     Bindings bindings = BindingsFactory.create(job);
     if (bindings.canExecute(job)) {
       return;
@@ -69,10 +78,11 @@ public class JobFitterImpl implements JobFitter {
     
     ResourceRequirement resourceRequirement = bindings.getResourceRequirement(job);
 
+    runningProcesses--;
     availableCores += resourceRequirement.getCpuMin() != null ? resourceRequirement.getCpuMin() : 0;
     availableMemory += resourceRequirement.getMemMinMB() != null ? resourceRequirement.getMemMinMB() : 0;
-    
-    logger.info("Job {} freed reqsources.", job.getId());
+
+    logger.info("Job {} freed reqsources. Number of running processes {}.", job.getId(), runningProcesses);
   }
   
 }
