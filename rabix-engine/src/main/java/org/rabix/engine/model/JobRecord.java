@@ -230,8 +230,14 @@ public class JobRecord {
           if (pc.updatedAsSourceCounter > 0) {
             pc.updatedAsSourceCounter = pc.updatedAsSourceCounter--;
             return;
-          } else if (type.equals(LinkPortType.OUTPUT) && (port.isScatter() || isContainer || isScatterWrapper)) {
-            pc.counter = pc.counter + 1;
+          } else { 
+            if (type.equals(LinkPortType.OUTPUT)) {
+              if (isScatterWrapper) {
+                pc.counter = pc.counter + 1;
+              } else if (isContainer && pc.incoming > 1) {
+                pc.counter = pc.counter + 1;
+              }
+            }
           }
         }
         return;
