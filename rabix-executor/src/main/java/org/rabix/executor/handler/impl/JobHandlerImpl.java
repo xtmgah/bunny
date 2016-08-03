@@ -374,8 +374,14 @@ public class JobHandlerImpl implements JobHandler {
   private class OutputFileMapper implements FileMapper {
     @Override
     public String map(String filePath) throws FileMappingException {
-      logger.info("Map absolute physical path {} to relative physical path.", filePath);
-      return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
+      BackendStore backendStore = StorageConfig.getBackendStore(configuration);
+      switch (backendStore) {
+      case FTP:
+        logger.info("Map absolute physical path {} to relative physical path.", filePath);
+        return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
+      default:
+        return filePath;
+      }
     }
   }
 
