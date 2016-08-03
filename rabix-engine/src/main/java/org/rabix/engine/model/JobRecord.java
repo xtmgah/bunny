@@ -297,6 +297,7 @@ public class JobRecord {
   }
   
   public void resetOutputPortCounter(int value, String port) {
+    logger.info("Reset output port counter {} for {} to {}", port, id, value);
     for (PortCounter pc : outputCounters) {
       if (pc.port.equals(port)) {
         int oldValue = pc.globalCounter;
