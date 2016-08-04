@@ -297,20 +297,21 @@ public class JobRecord {
   }
   
   public void resetOutputPortCounter(int value, String port) {
+    logger.info("Reset output port counter {} for {} to {}", port, id, value);
     for (PortCounter pc : outputCounters) {
       if (pc.port.equals(port)) {
         int oldValue = pc.globalCounter;
-        if (numberOfGlobalOutputs < value) {
-          numberOfGlobalOutputs = value;
+        if (pc.globalCounter < value) {
+          pc.globalCounter = value;
 
           if (pc.counter == 0) {
             continue;
           }
           if (pc.counter != value) {
             if (oldValue != 0) {
-              pc.counter = numberOfGlobalOutputs - (oldValue - pc.counter);
+              pc.counter = pc.globalCounter - (oldValue - pc.counter);
             } else {
-              pc.counter = numberOfGlobalOutputs;
+              pc.counter = pc.globalCounter;
             }
           }
         }
