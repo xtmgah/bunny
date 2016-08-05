@@ -59,9 +59,11 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       String path = Draft2FileValueHelper.getPath(clonedValue);
       if (pathToMetadata.containsKey(path)) {
         Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(clonedValue);
-        if (metadata == null || metadata.isEmpty()) {
-          Draft2FileValueHelper.setMetadata(pathToMetadata.get(path), clonedValue);
+        Map<String, Object> newMetadata = pathToMetadata.get(path);
+        if (metadata != null) {
+          newMetadata.putAll(metadata);
         }
+        Draft2FileValueHelper.setMetadata(newMetadata, clonedValue);
       }
       outputMetadata.put(path, Draft2FileValueHelper.getMetadata(clonedValue));
 
@@ -69,13 +71,16 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       if (secondaryFiles != null) {
         for (Map<String, Object> secondaryFileValue : secondaryFiles) {
           String subpath = Draft2FileValueHelper.getPath(secondaryFileValue);
-          Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
-
+          
           if (pathToMetadata.containsKey(subpath)) {
-            if (metadata == null || metadata.isEmpty()) {
-              Draft2FileValueHelper.setMetadata(pathToMetadata.get(subpath), secondaryFileValue);
+            Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
+            Map<String, Object> newMetadata = pathToMetadata.get(path);
+            if (metadata != null) {
+              newMetadata.putAll(metadata);
             }
+            Draft2FileValueHelper.setMetadata(newMetadata, secondaryFileValue);
           }
+          Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
           if ((metadata == null || metadata.isEmpty()) && outputMetadata.containsKey(subpath)) {
             Draft2FileValueHelper.setMetadata(outputMetadata.get(subpath), secondaryFileValue);
           }
