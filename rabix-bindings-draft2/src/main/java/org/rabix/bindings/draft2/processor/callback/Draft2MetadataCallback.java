@@ -72,7 +72,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       String path = Draft2FileValueHelper.getPath(clonedValue);
       logger.debug("Searching for file {} in pathToMetadata {}.", path, pathToMetadata);
       if (pathToMetadata.containsKey(path)) {
-        logger.info("Output file {} is found in the inputs section.", path);
+        logger.debug("Output file {} is found in the inputs section.", path);
         
         Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(clonedValue);
         Map<String, Object> newMetadata = pathToMetadata.get(path);
@@ -80,7 +80,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
           newMetadata.putAll(metadata);
         }
         Draft2FileValueHelper.setMetadata(newMetadata, clonedValue);
-        logger.info("Combined metadata for file {} is {}.", path, newMetadata);
+        logger.debug("Combined metadata for file {} is {}.", path, newMetadata);
       }
       outputMetadata.put(path, Draft2FileValueHelper.getMetadata(clonedValue));
 
@@ -90,7 +90,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
           String subpath = Draft2FileValueHelper.getPath(secondaryFileValue);
           
           if (pathToMetadata.containsKey(subpath)) {
-            logger.info("Output file {} is found in the inputs section.", subpath);
+            logger.debug("Output file {} is found in the inputs section.", subpath);
             
             Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
             Map<String, Object> newMetadata = pathToMetadata.get(path);
@@ -98,7 +98,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
               newMetadata.putAll(metadata);
             }
             Draft2FileValueHelper.setMetadata(newMetadata, secondaryFileValue);
-            logger.info("Combined metadata for file {} is {}.", subpath, newMetadata);
+            logger.debug("Combined metadata for file {} is {}.", subpath, newMetadata);
           }
           Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
           if ((metadata == null || metadata.isEmpty()) && outputMetadata.containsKey(subpath)) {
