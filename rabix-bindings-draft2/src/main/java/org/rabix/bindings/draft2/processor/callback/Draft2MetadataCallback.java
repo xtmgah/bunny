@@ -10,9 +10,13 @@ import org.rabix.bindings.draft2.processor.Draft2PortProcessorCallback;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessorResult;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.common.helper.CloneHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
 
+  private final static Logger logger = LoggerFactory.getLogger(Draft2MetadataCallback.class);
+  
   private Map<String, Map<String, Object>> pathToMetadata = new HashMap<>();
   private Map<String, Map<String, Object>> outputMetadata = new HashMap<>();
   
@@ -58,12 +62,15 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       Object clonedValue = CloneHelper.deepCopy(value);
       String path = Draft2FileValueHelper.getPath(clonedValue);
       if (pathToMetadata.containsKey(path)) {
+        logger.info("Output file {} is found in the inputs section.", path);
+        
         Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(clonedValue);
         Map<String, Object> newMetadata = pathToMetadata.get(path);
         if (metadata != null) {
           newMetadata.putAll(metadata);
         }
         Draft2FileValueHelper.setMetadata(newMetadata, clonedValue);
+        logger.info("Combined metadata for file {} is {}.", path, newMetadata);
       }
       outputMetadata.put(path, Draft2FileValueHelper.getMetadata(clonedValue));
 
@@ -73,12 +80,15 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
           String subpath = Draft2FileValueHelper.getPath(secondaryFileValue);
           
           if (pathToMetadata.containsKey(subpath)) {
+            logger.info("Output file {} is found in the inputs section.", subpath);
+            
             Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
             Map<String, Object> newMetadata = pathToMetadata.get(path);
             if (metadata != null) {
               newMetadata.putAll(metadata);
             }
             Draft2FileValueHelper.setMetadata(newMetadata, secondaryFileValue);
+            logger.info("Combined metadata for file {} is {}.", subpath, newMetadata);
           }
           Map<String, Object> metadata = Draft2FileValueHelper.getMetadata(secondaryFileValue);
           if ((metadata == null || metadata.isEmpty()) && outputMetadata.containsKey(subpath)) {
