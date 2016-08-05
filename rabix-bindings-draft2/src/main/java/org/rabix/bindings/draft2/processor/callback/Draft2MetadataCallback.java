@@ -32,16 +32,25 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
       return;
     } else if (Draft2SchemaHelper.isFileFromValue(value)) {
       String path = Draft2FileValueHelper.getPath(value);
+      String originalPath = Draft2FileValueHelper.getOriginalPath(value);
+      logger.debug("Putting metadata for file {}", path);
       if (!pathToMetadata.containsKey(path)) {
         pathToMetadata.put(path, Draft2FileValueHelper.getMetadata(value));
+        if(originalPath != null) {
+          pathToMetadata.put(originalPath, Draft2FileValueHelper.getMetadata(value));
+        }
       }
 
       List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(value);
       if (secondaryFiles != null) {
         for (Object subvalue : secondaryFiles) {
           String subpath = Draft2FileValueHelper.getPath(subvalue);
+          String suboriginalPath = Draft2FileValueHelper.getOriginalPath(subvalue);
           if (!pathToMetadata.containsKey(subpath)) {
             pathToMetadata.put(subpath, Draft2FileValueHelper.getMetadata(subvalue));
+            if(suboriginalPath != null) {
+              pathToMetadata.put(suboriginalPath, Draft2FileValueHelper.getMetadata(subvalue));
+            }
           }
         }
       }
@@ -61,6 +70,7 @@ public class Draft2MetadataCallback implements Draft2PortProcessorCallback {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
       Object clonedValue = CloneHelper.deepCopy(value);
       String path = Draft2FileValueHelper.getPath(clonedValue);
+      logger.debug("Searching for file {} in pathToMetadata {}.", path, pathToMetadata);
       if (pathToMetadata.containsKey(path)) {
         logger.info("Output file {} is found in the inputs section.", path);
         
