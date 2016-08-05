@@ -108,6 +108,7 @@ public class Draft2Processor implements ProtocolProcessor {
         outputs = collectOutputs(draft2Job, workingDir, null);
       }
       outputs = new Draft2PortProcessorHelper(draft2Job).fixOutputMetadata(draft2Job.getInputs(), outputs);
+      writeResult(workingDir, outputs);
       return Job.cloneWithOutputs(job, outputs);
     } catch (Draft2GlobException | Draft2ExpressionException | IOException | Draft2PortProcessorException e) {
       throw new BindingException(e);
@@ -130,8 +131,12 @@ public class Draft2Processor implements ProtocolProcessor {
         result.put(Draft2SchemaHelper.normalizeId(outputPort.getId()), singleResult);
       }
     }
-    BeanSerializer.serializePartial(resultFile, result);
+    writeResult(workingDir, result);
     return result;
+  }
+  
+  public void writeResult(File workingDir, Map<String, Object> result) {
+    BeanSerializer.serializePartial(new File(workingDir, resultFilename), result);
   }
 
   @SuppressWarnings("unchecked")
