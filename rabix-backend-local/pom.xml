@@ -99,6 +99,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
+			<artifactId>rabix-bindings-sb</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.rabix</groupId>
 			<artifactId>rabix-engine-rest</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
