@@ -113,9 +113,9 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     case FAILED:
       eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
       
-      if (jobRecord.isRoot()) {
+      if (event.getJobId().equals(event.getContextId())) {
         try {
-          jobStatusCallback.onRootFailed(jobRecord.getRootId());
+          jobStatusCallback.onRootFailed(event.getJobId());
         } catch (Exception e) {
           logger.error("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
