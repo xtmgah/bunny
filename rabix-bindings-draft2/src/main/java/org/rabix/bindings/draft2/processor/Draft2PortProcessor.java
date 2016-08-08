@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.draft2.bean.Draft2Job;
 import org.rabix.bindings.draft2.bean.Draft2OutputPort;
 import org.rabix.bindings.draft2.helper.Draft2SchemaHelper;
-import org.rabix.bindings.model.ApplicationPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,17 +48,16 @@ public class Draft2PortProcessor {
       Object value = entry.getValue();
 
       ApplicationPort port = job.getApp().getPort(Draft2SchemaHelper.denormalizeId(id), clazz);
-      if (port == null) {
-        throw new Draft2PortProcessorException("Port with ID=" + Draft2SchemaHelper.denormalizeId(id) + " doesn't exist.");
-      }
-      Object mappedValue = null;
-      try {
-        mappedValue = processValue(value, port, port.getSchema(), Draft2SchemaHelper.denormalizeId(id), portProcessor);
-      } catch (Exception e) {
-        throw new Draft2PortProcessorException("Failed to process value " + value, e);
-      }
-      if (mappedValue != null) {
-        mappedValues.put(entry.getKey(), mappedValue);
+      if (port != null) {
+        Object mappedValue = null;
+        try {
+          mappedValue = processValue(value, port, port.getSchema(), Draft2SchemaHelper.denormalizeId(id), portProcessor);
+        } catch (Exception e) {
+          throw new Draft2PortProcessorException("Failed to process value " + value, e);
+        }
+        if (mappedValue != null) {
+          mappedValues.put(entry.getKey(), mappedValue);
+        }
       }
     }
     return mappedValues;
@@ -92,7 +91,7 @@ public class Draft2PortProcessor {
           continue;
         }
 
-        Object singleResult = processValue(entry.getValue(), port, schema, entry.getKey(), portProcessor);
+        Object singleResult = processValue(entry.getValue(), port, Draft2SchemaHelper.getType(field), entry.getKey(), portProcessor);
         result.put(entry.getKey(), singleResult);
       }
       return result;
@@ -102,7 +101,7 @@ public class Draft2PortProcessor {
       List<Object> result = new LinkedList<>();
 
       for (Object item : ((List<?>) value)) {
-        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(job.getApp().getSchemaDefs(), schema);
+        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(item, job.getApp().getSchemaDefs(), schema);
         Object singleResult = processValue(item, port, arrayItemSchema, key, portProcessor);
         result.add(singleResult);
       }

@@ -153,7 +153,7 @@ public class Draft2Processor implements ProtocolProcessor {
     Object result = null;
     if (Draft2SchemaHelper.isArrayFromSchema(schema)) {
       Draft2JobApp app = job.getApp();
-      Object itemSchema = Draft2SchemaHelper.getSchemaForArrayItem(app.getSchemaDefs(), schema);
+      Object itemSchema = Draft2SchemaHelper.getSchemaForArrayItem(null, app.getSchemaDefs(), schema);
       if (itemSchema == null) {
         return null;
       }

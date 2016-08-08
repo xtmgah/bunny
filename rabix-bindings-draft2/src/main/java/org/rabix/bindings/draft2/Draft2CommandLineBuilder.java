@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolCommandLineBuilder;
+import org.rabix.bindings.model.Job;
 import org.rabix.bindings.draft2.bean.Draft2CommandLineTool;
 import org.rabix.bindings.draft2.bean.Draft2InputPort;
 import org.rabix.bindings.draft2.bean.Draft2Job;
@@ -20,7 +21,6 @@ import org.rabix.bindings.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.draft2.helper.Draft2JobHelper;
 import org.rabix.bindings.draft2.helper.Draft2SchemaHelper;
-import org.rabix.bindings.model.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,7 +218,8 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
         String fieldKey = entry.getKey();
         Object fieldValue = entry.getValue();
 
-        Object field = Draft2SchemaHelper.getField(fieldKey, Draft2SchemaHelper.getSchemaForRecordField(job.getApp().getSchemaDefs(), schema));
+        Object field = Draft2SchemaHelper.getField(fieldKey, Draft2SchemaHelper.getSchemaForRecordField(job.getApp().getSchemaDefs(), schema));          
+        
         if (field == null) {
           logger.info("Field {} not found in schema {}", fieldKey, schema);
           continue;
@@ -243,7 +244,7 @@ public class Draft2CommandLineBuilder implements ProtocolCommandLineBuilder {
       commandLinePartBuilder.keyValue(keyValue);
       
       for (Object item : ((List<?>) value)) {
-        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(commandLineTool.getSchemaDefs(), schema);
+        Object arrayItemSchema = Draft2SchemaHelper.getSchemaForArrayItem(item, commandLineTool.getSchemaDefs(), schema);
         Object arrayItemInputBinding = new HashMap<>();
         if (schema != null && Draft2SchemaHelper.getInputBinding(schema) != null) {
           arrayItemInputBinding = (Map<String, Object>) Draft2SchemaHelper.getInputBinding(schema);
