@@ -18,6 +18,7 @@
     <module>rabix-transport</module>
     <module>rabix-bindings-draft2</module>
     <module>rabix-bindings-draft3</module>
+    <module>rabix-bindings-sb</module>
   </modules>
 
 	<properties>

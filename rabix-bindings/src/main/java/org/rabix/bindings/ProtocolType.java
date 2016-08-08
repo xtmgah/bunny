@@ -2,7 +2,8 @@ package org.rabix.bindings;
 
 
 public enum ProtocolType {
-  DRAFT2("org.rabix.bindings.draft2.Draft2Bindings", 2),
+  DRAFT2("org.rabix.bindings.draft2.Draft2Bindings", 3),
+  SB("org.rabix.bindings.sb.SBBindings", 2),
   DRAFT3("org.rabix.bindings.draft3.Draft3Bindings", 1);
 
   public final int order;
