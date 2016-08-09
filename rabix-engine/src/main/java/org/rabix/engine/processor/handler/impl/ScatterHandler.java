@@ -52,6 +52,7 @@ public class ScatterHandler {
   
   /**
    * Scatters port
+   * @throws BindingException 
    */
   @SuppressWarnings("unchecked")
   public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
@@ -81,6 +82,9 @@ public class ScatterHandler {
     if (isFromEvent || !(value instanceof List<?>)) {
       if (job.getInputPortIncoming(portId) == 1) {
         usePositionFromEvent = false;
+        if (!(value instanceof List<?>)) {
+          throw new EventHandlerException("Port " + portId + " for " + job.getId() + " and rootId " + job.getRootId() + " is not a list and therefore cannot be scattered.");
+        }
         values = (List<Object>) value;
       } else {
         values = new ArrayList<>();
