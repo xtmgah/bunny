@@ -64,16 +64,18 @@ public class JobHandlerImpl implements JobHandler {
   private final HashAlgorithm hashAlgorithm;
 
   private Job job;
-  private EngineStub<?,?,?> engineStub;
+  private EngineStub<?, ?, ?> engineStub;
 
   private Configuration configuration;
   private ContainerHandler containerHandler;
   private DockerClientLockDecorator dockerClient;
-  
+
   private LocalMemoizationService localMemoizationService;
-  
+
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?,?,?> engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient, LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
+      DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient,
+      LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
@@ -97,7 +99,7 @@ public class JobHandlerImpl implements JobHandler {
         containerHandler.start();
         return;
       }
-      
+
       Bindings bindings = BindingsFactory.create(job);
       downloadFileService.download(job, bindings.getInputFiles(job));
 
@@ -227,7 +229,8 @@ public class JobHandlerImpl implements JobHandler {
       return;
     }
     for (File file : workingDir.listFiles()) {
-      String remotePath = file.getAbsolutePath().substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
+      String remotePath = file.getAbsolutePath()
+          .substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
       ftpClient.upload(file, remotePath);
     }
   }
@@ -340,10 +343,10 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  public EngineStub<?,?,?> getEngineStub() {
+  public EngineStub<?, ?, ?> getEngineStub() {
     return engineStub;
   }
-  
+
   private class InputFileMapper implements FileMapper {
     @Override
     public String map(String filePath) throws FileMappingException {
@@ -352,14 +355,16 @@ public class JobHandlerImpl implements JobHandler {
       case FTP:
         logger.info("Map FTP path {} to physical path.", filePath);
         try {
-          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath)
+              .getCanonicalPath();
         } catch (IOException e) {
           throw new FileMappingException(e);
         }
       case LOCAL:
         if (!filePath.startsWith(File.separator)) {
           try {
-            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath)
+                .getCanonicalPath();
           } catch (IOException e) {
             throw new FileMappingException(e);
           }

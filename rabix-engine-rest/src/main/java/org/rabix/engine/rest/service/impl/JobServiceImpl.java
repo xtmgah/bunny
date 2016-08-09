@@ -1,6 +1,7 @@
 package org.rabix.engine.rest.service.impl;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -68,7 +69,8 @@ public class JobServiceImpl implements JobService {
     this.backendDispatcher = backendDispatcher;
 
     boolean isLocalBackend = configuration.getBoolean("local.backend", false);
-    this.eventProcessor.start(null, new JobStatusCallbackImpl(isLocalBackend, isLocalBackend));
+    boolean isConformance = configuration.getString("rabix.conformance") != null;
+    this.eventProcessor.start(null, new JobStatusCallbackImpl(isLocalBackend, isLocalBackend, isConformance));
   }
   
   @Override
@@ -115,10 +117,10 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public Job start(Job job) throws JobServiceException {
+  public Job start(Job job, Map<String, String> config) throws JobServiceException {
     logger.debug("Start Job {}", job);
     
-    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
+    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString(), config);
     job = Job.cloneWithIds(job, context.getId(), context.getId());
     job = Job.cloneWithContext(job, context);
 
@@ -170,31 +172,39 @@ public class JobServiceImpl implements JobService {
     return jobDB.get(id);
   }
 
-  private Context createContext(String contextId) {
-    return new Context(contextId, null);
+  private Context createContext(String contextId, Map<String, String> config) {
+    return new Context(contextId, config);
   }
   
   private class JobStatusCallbackImpl implements JobStatusCallback {
 
     private boolean stopOnFail;
     private boolean setResources;
+    private boolean conformance;
     
     private AtomicInteger failCount = new AtomicInteger(0);
     private AtomicInteger successCount = new AtomicInteger(0);
 
     private Set<String> stoppingRootIds = new HashSet<>();
     
-    public JobStatusCallbackImpl(boolean setResources, boolean stopOnFail) {
+    public JobStatusCallbackImpl(boolean setResources, boolean stopOnFail, boolean conformance) {
       this.stopOnFail = stopOnFail;
       this.setResources = setResources;
+      this.conformance = conformance;
     }
     
     @Override
     public void onReady(Job job) {
-      if (setResources) {
+      if (setResources && !conformance) {
         long numberOfCores = SystemEnvironmentHelper.getNumberOfCores();
         long memory = SystemEnvironmentHelper.getTotalPhysicalMemorySizeInMB();
         
+        Resources resources = new Resources(numberOfCores, memory, null, true);
+        job = Job.cloneWithResources(job, resources);
+      }
+      else if (conformance) {
+        long numberOfCores = Long.parseLong(job.getContext().getConfig().get("allocatedResources.cpu"));
+        long memory = Long.parseLong(job.getContext().getConfig().get("allocatedResources.mem"));
         Resources resources = new Resources(numberOfCores, memory, null, true);
         job = Job.cloneWithResources(job, resources);
       }

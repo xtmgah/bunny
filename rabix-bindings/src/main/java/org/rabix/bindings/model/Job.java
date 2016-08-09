@@ -51,6 +51,10 @@ public class Job {
     this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null);
   }
   
+  public Job(String app, Map<String, Object> inputs, Context context) {
+    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, context, null);
+  }
+  
   @JsonCreator
   public Job(@JsonProperty("id") String id,
       @JsonProperty("parentId") String parentId,

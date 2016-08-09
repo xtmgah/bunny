@@ -5,6 +5,8 @@ import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 
 public class FileConfig {
 
+  public static final String RABIX_CONFORMANCE = "rabix.conformance";
+  
   public static final String CALCULATE_FILE_CHECKSUM = "rabix.calculate_file_checksum";
   public static final String CHECKSUM_ALGORITHM = "rabix.checksum_algorithm";
 

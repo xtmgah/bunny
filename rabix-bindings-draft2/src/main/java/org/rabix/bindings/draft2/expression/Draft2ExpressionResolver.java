@@ -2,11 +2,13 @@ package org.rabix.bindings.draft2.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.rabix.bindings.draft2.bean.Draft2Job;
 import org.rabix.bindings.draft2.bean.resource.requirement.Draft2ExpressionEngineRequirement;
 import org.rabix.bindings.draft2.expression.javascript.Draft2ExpressionJavascriptResolver;
 import org.rabix.bindings.draft2.expression.jsonpointer.Draft2ExpressionJSPointerResolver;
+import org.rabix.common.helper.CloneHelper;
 
 public class Draft2ExpressionResolver {
 
@@ -60,13 +62,16 @@ public class Draft2ExpressionResolver {
    * By reference CWL implementation, context is equals to 'inputs' section from the Job
    * Out implementation uses whole Job as a context
    */
+  @SuppressWarnings("unchecked")
   private static Object transformContext(Draft2Job context, String language) {
     if (context == null) {
       return null;
     }
 
     if (!language.equals("#cwl-js-engine") && !language.equals("cwl-js-engine")) {
-      return context.getInputs();
+      Map<String, Object> newContext = (Map<String, Object>) CloneHelper.deepCopy(context.getInputs());
+      newContext.put("allocatedResources", context.getResources());
+      return newContext;
     }
     return context;
   }
