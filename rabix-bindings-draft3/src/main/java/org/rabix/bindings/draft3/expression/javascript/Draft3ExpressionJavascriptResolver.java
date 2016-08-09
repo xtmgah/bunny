@@ -103,6 +103,8 @@ public class Draft3ExpressionJavascriptResolver {
         }
       });
       ScriptableObject.putProperty(scope, name, json);
+    } else {
+      ScriptableObject.putProperty(scope, name, null);
     }
   }
 

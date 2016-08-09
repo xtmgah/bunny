@@ -34,6 +34,8 @@ public class Draft2ExpressionJSPointerResolver {
       } else {
         rootMap.put(SELF_NAME, JSONHelper.convertToMap(self));        
       }
+    } else {
+      rootMap.put(SELF_NAME, null);
     }
 
     Object result = rootMap;

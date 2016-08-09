@@ -53,8 +53,7 @@ public class Draft2ExpressionJavascriptResolver {
       Scriptable globalScope = cx.initStandardObjects();
 
       if (includeTemplates) {
-        Reader templateLibReader = new InputStreamReader(
-            Draft2ExpressionJavascriptResolver.class.getResourceAsStream("underscore-min.js"));
+        Reader templateLibReader = new InputStreamReader(Draft2ExpressionJavascriptResolver.class.getResourceAsStream("underscore-min.js"));
         cx.evaluateReader(globalScope, templateLibReader, "underscore-min.js", 1, null);
       }
 
@@ -112,6 +111,8 @@ public class Draft2ExpressionJavascriptResolver {
         }
       });
       ScriptableObject.putProperty(scope, name, json);
+    } else {
+      ScriptableObject.putProperty(scope, name, null);
     }
   }
 

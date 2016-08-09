@@ -35,8 +35,7 @@ public class Draft2ExpressionResolver {
     return evaluate(expression, context, self, includeTemplates, null);
   }
 
-  public static <T> T evaluate(final String expression, final Draft2Job context, final Object self, String language)
-      throws Draft2ExpressionException {
+  public static <T> T evaluate(final String expression, final Draft2Job context, final Object self, String language) throws Draft2ExpressionException {
     return evaluate(expression, context, self, false, language);
   }
 
