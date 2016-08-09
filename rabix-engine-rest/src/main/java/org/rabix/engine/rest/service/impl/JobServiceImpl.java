@@ -202,9 +202,9 @@ public class JobServiceImpl implements JobService {
         Resources resources = new Resources(numberOfCores, memory, null, true);
         job = Job.cloneWithResources(job, resources);
       }
-      else if (conformance) {
-        long numberOfCores = Long.parseLong(job.getContext().getConfig().get("allocatedResources.cpu"));
-        long memory = Long.parseLong(job.getContext().getConfig().get("allocatedResources.mem"));
+      else if (conformance && job.getContext().getConfig() != null) {
+        long numberOfCores = job.getContext().getConfig().get("allocatedResources.cpu") != null ? Long.parseLong(job.getContext().getConfig().get("allocatedResources.cpu")) : null;
+        long memory = job.getContext().getConfig().get("allocatedResources.mem") != null ? Long.parseLong(job.getContext().getConfig().get("allocatedResources.mem")) : null;
         Resources resources = new Resources(numberOfCores, memory, null, true);
         job = Job.cloneWithResources(job, resources);
       }
@@ -282,7 +282,6 @@ public class JobServiceImpl implements JobService {
         logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
       }
     }
-
   }
   
 }

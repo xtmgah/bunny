@@ -151,9 +151,15 @@ public class BackendCommandLine {
       if(conformance) {
         BindingsFactory.setProtocol(configuration.getString(FileConfig.RABIX_CONFORMANCE));
         resources = extractResources(inputs, BindingsFactory.protocol);
-        contextConfig = new HashMap<String, String>();
-        contextConfig.put("allocatedResources.cpu", resources.getCpu().toString());
-        contextConfig.put("allocatedResources.mem", resources.getMemMB().toString());
+        if(resources != null) {
+          contextConfig = new HashMap<String, String>();
+          if(resources.getCpu() != null) {
+            contextConfig.put("allocatedResources.cpu", resources.getCpu().toString());
+          }
+          if(resources.getMemMB() != null) {
+            contextConfig.put("allocatedResources.mem", resources.getMemMB().toString());
+          }
+        }
       }
       
       final JobService jobService = injector.getInstance(JobService.class);
@@ -226,8 +232,9 @@ public class BackendCommandLine {
     options.addOption("c", "configuration-dir", true, "configuration directory");
     options.addOption("t", "conformance-test", false, "conformance test");
     options.addOption(null, "no-container",  false, "don't use containers");
-    options.addOption(null, "tmpdir-prefix", true, "doesn't do anything");
     options.addOption(null, "tmp-outdir-prefix", true, "doesn't do anything");
+    options.addOption(null, "tmpdir-prefix", true, "doesn't do anything");
+    options.addOption(null, "outdir", true, "doesn't do anything");
     options.addOption(null, "quiet", false, "quiet");
     options.addOption("h", "help", false, "help");
     return options;
