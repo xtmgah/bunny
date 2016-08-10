@@ -208,7 +208,7 @@ public class TestRunner {
     if (userDir == null) {
       throw new RabixTestException("null value for user.dir property");
     }
-    File configDir = new File(userDir + "/rabix-integration-tests/config/test/");
+    File configDir = new File(userDir + "/rabix-integration-tests/config/test");
     try {
       Iterator<File> iterator = FileUtils.iterateFiles(configDir, new String[] { "properties" }, true);
       while (iterator.hasNext()) {
