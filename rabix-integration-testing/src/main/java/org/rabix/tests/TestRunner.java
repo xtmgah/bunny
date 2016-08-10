@@ -56,7 +56,7 @@ public class TestRunner {
     logger.info("Extracting jar file");
     executeCommand("sudo tar -zxvf " + System.getProperty("user.dir")
         + "/rabix-backend-local/target/rabix-backend-local-0.0.1-SNAPSHOT-id3.tar.gz");
-    executeCommand("cp -a " + System.getProperty("user.dir") + "/rabix-integration-tests/testbacklog .");
+    executeCommand("cp -a " + System.getProperty("user.dir") + "/rabix-integration-testing/testbacklog .");
 
     for (File child : directoryListing) {
       if (!child.toString().endsWith(".test.yaml"))
@@ -208,9 +208,7 @@ public class TestRunner {
     if (userDir == null) {
       throw new RabixTestException("null value for user.dir property");
     }
-    logger.info("Checkpoint2:\n");
-    logger.info(userDir + "/rabix-integration-tests/config/test");
-    File configDir = new File(userDir + "/rabix-integration-tests/config/test");
+    File configDir = new File(userDir + "/rabix-integration-testing/config/test");
     try {
       Iterator<File> iterator = FileUtils.iterateFiles(configDir, new String[] { "properties" }, true);
       while (iterator.hasNext()) {
