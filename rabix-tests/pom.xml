@@ -8,7 +8,7 @@
 		<artifactId>rabix</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>rabix-tests</artifactId>
+	<artifactId>rabix-integration-testing</artifactId>
 	<name>rabix-tests</name>
 	<url>http://maven.apache.org</url>
 	<properties>
@@ -17,13 +17,13 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.rabix</groupId>
-			<artifactId>rabix-common</artifactId>
+			<artifactId>rabix-backend-local</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.rabix</groupId>
-			<artifactId>rabix-backend-local</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.10</version>
 		</dependency>
 	</dependencies>
 </project>
