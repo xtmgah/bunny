@@ -28,6 +28,10 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.rabix.bindings.model.Job;
 import org.rabix.common.config.ConfigModule;
+import org.rabix.common.service.download.DownloadService;
+import org.rabix.common.service.download.impl.NoOpDownloadServiceImpl;
+import org.rabix.common.service.upload.UploadService;
+import org.rabix.common.service.upload.impl.NoOpUploadServiceImpl;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.rest.api.ExecutorHTTPService;
 import org.rabix.executor.rest.api.impl.ExecutorHTTPServiceImpl;
@@ -69,6 +73,8 @@ public class ServerBuilder {
               protected void configure() {
                 bind(BackendRegister.class).in(Scopes.SINGLETON);
                 bind(ExecutorHTTPService.class).to(ExecutorHTTPServiceImpl.class).in(Scopes.SINGLETON);
+                bind(DownloadService.class).to(NoOpDownloadServiceImpl.class).in(Scopes.SINGLETON);
+                bind(UploadService.class).to(NoOpUploadServiceImpl.class).in(Scopes.SINGLETON);
                 bind(ExecutorStatusCallback.class).to(NoOpExecutorStatusCallback.class).in(Scopes.SINGLETON);;
               }
         }));
