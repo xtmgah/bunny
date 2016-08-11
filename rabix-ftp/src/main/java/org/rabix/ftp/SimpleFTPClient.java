@@ -12,10 +12,10 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
-import org.rabix.common.service.DownloadService;
-import org.rabix.common.service.DownloadServiceException;
-import org.rabix.common.service.UploadService;
-import org.rabix.common.service.UploadServiceException;
+import org.rabix.common.service.download.DownloadService;
+import org.rabix.common.service.download.DownloadServiceException;
+import org.rabix.common.service.upload.UploadService;
+import org.rabix.common.service.upload.UploadServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

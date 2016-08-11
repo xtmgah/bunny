@@ -28,10 +28,10 @@ import org.rabix.bindings.model.requirement.LocalContainerRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.helper.ChecksumHelper;
 import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
-import org.rabix.common.service.DownloadService;
-import org.rabix.common.service.DownloadServiceException;
-import org.rabix.common.service.UploadService;
-import org.rabix.common.service.UploadServiceException;
+import org.rabix.common.service.download.DownloadService;
+import org.rabix.common.service.download.DownloadServiceException;
+import org.rabix.common.service.upload.UploadService;
+import org.rabix.common.service.upload.UploadServiceException;
 import org.rabix.executor.ExecutorException;
 import org.rabix.executor.config.FileConfig;
 import org.rabix.executor.config.StorageConfig;
@@ -46,6 +46,8 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.impl.LocalMemoizationService;
+import org.rabix.executor.status.ExecutorStatusCallback;
+import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,17 +76,19 @@ public class JobHandlerImpl implements JobHandler {
   private ContainerHandler containerHandler;
   private DockerClientLockDecorator dockerClient;
 
-  private LocalMemoizationService localMemoizationService;
+  private final ExecutorStatusCallback statusCallback;
+  private final LocalMemoizationService localMemoizationService;
 
   @Inject
   public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
-      Configuration configuration, DockerClientLockDecorator dockerClient,
+      Configuration configuration, DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
       LocalMemoizationService localMemoizationService, UploadService uploadService, DownloadService downloadService) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
     this.jobDataService = jobDataService;
     this.dockerClient = dockerClient;
+    this.statusCallback = statusCallback;
     this.localMemoizationService = localMemoizationService;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.uploadService = uploadService;
@@ -97,6 +101,8 @@ public class JobHandlerImpl implements JobHandler {
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
+      statusCallback.onJobStarted(job);
+      
       Map<String, Object> results = localMemoizationService.tryToFindResults(job);
       if (results != null) {
         containerHandler = new CompletedContainerHandler(job);
@@ -105,7 +111,10 @@ public class JobHandlerImpl implements JobHandler {
       }
 
       Bindings bindings = BindingsFactory.create(job);
+      
+      statusCallback.onInputFilesDownloadStarted();
       download(job, bindings.getInputFiles(job));
+      statusCallback.onInputFilesDownloadCompleted();
       
       List<Requirement> combinedRequirements = new ArrayList<>();
       combinedRequirements.addAll(bindings.getHints(job));
@@ -123,7 +132,7 @@ public class JobHandlerImpl implements JobHandler {
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, statusCallback, configuration);
       }
       containerHandler.start();
     } catch (Exception e) {
@@ -207,6 +216,7 @@ public class JobHandlerImpl implements JobHandler {
 
       if (!isSuccessful()) {
         upload(workingDir);
+        statusCallback.onJobFailed(job);
         return job;
       }
 
@@ -220,13 +230,17 @@ public class JobHandlerImpl implements JobHandler {
       }
 
       job = bindings.mapOutputFilePaths(job, new OutputFileMapper());
+      
+      statusCallback.onOutputFilesUploadStarted();
       upload(workingDir);
+      statusCallback.onOutputFilesUploadCompleted();
 
       JobData jobData = jobDataService.find(job.getId(), job.getRootId());
       jobData = JobData.cloneWithResult(jobData, job.getOutputs());
       jobDataService.save(jobData);
 
       logger.debug("Command line tool {} returned result {}.", job.getId(), job.getOutputs());
+      statusCallback.onJobCompleted(job);
       return job;
     } catch (ContainerException e) {
       logger.error("Failed to query container.", e);
@@ -237,6 +251,9 @@ public class JobHandlerImpl implements JobHandler {
     } catch (UploadServiceException e) {
       logger.error("Could not upload outputs.", e);
       throw new ExecutorException("Could not upload outputs.", e);
+    } catch (ExecutorStatusCallbackException e) {
+      logger.error("Could not call executor callback.", e);
+      throw new ExecutorException("Could not call executor callback.", e);
     }
   }
 

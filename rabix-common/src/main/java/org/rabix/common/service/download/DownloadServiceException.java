@@ -1,4 +1,4 @@
-package org.rabix.common.service;
+package org.rabix.common.service.download;
 
 public class DownloadServiceException extends Exception {
 

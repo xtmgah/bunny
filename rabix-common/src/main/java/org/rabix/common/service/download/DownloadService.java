@@ -1,4 +1,4 @@
-package org.rabix.common.service;
+package org.rabix.common.service.download;
 
 import java.io.File;
 

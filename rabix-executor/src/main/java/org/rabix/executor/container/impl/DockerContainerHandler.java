@@ -29,6 +29,8 @@ import org.rabix.common.retry.Retry;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
+import org.rabix.executor.status.ExecutorStatusCallback;
+import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,11 +75,14 @@ public class DockerContainerHandler implements ContainerHandler {
 
   private Integer overrideResultStatus = null;
 
-  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration, DockerClientLockDecorator dockerClient) throws ContainerException {
+  private ExecutorStatusCallback statusCallback;
+
+  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration, ExecutorStatusCallback statusCallback, DockerClientLockDecorator dockerClient) throws ContainerException {
     this.job = job;
     this.dockerClient = dockerClient;
     this.dockerResource = dockerResource;
     this.configuration = configuration;
+    this.statusCallback = statusCallback;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.isConfigAuthEnabled = configuration.getBoolean("docker.override.auth.enabled", false);
   }
@@ -87,6 +92,7 @@ public class DockerContainerHandler implements ContainerHandler {
     VerboseLogger.log(String.format("Pulling docker image %s", image));
 
     try {
+      statusCallback.onContainerImagePullStarted(image);
       if (isConfigAuthEnabled) {
         dockerClient.pull(image);
       } else {
@@ -99,9 +105,13 @@ public class DockerContainerHandler implements ContainerHandler {
           dockerClient.pull(image);
         }
       }
+      statusCallback.onContainerImagePullCompleted(image);
     } catch (DockerException | InterruptedException e) {
       logger.error("Failed to pull " + image, e);
       throw new ContainerException("Failed to pull " + image, e);
+    } catch (ExecutorStatusCallbackException e) {
+      logger.error("Failed to call status callback", e);
+      throw new ContainerException("Failed to call status callback", e);
     }
   }
 
