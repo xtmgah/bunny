@@ -15,6 +15,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.Configuration;
+import org.rabix.backend.local.status.NoOpExecutorStatusCallback;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
 import org.rabix.bindings.helper.URIHelper;
@@ -40,6 +41,7 @@ import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.config.FileConfig;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.status.ExecutorStatusCallback;
 import org.rabix.ftp.SimpleFTPModule;
 import org.rabix.transport.backend.BackendPopulator;
 import org.rabix.transport.backend.impl.BackendLocal;
@@ -134,6 +136,7 @@ public class BackendCommandLine {
               bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
               bind(BackendDispatcher.class).in(Scopes.SINGLETON);
               bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
+              bind(ExecutorStatusCallback.class).to(NoOpExecutorStatusCallback.class).in(Scopes.SINGLETON);;
               bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
             }
           });

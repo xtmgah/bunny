@@ -41,6 +41,8 @@ import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.DownloadFileService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.impl.LocalMemoizationService;
+import org.rabix.executor.status.ExecutorStatusCallback;
+import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.rabix.ftp.SimpleFTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,16 +67,17 @@ public class JobHandlerImpl implements JobHandler {
 
   private Job job;
   private EngineStub<?, ?, ?> engineStub;
-
-  private Configuration configuration;
   private ContainerHandler containerHandler;
-  private DockerClientLockDecorator dockerClient;
+  
+  private final Configuration configuration;
+  private final DockerClientLockDecorator dockerClient;
 
-  private LocalMemoizationService localMemoizationService;
+  private final ExecutorStatusCallback statusCallback;
+  private final LocalMemoizationService localMemoizationService;
 
   @Inject
   public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
-      DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient,
+      DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
       LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
     this.job = job;
     this.engineStub = engineStub;
@@ -85,6 +88,7 @@ public class JobHandlerImpl implements JobHandler {
     this.localMemoizationService = localMemoizationService;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
+    this.statusCallback = statusCallback;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
     this.hashAlgorithm = FileConfig.checksumAlgorithm(configuration);
   }
@@ -93,6 +97,8 @@ public class JobHandlerImpl implements JobHandler {
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
+      statusCallback.onJobStarted(job);
+      
       Map<String, Object> results = localMemoizationService.tryToFindResults(job);
       if (results != null) {
         containerHandler = new CompletedContainerHandler(job);
@@ -119,7 +125,7 @@ public class JobHandlerImpl implements JobHandler {
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, statusCallback, configuration);
       }
       containerHandler.start();
     } catch (Exception e) {
@@ -191,6 +197,7 @@ public class JobHandlerImpl implements JobHandler {
 
       if (!isSuccessful()) {
         upload(workingDir);
+        statusCallback.onJobFailed(job);
         return job;
       }
 
@@ -211,6 +218,7 @@ public class JobHandlerImpl implements JobHandler {
       jobDataService.save(jobData);
 
       logger.debug("Command line tool {} returned result {}.", job.getId(), job.getOutputs());
+      statusCallback.onJobCompleted(job);
       return job;
     } catch (ContainerException e) {
       logger.error("Failed to query container.", e);
@@ -221,6 +229,9 @@ public class JobHandlerImpl implements JobHandler {
     } catch (IOException e) {
       logger.error("Could not upload outputs.", e);
       throw new ExecutorException("Could not upload outputs.", e);
+    } catch (ExecutorStatusCallbackException e) {
+      logger.error("Could not call executor callback.", e);
+      throw new ExecutorException("Could not call executor callback.", e);
     }
   }
 
