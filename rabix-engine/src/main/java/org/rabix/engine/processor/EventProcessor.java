@@ -2,13 +2,13 @@ package org.rabix.engine.processor;
 
 import java.util.List;
 
-import org.rabix.bindings.model.Job;
 import org.rabix.engine.event.Event;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.status.EngineStatusCallback;
 
 public interface EventProcessor {
 
-  void start(List<IterationCallback> iterationCallbacks, JobStatusCallback jobStatusCallback);
+  void start(List<IterationCallback> iterationCallbacks, EngineStatusCallback engineStatusCallback);
 
   void stop();
   
@@ -30,19 +30,4 @@ public interface EventProcessor {
     
   }
   
-  /**
-   * Job status callback (READY, COMPLETED, etc.)
-   */
-  public static interface JobStatusCallback {
-    
-    void onReady(Job job) throws Exception;
-    
-    void onFailed(Job job) throws Exception;
-    
-    void onRootCompleted(String string) throws Exception;
-    
-    void onRootFailed(String string) throws Exception;
-    
-  }
-
 }

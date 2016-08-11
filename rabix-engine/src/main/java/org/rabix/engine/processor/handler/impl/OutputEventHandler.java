@@ -14,13 +14,13 @@ import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.status.EngineStatusCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
   
   private final EventProcessor eventProcessor;
   
-  private JobStatusCallback jobStatusCallback;
+  private EngineStatusCallback engineStatusCallback;
   
   @Inject
   public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService) {
@@ -49,8 +49,8 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     this.eventProcessor = eventProcessor;
   }
 
-  public void initialize(JobStatusCallback jobStatusCallback) {
-    this.jobStatusCallback = jobStatusCallback;
+  public void initialize(EngineStatusCallback engineStatusCallback) {
+    this.engineStatusCallback = engineStatusCallback;
   }
   
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
@@ -69,7 +69,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
       if (sourceJob.isRoot()) {
         eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
         try {
-          jobStatusCallback.onRootCompleted(sourceJob.getExternalId());
+          engineStatusCallback.onJobRootCompleted(sourceJob.getExternalId());
         } catch (Exception e) {
           logger.error("Failed to call onRootCompleted callback for Job " + sourceJob.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootCompleted callback for Job " + sourceJob.getRootId(), e);

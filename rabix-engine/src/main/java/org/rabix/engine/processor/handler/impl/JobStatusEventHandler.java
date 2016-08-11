@@ -27,7 +27,6 @@ import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.ContextRecordService;
@@ -35,6 +34,7 @@ import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.status.EngineStatusCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private final VariableRecordService variableRecordService;
   private final ContextRecordService contextRecordService;
   
-  private JobStatusCallback jobStatusCallback;
+  private EngineStatusCallback engineStatusCallback;
 
   @Inject
   public JobStatusEventHandler(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final ContextRecordService contextRecordService, final EventProcessor eventProcessor, final ScatterHandler scatterHelper) {
@@ -67,8 +67,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     this.variableRecordService = variableRecordService;
   }
 
-  public void initialize(JobStatusCallback jobStatusCallback) {
-    this.jobStatusCallback = jobStatusCallback;
+  public void initialize(EngineStatusCallback engineStatusCallback) {
+    this.engineStatusCallback = engineStatusCallback;
   }
 
   @Override
@@ -84,7 +84,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       if (!jobRecord.isContainer()) {
         Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
         try {
-          jobStatusCallback.onReady(job);
+          engineStatusCallback.onJobReady(job);
         } catch (Exception e) {
           logger.error("Failed to call onReady callback for Job " + job.getId(), e);
           throw new EventHandlerException("Failed to call onReady callback for Job " + job.getId(), e);
@@ -103,7 +103,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       
       if (jobRecord.isRoot()) {
         try {
-          jobStatusCallback.onRootCompleted(jobRecord.getRootId());
+          engineStatusCallback.onJobRootCompleted(jobRecord.getRootId());
         } catch (Exception e) {
           logger.error("Failed to call onRootCompleted callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootCompleted callback for Job " + jobRecord.getRootId(), e);
@@ -115,7 +115,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       
       if (event.getJobId().equals(event.getContextId())) {
         try {
-          jobStatusCallback.onRootFailed(event.getJobId());
+          engineStatusCallback.onJobRootFailed(event.getJobId());
         } catch (Exception e) {
           logger.error("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
@@ -123,7 +123,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       } else {
         try {
           Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
-          jobStatusCallback.onFailed(failedJob);
+          engineStatusCallback.onJobFailed(failedJob);
         } catch (Exception e) {
           logger.error("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
           throw new EventHandlerException("Failed to call onFailed callback for Job " + jobRecord.getId(), e);

@@ -20,6 +20,7 @@ import org.rabix.engine.processor.dispatcher.EventDispatcherFactory;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.processor.handler.HandlerFactory;
 import org.rabix.engine.service.ContextRecordService;
+import org.rabix.engine.status.EngineStatusCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +55,8 @@ public class EventProcessorImpl implements EventProcessor {
     this.eventDispatcher = eventDispatcherFactory.create(EventDispatcher.Type.SYNC);
   }
 
-  public void start(final List<IterationCallback> iterationCallbacks, JobStatusCallback jobStatusCallback) {
-    this.handlerFactory.initialize(jobStatusCallback);
+  public void start(final List<IterationCallback> iterationCallbacks, EngineStatusCallback engineStatusCallback) {
+    this.handlerFactory.initialize(engineStatusCallback);
     
     executorService.execute(new Runnable() {
       @Override
