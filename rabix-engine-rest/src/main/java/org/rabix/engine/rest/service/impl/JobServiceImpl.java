@@ -24,7 +24,6 @@ import org.rabix.engine.event.impl.InitEvent;
 import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.rest.backend.BackendDispatcher;
 import org.rabix.engine.rest.db.JobDB;
@@ -34,6 +33,8 @@ import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.status.EngineStatusCallback;
+import org.rabix.engine.status.EngineStatusCallbackException;
 import org.rabix.engine.validator.JobStateValidationException;
 import org.rabix.engine.validator.JobStateValidator;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class JobServiceImpl implements JobService {
 
     boolean isLocalBackend = configuration.getBoolean("local.backend", false);
     boolean isConformance = configuration.getString("rabix.conformance") != null;
-    this.eventProcessor.start(null, new JobStatusCallbackImpl(isLocalBackend, isLocalBackend, isConformance));
+    this.eventProcessor.start(null, new EngineStatusCallbackImpl(isLocalBackend, isLocalBackend, isConformance));
   }
   
   @Override
@@ -176,7 +177,7 @@ public class JobServiceImpl implements JobService {
     return new Context(contextId, config);
   }
   
-  private class JobStatusCallbackImpl implements JobStatusCallback {
+  private class EngineStatusCallbackImpl implements EngineStatusCallback {
 
     private boolean stopOnFail;
     private boolean setResources;
@@ -187,14 +188,14 @@ public class JobServiceImpl implements JobService {
 
     private Set<String> stoppingRootIds = new HashSet<>();
     
-    public JobStatusCallbackImpl(boolean setResources, boolean stopOnFail, boolean conformance) {
+    public EngineStatusCallbackImpl(boolean setResources, boolean stopOnFail, boolean conformance) {
       this.stopOnFail = stopOnFail;
       this.setResources = setResources;
       this.conformance = conformance;
     }
     
     @Override
-    public void onReady(Job job) {
+    public void onJobReady(Job job) {
       if (setResources && !conformance) {
         long numberOfCores = SystemEnvironmentHelper.getNumberOfCores();
         long memory = SystemEnvironmentHelper.getTotalPhysicalMemorySizeInMB();
@@ -213,7 +214,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onFailed(final Job failedJob) throws Exception {
+    public void onJobFailed(final Job failedJob) throws EngineStatusCallbackException {
       if (stopOnFail) {
         synchronized (stoppingRootIds) {
           if (stoppingRootIds.contains(failedJob.getRootId())) {
@@ -221,7 +222,11 @@ public class JobServiceImpl implements JobService {
           }
           stoppingRootIds.add(failedJob.getRootId());
           
-          stop(failedJob.getRootId());
+          try {
+            stop(failedJob.getRootId());
+          } catch (JobServiceException e) {
+            logger.error("Failed to stop Root job " + failedJob.getRootId(), e);
+          }
           executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -235,7 +240,7 @@ public class JobServiceImpl implements JobService {
                     }
                   }
                   if (exit) {
-                    onRootFailed(failedJob.getRootId());
+                    onJobRootFailed(failedJob.getRootId());
                     break;
                   }
                   Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -262,7 +267,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onRootCompleted(String rootId) throws Exception {
+    public void onJobRootCompleted(String rootId) throws EngineStatusCallbackException {
       Job job = jobDB.get(rootId);
       job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
       job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
@@ -271,7 +276,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onRootFailed(String rootId) throws Exception {
+    public void onJobRootFailed(String rootId) throws EngineStatusCallbackException {
       synchronized (stoppingRootIds) {
         Job job = jobDB.get(rootId);
         job = Job.cloneWithStatus(job, JobStatus.FAILED);
