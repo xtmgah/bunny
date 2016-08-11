@@ -141,14 +141,15 @@ public class TestRunner {
     boolean fileClassesEqual = resultFileClass.equals(mapTest.get("expected").get("outfile").get("class"));
 
     if (!fileNamesEqual) {
-      logger.info("result and expected file name are not equal!");
+      logger.error("result and expected file name are not equal!");
     } else {
       if (!fileSizesEqual) {
-        logger.info("result and expected file size are not equal!");
+        logger.error("result and expected file size are not equal!");
       } else {
         if (!fileClassesEqual) {
-          logger.info("result and expected file class are not equal!");
+          logger.error("result and expected file class are not equal!");
         } else {
+          logger.info("Test case passed.");	
           return true;
         }
       }
