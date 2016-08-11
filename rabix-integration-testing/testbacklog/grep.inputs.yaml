@@ -1,6 +1,6 @@
 {
     "infile": {
-        "path": "grep.inputs.yaml",
+        "path": "inputs/grep.inputs.yaml",
         "class": "File",
     },
     "pattern": "inf"
