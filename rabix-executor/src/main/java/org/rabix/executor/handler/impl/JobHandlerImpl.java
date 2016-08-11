@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -16,6 +17,7 @@ import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
+import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement;
@@ -26,6 +28,10 @@ import org.rabix.bindings.model.requirement.LocalContainerRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.helper.ChecksumHelper;
 import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
+import org.rabix.common.service.DownloadService;
+import org.rabix.common.service.DownloadServiceException;
+import org.rabix.common.service.UploadService;
+import org.rabix.common.service.UploadServiceException;
 import org.rabix.executor.ExecutorException;
 import org.rabix.executor.config.FileConfig;
 import org.rabix.executor.config.StorageConfig;
@@ -38,10 +44,8 @@ import org.rabix.executor.container.impl.DockerContainerHandler.DockerClientLock
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.service.DownloadFileService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.impl.LocalMemoizationService;
-import org.rabix.ftp.SimpleFTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,12 +60,12 @@ public class JobHandlerImpl implements JobHandler {
 
   private final File workingDir;
 
-  private final DownloadFileService downloadFileService;
   private final JobDataService jobDataService;
 
-  private final SimpleFTPClient ftpClient;
   private final boolean enableHash;
   private final HashAlgorithm hashAlgorithm;
+  private final UploadService uploadService;
+  private final DownloadService downloadService;
 
   private Job job;
   private EngineStub<?, ?, ?> engineStub;
@@ -74,17 +78,17 @@ public class JobHandlerImpl implements JobHandler {
 
   @Inject
   public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
-      DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient,
-      LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
+      Configuration configuration, DockerClientLockDecorator dockerClient,
+      LocalMemoizationService localMemoizationService, UploadService uploadService, DownloadService downloadService) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
-    this.downloadFileService = downloadFileService;
     this.jobDataService = jobDataService;
     this.dockerClient = dockerClient;
     this.localMemoizationService = localMemoizationService;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
-    this.ftpClient = ftpClient;
+    this.uploadService = uploadService;
+    this.downloadService = downloadService;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
     this.hashAlgorithm = FileConfig.checksumAlgorithm(configuration);
   }
@@ -101,8 +105,8 @@ public class JobHandlerImpl implements JobHandler {
       }
 
       Bindings bindings = BindingsFactory.create(job);
-      downloadFileService.download(job, bindings.getInputFiles(job));
-
+      download(job, bindings.getInputFiles(job));
+      
       List<Requirement> combinedRequirements = new ArrayList<>();
       combinedRequirements.addAll(bindings.getHints(job));
       combinedRequirements.addAll(bindings.getRequirements(job));
@@ -128,6 +132,18 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
+  public void download(final Job job, final Set<FileValue> fileValues) throws DownloadServiceException {
+    for (FileValue fileValue : fileValues) {
+      File file = new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), fileValue.getPath());
+      if (file.exists()) {
+        continue;
+      }
+      if (StorageConfig.getBackendStore(configuration).equals(BackendStore.FTP)) {
+        downloadService.download(new File(StorageConfig.getLocalExecutionDirectory(configuration)), fileValue.getPath());
+      }
+    }
+  }
+  
   private void createFileRequirements(List<Requirement> requirements) throws ExecutorException, FileMappingException {
     try {
       FileRequirement fileRequirementResource = getRequirement(requirements, FileRequirement.class);
@@ -218,20 +234,19 @@ public class JobHandlerImpl implements JobHandler {
     } catch (BindingException e) {
       logger.error("Could not collect outputs.", e);
       throw new ExecutorException("Could not collect outputs.", e);
-    } catch (IOException e) {
+    } catch (UploadServiceException e) {
       logger.error("Could not upload outputs.", e);
       throw new ExecutorException("Could not upload outputs.", e);
     }
   }
 
-  private void upload(File workingDir) throws IOException {
+  private void upload(File workingDir) throws UploadServiceException {
     if (!StorageConfig.getBackendStore(configuration).equals(BackendStore.FTP)) {
       return;
     }
     for (File file : workingDir.listFiles()) {
-      String remotePath = file.getAbsolutePath()
-          .substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
-      ftpClient.upload(file, remotePath);
+      String remotePath = file.getAbsolutePath().substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
+      uploadService.upload(file, remotePath);
     }
   }
 

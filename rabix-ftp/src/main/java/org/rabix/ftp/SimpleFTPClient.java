@@ -12,12 +12,16 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+import org.rabix.common.service.DownloadService;
+import org.rabix.common.service.DownloadServiceException;
+import org.rabix.common.service.UploadService;
+import org.rabix.common.service.UploadServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-public class SimpleFTPClient {
+public class SimpleFTPClient implements DownloadService, UploadService {
 
   private final static Logger logger = LoggerFactory.getLogger(SimpleFTPClient.class);
   
@@ -34,7 +38,7 @@ public class SimpleFTPClient {
     this.password = FTPConfig.getPassword(configuration);
   }
 
-  public void download(File workingDir, String remotePath) throws IOException {
+  public void download(File workingDir, String remotePath) throws DownloadServiceException {
     FTPClient ftpClient = new FTPClient();
     try {
       ftpClient.connect(host, port);
@@ -63,7 +67,7 @@ public class SimpleFTPClient {
         logger.debug("File {} has been downloaded successfully.", remotePath);
       }
     } catch (IOException e) {
-      throw e;
+      throw new DownloadServiceException(e);
     } finally {
       try {
         if (ftpClient.isConnected()) {
@@ -76,7 +80,7 @@ public class SimpleFTPClient {
     }
   }
 
-  public void upload(File file, String remotePath) throws IOException {
+  public void upload(File file, String remotePath) throws UploadServiceException {
     FTPClient ftp = new FTPClient();
     int reply;
     try {
@@ -108,7 +112,7 @@ public class SimpleFTPClient {
       }
       ftp.disconnect();
     } catch (IOException e) {
-      throw e;
+      throw new UploadServiceException(e);
     }
   }
   
