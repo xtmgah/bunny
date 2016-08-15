@@ -165,7 +165,7 @@ public class Draft2Processor implements ProtocolProcessor {
         }
         result = globFiles(job, workingDir, hashAlgorithm, outputPort, binding);
       } else {
-        result = collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
+        return collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
       }
     } else if (Draft2SchemaHelper.isRecordFromSchema(schema)) {
       Map<String, Object> record = new HashMap<>();
