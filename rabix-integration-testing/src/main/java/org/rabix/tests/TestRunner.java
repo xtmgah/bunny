@@ -188,7 +188,7 @@ static void executeCommand(String cmdline) {
     ArrayList<String> output = command(cmdline, workingdir);
     if (null == output) {
       logger.error("COMMAND FAILED: " + cmdline + "\n");
-//      System.exit(-1);
+      System.exit(-1);
     }
 
     for (String line : output) {

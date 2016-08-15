@@ -1,6 +1,6 @@
 {
     "infile": {
-        "path": "inputs/sampleFile.txt",
+        "path": "testbacklog/inputs/sampleFile.txt",
         "class": "File"
     },
     "pattern": "inf"
