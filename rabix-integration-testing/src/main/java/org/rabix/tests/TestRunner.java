@@ -57,9 +57,11 @@ public class TestRunner {
     logger.info("Extracting jar file");
     executeCommand("sudo tar -zxvf " + System.getProperty("user.dir")
         + "/rabix-backend-local/target/rabix-backend-local-0.0.1-SNAPSHOT-id3.tar.gz");
-    executeCommand("current folder");
+    logger.info("current folder");
     executeCommand("pwd");
     executeCommand("cp -a " + System.getProperty("user.dir") + "/rabix-integration-testing/testbacklog .");
+    logger.info("ispis foldera");
+    executeCommand("ls -ltra");
 
     for (File child : directoryListing) {
       if (!child.toString().endsWith(".test.yaml"))
