@@ -29,6 +29,7 @@ public class TestRunner {
 
   public static void main(String[] commandLineArguments) {
     try {
+      logger.info("Testing started...");	
       PropertiesConfiguration configuration = getConfig();
       testDirPath = getStringFromConfig(configuration, "testDirPath");
       cmdPrefix = getStringFromConfig(configuration, "cmdPrefix");
@@ -182,10 +183,13 @@ public class TestRunner {
     return null;
   }
 
-  static void executeCommand(String cmdline) {
+  @SuppressWarnings("null")
+static void executeCommand(String cmdline) {
     ArrayList<String> output = command(cmdline, workingdir);
     if (null == output) {
       logger.error("COMMAND FAILED: " + cmdline + "\n");
+      logger.error("output has value null: " + output.toString());
+      logger.error("output size: " +output.size());
       System.exit(-1);
     }
 
