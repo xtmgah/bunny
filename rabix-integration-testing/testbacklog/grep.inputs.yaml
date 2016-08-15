@@ -1,6 +1,6 @@
 {
     "infile": {
-        "path": "testbacklog/grep.inputs.yaml",
+        "path": "/home/travis/build/rabix/bunny/rabix-backend-local/target/testbacklog/grep.inputs.yaml",
         "class": "File"
     },
     "pattern": "inf"
