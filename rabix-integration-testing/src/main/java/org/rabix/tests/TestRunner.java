@@ -80,6 +80,7 @@ public class TestRunner {
           String cmd = cmdPrefix + " " + mapTest.get("app") + " " + mapTest.get("inputs") + " > result.yaml";
           logger.info("Currently in folder: ");
           executeCommand("pwd");
+          executeCommand("ls -ltra");
           logger.info("->Running cmd: " + cmd);
           executeCommand(cmd);
 
