@@ -1,1 +1,7 @@
-there is no inf here
+-{
+ -    "infile": {
+ -        "path": "inputs/sampleFile.txt",
+ -        "class": "File",
+ -    },
+ -    "pattern": "inf"
+ -}
