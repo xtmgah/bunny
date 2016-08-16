@@ -27,13 +27,6 @@
             </excludes>
         </fileSet>
         <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>/lib/</outputDirectory>
-            <includes>
-                <include>rabix-backend-local-${project.version}.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
             <directory>${project.basedir}/bin</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
@@ -41,4 +34,11 @@
             </includes>
         </fileSet>
     </fileSets>
+    <files>
+		<file>
+			<source>${project.build.directory}/rabix-backend-local-${project.version}.jar</source>
+			<outputDirectory>/lib/</outputDirectory>
+			<destName>rabix-backend-local.jar</destName>
+		</file>
+	</files>
 </assembly>
