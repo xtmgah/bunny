@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.rabix</groupId>
 	<artifactId>rabix</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.6.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Rabix</name>
 	<modules>
@@ -63,7 +63,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
+			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>${commons-io.version}</version>
 		</dependency>
