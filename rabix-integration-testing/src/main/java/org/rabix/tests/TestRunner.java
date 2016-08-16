@@ -41,7 +41,7 @@ public class TestRunner {
   }
 
   private static void startTestExecution() throws RabixTestException {
-    boolean success = true;
+    boolean allTestsPassed = true;
     boolean testPassed = false;
     File dir = new File(testDirPath);
     File[] directoryListing = dir.listFiles();
@@ -99,7 +99,7 @@ public class TestRunner {
           } else {
             logger.info(testName + " FAILED");
             failedTests.add(testName);
-            success = false;
+            allTestsPassed = false;
           }
 
         }
@@ -110,7 +110,7 @@ public class TestRunner {
       }
     }
 
-    if (success) {
+    if (allTestsPassed) {
       logger.info("Test suite passed successfully.");
     } else {
       logger.info("Test suite failed.");
