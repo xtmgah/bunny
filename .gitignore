@@ -51,4 +51,10 @@ vcs.xml
 # sbteclipse plugin
 .target
 
+# TestRunner specific
+result.yaml
+
 target
+
+# TestRunner specific
+result.yaml
