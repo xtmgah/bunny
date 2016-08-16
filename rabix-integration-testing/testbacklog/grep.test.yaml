@@ -17,7 +17,7 @@ test2:
       size: 36
 test3:
   app: testbacklog/grep.cwl.yaml
-  inputs: testbacklog/grep.inputs.yaml
+  inputs: testbacklog/grep2.inputs.yaml
   expected:
     outfile:
       class: File
