@@ -73,27 +73,27 @@
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-engine</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-draft2</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-draft3</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-sb</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-transport</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>

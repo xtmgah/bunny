@@ -85,27 +85,27 @@
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-executor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-draft2</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-draft3</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-sb</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-engine-rest</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>
