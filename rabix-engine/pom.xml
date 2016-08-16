@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-cli</groupId>

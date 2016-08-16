@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mozilla</groupId>
@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-ftp</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>
