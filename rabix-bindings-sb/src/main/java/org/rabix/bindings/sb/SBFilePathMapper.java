@@ -20,7 +20,8 @@ public class SBFilePathMapper implements ProtocolFilePathMapper {
     
     SBPortProcessor sbPortProcessor = new SBPortProcessor(sbJob);
     try {
-      Map<String, Object> inputs = sbPortProcessor.processInputs(job.getInputs(), new SBFilePathMapProcessorCallback(fileMapper));
+      Map<String, Object> config = job.getContext() != null? job.getContext().getConfig() : null;
+      Map<String, Object> inputs = sbPortProcessor.processInputs(job.getInputs(), new SBFilePathMapProcessorCallback(fileMapper, config));
       return Job.cloneWithInputs(job, inputs);
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
@@ -33,7 +34,8 @@ public class SBFilePathMapper implements ProtocolFilePathMapper {
     
     SBPortProcessor sbPortProcessor = new SBPortProcessor(sbJob);
     try {
-      Map<String, Object> outputs = sbPortProcessor.processOutputs(job.getOutputs(), new SBFilePathMapProcessorCallback(fileMapper));
+      Map<String, Object> config = job.getContext() != null? job.getContext().getConfig() : null;
+      Map<String, Object> outputs = sbPortProcessor.processOutputs(job.getOutputs(), new SBFilePathMapProcessorCallback(fileMapper, config));
       return Job.cloneWithOutputs(job, outputs);
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);

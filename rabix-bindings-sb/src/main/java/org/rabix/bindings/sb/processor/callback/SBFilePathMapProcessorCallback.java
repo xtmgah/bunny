@@ -15,8 +15,10 @@ import org.rabix.common.helper.CloneHelper;
 public class SBFilePathMapProcessorCallback implements SBPortProcessorCallback {
 
   private final FileMapper filePathMapper;
+  private final Map<String, Object> config;
 
-  public SBFilePathMapProcessorCallback(FileMapper filePathMapper) {
+  public SBFilePathMapProcessorCallback(FileMapper filePathMapper, Map<String, Object> config) {
+    this.config = config;
     this.filePathMapper = filePathMapper;
   }
 
@@ -34,14 +36,14 @@ public class SBFilePathMapProcessorCallback implements SBPortProcessorCallback {
         String path = SBFileValueHelper.getPath(valueMap);
 
         if (path != null && filePathMapper != null) {
-          SBFileValueHelper.setPath(filePathMapper.map(path), valueMap);
+          SBFileValueHelper.setPath(filePathMapper.map(path, config), valueMap);
 
           List<Map<String, Object>> secondaryFiles = SBFileValueHelper.getSecondaryFiles(valueMap);
 
           if (secondaryFiles != null) {
             for (Map<String, Object> secondaryFile : secondaryFiles) {
               String secondaryFilePath = SBFileValueHelper.getPath(secondaryFile);
-              SBFileValueHelper.setPath(filePathMapper.map(secondaryFilePath), secondaryFile);
+              SBFileValueHelper.setPath(filePathMapper.map(secondaryFilePath, config), secondaryFile);
             }
           }
           return new SBPortProcessorResult(valueMap, true);

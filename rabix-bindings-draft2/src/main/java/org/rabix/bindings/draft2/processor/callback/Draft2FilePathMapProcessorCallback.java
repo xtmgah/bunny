@@ -15,8 +15,10 @@ import org.rabix.common.helper.CloneHelper;
 public class Draft2FilePathMapProcessorCallback implements Draft2PortProcessorCallback {
 
   private final FileMapper filePathMapper;
+  private final Map<String, Object> config;
 
-  public Draft2FilePathMapProcessorCallback(FileMapper filePathMapper) {
+  public Draft2FilePathMapProcessorCallback(FileMapper filePathMapper, Map<String, Object> config) {
+    this.config = config;
     this.filePathMapper = filePathMapper;
   }
 
@@ -34,14 +36,14 @@ public class Draft2FilePathMapProcessorCallback implements Draft2PortProcessorCa
         String path = Draft2FileValueHelper.getPath(valueMap);
 
         if (path != null && filePathMapper != null) {
-          Draft2FileValueHelper.setPath(filePathMapper.map(path), valueMap);
+          Draft2FileValueHelper.setPath(filePathMapper.map(path, config), valueMap);
 
           List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(valueMap);
 
           if (secondaryFiles != null) {
             for (Map<String, Object> secondaryFile : secondaryFiles) {
               String secondaryFilePath = Draft2FileValueHelper.getPath(secondaryFile);
-              Draft2FileValueHelper.setPath(filePathMapper.map(secondaryFilePath), secondaryFile);
+              Draft2FileValueHelper.setPath(filePathMapper.map(secondaryFilePath, config), secondaryFile);
             }
           }
           return new Draft2PortProcessorResult(valueMap, true);

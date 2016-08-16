@@ -15,8 +15,10 @@ import org.rabix.common.helper.CloneHelper;
 public class Draft3FilePathMapProcessorCallback implements Draft3PortProcessorCallback {
 
   private final FileMapper filePathMapper;
+  private final Map<String, Object> config;
 
-  public Draft3FilePathMapProcessorCallback(FileMapper filePathMapper) {
+  public Draft3FilePathMapProcessorCallback(FileMapper filePathMapper, Map<String, Object> config) {
+    this.config = config;
     this.filePathMapper = filePathMapper;
   }
 
@@ -34,14 +36,14 @@ public class Draft3FilePathMapProcessorCallback implements Draft3PortProcessorCa
         String path = Draft3FileValueHelper.getPath(valueMap);
 
         if (path != null && filePathMapper != null) {
-          Draft3FileValueHelper.setPath(filePathMapper.map(path), valueMap);
+          Draft3FileValueHelper.setPath(filePathMapper.map(path, config), valueMap);
 
           List<Map<String, Object>> secondaryFiles = Draft3FileValueHelper.getSecondaryFiles(valueMap);
 
           if (secondaryFiles != null) {
             for (Map<String, Object> secondaryFile : secondaryFiles) {
               String secondaryFilePath = Draft3FileValueHelper.getPath(secondaryFile);
-              Draft3FileValueHelper.setPath(filePathMapper.map(secondaryFilePath), secondaryFile);
+              Draft3FileValueHelper.setPath(filePathMapper.map(secondaryFilePath, config), secondaryFile);
             }
           }
           return new Draft3PortProcessorResult(valueMap, true);

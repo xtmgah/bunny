@@ -185,7 +185,7 @@ public class JobHandlerImpl implements JobHandler {
         }
         if (fileRequirement instanceof SingleInputFileRequirement) {
           String path = ((SingleInputFileRequirement) fileRequirement).getContent().getPath();
-          String mappedPath = inputFileMapper.map(path);
+          String mappedPath = inputFileMapper.map(path, job.getContext().getConfig());
           File file = new File(mappedPath);
           if (!file.exists()) {
             continue;
@@ -240,12 +240,12 @@ public class JobHandlerImpl implements JobHandler {
         job = Job.cloneWithOutputs(job, outputsWithCheckSum);
       }
 
-      job = bindings.mapOutputFilePaths(job, outputFileMapper);
-      
       statusCallback.onOutputFilesUploadStarted();
       upload(workingDir);
       statusCallback.onOutputFilesUploadCompleted();
 
+      job = bindings.mapOutputFilePaths(job, outputFileMapper);
+      
       JobData jobData = jobDataService.find(job.getId(), job.getRootId());
       jobData = JobData.cloneWithResult(jobData, job.getOutputs());
       jobDataService.save(jobData);

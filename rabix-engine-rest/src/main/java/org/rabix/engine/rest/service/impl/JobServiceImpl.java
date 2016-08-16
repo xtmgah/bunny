@@ -122,6 +122,9 @@ public class JobServiceImpl implements JobService {
     logger.debug("Start Job {}", job);
     
     Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString(), config);
+    if (context.getId() == null) {
+      context.setId(UUID.randomUUID().toString());
+    }
     job = Job.cloneWithIds(job, context.getId(), context.getId());
     job = Job.cloneWithContext(job, context);
 
