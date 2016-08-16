@@ -152,7 +152,7 @@ public class JobHandlerImpl implements JobHandler {
   }
 
   public void downloadInputFiles(final Job job, final Bindings bindings) throws BindingException, DownloadServiceException {
-    if (!StorageConfig.getBackendStore(configuration).equals(BackendStore.FTP)) {
+    if (StorageConfig.getBackendStore(configuration).equals(BackendStore.LOCAL)) {
       return;
     }
     Set<FileValue> fileValues = bindings.getInputFiles(job);
@@ -269,7 +269,7 @@ public class JobHandlerImpl implements JobHandler {
   }
 
   private void upload(File workingDir) throws UploadServiceException {
-    if (!StorageConfig.getBackendStore(configuration).equals(BackendStore.FTP)) {
+    if (StorageConfig.getBackendStore(configuration).equals(BackendStore.LOCAL)) {
       return;
     }
     File baseExecutionDirectory = new File(StorageConfig.getLocalExecutionDirectory(configuration));
