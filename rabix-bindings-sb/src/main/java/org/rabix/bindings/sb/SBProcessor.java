@@ -165,7 +165,7 @@ public class SBProcessor implements ProtocolProcessor {
         }
         result = globFiles(job, workingDir, hashAlgorithm, outputPort, binding);
       } else {
-        result = collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
+        return collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
       }
     } else if (SBSchemaHelper.isRecordFromSchema(schema)) {
       Map<String, Object> record = new HashMap<>();
@@ -194,6 +194,7 @@ public class SBProcessor implements ProtocolProcessor {
     }
     Object outputEval = SBBindingHelper.getOutputEval(binding);
     if (outputEval != null) {
+      logger.debug("Evaluating OutputEval for type {} and result {}", schema, result);
       result = SBBindingHelper.evaluateOutputEval(job, result, binding);
       logger.info("OutputEval transformed result into {}.", result);
     }
