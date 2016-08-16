@@ -12,7 +12,7 @@ public interface JobService {
   
   Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException;
 
-  Job start(Job job, Map<String, String> config) throws JobServiceException;
+  Job start(Job job, Map<String, Object> config) throws JobServiceException;
   
   void stop(String id) throws JobServiceException;
   

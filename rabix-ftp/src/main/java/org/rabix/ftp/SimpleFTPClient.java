@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.net.ftp.FTP;
@@ -38,7 +40,7 @@ public class SimpleFTPClient implements DownloadService, UploadService {
     this.password = FTPConfig.getPassword(configuration);
   }
 
-  public void download(File workingDir, String remotePath) throws DownloadServiceException {
+  public void download(File workingDir, String remotePath, Map<String, Object> config) throws DownloadServiceException {
     FTPClient ftpClient = new FTPClient();
     try {
       ftpClient.connect(host, port);
@@ -80,7 +82,14 @@ public class SimpleFTPClient implements DownloadService, UploadService {
     }
   }
 
-  public void upload(File file, String remotePath) throws UploadServiceException {
+  @Override
+  public void download(File workingDir, Set<String> remotePaths, Map<String, Object> config) throws DownloadServiceException {
+    for (String path : remotePaths) {
+      download(workingDir, path, config);
+    }
+  }
+  
+  public void upload(File file, File baseExecutionDirectory, boolean wait, boolean create, Map<String, Object> config) throws UploadServiceException {
     FTPClient ftp = new FTPClient();
     int reply;
     try {
@@ -95,6 +104,7 @@ public class SimpleFTPClient implements DownloadService, UploadService {
       ftp.setFileType(FTP.BINARY_FILE_TYPE);
       ftp.enterLocalPassiveMode();
 
+      String remotePath = file.getAbsolutePath().substring(baseExecutionDirectory.getAbsolutePath().length()); // TODO check
       String[] paths = remotePath.split(File.separator);
       
       for(int i = 0; i < paths.length - 1; i++) {
@@ -116,6 +126,13 @@ public class SimpleFTPClient implements DownloadService, UploadService {
     }
   }
   
+  @Override
+  public void upload(Set<File> files, File baseExecutionDirectory,boolean wait,  boolean create, Map<String, Object> config) throws UploadServiceException {
+    for (File file : files) {
+      upload(file, baseExecutionDirectory, wait, create, config);
+    }
+  }
+  
   private static boolean changeWorkingDirectory(FTPClient ftpClient, String dirPath) throws IOException {
     ftpClient.changeWorkingDirectory(dirPath);
     int returnCode = ftpClient.getReplyCode();
@@ -124,5 +141,5 @@ public class SimpleFTPClient implements DownloadService, UploadService {
     }
     return true;
   }
-  
+
 }

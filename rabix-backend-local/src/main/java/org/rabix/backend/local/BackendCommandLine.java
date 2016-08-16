@@ -17,6 +17,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
@@ -43,6 +44,9 @@ import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
 import org.rabix.executor.config.FileConfig;
+import org.rabix.executor.pathmapper.InputFileMapper;
+import org.rabix.executor.pathmapper.OutputFileMapper;
+import org.rabix.executor.pathmapper.local.LocalPathMapper;
 import org.rabix.executor.service.ExecutorService;
 import org.rabix.executor.status.ExecutorStatusCallback;
 import org.rabix.executor.status.impl.NoOpExecutorStatusCallback;
@@ -144,6 +148,9 @@ public class BackendCommandLine {
               bind(UploadService.class).to(NoOpUploadServiceImpl.class).in(Scopes.SINGLETON);
               bind(ExecutorStatusCallback.class).to(NoOpExecutorStatusCallback.class).in(Scopes.SINGLETON);;
               bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
+              
+              bind(FileMapper.class).annotatedWith(InputFileMapper.class).to(LocalPathMapper.class);
+              bind(FileMapper.class).annotatedWith(OutputFileMapper.class).to(LocalPathMapper.class);
             }
           });
 
@@ -155,13 +162,13 @@ public class BackendCommandLine {
       Boolean conformance = configuration.getString(FileConfig.RABIX_CONFORMANCE) != null;    
       
       Resources resources = null;
-      Map<String, String> contextConfig = null;
+      Map<String, Object> contextConfig = null;
       
       if(conformance) {
         BindingsFactory.setProtocol(configuration.getString(FileConfig.RABIX_CONFORMANCE));
         resources = extractResources(inputs, BindingsFactory.protocol);
         if(resources != null) {
-          contextConfig = new HashMap<String, String>();
+          contextConfig = new HashMap<String, Object>();
           if(resources.getCpu() != null) {
             contextConfig.put("allocatedResources.cpu", resources.getCpu().toString());
           }

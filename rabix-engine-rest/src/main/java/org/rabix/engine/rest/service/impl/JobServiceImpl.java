@@ -118,7 +118,7 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public Job start(Job job, Map<String, String> config) throws JobServiceException {
+  public Job start(Job job, Map<String, Object> config) throws JobServiceException {
     logger.debug("Start Job {}", job);
     
     Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString(), config);
@@ -173,7 +173,7 @@ public class JobServiceImpl implements JobService {
     return jobDB.get(id);
   }
 
-  private Context createContext(String contextId, Map<String, String> config) {
+  private Context createContext(String contextId, Map<String, Object> config) {
     return new Context(contextId, config);
   }
   
@@ -204,8 +204,8 @@ public class JobServiceImpl implements JobService {
         job = Job.cloneWithResources(job, resources);
       }
       else if (conformance && job.getContext().getConfig() != null) {
-        long numberOfCores = job.getContext().getConfig().get("allocatedResources.cpu") != null ? Long.parseLong(job.getContext().getConfig().get("allocatedResources.cpu")) : null;
-        long memory = job.getContext().getConfig().get("allocatedResources.mem") != null ? Long.parseLong(job.getContext().getConfig().get("allocatedResources.mem")) : null;
+        long numberOfCores = job.getContext().getConfig().get("allocatedResources.cpu") != null ? Long.parseLong((String) job.getContext().getConfig().get("allocatedResources.cpu")) : null;
+        long memory = job.getContext().getConfig().get("allocatedResources.mem") != null ? Long.parseLong((String) job.getContext().getConfig().get("allocatedResources.mem")) : null;
         Resources resources = new Resources(numberOfCores, memory, null, true);
         job = Job.cloneWithResources(job, resources);
       }

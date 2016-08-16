@@ -10,10 +10,10 @@ public class Context {
   @JsonProperty("id")
   private String id;
   @JsonProperty("config")
-  private Map<String, String> config;
+  private Map<String, Object> config;
 
   @JsonCreator
-  public Context(@JsonProperty("id") String id, @JsonProperty("config") Map<String, String> config) {
+  public Context(@JsonProperty("id") String id, @JsonProperty("config") Map<String, Object> config) {
     this.id = id;
     this.config = config;
   }
@@ -26,11 +26,11 @@ public class Context {
     return id;
   }
 
-  public void setConfig(Map<String, String> config) {
+  public void setConfig(Map<String, Object> config) {
     this.config = config;
   }
   
-  public Map<String, String> getConfig() {
+  public Map<String, Object> getConfig() {
     return config;
   }
 
