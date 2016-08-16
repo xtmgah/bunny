@@ -31,3 +31,11 @@ test4:
       class: File
       name: out.txt
       size: 14
+test5:
+  app: testbacklog/workflow.cwl.yaml
+  inputs: testbacklog/workflow.inputs.yaml
+  expected:
+    outfile:
+      class: File
+      name: out.txt
+      size: 13
