@@ -20,7 +20,7 @@ public class BackendStubRabbitMQ extends BackendStub<TransportQueueRabbitMQ, Bac
 
     BackendConfiguration backendConfiguration = backend.getBackendConfiguration();
     this.sendToBackendQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
-    this.sendToBackendControlQueue = new TransportQueueRabbitMQ(backendConfiguration.getReceiveControlRoutingKey(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveRoutingKey());
+    this.sendToBackendControlQueue = new TransportQueueRabbitMQ(backendConfiguration.getExchange(), backendConfiguration.getExchangeType(), backendConfiguration.getReceiveControlRoutingKey());
     
     EngineConfiguration engineConfiguration = backend.getEngineConfiguration();
     this.receiveFromBackendQueue = new TransportQueueRabbitMQ(engineConfiguration.getExchange(), engineConfiguration.getExchangeType(), engineConfiguration.getReceiveRoutingKey());
