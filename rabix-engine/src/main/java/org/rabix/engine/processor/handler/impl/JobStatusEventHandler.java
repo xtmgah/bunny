@@ -81,7 +81,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       jobRecordService.update(jobRecord);
       ready(jobRecord, event.getContextId());
       
-      if (!jobRecord.isContainer()) {
+      if (!jobRecord.isContainer() && !jobRecord.isScatterWrapper()) {
         Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
         try {
           engineStatusCallback.onJobReady(job);
