@@ -39,3 +39,11 @@ test5:
       class: File
       name: out.txt
       size: 13
+test6:
+  app: testbacklog/doublework.cwl.yaml
+  inputs: testbacklog/doublework.inputs.yaml
+  expected:
+    outfile:
+      class: File
+      name: out.txt
+      size: 13
