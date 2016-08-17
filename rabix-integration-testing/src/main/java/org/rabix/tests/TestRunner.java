@@ -184,11 +184,12 @@ public class TestRunner {
   }
 
   
-static void executeCommand(String cmdline) {
+static void executeCommand(String cmdline) throws RabixTestException {
     ArrayList<String> output = command(cmdline, workingdir);
     if (null == output) {
       logger.error("COMMAND FAILED: " + cmdline + "\n");
-      System.exit(-1);
+      throw new RabixTestException("RabixTestException in executeCommand!");
+//      System.exit(-1);
     }
 
     for (String line : output) {
