@@ -188,8 +188,6 @@ static void executeCommand(String cmdline) throws RabixTestException {
     ArrayList<String> output = command(cmdline, workingdir);
     if (null == output) {
       logger.error("COMMAND FAILED: " + cmdline + "\n");
-      throw new RabixTestException("RabixTestException in executeCommand!");
-//      System.exit(-1);
     }
 
     for (String line : output) {
