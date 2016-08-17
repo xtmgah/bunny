@@ -14,7 +14,7 @@
     {
       "dockerImageId": "",
       "class": "DockerRequirement",
-      "dockerPull": "images.sbgenomics.com/markovtest/prod_3_38:v1"
+      "dockerPull": "ubuntu:latest"
     }
   ],
   "inputs": [
