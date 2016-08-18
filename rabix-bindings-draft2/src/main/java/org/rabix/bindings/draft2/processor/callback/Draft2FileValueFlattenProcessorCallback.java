@@ -1,6 +1,8 @@
 package org.rabix.bindings.draft2.processor.callback;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.draft2.helper.Draft2FileValueHelper;
@@ -22,6 +24,13 @@ public class Draft2FileValueFlattenProcessorCallback implements Draft2PortProces
   public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
       fileValues.add(Draft2FileValueHelper.createFileValue(value));
+      
+      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(value);
+      if (secondaryFiles != null) {
+        for (Map<String, Object> secondaryFileValue : secondaryFiles) {
+          fileValues.add(Draft2FileValueHelper.createFileValue(secondaryFileValue));
+        }
+      }
       return new Draft2PortProcessorResult(value, true);
     }
     return new Draft2PortProcessorResult(value, false);

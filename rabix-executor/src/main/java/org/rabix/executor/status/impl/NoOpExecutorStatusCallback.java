@@ -19,6 +19,11 @@ public class NoOpExecutorStatusCallback implements ExecutorStatusCallback {
   public void onJobStarted(Job job) throws ExecutorStatusCallbackException {
     logger.debug("onJobStarted(jobId={})", job.getId());
   }
+  
+  @Override
+  public void onJobStopped(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onJobStopped(jobId={})", job.getId());
+  }
 
   @Override
   public void onJobCompleted(Job job) throws ExecutorStatusCallbackException {
@@ -26,33 +31,48 @@ public class NoOpExecutorStatusCallback implements ExecutorStatusCallback {
   }
 
   @Override
-  public void onContainerImagePullStarted(String image) throws ExecutorStatusCallbackException {
-    logger.debug("onContainerImagePullStarted(image={})", image);
+  public void onContainerImagePullStarted(Job job, String image) throws ExecutorStatusCallbackException {
+    logger.debug("onContainerImagePullStarted(jobId={}, image={})", job.getId(), image);
   }
 
   @Override
-  public void onContainerImagePullCompleted(String image) throws ExecutorStatusCallbackException {
-    logger.debug("onContainerImagePullCompleted(image={})", image);
+  public void onContainerImagePullCompleted(Job job, String image) throws ExecutorStatusCallbackException {
+    logger.debug("onContainerImagePullCompleted(jobId={}, image={})", job.getId(), image);
   }
 
   @Override
-  public void onInputFilesDownloadStarted() throws ExecutorStatusCallbackException {
-    logger.debug("onInputFilesDownloadStarted()");
+  public void onInputFilesDownloadStarted(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onInputFilesDownloadStarted(jobId={})", job.getId());
   }
 
   @Override
-  public void onInputFilesDownloadCompleted() throws ExecutorStatusCallbackException {
-    logger.debug("onInputFilesDownloadCompleted()");
+  public void onInputFilesDownloadCompleted(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onInputFilesDownloadCompleted(jobId={})", job.getId());
   }
 
   @Override
-  public void onOutputFilesUploadStarted() throws ExecutorStatusCallbackException {
-    logger.debug("onOutputFilesUploadStarted()");
+  public void onOutputFilesUploadStarted(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onOutputFilesUploadStarted(jobId={})", job.getId());
   }
 
   @Override
-  public void onOutputFilesUploadCompleted() throws ExecutorStatusCallbackException {
-    logger.debug("onOutputFilesUploadComplted()");
+  public void onOutputFilesUploadCompleted(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onOutputFilesUploadComplted(jobId={})", job.getId());
+  }
+
+  @Override
+  public void onContainerImagePullFailed(Job job, String image) throws ExecutorStatusCallbackException {
+    logger.debug("onContainerImagePullFailed(jobId={})", job.getId());
+  }
+
+  @Override
+  public void onInputFilesDownloadFailed(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onInputFilesDownloadFailed(jobId={})", job.getId());
+  }
+
+  @Override
+  public void onOutputFilesUploadFailed(Job job) throws ExecutorStatusCallbackException {
+    logger.debug("onOutputFilesUploadFailed(jobId={})", job.getId());
   }
 
 }

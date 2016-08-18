@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
-import org.rabix.executor.config.StorageConfig;
+import org.rabix.executor.config.StorageConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,18 +16,18 @@ public class FTPToLocalPathMapper implements FileMapper {
 
   private final static Logger logger = LoggerFactory.getLogger(FTPToLocalPathMapper.class);
   
-  private final Configuration configuration;
+  private final StorageConfiguration storageConfig;
   
   @Inject
-  public FTPToLocalPathMapper(Configuration configuration) {
-    this.configuration = configuration;
+  public FTPToLocalPathMapper(StorageConfiguration storageConfig) {
+    this.storageConfig = storageConfig;
   }
   
   @Override
   public String map(String path, Map<String, Object> config) throws FileMappingException {
     logger.info("Map FTP path {} to physical path.", path);
     try {
-      return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), path).getCanonicalPath();
+      return new File(storageConfig.getLocalExecutionDirectory(), path).getCanonicalPath();
     } catch (IOException e) {
       throw new FileMappingException(e);
     }

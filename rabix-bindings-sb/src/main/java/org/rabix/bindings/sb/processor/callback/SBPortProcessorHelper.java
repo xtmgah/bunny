@@ -42,7 +42,7 @@ public class SBPortProcessorHelper {
     try {
       portProcessor.processOutputs(inputs, callback);
     } catch (SBPortProcessorException e) {
-      throw new SBPortProcessorException("Failed to flatten input file paths.", e);
+      throw new SBPortProcessorException("Failed to flatten output file paths.", e);
     }
     return callback.getFlattenedFileData();
   }

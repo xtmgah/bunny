@@ -43,7 +43,9 @@ import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
-import org.rabix.executor.config.FileConfig;
+import org.rabix.executor.config.FileConfiguration;
+import org.rabix.executor.config.StorageConfiguration;
+import org.rabix.executor.config.impl.DefaultStorageConfiguration;
 import org.rabix.executor.pathmapper.InputFileMapper;
 import org.rabix.executor.pathmapper.OutputFileMapper;
 import org.rabix.executor.pathmapper.local.LocalPathMapper;
@@ -138,6 +140,7 @@ public class BackendCommandLine {
             @Override
             protected void configure() {
               bind(JobDB.class).in(Scopes.SINGLETON);
+              bind(StorageConfiguration.class).to(DefaultStorageConfiguration.class).in(Scopes.SINGLETON);
               bind(BackendDB.class).in(Scopes.SINGLETON);
               bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
               bind(BackendPopulator.class).in(Scopes.SINGLETON);
@@ -159,13 +162,13 @@ public class BackendCommandLine {
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
       
       Configuration configuration = configModule.provideConfig();
-      Boolean conformance = configuration.getString(FileConfig.RABIX_CONFORMANCE) != null;    
+      Boolean conformance = configuration.getString(FileConfiguration.RABIX_CONFORMANCE) != null;    
       
       Resources resources = null;
       Map<String, Object> contextConfig = null;
       
       if(conformance) {
-        BindingsFactory.setProtocol(configuration.getString(FileConfig.RABIX_CONFORMANCE));
+        BindingsFactory.setProtocol(configuration.getString(FileConfiguration.RABIX_CONFORMANCE));
         resources = extractResources(inputs, BindingsFactory.protocol);
         if(resources != null) {
           contextConfig = new HashMap<String, Object>();

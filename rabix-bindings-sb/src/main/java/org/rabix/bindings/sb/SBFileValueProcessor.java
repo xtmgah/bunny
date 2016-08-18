@@ -26,7 +26,7 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
     SBJob sbJob = SBJobHelper.getSBJob(job);
     try {
-      return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getInputs());
+      return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getOutputs());
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }
