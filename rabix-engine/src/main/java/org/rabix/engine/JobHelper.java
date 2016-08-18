@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.ApplicationPort;
-import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
@@ -72,14 +71,13 @@ public class JobHelper {
     logger.debug(inputsLogBuilder.toString());
     
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
-    Context context = new Context(job.getRootId(), contextRecord.getConfig());
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, context, null);
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, contextRecord.getConfig(), null);
   }
   
   public static Job fillOutputs(Job job, JobRecordService jobRecordService, VariableRecordService variableRecordService) {
-    JobRecord jobRecord = jobRecordService.findRoot(job.getContext().getId());
-    List<VariableRecord> outputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.OUTPUT, job.getContext().getId());
+    JobRecord jobRecord = jobRecordService.findRoot(job.getRootId());
+    List<VariableRecord> outputVariables = variableRecordService.find(jobRecord.getId(), LinkPortType.OUTPUT, job.getRootId());
     
     Map<String, Object> outputs = new HashMap<>();
     for (VariableRecord outputVariable : outputVariables) {

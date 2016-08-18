@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.Resources;
@@ -121,13 +121,12 @@ public class JobServiceImpl implements JobService {
   public Job start(Job job, Map<String, Object> config) throws JobServiceException {
     logger.debug("Start Job {}", job);
     
-    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString(), config);
-    if (context.getId() == null) {
-      context.setId(UUID.randomUUID().toString());
+    String rootId = job.getRootId();
+    if (StringUtils.isEmpty(rootId)) {
+      rootId = UUID.randomUUID().toString();
     }
-    job = Job.cloneWithIds(job, context.getId(), context.getId());
-    job = Job.cloneWithContext(job, context);
-
+    job = Job.cloneWithIds(job, rootId, rootId);
+    
     Bindings bindings = null;
     try {
       bindings = BindingsFactory.create(job);
@@ -137,7 +136,7 @@ public class JobServiceImpl implements JobService {
       job = Job.cloneWithStatus(job, JobStatus.RUNNING);
       jobDB.add(job);
 
-      InitEvent initEvent = new InitEvent(context, context.getId(), node, job.getInputs());
+      InitEvent initEvent = new InitEvent(job.getConfig(), job.getRootId(), node, job.getInputs());
       eventProcessor.send(initEvent);
       return job;
     } catch (EventHandlerException e) {
@@ -176,10 +175,6 @@ public class JobServiceImpl implements JobService {
     return jobDB.get(id);
   }
 
-  private Context createContext(String contextId, Map<String, Object> config) {
-    return new Context(contextId, config);
-  }
-  
   private class EngineStatusCallbackImpl implements EngineStatusCallback {
 
     private boolean stopOnFail;
@@ -206,9 +201,9 @@ public class JobServiceImpl implements JobService {
         Resources resources = new Resources(numberOfCores, memory, null, true);
         job = Job.cloneWithResources(job, resources);
       }
-      else if (conformance && job.getContext().getConfig() != null) {
-        long numberOfCores = job.getContext().getConfig().get("allocatedResources.cpu") != null ? Long.parseLong((String) job.getContext().getConfig().get("allocatedResources.cpu")) : null;
-        long memory = job.getContext().getConfig().get("allocatedResources.mem") != null ? Long.parseLong((String) job.getContext().getConfig().get("allocatedResources.mem")) : null;
+      else if (conformance && job.getConfig() != null) {
+        long numberOfCores = job.getConfig().get("allocatedResources.cpu") != null ? Long.parseLong((String) job.getConfig().get("allocatedResources.cpu")) : null;
+        long memory = job.getConfig().get("allocatedResources.mem") != null ? Long.parseLong((String) job.getConfig().get("allocatedResources.mem")) : null;
         Resources resources = new Resources(numberOfCores, memory, null, true);
         job = Job.cloneWithResources(job, resources);
       }
