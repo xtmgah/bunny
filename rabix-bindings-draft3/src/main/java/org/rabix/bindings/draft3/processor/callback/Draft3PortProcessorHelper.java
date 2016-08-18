@@ -37,12 +37,12 @@ public class Draft3PortProcessorHelper {
     return callback.getFlattenedFileData();
   }
 
-  public Set<FileValue> flattenOutputFiles(Map<String, Object> inputs) throws Draft3PortProcessorException {
+  public Set<FileValue> flattenOutputFiles(Map<String, Object> outputs) throws Draft3PortProcessorException {
     Draft3FileValueFlattenProcessorCallback callback = new Draft3FileValueFlattenProcessorCallback();
     try {
-      portProcessor.processOutputs(inputs, callback);
+      portProcessor.processOutputs(outputs, callback);
     } catch (Draft3PortProcessorException e) {
-      throw new Draft3PortProcessorException("Failed to flatten input file paths.", e);
+      throw new Draft3PortProcessorException("Failed to flatten output file paths.", e);
     }
     return callback.getFlattenedFileData();
   }

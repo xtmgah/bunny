@@ -1,6 +1,8 @@
 package org.rabix.bindings.sb.processor.callback;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.model.ApplicationPort;
@@ -22,6 +24,13 @@ public class SBFileValueFlattenProcessorCallback implements SBPortProcessorCallb
   public SBPortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (SBSchemaHelper.isFileFromValue(value)) {
       fileValues.add(SBFileValueHelper.createFileValue(value));
+      
+      List<Map<String, Object>> secondaryFiles = SBFileValueHelper.getSecondaryFiles(value);
+      if (secondaryFiles != null) {
+        for (Map<String, Object> secondaryFileValue : secondaryFiles) {
+          fileValues.add(SBFileValueHelper.createFileValue(secondaryFileValue));
+        }
+      }
       return new SBPortProcessorResult(value, true);
     }
     return new SBPortProcessorResult(value, false);

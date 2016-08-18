@@ -13,30 +13,32 @@ import org.rabix.bindings.model.Job;
 import org.rabix.common.helper.ChecksumHelper;
 import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
 import org.rabix.common.helper.JSONHelper;
-import org.rabix.executor.config.StorageConfig;
+import org.rabix.executor.config.StorageConfiguration;
+import org.rabix.executor.service.BasicMemoizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 
-public class LocalMemoizationService {
+public class BasicMemoizationServiceImpl implements BasicMemoizationService {
 
-  private final static Logger logger = LoggerFactory.getLogger(LocalMemoizationService.class);
+private final static Logger logger = LoggerFactory.getLogger(BasicMemoizationService.class);
   
-  private Configuration configuration;
+  private StorageConfiguration storageConfig;
   private File memoizationDirectory;
   
   @Inject
-  public LocalMemoizationService(Configuration configuration) {
-    this.configuration = configuration;
+  public BasicMemoizationServiceImpl(StorageConfiguration storageConfig, Configuration configuration) {
+    this.storageConfig = storageConfig;
     this.memoizationDirectory = new File(configuration.getString("local.memoization.directory"));
   }
   
+  @Override
   public Map<String, Object> tryToFindResults(Job job) {
     try {
       Bindings bindings = BindingsFactory.create(job);
-      File workingDir = new File(memoizationDirectory, StorageConfig.getWorkingDirWithoutRootId(job, configuration).getAbsolutePath());
+      File workingDir = new File(memoizationDirectory, storageConfig.getWorkingDirWithoutRoot(job).getAbsolutePath());
       
       if (!workingDir.exists()) {
         return null;

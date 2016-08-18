@@ -34,6 +34,8 @@ public interface Bindings {
 
   Set<FileValue> getOutputFiles(Job job) throws BindingException;
   
+  Set<FileValue> getProtocolFiles(File workingDir) throws BindingException;
+  
   Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException;
 
   Job mapOutputFilePaths(Job job, FileMapper fileMapper) throws BindingException;

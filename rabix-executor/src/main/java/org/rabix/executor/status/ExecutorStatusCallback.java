@@ -8,18 +8,26 @@ public interface ExecutorStatusCallback {
   
   void onJobStarted(Job job) throws ExecutorStatusCallbackException;
   
+  void onJobStopped(Job job) throws ExecutorStatusCallbackException;
+  
   void onJobCompleted(Job job) throws ExecutorStatusCallbackException;
   
-  void onContainerImagePullStarted(String image) throws ExecutorStatusCallbackException;
+  void onContainerImagePullStarted(Job job, String image) throws ExecutorStatusCallbackException;
   
-  void onContainerImagePullCompleted(String image) throws ExecutorStatusCallbackException;
+  void onContainerImagePullFailed(Job job, String image) throws ExecutorStatusCallbackException;
   
-  void onInputFilesDownloadStarted() throws ExecutorStatusCallbackException;
+  void onContainerImagePullCompleted(Job job, String image) throws ExecutorStatusCallbackException;
   
-  void onInputFilesDownloadCompleted() throws ExecutorStatusCallbackException;
+  void onInputFilesDownloadStarted(Job job) throws ExecutorStatusCallbackException;
   
-  void onOutputFilesUploadStarted() throws ExecutorStatusCallbackException;
+  void onInputFilesDownloadFailed(Job job) throws ExecutorStatusCallbackException;
   
-  void onOutputFilesUploadCompleted() throws ExecutorStatusCallbackException;
+  void onInputFilesDownloadCompleted(Job job) throws ExecutorStatusCallbackException;
+  
+  void onOutputFilesUploadStarted(Job job) throws ExecutorStatusCallbackException;
+  
+  void onOutputFilesUploadFailed(Job job) throws ExecutorStatusCallbackException;
+  
+  void onOutputFilesUploadCompleted(Job job) throws ExecutorStatusCallbackException;
   
 }

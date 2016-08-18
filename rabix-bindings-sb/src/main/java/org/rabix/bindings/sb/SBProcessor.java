@@ -40,8 +40,8 @@ public class SBProcessor implements ProtocolProcessor {
 
   public final static int DEFAULT_SUCCESS_CODE = 0;
   
-  private final static String JOB_FILE = "job.json";
-  private final static String resultFilename = "cwl.output.json";
+  public final static String JOB_FILE = "job.json";
+  public final static String RESULT_FILENAME = "cwl.output.json";
   
   private final static Logger logger = LoggerFactory.getLogger(SBProcessor.class);
 
@@ -116,7 +116,7 @@ public class SBProcessor implements ProtocolProcessor {
   }
   
   private Map<String, Object> collectOutputs(SBJob job, File workingDir, HashAlgorithm hashAlgorithm) throws SBGlobException, SBExpressionException, IOException, BindingException {
-    File resultFile = new File(workingDir, resultFilename);
+    File resultFile = new File(workingDir, RESULT_FILENAME);
     
     if (resultFile.exists()) {
       String resultStr = FileUtils.readFileToString(resultFile);
@@ -136,7 +136,7 @@ public class SBProcessor implements ProtocolProcessor {
   }
   
   public void writeResult(File workingDir, Map<String, Object> result) {
-    BeanSerializer.serializePartial(new File(workingDir, resultFilename), result);
+    BeanSerializer.serializePartial(new File(workingDir, RESULT_FILENAME), result);
   }
 
   @SuppressWarnings("unchecked")

@@ -1,6 +1,7 @@
 package org.rabix.bindings.sb;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -95,6 +96,24 @@ public class SBBindings implements Bindings {
   @Override
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
     return fileValueProcessor.getOutputFiles(job);
+  }
+  
+  @Override
+  public Set<FileValue> getProtocolFiles(File workingDir) throws BindingException {
+    Set<FileValue> files = new HashSet<>();
+    
+    File jobFile = new File(workingDir, SBProcessor.JOB_FILE);
+    if (jobFile.exists()) {
+      String jobFilePath = jobFile.getAbsolutePath();
+      files.add(new FileValue(null, jobFilePath, null, null, null));
+    }
+    
+    File resultFile = new File(workingDir, SBProcessor.RESULT_FILENAME);
+    if (resultFile.exists()) {
+      String resultFilePath = resultFile.getAbsolutePath();
+      files.add(new FileValue(null, resultFilePath, null, null, null));
+    }
+    return files;
   }
   
   @Override

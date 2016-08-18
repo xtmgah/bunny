@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.rabix.bindings.Bindings;
@@ -24,7 +23,7 @@ import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.logging.VerboseLogger;
-import org.rabix.executor.config.StorageConfig;
+import org.rabix.executor.config.StorageConfiguration;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.slf4j.Logger;
@@ -42,9 +41,9 @@ public class LocalContainerHandler implements ContainerHandler {
 
   private Process process;
 
-  public LocalContainerHandler(Job job, Configuration configuration) {
+  public LocalContainerHandler(Job job, StorageConfiguration storageConfig) {
     this.job = job;
-    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
+    this.workingDir = storageConfig.getWorkingDir(job);
   }
 
   @Override

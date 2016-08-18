@@ -26,9 +26,11 @@ import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.logging.VerboseLogger;
 import org.rabix.common.retry.Retry;
-import org.rabix.executor.config.StorageConfig;
+import org.rabix.executor.config.DockerConfigation;
+import org.rabix.executor.config.StorageConfiguration;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
+import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.status.ExecutorStatusCallback;
 import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.slf4j.Logger;
@@ -60,7 +62,6 @@ public class DockerContainerHandler implements ContainerHandler {
   private static final String dockerHubServer = "https://index.docker.io/v1/";
 
   public static final String DIRECTORY_MAP_MODE = "rw";
-  public static final String COMMAND_FILE = "cmd.log";
   
   private String containerId;
   private DockerClientLockDecorator dockerClient;
@@ -69,22 +70,22 @@ public class DockerContainerHandler implements ContainerHandler {
   private final DockerContainerRequirement dockerResource;
 
   private final File workingDir;
-  private final Configuration configuration;
 
   private boolean isConfigAuthEnabled;
 
   private Integer overrideResultStatus = null;
 
+  private StorageConfiguration storageConfig;
   private ExecutorStatusCallback statusCallback;
 
-  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration, ExecutorStatusCallback statusCallback, DockerClientLockDecorator dockerClient) throws ContainerException {
+  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, StorageConfiguration storageConfig, DockerConfigation dockerConfig, ExecutorStatusCallback statusCallback, DockerClientLockDecorator dockerClient) throws ContainerException {
     this.job = job;
     this.dockerClient = dockerClient;
     this.dockerResource = dockerResource;
-    this.configuration = configuration;
     this.statusCallback = statusCallback;
-    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
-    this.isConfigAuthEnabled = configuration.getBoolean("docker.override.auth.enabled", false);
+    this.storageConfig = storageConfig;
+    this.workingDir = storageConfig.getWorkingDir(job);
+    this.isConfigAuthEnabled = dockerConfig.isDockerConfigAuthEnabled();
   }
 
   private void pull(String image) throws ContainerException {
@@ -92,7 +93,7 @@ public class DockerContainerHandler implements ContainerHandler {
     VerboseLogger.log(String.format("Pulling docker image %s", image));
 
     try {
-      statusCallback.onContainerImagePullStarted(image);
+      statusCallback.onContainerImagePullStarted(job, image);
       if (isConfigAuthEnabled) {
         dockerClient.pull(image);
       } else {
@@ -105,12 +106,17 @@ public class DockerContainerHandler implements ContainerHandler {
           dockerClient.pull(image);
         }
       }
-      statusCallback.onContainerImagePullCompleted(image);
+      statusCallback.onContainerImagePullCompleted(job, image);
     } catch (DockerException | InterruptedException e) {
       logger.error("Failed to pull " + image, e);
       throw new ContainerException("Failed to pull " + image, e);
     } catch (ExecutorStatusCallbackException e) {
       logger.error("Failed to call status callback", e);
+      try {
+        statusCallback.onContainerImagePullFailed(job, image);
+      } catch (ExecutorStatusCallbackException e1) {
+        logger.error("Failed to call status callback", e1);
+      }
       throw new ContainerException("Failed to call status callback", e);
     }
   }
@@ -130,7 +136,7 @@ public class DockerContainerHandler implements ContainerHandler {
       pull(dockerPull);
 
       Set<String> volumes = new HashSet<>();
-      String physicalPath = StorageConfig.getLocalExecutionDirectory(configuration);
+      String physicalPath = storageConfig.getLocalExecutionDirectory().getAbsolutePath();
       volumes.add(physicalPath);
 
       ContainerConfig.Builder builder = ContainerConfig.builder();
@@ -149,7 +155,7 @@ public class DockerContainerHandler implements ContainerHandler {
         return;
       }
 
-      File commandLineFile = new File(workingDir, COMMAND_FILE);
+      File commandLineFile = new File(workingDir, JobHandler.COMMAND_LOG);
       FileUtils.writeStringToFile(commandLineFile, commandLine);
       builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
 

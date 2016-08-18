@@ -11,7 +11,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
@@ -34,9 +33,10 @@ import org.rabix.common.service.download.DownloadServiceException;
 import org.rabix.common.service.upload.UploadService;
 import org.rabix.common.service.upload.UploadServiceException;
 import org.rabix.executor.ExecutorException;
-import org.rabix.executor.config.FileConfig;
-import org.rabix.executor.config.StorageConfig;
-import org.rabix.executor.config.StorageConfig.BackendStore;
+import org.rabix.executor.config.DockerConfigation;
+import org.rabix.executor.config.FileConfiguration;
+import org.rabix.executor.config.StorageConfiguration;
+import org.rabix.executor.config.StorageConfiguration.BackendStore;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
@@ -47,8 +47,8 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.pathmapper.InputFileMapper;
 import org.rabix.executor.pathmapper.OutputFileMapper;
+import org.rabix.executor.service.BasicMemoizationService;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.service.impl.LocalMemoizationService;
 import org.rabix.executor.status.ExecutorStatusCallback;
 import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.slf4j.Logger;
@@ -58,7 +58,6 @@ import com.google.inject.assistedinject.Assisted;
 
 public class JobHandlerImpl implements JobHandler {
 
-  private static final String ERROR_LOG = "job.err.log";
   private final String KEY_CHECKSUM = "checksum";
 
   private static final Logger logger = LoggerFactory.getLogger(JobHandlerImpl.class);
@@ -79,32 +78,34 @@ public class JobHandlerImpl implements JobHandler {
   private Job job;
   private EngineStub<?, ?, ?> engineStub;
 
-  private Configuration configuration;
+  private DockerConfigation dockerConfig;
+  private StorageConfiguration storageConfiguration;
   private ContainerHandler containerHandler;
   private DockerClientLockDecorator dockerClient;
 
   private final ExecutorStatusCallback statusCallback;
-  private final LocalMemoizationService localMemoizationService;
+  private final BasicMemoizationService localMemoizationService;
 
   @Inject
   public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
-      Configuration configuration, DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
-      LocalMemoizationService localMemoizationService, UploadService uploadService, DownloadService downloadService,
+      StorageConfiguration storageConfig, DockerConfigation dockerConfig, FileConfiguration fileConfiguration, DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
+      BasicMemoizationService localMemoizationService, UploadService uploadService, DownloadService downloadService,
       @InputFileMapper FileMapper inputFileMapper, @OutputFileMapper FileMapper outputFileMapper) {
     this.job = job;
     this.engineStub = engineStub;
-    this.configuration = configuration;
+    this.storageConfiguration = storageConfig;
+    this.dockerConfig = dockerConfig;
     this.jobDataService = jobDataService;
     this.dockerClient = dockerClient;
     this.statusCallback = statusCallback;
     this.localMemoizationService = localMemoizationService;
-    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
+    this.workingDir = storageConfig.getWorkingDir(job);
     this.uploadService = uploadService;
     this.downloadService = downloadService;
     this.inputFileMapper = inputFileMapper;
     this.outputFileMapper = outputFileMapper;
-    this.enableHash = FileConfig.calculateFileChecksum(configuration);
-    this.hashAlgorithm = FileConfig.checksumAlgorithm(configuration);
+    this.enableHash = fileConfiguration.calculateFileChecksum();
+    this.hashAlgorithm = fileConfiguration.checksumAlgorithm();
   }
 
   @Override
@@ -122,9 +123,14 @@ public class JobHandlerImpl implements JobHandler {
 
       Bindings bindings = BindingsFactory.create(job);
       
-      statusCallback.onInputFilesDownloadStarted();
-      downloadInputFiles(job, bindings);
-      statusCallback.onInputFilesDownloadCompleted();
+      statusCallback.onInputFilesDownloadStarted(job);
+      try {
+        downloadInputFiles(job, bindings);
+      } catch (Exception e) {
+        statusCallback.onInputFilesDownloadFailed(job);
+        throw e;
+      }
+      statusCallback.onInputFilesDownloadCompleted(job);
       
       List<Requirement> combinedRequirements = new ArrayList<>();
       combinedRequirements.addAll(bindings.getHints(job));
@@ -139,10 +145,10 @@ public class JobHandlerImpl implements JobHandler {
         containerHandler = new CompletedContainerHandler(job);
       } else {
         Requirement containerRequirement = getRequirement(combinedRequirements, DockerContainerRequirement.class);
-        if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
+        if (containerRequirement == null || !dockerConfig.isDockerSupported()) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, statusCallback, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, statusCallback, storageConfiguration, dockerConfig);
       }
       containerHandler.start();
     } catch (Exception e) {
@@ -151,8 +157,8 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  public void downloadInputFiles(final Job job, final Bindings bindings) throws BindingException, DownloadServiceException {
-    if (StorageConfig.getBackendStore(configuration).equals(BackendStore.LOCAL)) {
+  private void downloadInputFiles(final Job job, final Bindings bindings) throws BindingException, DownloadServiceException {
+    if (storageConfiguration.getBackendStore().equals(BackendStore.LOCAL)) {
       return;
     }
     Set<FileValue> fileValues = bindings.getInputFiles(job);
@@ -225,13 +231,12 @@ public class JobHandlerImpl implements JobHandler {
       }
       containerHandler.dumpContainerLogs(new File(workingDir, ERROR_LOG));
 
+      Bindings bindings = BindingsFactory.create(job);
       if (!isSuccessful()) {
-        upload(workingDir);
+        uploadOutputFiles(job, bindings);
         statusCallback.onJobFailed(job);
         return job;
       }
-
-      Bindings bindings = BindingsFactory.create(job);
       job = bindings.postprocess(job, workingDir);
 
       if (enableHash) {
@@ -240,9 +245,9 @@ public class JobHandlerImpl implements JobHandler {
         job = Job.cloneWithOutputs(job, outputsWithCheckSum);
       }
 
-      statusCallback.onOutputFilesUploadStarted();
-      upload(workingDir);
-      statusCallback.onOutputFilesUploadCompleted();
+      statusCallback.onOutputFilesUploadStarted(job);
+      uploadOutputFiles(job, bindings);
+      statusCallback.onOutputFilesUploadCompleted(job);
 
       job = bindings.mapOutputFilePaths(job, outputFileMapper);
       
@@ -268,14 +273,30 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  private void upload(File workingDir) throws UploadServiceException {
-    if (StorageConfig.getBackendStore(configuration).equals(BackendStore.LOCAL)) {
+  private void uploadOutputFiles(final Job job, final Bindings bindings) throws BindingException, UploadServiceException {
+    if (storageConfiguration.getBackendStore().equals(BackendStore.LOCAL)) {
       return;
     }
-    File baseExecutionDirectory = new File(StorageConfig.getLocalExecutionDirectory(configuration));
-    for (File file : workingDir.listFiles()) {
-      uploadService.upload(file, baseExecutionDirectory, true, true, job.getContext().getConfig());
+    Set<FileValue> fileValues = bindings.getOutputFiles(job);
+    fileValues.addAll(bindings.getProtocolFiles(workingDir));
+    
+    File cmdFile = new File(workingDir, COMMAND_LOG);
+    if (cmdFile.exists()) {
+      String cmdFilePath = cmdFile.getAbsolutePath();
+      fileValues.add(new FileValue(null, cmdFilePath, null, null, null));
     }
+    
+    File jobErrFile = new File(workingDir, ERROR_LOG);
+    if (jobErrFile.exists()) {
+      String jobErrFilePath = jobErrFile.getAbsolutePath();
+      fileValues.add(new FileValue(null, jobErrFilePath, null, null, null));
+    }
+    
+    Set<File> files = new HashSet<>();
+    for (FileValue fileValue : fileValues) {
+      files.add(new File(fileValue.getPath()));
+    }
+    uploadService.upload(files, storageConfiguration.getLocalExecutionDirectory(), true, true, job.getContext().getConfig());
   }
 
   public void stop() throws ExecutorException {

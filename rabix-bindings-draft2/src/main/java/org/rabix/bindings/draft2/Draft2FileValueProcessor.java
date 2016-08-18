@@ -26,7 +26,7 @@ public class Draft2FileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getOutputFiles(Job job) throws BindingException {
     Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     try {
-      return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getInputs());
+      return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getOutputs());
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }
