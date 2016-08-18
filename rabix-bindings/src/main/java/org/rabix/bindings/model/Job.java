@@ -38,8 +38,8 @@ public class Job {
   private final String app;
   @JsonProperty("status")
   private final JobStatus status;
-  @JsonProperty("context")
-  private final Context context;
+  @JsonProperty("config")
+  private final Map<String, Object> config;
   @JsonProperty("inputs")
   private final Map<String, Object> inputs;
   @JsonProperty("outputs")
@@ -51,10 +51,6 @@ public class Job {
     this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null);
   }
   
-  public Job(String app, Map<String, Object> inputs, Context context) {
-    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, context, null);
-  }
-  
   @JsonCreator
   public Job(@JsonProperty("id") String id,
       @JsonProperty("parentId") String parentId,
@@ -64,7 +60,7 @@ public class Job {
       @JsonProperty("status") JobStatus status, 
       @JsonProperty("inputs") Map<String, Object> inputs, 
       @JsonProperty("outputs") Map<String, Object> otputs,
-      @JsonProperty("context") Context context,
+      @JsonProperty("config") Map<String, Object> config,
       @JsonProperty("resources") Resources resources) {
     this.id = id;
     this.parentId = parentId;
@@ -75,7 +71,7 @@ public class Job {
     this.inputs = inputs;
     this.outputs = otputs;
     this.resources = resources;
-    this.context = context;
+    this.config = config;
   }
   
   public static String generateId() {
@@ -83,35 +79,35 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
+    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources);
   }
 
   public static Job cloneWithIds(Job job, String id, String rootId) {
-    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
+    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources);
   }
   
   public static Job cloneWithRootId(Job job, String rootId) {
-    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
+    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources);
   }
   
-  public static Job cloneWithContext(Job job, Context context) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context, job.resources);
+  public static Job cloneWithContext(Job job, Map<String, Object> config) {
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, config, job.resources);
   }
   
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.config, job.resources);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.context, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.config, job.resources);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.config, job.resources);
   }
   
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, resources);
   }
   
   public static boolean isFinished(Job job) {
@@ -174,16 +170,24 @@ public class Job {
     return status;
   }
   
-  public Context getContext() {
-    return context;
+  public Map<String, Object> getConfig() {
+    return config;
   }
   
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((context == null) ? 0 : context.getId().hashCode());
+    result = prime * result + ((app == null) ? 0 : app.hashCode());
+    result = prime * result + ((config == null) ? 0 : config.hashCode());
+    result = prime * result + ((id == null) ? 0 : id.hashCode());
+    result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
     result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + ((outputs == null) ? 0 : outputs.hashCode());
+    result = prime * result + ((parentId == null) ? 0 : parentId.hashCode());
+    result = prime * result + ((resources == null) ? 0 : resources.hashCode());
+    result = prime * result + ((rootId == null) ? 0 : rootId.hashCode());
+    result = prime * result + ((status == null) ? 0 : status.hashCode());
     return result;
   }
 
@@ -196,22 +200,59 @@ public class Job {
     if (getClass() != obj.getClass())
       return false;
     Job other = (Job) obj;
-    if (context == null) {
-      if (other.context != null)
+    if (app == null) {
+      if (other.app != null)
         return false;
-    } else if (!context.getId().equals(other.context.getId()))
+    } else if (!app.equals(other.app))
+      return false;
+    if (config == null) {
+      if (other.config != null)
+        return false;
+    } else if (!config.equals(other.config))
+      return false;
+    if (id == null) {
+      if (other.id != null)
+        return false;
+    } else if (!id.equals(other.id))
+      return false;
+    if (inputs == null) {
+      if (other.inputs != null)
+        return false;
+    } else if (!inputs.equals(other.inputs))
       return false;
     if (name == null) {
       if (other.name != null)
         return false;
     } else if (!name.equals(other.name))
       return false;
+    if (outputs == null) {
+      if (other.outputs != null)
+        return false;
+    } else if (!outputs.equals(other.outputs))
+      return false;
+    if (parentId == null) {
+      if (other.parentId != null)
+        return false;
+    } else if (!parentId.equals(other.parentId))
+      return false;
+    if (resources == null) {
+      if (other.resources != null)
+        return false;
+    } else if (!resources.equals(other.resources))
+      return false;
+    if (rootId == null) {
+      if (other.rootId != null)
+        return false;
+    } else if (!rootId.equals(other.rootId))
+      return false;
+    if (status != other.status)
+      return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "Job [id=" + id + ", parentId=" + parentId + ", rootId=" + rootId + ", name=" + name + ", status=" + status + ", context=" + context + ", inputs=" + inputs + ", outputs=" + outputs + "]";
+    return "Job [id=" + id + ", parentId=" + parentId + ", rootId=" + rootId + ", name=" + name + ", status=" + status + ", config=" + config + ", inputs=" + inputs + ", outputs=" + outputs + "]";
   }
 
 }

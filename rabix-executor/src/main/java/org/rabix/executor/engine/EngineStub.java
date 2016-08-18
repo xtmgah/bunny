@@ -40,7 +40,7 @@ public abstract class EngineStub<Q extends TransportQueue, B extends Backend, T 
     transportPlugin.startReceiver(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
       public void handleReceive(Job job) throws TransportPluginException {
-        executorService.start(job, job.getContext().getId());
+        executorService.start(job, job.getRootId());
       }
     }, new ErrorCallback() {
       @Override

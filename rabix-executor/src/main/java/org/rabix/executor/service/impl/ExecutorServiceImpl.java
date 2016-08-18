@@ -66,7 +66,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   }
 
   @Override
-  public void start(final Job job, String contextId) {
+  public void start(final Job job, String rootId) {
     logger.debug("start(id={}, important={}, uploadOutputs={})", job.getId());
 
     final JobData jobData = new JobData(job, JobDataStatus.PENDING, "Job is queued to start.", false, false);

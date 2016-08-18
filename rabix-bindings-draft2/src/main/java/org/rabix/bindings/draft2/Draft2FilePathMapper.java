@@ -20,7 +20,7 @@ public class Draft2FilePathMapper implements ProtocolFilePathMapper {
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
-      Map<String, Object> config = job.getContext() != null ? job.getContext().getConfig() : null;
+      Map<String, Object> config = job.getConfig();
       Map<String, Object> inputs = draft2PortProcessor.processInputs(job.getInputs(), new Draft2FilePathMapProcessorCallback(fileMapper, config));
       return Job.cloneWithInputs(job, inputs);
     } catch (Draft2PortProcessorException e) {
@@ -34,7 +34,7 @@ public class Draft2FilePathMapper implements ProtocolFilePathMapper {
     
     Draft2PortProcessor draft2PortProcessor = new Draft2PortProcessor(draft2Job);
     try {
-      Map<String, Object> config = job.getContext() != null ? job.getContext().getConfig() : null;
+      Map<String, Object> config = job.getConfig();
       Map<String, Object> outputs = draft2PortProcessor.processOutputs(job.getOutputs(), new Draft2FilePathMapProcessorCallback(fileMapper, config));
       return Job.cloneWithOutputs(job, outputs);
     } catch (Draft2PortProcessorException e) {

@@ -167,7 +167,7 @@ public class JobHandlerImpl implements JobHandler {
     for (FileValue fileValue : fileValues) {
       paths.add(fileValue.getPath());
     }
-    downloadService.download(workingDir, paths, job.getContext().getConfig());
+    downloadService.download(workingDir, paths, job.getConfig());
   }
   
   private void createFileRequirements(List<Requirement> requirements) throws ExecutorException, FileMappingException {
@@ -191,7 +191,7 @@ public class JobHandlerImpl implements JobHandler {
         }
         if (fileRequirement instanceof SingleInputFileRequirement) {
           String path = ((SingleInputFileRequirement) fileRequirement).getContent().getPath();
-          String mappedPath = inputFileMapper.map(path, job.getContext().getConfig());
+          String mappedPath = inputFileMapper.map(path, job.getConfig());
           File file = new File(mappedPath);
           if (!file.exists()) {
             continue;
@@ -296,7 +296,7 @@ public class JobHandlerImpl implements JobHandler {
     for (FileValue fileValue : fileValues) {
       files.add(new File(fileValue.getPath()));
     }
-    uploadService.upload(files, storageConfiguration.getLocalExecutionDirectory(), true, true, job.getContext().getConfig());
+    uploadService.upload(files, storageConfiguration.getLocalExecutionDirectory(), true, true, job.getConfig());
   }
 
   public void stop() throws ExecutorException {
