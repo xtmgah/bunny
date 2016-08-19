@@ -58,6 +58,16 @@
 									<mainClass>org.rabix.backend.local.BackendCommandLine</mainClass>
 								</transformer>
 							</transformers>
+							<relocations>
+								<relocation>
+									<pattern>com.fasterxml.jackson</pattern>
+									<shadedPattern>org.rabix.shaded.com.fasterxml.jackson</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.glassfish.jersey</pattern>
+									<shadedPattern>org.rabix.shaed.org.glassfish.jersey</shadedPattern>
+								</relocation>
+							</relocations>
 						</configuration>
 					</execution>
 				</executions>
