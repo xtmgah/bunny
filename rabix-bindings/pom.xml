@@ -16,6 +16,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<rhino.version>1.7.7.1</rhino.version>
+		<commons-net.version>2.0</commons-net.version>
+		<ftpserver-core.version>1.0.0</ftpserver-core.version>
 	</properties>
 	<build>
 		<plugins>
@@ -29,7 +31,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.rabix</groupId>
@@ -47,9 +48,20 @@
 			<version>1.7</version>
 		</dependency>
 		<dependency>
-			<groupId>org.rabix</groupId>
-			<artifactId>rabix-ftp</artifactId>
-			<version>${project.version}</version>
+			<groupId>commons-net</groupId>
+			<artifactId>commons-net</artifactId>
+			<version>${commons-net.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ftpserver</groupId>
+			<artifactId>ftpserver-core</artifactId>
+			<version>${ftpserver-core.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>
