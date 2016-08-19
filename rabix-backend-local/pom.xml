@@ -116,6 +116,20 @@
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-engine-rest</artifactId>
 			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.rabix</groupId>
+					<artifactId>rabix-bindings-draft2</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.rabix</groupId>
+					<artifactId>rabix-bindings-draft3</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.rabix</groupId>
+					<artifactId>rabix-bindings-sb</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>
