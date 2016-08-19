@@ -35,10 +35,10 @@
         </fileSet>
     </fileSets>
     <files>
-        <file>
-		    <source>${project.build.directory}/rabix-backend-local-${project.version}-shaded.jar</source>
-            <outputDirectory>/lib/</outputDirectory>
-            <destName>rabix-backend-local.jar</destName>
-        </file>
-    </files>
+		<file>
+			<source>${project.build.directory}/rabix-backend-local-${project.version}.jar</source>
+			<outputDirectory>/lib/</outputDirectory>
+			<destName>rabix-backend-local.jar</destName>
+		</file>
+	</files>
 </assembly>
