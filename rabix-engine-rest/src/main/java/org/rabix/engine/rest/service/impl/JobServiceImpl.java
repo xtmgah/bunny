@@ -31,6 +31,7 @@ import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.status.EngineStatusCallback;
@@ -47,6 +48,7 @@ public class JobServiceImpl implements JobService {
   private final static Logger logger = LoggerFactory.getLogger(JobServiceImpl.class);
   
   private final JobRecordService jobRecordService;
+  private final LinkRecordService linkRecordService;
   private final VariableRecordService variableRecordService;
   private final ContextRecordService contextRecordService;
   
@@ -59,12 +61,13 @@ public class JobServiceImpl implements JobService {
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
     this.jobDB = jobDB;
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
     
     this.jobRecordService = jobRecordService;
+    this.linkRecordService = linkRecordService;
     this.variableRecordService = variableRecordService;
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
@@ -162,7 +165,7 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
+    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB, contextId);
   }
   
   @Override

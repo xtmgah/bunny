@@ -82,7 +82,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       ready(jobRecord, event.getContextId());
       
       if (!jobRecord.isContainer() && !jobRecord.isScatterWrapper()) {
-        Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+        Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB);
         try {
           engineStatusCallback.onJobReady(job);
         } catch (Exception e) {
@@ -122,7 +122,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
         }
       } else {
         try {
-          Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+          Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB);
           engineStatusCallback.onJobFailed(failedJob);
         } catch (Exception e) {
           logger.error("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
