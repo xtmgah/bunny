@@ -17,6 +17,9 @@ script:
   - ls -ltra
   - cd testbacklog
   - ls -ltra
+  - cd ..
+  - cd ..
+  - cd ..
   - cd rabix-integration-testing
   - ls -ltra
   - pwd
