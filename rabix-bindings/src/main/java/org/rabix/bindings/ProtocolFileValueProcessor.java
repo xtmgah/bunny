@@ -9,6 +9,6 @@ public interface ProtocolFileValueProcessor {
 
   Set<FileValue> getInputFiles(Job job) throws BindingException;
   
-  Set<FileValue> getOutputFiles(Job job) throws BindingException;
+  Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
   
 }

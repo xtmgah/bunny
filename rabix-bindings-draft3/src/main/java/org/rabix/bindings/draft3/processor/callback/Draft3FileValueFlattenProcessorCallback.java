@@ -14,15 +14,17 @@ import org.rabix.bindings.model.FileValue;
 
 public class Draft3FileValueFlattenProcessorCallback implements Draft3PortProcessorCallback {
 
+  private final Set<String> visiblePorts;
   private final Set<FileValue> fileValues;
 
-  protected Draft3FileValueFlattenProcessorCallback() {
+  protected Draft3FileValueFlattenProcessorCallback(Set<String> visiblePorts) {
+    this.visiblePorts = visiblePorts;
     this.fileValues = new HashSet<>();
   }
 
   @Override
   public Draft3PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
-    if (Draft3SchemaHelper.isFileFromValue(value)) {
+    if (Draft3SchemaHelper.isFileFromValue(value) && !skip(port.getId())) {
       fileValues.add(Draft3FileValueHelper.createFileValue(value));
       
       List<Map<String, Object>> secondaryFiles = Draft3FileValueHelper.getSecondaryFiles(value);
@@ -34,6 +36,10 @@ public class Draft3FileValueFlattenProcessorCallback implements Draft3PortProces
       return new Draft3PortProcessorResult(value, true);
     }
     return new Draft3PortProcessorResult(value, false);
+  }
+  
+  private boolean skip(String portId) {
+    return visiblePorts != null && !visiblePorts.contains(Draft3SchemaHelper.normalizeId(portId));
   }
 
   public Set<FileValue> getFlattenedFileData() {

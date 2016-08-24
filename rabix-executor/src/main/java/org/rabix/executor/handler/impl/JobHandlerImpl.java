@@ -87,8 +87,11 @@ public class JobHandlerImpl implements JobHandler {
   private final BasicMemoizationService localMemoizationService;
 
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
-      StorageConfiguration storageConfig, DockerConfigation dockerConfig, FileConfiguration fileConfiguration, DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
+  public JobHandlerImpl(
+      @Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, 
+      JobDataService jobDataService, StorageConfiguration storageConfig, 
+      DockerConfigation dockerConfig, FileConfiguration fileConfiguration, 
+      DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
       BasicMemoizationService localMemoizationService, UploadService uploadService, DownloadService downloadService,
       @InputFileMapper FileMapper inputFileMapper, @OutputFileMapper FileMapper outputFileMapper) {
     this.job = job;
@@ -277,7 +280,7 @@ public class JobHandlerImpl implements JobHandler {
     if (storageConfiguration.getBackendStore().equals(BackendStore.LOCAL)) {
       return;
     }
-    Set<FileValue> fileValues = bindings.getOutputFiles(job);
+    Set<FileValue> fileValues = bindings.getOutputFiles(job, true);
     fileValues.addAll(bindings.getProtocolFiles(workingDir));
     
     File cmdFile = new File(workingDir, COMMAND_LOG);

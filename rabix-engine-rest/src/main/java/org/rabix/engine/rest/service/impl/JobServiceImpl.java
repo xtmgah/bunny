@@ -32,6 +32,7 @@ import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.status.EngineStatusCallback;
 import org.rabix.engine.status.EngineStatusCallbackException;
@@ -47,6 +48,7 @@ public class JobServiceImpl implements JobService {
   private final static Logger logger = LoggerFactory.getLogger(JobServiceImpl.class);
   
   private final JobRecordService jobRecordService;
+  private final LinkRecordService linkRecordService;
   private final VariableRecordService variableRecordService;
   private final ContextRecordService contextRecordService;
   
@@ -59,12 +61,13 @@ public class JobServiceImpl implements JobService {
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
     this.jobDB = jobDB;
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
     
     this.jobRecordService = jobRecordService;
+    this.linkRecordService = linkRecordService;
     this.variableRecordService = variableRecordService;
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
@@ -162,7 +165,7 @@ public class JobServiceImpl implements JobService {
   
   @Override
   public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
+    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB, contextId);
   }
   
   @Override
@@ -238,7 +241,7 @@ public class JobServiceImpl implements JobService {
                     }
                   }
                   if (exit) {
-                    onJobRootFailed(failedJob.getRootId());
+                    onJobRootFailed(failedJob);
                     break;
                   }
                   Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -265,8 +268,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onJobRootCompleted(String rootId) throws EngineStatusCallbackException {
-      Job job = jobDB.get(rootId);
+    public void onJobRootCompleted(Job job) throws EngineStatusCallbackException {
       job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
       job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
       jobDB.update(job);
@@ -274,16 +276,20 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onJobRootFailed(String rootId) throws EngineStatusCallbackException {
+    public void onJobRootFailed(Job job) throws EngineStatusCallbackException {
       synchronized (stoppingRootIds) {
-        Job job = jobDB.get(rootId);
         job = Job.cloneWithStatus(job, JobStatus.FAILED);
         jobDB.update(job);
 
         backendDispatcher.remove(job);
-        stoppingRootIds.remove(rootId);
+        stoppingRootIds.remove(job.getId());
         logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
       }
+    }
+
+    @Override
+    public void onJobRootPartiallyCompleted(Job rootJob) throws EngineStatusCallbackException {
+      logger.info("Root {} is partially completed.", rootJob.getId());
     }
   }
   

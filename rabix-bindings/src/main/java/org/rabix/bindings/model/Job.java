@@ -1,6 +1,7 @@
 package org.rabix.bindings.model;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.rabix.common.helper.CloneHelper;
@@ -47,8 +48,11 @@ public class Job {
   @JsonProperty("resources")
   private final Resources resources;
   
+  @JsonProperty("visiblePorts")
+  private Set<String> visiblePorts;
+  
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null);
+    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null, null);
   }
   
   @JsonCreator
@@ -61,7 +65,8 @@ public class Job {
       @JsonProperty("inputs") Map<String, Object> inputs, 
       @JsonProperty("outputs") Map<String, Object> otputs,
       @JsonProperty("config") Map<String, Object> config,
-      @JsonProperty("resources") Resources resources) {
+      @JsonProperty("resources") Resources resources,
+      @JsonProperty("visiblePorts") Set<String> visiblePorts) {
     this.id = id;
     this.parentId = parentId;
     this.rootId = rootId;
@@ -72,6 +77,7 @@ public class Job {
     this.outputs = otputs;
     this.resources = resources;
     this.config = config;
+    this.visiblePorts = visiblePorts;
   }
   
   public static String generateId() {
@@ -79,35 +85,35 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources);
+    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources, job.visiblePorts);
   }
 
   public static Job cloneWithIds(Job job, String id, String rootId) {
-    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources);
+    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources, job.visiblePorts);
   }
   
   public static Job cloneWithRootId(Job job, String rootId) {
-    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources);
+    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, job.resources, job.visiblePorts);
   }
   
   public static Job cloneWithContext(Job job, Map<String, Object> config) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, config, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, config, job.resources, job.visiblePorts);
   }
   
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.config, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.config, job.resources, job.visiblePorts);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.config, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.config, job.resources, job.visiblePorts);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.config, job.resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.config, job.resources, job.visiblePorts);
   }
   
   public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, resources);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.config, resources, job.visiblePorts);
   }
   
   public static boolean isFinished(Job job) {
@@ -146,6 +152,10 @@ public class Job {
   
   public Resources getResources() {
     return resources;
+  }
+  
+  public Set<String> getVisiblePorts() {
+    return visiblePorts;
   }
   
   @SuppressWarnings("unchecked")

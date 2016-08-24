@@ -76,7 +76,34 @@
 		<dependency>
 			<groupId>com.spotify</groupId>
 			<artifactId>docker-client</artifactId>
+			<classifier>shaded</classifier>
 			<version>${docker-client.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jersey-client</artifactId>
+					<groupId>org.glassfish.jersey.core</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jersey-media-json-jackson</artifactId>
+					<groupId>org.glassfish.jersey.media</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jersey-apache-connector</artifactId>
+					<groupId>org.glassfish.jersey.connectors</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jackson-databind</artifactId>
+					<groupId>com.fasterxml.jackson.core</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jackson-datatype-guava</artifactId>
+					<groupId>com.fasterxml.jackson.datatype</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jackson-jaxrs-json-provider</artifactId>
+					<groupId>com.fasterxml.jackson.jaxrs</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>

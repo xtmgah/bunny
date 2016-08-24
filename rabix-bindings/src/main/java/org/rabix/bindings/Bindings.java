@@ -32,7 +32,7 @@ public interface Bindings {
 
   Set<FileValue> getInputFiles(Job job) throws BindingException;
 
-  Set<FileValue> getOutputFiles(Job job) throws BindingException;
+  Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
   
   Set<FileValue> getProtocolFiles(File workingDir) throws BindingException;
   

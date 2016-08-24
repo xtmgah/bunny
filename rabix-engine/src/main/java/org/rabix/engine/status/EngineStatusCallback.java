@@ -8,8 +8,10 @@ public interface EngineStatusCallback {
 
   void onJobFailed(Job job) throws EngineStatusCallbackException;
 
-  void onJobRootCompleted(String rootId) throws EngineStatusCallbackException;
-
-  void onJobRootFailed(String rootId) throws EngineStatusCallbackException;
+  void onJobRootCompleted(Job rootJob) throws EngineStatusCallbackException;
+  
+  void onJobRootPartiallyCompleted(Job rootJob) throws EngineStatusCallbackException;
+  
+  void onJobRootFailed(Job rootJob) throws EngineStatusCallbackException;
 
 }

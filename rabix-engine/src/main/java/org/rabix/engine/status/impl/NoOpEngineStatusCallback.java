@@ -21,13 +21,18 @@ public class NoOpEngineStatusCallback implements EngineStatusCallback {
   }
 
   @Override
-  public void onJobRootCompleted(String rootId) throws EngineStatusCallbackException {
-    logger.debug("onJobRootCompleted(rootId={})", rootId);
+  public void onJobRootCompleted(Job rootJob) throws EngineStatusCallbackException {
+    logger.debug("onJobRootCompleted(jobId={})", rootJob.getId());
+  }
+  
+  @Override
+  public void onJobRootPartiallyCompleted(Job rootJob) throws EngineStatusCallbackException {
+    logger.debug("onJobRootPartiallyCompleted(jobId={})", rootJob.getId());
   }
 
   @Override
-  public void onJobRootFailed(String rootId) throws EngineStatusCallbackException {
-    logger.debug("onJobFailed(rootId)", rootId);
+  public void onJobRootFailed(Job rootJob) throws EngineStatusCallbackException {
+    logger.debug("onJobFailed(jobId={})", rootJob.getId());
   }
 
 }

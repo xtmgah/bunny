@@ -26,5 +26,5 @@ public class FileConfiguration {
   public HashAlgorithm checksumAlgorithm() {
     return HashAlgorithm.valueOf(configuration.getString(CHECKSUM_ALGORITHM, "SHA1"));
   }
-
+  
 }
