@@ -31,8 +31,8 @@ import org.rabix.engine.rest.service.JobService;
 import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
-import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 import org.rabix.engine.status.EngineStatusCallback;
 import org.rabix.engine.status.EngineStatusCallbackException;
@@ -241,7 +241,7 @@ public class JobServiceImpl implements JobService {
                     }
                   }
                   if (exit) {
-                    onJobRootFailed(failedJob.getRootId());
+                    onJobRootFailed(failedJob);
                     break;
                   }
                   Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -268,8 +268,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onJobRootCompleted(String rootId) throws EngineStatusCallbackException {
-      Job job = jobDB.get(rootId);
+    public void onJobRootCompleted(Job job) throws EngineStatusCallbackException {
       job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
       job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
       jobDB.update(job);
@@ -277,16 +276,20 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void onJobRootFailed(String rootId) throws EngineStatusCallbackException {
+    public void onJobRootFailed(Job job) throws EngineStatusCallbackException {
       synchronized (stoppingRootIds) {
-        Job job = jobDB.get(rootId);
         job = Job.cloneWithStatus(job, JobStatus.FAILED);
         jobDB.update(job);
 
         backendDispatcher.remove(job);
-        stoppingRootIds.remove(rootId);
+        stoppingRootIds.remove(job.getId());
         logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
       }
+    }
+
+    @Override
+    public void onJobRootPartiallyCompleted(Job rootJob) throws EngineStatusCallbackException {
+      logger.info("Root {} is partially completed.", rootJob.getId());
     }
   }
   

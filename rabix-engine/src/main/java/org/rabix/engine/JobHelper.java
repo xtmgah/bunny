@@ -19,11 +19,12 @@ import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.model.ContextRecord;
 import org.rabix.engine.model.JobRecord;
-import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.LinkRecord;
+import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
+import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
 import org.slf4j.Logger;
@@ -35,6 +36,24 @@ public class JobHelper {
   
   public static String generateId() {
     return UUID.randomUUID().toString();
+  }
+  
+  public static JobStatus transformStatus(JobState state) {
+    switch (state) {
+    case COMPLETED:
+      return JobStatus.COMPLETED;
+    case FAILED:
+      return JobStatus.FAILED;
+    case RUNNING:
+      return JobStatus.RUNNING;
+    case READY:
+      return JobStatus.READY;
+    case PENDING:
+      return JobStatus.PENDING;
+    default:
+      break;
+    }
+    return null;
   }
   
   public static Set<Job> createReadyJobs(JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB, String contextId) {
@@ -78,6 +97,21 @@ public class JobHelper {
     
     Set<String> visiblePorts = findVisiblePorts(job, jobRecordService, linkRecordService, variableRecordService);
     return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, contextRecord.getConfig(), null, visiblePorts);
+  }
+  
+  public static Job createRootJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB, Map<String, Object> outputs) {
+    DAGNode node = dagNodeDB.get(InternalSchemaHelper.normalizeId(job.getId()), job.getRootId());
+
+    Map<String, Object> inputs = new HashMap<>();
+    List<VariableRecord> inputVariables = variableRecordService.find(job.getId(), LinkPortType.INPUT, job.getRootId());
+    for (VariableRecord inputVariable : inputVariables) {
+      Object value = CloneHelper.deepCopy(inputVariable.getValue());
+      inputs.put(inputVariable.getPortId(), value);
+    }
+    
+    ContextRecord contextRecord = contextRecordService.find(job.getRootId());
+    String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, outputs, contextRecord.getConfig(), null, null);
   }
   
   private static Set<String> findVisiblePorts(JobRecord jobRecord, JobRecordService jobRecordService, LinkRecordService linkRecordService, VariableRecordService variableRecordService) {

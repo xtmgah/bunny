@@ -96,26 +96,30 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       jobRecordService.update(jobRecord);
       break;
     case COMPLETED:
-      for (PortCounter portCounter : jobRecord.getOutputCounters()) {
-        Object output = event.getResult().get(portCounter.getPort());
-        eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
-      }
-      
       if (jobRecord.isRoot()) {
         try {
-          engineStatusCallback.onJobRootCompleted(jobRecord.getRootId());
+          eventProcessor.send(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
+          
+          Job rootJob = JobHelper.createRootJob(jobRecord, JobStatus.COMPLETED, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB, event.getResult());
+          engineStatusCallback.onJobRootCompleted(rootJob);
         } catch (Exception e) {
           logger.error("Failed to call onRootCompleted callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootCompleted callback for Job " + jobRecord.getRootId(), e);
+        }
+      } else {
+        for (PortCounter portCounter : jobRecord.getOutputCounters()) {
+          Object output = event.getResult().get(portCounter.getPort());
+          eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
         }
       }
       break;
     case FAILED:
       eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
       
-      if (event.getJobId().equals(event.getContextId())) {
+      if (jobRecord.isRoot()) {
         try {
-          engineStatusCallback.onJobRootFailed(event.getJobId());
+          Job rootJob = JobHelper.createRootJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB, null);
+          engineStatusCallback.onJobRootFailed(rootJob);
         } catch (Exception e) {
           logger.error("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
