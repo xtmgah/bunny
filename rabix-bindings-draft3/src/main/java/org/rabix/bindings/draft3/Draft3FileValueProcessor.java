@@ -23,10 +23,14 @@ public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
   }
 
   @Override
-  public Set<FileValue> getOutputFiles(Job job) throws BindingException {
+  public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
     Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
     try {
-      return new Draft3PortProcessorHelper(draft3Job).flattenOutputFiles(job.getOutputs());
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new Draft3PortProcessorHelper(draft3Job).flattenOutputFiles(job.getOutputs(), visiblePorts);
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);
     }

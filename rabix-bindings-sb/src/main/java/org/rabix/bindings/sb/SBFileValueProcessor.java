@@ -23,10 +23,14 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
   }
 
   @Override
-  public Set<FileValue> getOutputFiles(Job job) throws BindingException {
+  public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
     SBJob sbJob = SBJobHelper.getSBJob(job);
     try {
-      return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getOutputs());
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getOutputs(), visiblePorts);
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }

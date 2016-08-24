@@ -99,8 +99,8 @@ public class Draft3Bindings implements Bindings {
   }
 
   @Override
-  public Set<FileValue> getOutputFiles(Job job) throws BindingException {
-    return fileValueProcessor.getOutputFiles(job);
+  public Set<FileValue> getOutputFiles(Job job, boolean visiblePorts) throws BindingException {
+    return fileValueProcessor.getOutputFiles(job, visiblePorts);
   }
   
   @Override
