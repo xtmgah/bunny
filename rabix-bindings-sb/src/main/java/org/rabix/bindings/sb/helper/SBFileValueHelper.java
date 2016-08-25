@@ -177,6 +177,6 @@ public class SBFileValueHelper extends SBBeanHelper {
         secondaryFiles.add(createFileValue(secondaryFileValue));
       }
     }
-    return new FileValue(size, path, checksum, secondaryFiles, properties);
+    return new FileValue(size, path, null, checksum, secondaryFiles, properties);
   }
 }

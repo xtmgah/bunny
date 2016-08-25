@@ -77,10 +77,26 @@ public class Draft2PortProcessorHelper {
     }
     return callback.getFlattenedFileData();
   }
-
+  
   public Map<String, Object> setFileSize(Map<String, Object> inputs) throws Draft2PortProcessorException {
     try {
       return portProcessor.processInputs(inputs, new Draft2FileSizeProcessorCallback());
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
+  public Map<String, Object> updateInputFiles(Map<String, Object> inputs, Set<FileValue> fileValues) throws Draft2PortProcessorException {
+    try {
+      return portProcessor.processInputs(inputs, new Draft2FileValueUpdateProcessorCallback(fileValues));
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
+  public Map<String, Object> updateOutputFiles(Map<String, Object> outputs, Set<FileValue> fileValues) throws Draft2PortProcessorException {
+    try {
+      return portProcessor.processOutputs(outputs, new Draft2FileValueUpdateProcessorCallback(fileValues));
     } catch (Draft2PortProcessorException e) {
       throw new Draft2PortProcessorException("Failed to set input file size", e);
     }

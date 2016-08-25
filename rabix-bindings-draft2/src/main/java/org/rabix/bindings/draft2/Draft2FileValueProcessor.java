@@ -1,5 +1,6 @@
 package org.rabix.bindings.draft2;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.BindingException;
@@ -31,6 +32,30 @@ public class Draft2FileValueProcessor implements ProtocolFileValueProcessor {
         visiblePorts = job.getVisiblePorts();
       }
       return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getOutputs(), visiblePorts);
+    } catch (Draft2PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    Map<String, Object> inputs;
+    try {
+      inputs = new Draft2PortProcessorHelper(draft2Job).updateInputFiles(job.getInputs(), inputFiles);
+      return Job.cloneWithInputs(job, inputs);
+    } catch (Draft2PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Job updateOutputFiles(Job job, Set<FileValue> outputFiles) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    Map<String, Object> outputs;
+    try {
+      outputs = new Draft2PortProcessorHelper(draft2Job).updateOutputFiles(job.getOutputs(), outputFiles);
+      return Job.cloneWithOutputs(job, outputs);
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }

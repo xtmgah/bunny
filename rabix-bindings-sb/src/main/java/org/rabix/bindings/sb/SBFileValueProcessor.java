@@ -1,5 +1,6 @@
 package org.rabix.bindings.sb;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.BindingException;
@@ -31,6 +32,30 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
         visiblePorts = job.getVisiblePorts();
       }
       return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getOutputs(), visiblePorts);
+    } catch (SBPortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException {
+    SBJob draft2Job = SBJobHelper.getSBJob(job);
+    Map<String, Object> inputs;
+    try {
+      inputs = new SBPortProcessorHelper(draft2Job).updateInputFiles(job.getInputs(), inputFiles);
+      return Job.cloneWithInputs(job, inputs);
+    } catch (SBPortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Job updateOutputFiles(Job job, Set<FileValue> outputFiles) throws BindingException {
+    SBJob draft2Job = SBJobHelper.getSBJob(job);
+    Map<String, Object> outputs;
+    try {
+      outputs = new SBPortProcessorHelper(draft2Job).updateOutputFiles(job.getOutputs(), outputFiles);
+      return Job.cloneWithOutputs(job, outputs);
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }

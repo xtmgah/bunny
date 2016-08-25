@@ -46,6 +46,22 @@ public class SBPortProcessorHelper {
     }
     return callback.getFlattenedFileData();
   }
+  
+  public Map<String, Object> updateInputFiles(Map<String, Object> inputs, Set<FileValue> fileValues) throws SBPortProcessorException {
+    try {
+      return portProcessor.processInputs(inputs, new SBFileValueUpdateProcessorCallback(fileValues));
+    } catch (SBPortProcessorException e) {
+      throw new SBPortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
+  public Map<String, Object> updateOutputFiles(Map<String, Object> outputs, Set<FileValue> fileValues) throws SBPortProcessorException {
+    try {
+      return portProcessor.processOutputs(outputs, new SBFileValueUpdateProcessorCallback(fileValues));
+    } catch (SBPortProcessorException e) {
+      throw new SBPortProcessorException("Failed to set input file size", e);
+    }
+  }
 
   public Set<String> flattenOutputFilePaths(Map<String, Object> outputs) throws SBPortProcessorException {
     SBFilePathFlattenProcessorCallback callback = new SBFilePathFlattenProcessorCallback();

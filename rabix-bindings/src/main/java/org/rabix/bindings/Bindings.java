@@ -34,6 +34,10 @@ public interface Bindings {
 
   Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
   
+  Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException;
+  
+  Job updateOutputFiles(Job job, Set<FileValue> outputFiles) throws BindingException;
+  
   Set<FileValue> getProtocolFiles(File workingDir) throws BindingException;
   
   Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException;

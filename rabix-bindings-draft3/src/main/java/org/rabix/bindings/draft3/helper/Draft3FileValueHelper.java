@@ -182,6 +182,6 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
         secondaryFiles.add(createFileValue(secondaryFileValue));
       }
     }
-    return new FileValue(size, path, checksum, secondaryFiles, properties);
+    return new FileValue(size, path, null, checksum, secondaryFiles, properties);
   }
 }

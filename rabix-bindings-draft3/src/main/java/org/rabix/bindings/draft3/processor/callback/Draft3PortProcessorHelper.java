@@ -57,6 +57,22 @@ public class Draft3PortProcessorHelper {
     return callback.getFlattenedPaths();
   }
 
+  public Map<String, Object> updateInputFiles(Map<String, Object> inputs, Set<FileValue> fileValues) throws Draft3PortProcessorException {
+    try {
+      return portProcessor.processInputs(inputs, new Draft3FileValueUpdateProcessorCallback(fileValues));
+    } catch (Draft3PortProcessorException e) {
+      throw new Draft3PortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
+  public Map<String, Object> updateOutputFiles(Map<String, Object> outputs, Set<FileValue> fileValues) throws Draft3PortProcessorException {
+    try {
+      return portProcessor.processOutputs(outputs, new Draft3FileValueUpdateProcessorCallback(fileValues));
+    } catch (Draft3PortProcessorException e) {
+      throw new Draft3PortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
   public Set<Map<String, Object>> flattenInputFileData(Map<String, Object> inputs) throws Draft3PortProcessorException {
     Draft3FileDataFlattenProcessorCallback callback = new Draft3FileDataFlattenProcessorCallback();
     try {

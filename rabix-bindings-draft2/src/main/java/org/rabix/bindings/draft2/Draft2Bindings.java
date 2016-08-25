@@ -99,19 +99,29 @@ public class Draft2Bindings implements Bindings {
   }
   
   @Override
+  public Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException {
+    return fileValueProcessor.updateInputFiles(job, inputFiles);
+  }
+
+  @Override
+  public Job updateOutputFiles(Job job, Set<FileValue> outputFiles) throws BindingException {
+    return fileValueProcessor.updateOutputFiles(job, outputFiles);
+  }
+  
+  @Override
   public Set<FileValue> getProtocolFiles(File workingDir) throws BindingException {
     Set<FileValue> files = new HashSet<>();
     
     File jobFile = new File(workingDir, Draft2Processor.JOB_FILE);
     if (jobFile.exists()) {
       String jobFilePath = jobFile.getAbsolutePath();
-      files.add(new FileValue(null, jobFilePath, null, null, null));
+      files.add(new FileValue(null, jobFilePath, null, null, null, null));
     }
     
     File resultFile = new File(workingDir, Draft2Processor.RESULT_FILENAME);
     if (resultFile.exists()) {
       String resultFilePath = resultFile.getAbsolutePath();
-      files.add(new FileValue(null, resultFilePath, null, null, null));
+      files.add(new FileValue(null, resultFilePath, null, null, null, null));
     }
     return files;
   }

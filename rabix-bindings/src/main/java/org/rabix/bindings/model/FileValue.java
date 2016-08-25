@@ -7,17 +7,24 @@ public class FileValue {
 
   private final Long size;
   private final String path;
+  private final String relocatedPath;
+  
   private final String checksum;
   private final List<FileValue> secondaryFiles;
   private final Map<String, Object> properties;
   
-  public FileValue(Long size, String path, String checksum, List<FileValue> secondaryFiles, Map<String, Object> properties) {
+  public FileValue(Long size, String path, String relocatedPath, String checksum, List<FileValue> secondaryFiles, Map<String, Object> properties) {
     super();
     this.size = size;
     this.path = path;
+    this.relocatedPath = relocatedPath;
     this.checksum = checksum;
     this.secondaryFiles = secondaryFiles;
     this.properties = properties;
+  }
+  
+  public static FileValue cloneWithRelocatedPath(FileValue fileValue, String relocatedPath) {
+    return new FileValue(fileValue.size, fileValue.path, relocatedPath, fileValue.checksum, fileValue.secondaryFiles, fileValue.properties);
   }
 
   public Long getSize() {
@@ -26,6 +33,10 @@ public class FileValue {
 
   public String getPath() {
     return path;
+  }
+  
+  public String getRelocatedPath() {
+    return relocatedPath;
   }
 
   public String getChecksum() {
