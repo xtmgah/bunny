@@ -16,6 +16,7 @@ import org.rabix.bindings.sb.bean.SBStep;
 import org.rabix.bindings.sb.bean.SBWorkflow;
 import org.rabix.bindings.sb.helper.SBBindingHelper;
 import org.rabix.bindings.sb.helper.SBSchemaHelper;
+import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.common.json.processor.BeanProcessor;
 import org.rabix.common.json.processor.BeanProcessorException;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public class SBJobProcessor implements BeanProcessor<SBJob> {
   private SBJob process(SBJob parentJob, SBJob job) throws SBException {
     if (job.getId() == null) {
       String workflowId = parentJob != null ? parentJob.getId() : null;
-      String id = workflowId != null? workflowId + SBSchemaHelper.PORT_ID_SEPARATOR + SBSchemaHelper.MASTER_JOB_ID : SBSchemaHelper.MASTER_JOB_ID;
+      String id = workflowId != null? workflowId + SBSchemaHelper.PORT_ID_SEPARATOR + InternalSchemaHelper.ROOT_NAME : InternalSchemaHelper.ROOT_NAME;
       job.setId(id);
     }
     processElements(null, job);

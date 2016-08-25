@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 public class InternalSchemaHelper {
 
+  public static final String ROOT_NAME = "root";
   public static final String SEPARATOR = ".";
   public static final String SLASH_SEPARATOR = "/";
   

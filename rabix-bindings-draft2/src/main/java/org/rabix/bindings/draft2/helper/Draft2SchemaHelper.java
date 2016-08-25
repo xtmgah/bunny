@@ -20,8 +20,6 @@ import com.google.common.collect.Sets;
 
 public class Draft2SchemaHelper extends Draft2BeanHelper {
 
-  public static final String MASTER_JOB_ID = "root";
-
   public static final String ID_START = "#";
   public static final String ID_SEPARATOR = "/";
   public static final String PORT_ID_SEPARATOR = ".";
