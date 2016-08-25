@@ -17,6 +17,7 @@ import org.rabix.bindings.draft3.helper.Draft3BindingHelper;
 import org.rabix.bindings.draft3.helper.Draft3SchemaHelper;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.LinkMerge;
+import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.common.json.processor.BeanProcessor;
 import org.rabix.common.json.processor.BeanProcessorException;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class Draft3JobProcessor implements BeanProcessor<Draft3Job> {
   private Draft3Job process(Draft3Job parentJob, Draft3Job job) throws Draft3Exception {
     if (job.getId() == null) {
       String workflowId = parentJob != null ? parentJob.getId() : null;
-      String id = workflowId != null? workflowId + DOT_SEPARATOR + Draft3SchemaHelper.MASTER_JOB_ID : Draft3SchemaHelper.MASTER_JOB_ID;
+      String id = workflowId != null? workflowId + DOT_SEPARATOR + InternalSchemaHelper.ROOT_NAME : InternalSchemaHelper.ROOT_NAME;
       job.setId(id);
     }
     processElements(null, job);

@@ -129,7 +129,7 @@ public class JobHelper {
     List<LinkRecord> links = linkRecordService.findBySourceAndDestinationType(jobId, portId, LinkPortType.OUTPUT, rootId);
 
     for (LinkRecord link : links) {
-      if (link.getDestinationJobId().equals("root")) {
+      if (link.getDestinationJobId().equals(InternalSchemaHelper.ROOT_NAME)) {
         return true;
       } else {
         return isRoot(link.getDestinationJobPort(), link.getDestinationJobId(), rootId, linkRecordService);

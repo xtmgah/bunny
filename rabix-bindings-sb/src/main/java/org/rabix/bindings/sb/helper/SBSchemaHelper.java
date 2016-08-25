@@ -11,8 +11,6 @@ import com.google.common.base.Preconditions;
 
 public class SBSchemaHelper extends SBBeanHelper {
 
-  public static final String MASTER_JOB_ID = "root";
-  
   public static final String ID_START = "#";
   public static final String ID_SEPARATOR = "/";
   public static final String PORT_ID_SEPARATOR = ".";
