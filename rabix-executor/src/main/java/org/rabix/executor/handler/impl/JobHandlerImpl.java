@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
@@ -48,6 +49,7 @@ import org.rabix.executor.model.JobData;
 import org.rabix.executor.pathmapper.InputFileMapper;
 import org.rabix.executor.pathmapper.OutputFileMapper;
 import org.rabix.executor.service.BasicMemoizationService;
+import org.rabix.executor.service.FilePermissionService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.status.ExecutorStatusCallback;
 import org.rabix.executor.status.ExecutorStatusCallbackException;
@@ -84,15 +86,20 @@ public class JobHandlerImpl implements JobHandler {
   private DockerClientLockDecorator dockerClient;
 
   private final ExecutorStatusCallback statusCallback;
+  
+  private final FilePermissionService filePermissionService;
   private final BasicMemoizationService localMemoizationService;
+
+  private boolean setPermissions;
 
   @Inject
   public JobHandlerImpl(
       @Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, 
-      JobDataService jobDataService, StorageConfiguration storageConfig, 
+      JobDataService jobDataService, Configuration configuration, StorageConfiguration storageConfig, 
       DockerConfigation dockerConfig, FileConfiguration fileConfiguration, 
       DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
-      BasicMemoizationService localMemoizationService, UploadService uploadService, DownloadService downloadService,
+      BasicMemoizationService localMemoizationService, FilePermissionService filePermissionService, 
+      UploadService uploadService, DownloadService downloadService,
       @InputFileMapper FileMapper inputFileMapper, @OutputFileMapper FileMapper outputFileMapper) {
     this.job = job;
     this.engineStub = engineStub;
@@ -101,6 +108,7 @@ public class JobHandlerImpl implements JobHandler {
     this.jobDataService = jobDataService;
     this.dockerClient = dockerClient;
     this.statusCallback = statusCallback;
+    this.filePermissionService = filePermissionService;
     this.localMemoizationService = localMemoizationService;
     this.workingDir = storageConfig.getWorkingDir(job);
     this.uploadService = uploadService;
@@ -109,6 +117,8 @@ public class JobHandlerImpl implements JobHandler {
     this.outputFileMapper = outputFileMapper;
     this.enableHash = fileConfiguration.calculateFileChecksum();
     this.hashAlgorithm = fileConfiguration.checksumAlgorithm();
+
+    this.setPermissions = configuration.getBoolean("executor.set_permissions", false);
   }
 
   @Override
@@ -239,6 +249,9 @@ public class JobHandlerImpl implements JobHandler {
         uploadOutputFiles(job, bindings);
         statusCallback.onJobFailed(job);
         return job;
+      }
+      if (setPermissions) {
+        filePermissionService.execute(job);
       }
       job = bindings.postprocess(job, workingDir);
 

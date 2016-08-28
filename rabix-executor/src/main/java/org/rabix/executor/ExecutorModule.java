@@ -9,10 +9,12 @@ import org.rabix.executor.handler.JobHandlerFactory;
 import org.rabix.executor.handler.impl.JobHandlerImpl;
 import org.rabix.executor.service.BasicMemoizationService;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.service.FilePermissionService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.JobFitter;
 import org.rabix.executor.service.impl.BasicMemoizationServiceImpl;
 import org.rabix.executor.service.impl.ExecutorServiceImpl;
+import org.rabix.executor.service.impl.FilePermissionServiceImpl;
 import org.rabix.executor.service.impl.JobDataServiceImpl;
 import org.rabix.executor.service.impl.JobFitterImpl;
 
@@ -41,6 +43,7 @@ public class ExecutorModule extends AbstractModule {
     bind(JobHandlerCommandDispatcher.class).in(Scopes.SINGLETON);
 
     bind(ExecutorService.class).to(ExecutorServiceImpl.class).in(Scopes.SINGLETON);
+    bind(FilePermissionService.class).to(FilePermissionServiceImpl.class).in(Scopes.SINGLETON);
     bind(BasicMemoizationService.class).to(BasicMemoizationServiceImpl.class).in(Scopes.SINGLETON);
   }
 
