@@ -48,6 +48,7 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.messages.AuthConfig;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerExit;
 import com.spotify.docker.client.messages.ContainerInfo;
 import com.spotify.docker.client.messages.ContainerState;
 import com.spotify.docker.client.messages.HostConfig;
@@ -394,8 +395,13 @@ public class DockerContainerHandler implements ContainerHandler {
     public synchronized LogStream logs(String containerId, LogsParam... params) throws DockerException, InterruptedException {
       return dockerClient.logs(containerId, params);
     }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
+    public synchronized ContainerExit waitContainer(String containerId) throws DockerException, InterruptedException {
+      return dockerClient.waitContainer(containerId);
+    }
 
-    private DockerClient createDockerClient(Configuration configuration) throws ContainerException {
+    public static DockerClient createDockerClient(Configuration configuration) throws ContainerException {
       DockerClient docker = null;
       try {
         DefaultDockerClient.Builder dockerClientBuilder = DefaultDockerClient.fromEnv()
