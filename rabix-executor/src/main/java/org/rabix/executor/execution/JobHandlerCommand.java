@@ -66,7 +66,7 @@ public abstract class JobHandlerCommand {
   /**
    * Send notification to master about STARTED event 
    */
-  protected void started(JobData jobData, String message, EngineStub engineStub) {
+  protected void started(JobData jobData, String message, EngineStub<?,?,?> engineStub) {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
@@ -80,25 +80,29 @@ public abstract class JobHandlerCommand {
   /**
    * Send notification to master about FAILED event 
    */
-  protected void failed(JobData jobData, String message, EngineStub engineStub, Throwable e) {
+  protected void failed(JobData jobData, String message, EngineStub<?,?,?> engineStub, Throwable e) {
     logger.error(message, e);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
+    
+    VerboseLogger.log(String.format("%s", message));
   }
 
   /**
    * Send notification to master about STOPPED event 
    */
-  protected void stopped(JobData jobData, String message, EngineStub engineStub) {
+  protected void stopped(JobData jobData, String message, EngineStub<?,?,?> engineStub) {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
+    
+    VerboseLogger.log(String.format("Job %s has stopped", job.getName()));
   }
 
   static volatile int count = 0;
@@ -106,7 +110,7 @@ public abstract class JobHandlerCommand {
   /**
    * Send notification to master about COMPLETED event 
    */
-  protected void completed(JobData jobData, String message, Map<String, Object> result, EngineStub engineStub) {
+  protected void completed(JobData jobData, String message, Map<String, Object> result, EngineStub<?,?,?> engineStub) {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);

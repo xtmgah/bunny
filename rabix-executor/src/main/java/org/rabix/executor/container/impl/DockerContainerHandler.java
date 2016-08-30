@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Job;
@@ -26,6 +25,7 @@ import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.EnvironmentVariableRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.logging.VerboseLogger;
+import org.rabix.common.retry.Retry;
 import org.rabix.executor.config.StorageConfig;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.inject.Inject;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerCertificateException;
 import com.spotify.docker.client.DockerClient;
@@ -48,19 +49,19 @@ import com.spotify.docker.client.messages.ContainerState;
 import com.spotify.docker.client.messages.HostConfig;
 
 /**
- * Docker based implementation of {@link ContainerHandler} 
+ * Docker based implementation of {@link ContainerHandler}
  */
 public class DockerContainerHandler implements ContainerHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(DockerContainerHandler.class);
-  private static final String dockerHubServer = "https://index.docker.io/v1/";
   
+  private static final String dockerHubServer = "https://index.docker.io/v1/";
+
   public static final String DIRECTORY_MAP_MODE = "rw";
   public static final String COMMAND_FILE = "cmd.log";
   
   private String containerId;
-  private DockerClient dockerClient;
-  
+  private DockerClientLockDecorator dockerClient;
 
   private final Job job;
   private final DockerContainerRequirement dockerResource;
@@ -68,54 +69,47 @@ public class DockerContainerHandler implements ContainerHandler {
   private final File workingDir;
   private final Configuration configuration;
 
-  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration) {
+  private boolean isConfigAuthEnabled;
+
+  private Integer overrideResultStatus = null;
+
+  public DockerContainerHandler(Job job, DockerContainerRequirement dockerResource, Configuration configuration, DockerClientLockDecorator dockerClient) throws ContainerException {
     this.job = job;
+    this.dockerClient = dockerClient;
     this.dockerResource = dockerResource;
     this.configuration = configuration;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
-    this.dockerClient = createDockerClient();
+    this.isConfigAuthEnabled = configuration.getBoolean("docker.override.auth.enabled", false);
   }
-  
-  private DockerClient createDockerClient() {
-    DockerClient docker = null;
-    try {
-      docker = DefaultDockerClient.fromEnv().connectTimeoutMillis(TimeUnit.MINUTES.toMillis(1)).readTimeoutMillis(TimeUnit.MINUTES.toMillis(1)).build();
-    } catch (DockerCertificateException e) {
-      e.printStackTrace();
-    }
-    return docker;
-  }
-  
-  private String extractServerName(String image) {
-    if(StringUtils.countMatches(image, "/") <= 1) {
-      return dockerHubServer;
-    }
-    else {
-      return image.substring(0, image.indexOf("/"));
-    }
-  }
-  
+
   private void pull(String image) throws ContainerException {
     logger.debug("Pulling docker image");
     VerboseLogger.log(String.format("Pulling docker image %s", image));
-    
-    AuthConfig authConfig = null;
+
     try {
-      String serverAddress = extractServerName(image);
-      authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
-    } catch (IOException | RuntimeException e) {
-      logger.debug("Can't find docker config file");
-      try {
-        this.dockerClient.pull(image);
-      } catch (DockerException | InterruptedException e1) {
-        throw new ContainerException("Failed to pull " + image, e1);
+      if (isConfigAuthEnabled) {
+        dockerClient.pull(image);
+      } else {
+        try {
+          String serverAddress = extractServerName(image);
+          AuthConfig authConfig = AuthConfig.fromDockerConfig(serverAddress).build();
+          this.dockerClient.pull(image, authConfig);
+        } catch (IOException e) {
+          logger.debug("Can't find docker config file", e);
+          dockerClient.pull(image);
+        }
       }
-    }
-    try {
-      this.dockerClient.pull(image, authConfig);
     } catch (DockerException | InterruptedException e) {
+      logger.error("Failed to pull " + image, e);
       throw new ContainerException("Failed to pull " + image, e);
     }
+  }
+
+  private String extractServerName(String image) {
+    if (StringUtils.countMatches(image, "/") <= 1) {
+      return dockerHubServer;
+    }
+    return image.substring(0, image.indexOf("/"));
   }
 
   @Override
@@ -131,7 +125,7 @@ public class DockerContainerHandler implements ContainerHandler {
 
       ContainerConfig.Builder builder = ContainerConfig.builder();
       builder.image(dockerPull);
-      
+
       HostConfig.Builder hostConfigBuilder = HostConfig.builder();
       hostConfigBuilder.binds(physicalPath + ":" + physicalPath + ":" + DIRECTORY_MAP_MODE);
       HostConfig hostConfig = hostConfigBuilder.build();
@@ -140,6 +134,11 @@ public class DockerContainerHandler implements ContainerHandler {
       Bindings bindings = BindingsFactory.create(job);
       String commandLine = bindings.buildCommandLine(job);
 
+      if (StringUtils.isEmpty(commandLine.trim())) {
+        overrideResultStatus = 0; // default is success
+        return;
+      }
+
       File commandLineFile = new File(workingDir, COMMAND_FILE);
       FileUtils.writeStringToFile(commandLineFile, commandLine);
       builder.workingDir(workingDir.getAbsolutePath()).volumes(volumes).cmd("sh", "-c", commandLine);
@@ -147,8 +146,9 @@ public class DockerContainerHandler implements ContainerHandler {
       List<Requirement> combinedRequirements = new ArrayList<>();
       combinedRequirements.addAll(bindings.getHints(job));
       combinedRequirements.addAll(bindings.getRequirements(job));
-      
-      EnvironmentVariableRequirement environmentVariableResource = getRequirement(combinedRequirements, EnvironmentVariableRequirement.class);
+
+      EnvironmentVariableRequirement environmentVariableResource = getRequirement(combinedRequirements,
+          EnvironmentVariableRequirement.class);
       if (environmentVariableResource != null) {
         builder.env(transformEnvironmentVariables(environmentVariableResource.getVariables()));
       }
@@ -171,12 +171,12 @@ public class DockerContainerHandler implements ContainerHandler {
     } catch (IOException e) {
       logger.error("Failed to create cmd.log file.", e);
       throw new ContainerException("Failed to create cmd.log file.");
-    } catch (BindingException e) {
+    } catch (Exception e) {
       logger.error("Failed to start container.", e);
       throw new ContainerException("Failed to start container.", e);
     }
   }
-  
+
   private List<String> transformEnvironmentVariables(Map<String, String> variables) {
     List<String> transformed = new ArrayList<>();
     for (Entry<String, String> variableEntry : variables.entrySet()) {
@@ -184,7 +184,7 @@ public class DockerContainerHandler implements ContainerHandler {
     }
     return transformed;
   }
-  
+
   @SuppressWarnings("unchecked")
   private <T extends Requirement> T getRequirement(List<Requirement> requirements, Class<T> clazz) {
     for (Requirement requirement : requirements) {
@@ -197,6 +197,9 @@ public class DockerContainerHandler implements ContainerHandler {
 
   @Override
   public void stop() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return;
+    }
     try {
       dockerClient.stopContainer(containerId, 0);
     } catch (Exception e) {
@@ -207,6 +210,9 @@ public class DockerContainerHandler implements ContainerHandler {
 
   @JsonIgnore
   public boolean isStarted() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return true;
+    }
     ContainerInfo containerInfo;
     try {
       containerInfo = dockerClient.inspectContainer(containerId);
@@ -222,6 +228,9 @@ public class DockerContainerHandler implements ContainerHandler {
   @Override
   @JsonIgnore
   public boolean isRunning() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return false;
+    }
     ContainerInfo containerInfo;
     try {
       containerInfo = dockerClient.inspectContainer(containerId);
@@ -236,6 +245,9 @@ public class DockerContainerHandler implements ContainerHandler {
   @Override
   @JsonIgnore
   public int getProcessExitStatus() throws ContainerException {
+    if (overrideResultStatus != null) {
+      return overrideResultStatus;
+    }
     ContainerInfo containerInfo;
     try {
       containerInfo = dockerClient.inspectContainer(containerId);
@@ -252,6 +264,9 @@ public class DockerContainerHandler implements ContainerHandler {
    */
   @Override
   public void dumpContainerLogs(final File logFile) throws ContainerException {
+    if (overrideResultStatus != null) {
+      return;
+    }
     logger.debug("Saving standard error files for id={}", job.getId());
 
     if (logFile != null) {
@@ -263,13 +278,13 @@ public class DockerContainerHandler implements ContainerHandler {
       }
     }
   }
-  
+
   /**
-   * Helper method for dumping error logs from Docker to file 
+   * Helper method for dumping error logs from Docker to file
    */
   public void dumpLog(String containerId, File logFile) throws DockerException, InterruptedException {
     LogStream errorStream = null;
-    
+
     FileChannel fileChannel = null;
     FileOutputStream fileOutputStream = null;
     try {
@@ -277,7 +292,7 @@ public class DockerContainerHandler implements ContainerHandler {
         logFile.delete();
       }
       logFile.createNewFile();
-      
+
       fileOutputStream = new FileOutputStream(logFile);
       fileChannel = fileOutputStream.getChannel();
 
@@ -311,4 +326,81 @@ public class DockerContainerHandler implements ContainerHandler {
       }
     }
   }
+
+  public static class DockerClientLockDecorator {
+
+    public final static int RETRY_TIMES = 5;
+    
+    public final static long SECOND = 1000L;
+    public final static long MINUTE = 60 * SECOND;
+    public final static long METHOD_TIMEOUT = 10 * MINUTE; // maximize time (it's mostly because of big Docker images)
+    public final static long DEFAULT_DOCKER_CLIENT_TIMEOUT = 1000 * SECOND;
+    public final static long SLEEP_TIME = 30 * SECOND;
+    
+    private DockerClient dockerClient;
+
+    @Inject
+    public DockerClientLockDecorator(Configuration configuration) throws ContainerException {
+      this.dockerClient = createDockerClient(configuration);
+    }
+
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true, sleepTimeMillis = SLEEP_TIME)
+    public synchronized void pull(String image) throws DockerException, InterruptedException {
+      dockerClient.pull(image);
+    }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true, sleepTimeMillis = SLEEP_TIME)
+    public synchronized void pull(String image, AuthConfig authConfig) throws DockerException, InterruptedException {
+      dockerClient.pull(image, authConfig);
+    }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
+    public synchronized ContainerCreation createContainer(ContainerConfig containerConfig) throws DockerException, InterruptedException {
+      return dockerClient.createContainer(containerConfig);
+    }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
+    public synchronized void startContainer(String containerId) throws DockerException, InterruptedException {
+      dockerClient.startContainer(containerId);
+    }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
+    public synchronized void stopContainer(String containerId, int timeToWait) throws DockerException, InterruptedException {
+      dockerClient.stopContainer(containerId, timeToWait);
+    }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
+    public synchronized ContainerInfo inspectContainer(String containerId) throws DockerException, InterruptedException {
+      return dockerClient.inspectContainer(containerId);
+    }
+    
+    @Retry(times = RETRY_TIMES, methodTimeoutMillis = METHOD_TIMEOUT, exponentialBackoff = true)
+    public synchronized LogStream logs(String containerId, LogsParam... params) throws DockerException, InterruptedException {
+      return dockerClient.logs(containerId, params);
+    }
+
+    private DockerClient createDockerClient(Configuration configuration) throws ContainerException {
+      DockerClient docker = null;
+      try {
+        DefaultDockerClient.Builder dockerClientBuilder = DefaultDockerClient.fromEnv()
+            .connectTimeoutMillis(TimeUnit.MINUTES.toMillis(5)).readTimeoutMillis(TimeUnit.MINUTES.toMillis(5));
+
+        boolean isConfigAuthEnabled = configuration.getBoolean("docker.override.auth.enabled", false);
+        if (isConfigAuthEnabled) {
+          String username = configuration.getString("docker.username");
+          String password = configuration.getString("docker.password");
+
+          AuthConfig authConfig = AuthConfig.builder().username(username).password(password).build();
+          dockerClientBuilder.authConfig(authConfig);
+        }
+        docker = dockerClientBuilder.build();
+      } catch (DockerCertificateException e) {
+        logger.error("Failed to create Docker client", e);
+        throw new ContainerException("Failed to create Docker client", e);
+      }
+      return docker;
+    }
+
+  }
+
 }

@@ -22,7 +22,7 @@ public class BackendStubFactory {
     this.configuration = configuration;
   }
 
-  public <T extends Backend> BackendStub create(JobService jobService, T backend) throws TransportPluginException {
+  public <T extends Backend> BackendStub<?, ?, ?> create(JobService jobService, T backend) throws TransportPluginException {
     switch (backend.getType()) {
     case ACTIVE_MQ:
       return new BackendStubActiveMQ(jobService, configuration, (BackendActiveMQ) backend);

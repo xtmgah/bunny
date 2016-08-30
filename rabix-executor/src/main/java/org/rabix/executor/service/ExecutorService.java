@@ -1,5 +1,6 @@
 package org.rabix.executor.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.rabix.bindings.model.Job;
@@ -12,7 +13,7 @@ public interface ExecutorService {
   
   void start(final Job job, String contextId);
 
-  void stop(String id, String contextId);
+  void stop(List<String> ids, String contextId);
 
   void shutdown(Boolean stopEverything);
 

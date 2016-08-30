@@ -6,28 +6,54 @@ import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.model.Application;
-import org.rabix.bindings.model.LinkMerge;
-import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.Application.ApplicationDeserializer;
 import org.rabix.bindings.model.Application.ApplicationSerializer;
+import org.rabix.bindings.model.LinkMerge;
+import org.rabix.bindings.model.ScatterMethod;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({ 
+    @Type(value = DAGNode.class, name = "EXECUTABLE"),
+    @Type(value = DAGContainer.class, name = "CONTAINER")})
+@JsonInclude(Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DAGNode {
 
+  public static enum DAGNodeType {
+    EXECUTABLE,
+    CONTAINER
+  }
+  
+  @JsonProperty("id")
   protected final String id;
   @JsonDeserialize(using = ApplicationDeserializer.class)
   @JsonSerialize(using = ApplicationSerializer.class)
+  @JsonProperty("app")
   protected final Application app;
+  @JsonProperty("scatterMethod")
   protected final ScatterMethod scatterMethod;
+  @JsonProperty("inputPorts")
   protected final List<DAGLinkPort> inputPorts;
+  @JsonProperty("outputPorts")
   protected final List<DAGLinkPort> outputPorts;
   
+  @JsonProperty("defaults")
   protected final Map<String, Object> defaults;
-
-  public DAGNode(String id, List<DAGLinkPort> inputPorts, List<DAGLinkPort> outputPorts, ScatterMethod scatterMethod, Application app, Map<String, Object> defaults) {
+  
+  @JsonCreator
+  public DAGNode(@JsonProperty("id") String id, @JsonProperty("inputPorts") List<DAGLinkPort> inputPorts, @JsonProperty("outputPorts") List<DAGLinkPort> outputPorts, @JsonProperty("scatterMethod") ScatterMethod scatterMethod, @JsonProperty("app") Application app, @JsonProperty("defaults") Map<String, Object> defaults) {
     this.id = id;
     this.app = app;
     this.inputPorts = inputPorts;
@@ -100,6 +126,10 @@ public class DAGNode {
   
   public Map<String, Object> getDefaults() {
     return defaults;
+  }
+  
+  public DAGNodeType getType() {
+    return DAGNodeType.EXECUTABLE;
   }
 
   @Override

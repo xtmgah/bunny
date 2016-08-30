@@ -1,15 +1,23 @@
 package org.rabix.engine.rest.service.impl;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.model.Context;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.bindings.model.Resources;
 import org.rabix.bindings.model.dag.DAGNode;
+import org.rabix.common.SystemEnvironmentHelper;
 import org.rabix.engine.JobHelper;
 import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.impl.InitEvent;
@@ -46,9 +54,11 @@ public class JobServiceImpl implements JobService {
   
   private final EventProcessor eventProcessor;
   private final BackendDispatcher backendDispatcher;
+  
+  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   @Inject
-  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, DAGNodeDB dagNodeDB, JobDB jobDB) {
+  public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
     this.jobDB = jobDB;
     this.dagNodeDB = dagNodeDB;
     this.eventProcessor = eventProcessor;
@@ -58,11 +68,15 @@ public class JobServiceImpl implements JobService {
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
 
-    this.eventProcessor.start(null, new JobStatusCallbackImpl());
+    boolean isLocalBackend = configuration.getBoolean("local.backend", false);
+    boolean isConformance = configuration.getString("rabix.conformance") != null;
+    this.eventProcessor.start(null, new JobStatusCallbackImpl(isLocalBackend, isLocalBackend, isConformance));
   }
   
   @Override
   public void update(Job job) throws JobServiceException {
+    logger.debug("Update Job {}", job.getId());
+    
     JobRecord jobRecord = jobRecordService.find(job.getName(), job.getRootId());
     try {
       JobStatusEvent statusEvent = null;
@@ -83,7 +97,6 @@ public class JobServiceImpl implements JobService {
         JobStateValidator.checkState(jobRecord, JobState.FAILED);
         statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.FAILED, null);
         eventProcessor.addToQueue(statusEvent);
-        backendDispatcher.remove(job);
         break;
       case COMPLETED:
         if (JobState.COMPLETED.equals(jobRecord.getState())) {
@@ -92,7 +105,6 @@ public class JobServiceImpl implements JobService {
         JobStateValidator.checkState(jobRecord, JobState.COMPLETED);
         statusEvent = new JobStatusEvent(job.getName(), job.getRootId(), JobState.COMPLETED, job.getOutputs());
         eventProcessor.addToQueue(statusEvent);
-        backendDispatcher.remove(job);
         break;
       default:
         break;
@@ -105,13 +117,10 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
-  public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
-    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
-  }
-  
-  @Override
-  public Job create(Job job) throws JobServiceException {
-    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString());
+  public Job start(Job job, Map<String, String> config) throws JobServiceException {
+    logger.debug("Start Job {}", job);
+    
+    Context context = job.getContext() != null? job.getContext() : createContext(UUID.randomUUID().toString(), config);
     job = Job.cloneWithIds(job, context.getId(), context.getId());
     job = Job.cloneWithContext(job, context);
 
@@ -136,6 +145,24 @@ public class JobServiceImpl implements JobService {
   }
   
   @Override
+  public void stop(String id) throws JobServiceException {
+    logger.debug("Stop Job {}", id);
+    
+    Job job = jobDB.get(id);
+    if (job.isRoot()) {
+      Set<Job> jobs = jobDB.getJobs(id);
+      backendDispatcher.stop(jobs.toArray(new Job[jobs.size()]));
+    } else {
+      backendDispatcher.stop(job);
+    }
+  }
+  
+  @Override
+  public Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException {
+    return JobHelper.createReadyJobs(jobRecordService, variableRecordService, contextRecordService, dagNodeDB, contextId);
+  }
+  
+  @Override
   public Set<Job> get() {
     return jobDB.getJobs();
   }
@@ -145,19 +172,93 @@ public class JobServiceImpl implements JobService {
     return jobDB.get(id);
   }
 
-  private Context createContext(String contextId) {
-    return new Context(contextId, null);
+  private Context createContext(String contextId, Map<String, String> config) {
+    return new Context(contextId, config);
   }
   
   private class JobStatusCallbackImpl implements JobStatusCallback {
 
+    private boolean stopOnFail;
+    private boolean setResources;
+    private boolean conformance;
+    
     private AtomicInteger failCount = new AtomicInteger(0);
     private AtomicInteger successCount = new AtomicInteger(0);
 
+    private Set<String> stoppingRootIds = new HashSet<>();
+    
+    public JobStatusCallbackImpl(boolean setResources, boolean stopOnFail, boolean conformance) {
+      this.stopOnFail = stopOnFail;
+      this.setResources = setResources;
+      this.conformance = conformance;
+    }
+    
     @Override
     public void onReady(Job job) {
+      if (setResources && !conformance) {
+        long numberOfCores = SystemEnvironmentHelper.getNumberOfCores();
+        long memory = SystemEnvironmentHelper.getTotalPhysicalMemorySizeInMB();
+        
+        Resources resources = new Resources(numberOfCores, memory, null, true);
+        job = Job.cloneWithResources(job, resources);
+      }
+      else if (conformance && job.getContext().getConfig() != null) {
+        long numberOfCores = job.getContext().getConfig().get("allocatedResources.cpu") != null ? Long.parseLong(job.getContext().getConfig().get("allocatedResources.cpu")) : null;
+        long memory = job.getContext().getConfig().get("allocatedResources.mem") != null ? Long.parseLong(job.getContext().getConfig().get("allocatedResources.mem")) : null;
+        Resources resources = new Resources(numberOfCores, memory, null, true);
+        job = Job.cloneWithResources(job, resources);
+      }
       jobDB.update(job);
       backendDispatcher.send(job);
+    }
+
+    @Override
+    public void onFailed(final Job failedJob) throws Exception {
+      if (stopOnFail) {
+        synchronized (stoppingRootIds) {
+          if (stoppingRootIds.contains(failedJob.getRootId())) {
+            return;
+          }
+          stoppingRootIds.add(failedJob.getRootId());
+          
+          stop(failedJob.getRootId());
+          executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+              while (true) {
+                try {
+                  boolean exit = true;
+                  for (Job job : jobDB.getJobs(failedJob.getRootId())) {
+                    if (!job.isRoot() && !isFinished(job.getStatus())) {
+                      exit = false;
+                      break;
+                    }
+                  }
+                  if (exit) {
+                    onRootFailed(failedJob.getRootId());
+                    break;
+                  }
+                  Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+                } catch (Exception e) {
+                  logger.error("Failed to stop root Job " + failedJob.getRootId(), e);
+                  break;
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    
+    private boolean isFinished(JobStatus jobStatus) {
+      switch (jobStatus) {
+      case COMPLETED:
+      case FAILED:
+      case ABORTED:
+        return true;
+      default:
+        return false;
+      }
     }
 
     @Override
@@ -171,12 +272,16 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void onRootFailed(String rootId) throws Exception {
-      Job job = jobDB.get(rootId);
-      job = Job.cloneWithStatus(job, JobStatus.FAILED);
-      jobDB.update(job);
-      logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
-    }
+      synchronized (stoppingRootIds) {
+        Job job = jobDB.get(rootId);
+        job = Job.cloneWithStatus(job, JobStatus.FAILED);
+        jobDB.update(job);
 
+        backendDispatcher.remove(job);
+        stoppingRootIds.remove(rootId);
+        logger.info("Root Job {} failed. Failed {}.", job.getId(), failCount.incrementAndGet());
+      }
+    }
   }
   
 }

@@ -34,11 +34,13 @@ import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
 import org.rabix.executor.container.impl.CompletedContainerHandler;
+import org.rabix.executor.container.impl.DockerContainerHandler.DockerClientLockDecorator;
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.service.DownloadFileService;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.service.impl.LocalMemoizationService;
 import org.rabix.ftp.SimpleFTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,18 +64,25 @@ public class JobHandlerImpl implements JobHandler {
   private final HashAlgorithm hashAlgorithm;
 
   private Job job;
-  private EngineStub engineStub;
+  private EngineStub<?, ?, ?> engineStub;
 
   private Configuration configuration;
   private ContainerHandler containerHandler;
-  
+  private DockerClientLockDecorator dockerClient;
+
+  private LocalMemoizationService localMemoizationService;
+
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub engineStub, JobDataService jobDataService, DownloadFileService downloadFileService, Configuration configuration, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
+      DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient,
+      LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
     this.job = job;
     this.engineStub = engineStub;
     this.configuration = configuration;
     this.downloadFileService = downloadFileService;
     this.jobDataService = jobDataService;
+    this.dockerClient = dockerClient;
+    this.localMemoizationService = localMemoizationService;
     this.workingDir = StorageConfig.getWorkingDir(job, configuration);
     this.ftpClient = ftpClient;
     this.enableHash = FileConfig.calculateFileChecksum(configuration);
@@ -84,6 +93,13 @@ public class JobHandlerImpl implements JobHandler {
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
+      Map<String, Object> results = localMemoizationService.tryToFindResults(job);
+      if (results != null) {
+        containerHandler = new CompletedContainerHandler(job);
+        containerHandler.start();
+        return;
+      }
+
       Bindings bindings = BindingsFactory.create(job);
       downloadFileService.download(job, bindings.getInputFiles(job));
 
@@ -103,7 +119,7 @@ public class JobHandlerImpl implements JobHandler {
         if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, configuration);
       }
       containerHandler.start();
     } catch (Exception e) {
@@ -166,6 +182,11 @@ public class JobHandlerImpl implements JobHandler {
   public Job postprocess(boolean isTerminal) throws ExecutorException {
     logger.debug("postprocess(id={})", job.getId());
     try {
+      Map<String, Object> results = localMemoizationService.tryToFindResults(job);
+      if (results != null) {
+        job = Job.cloneWithOutputs(job, results);
+        return job;
+      }
       containerHandler.dumpContainerLogs(new File(workingDir, ERROR_LOG));
 
       if (!isSuccessful()) {
@@ -208,7 +229,8 @@ public class JobHandlerImpl implements JobHandler {
       return;
     }
     for (File file : workingDir.listFiles()) {
-      String remotePath = file.getAbsolutePath().substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
+      String remotePath = file.getAbsolutePath()
+          .substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
       ftpClient.upload(file, remotePath);
     }
   }
@@ -242,7 +264,6 @@ public class JobHandlerImpl implements JobHandler {
   }
 
   public boolean isRunning() throws ExecutorException {
-    logger.debug("isRunning()");
     if (containerHandler == null) {
       logger.debug("Container hasn't started yet.");
       return false;
@@ -322,10 +343,10 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
-  public EngineStub getEngineStub() {
+  public EngineStub<?, ?, ?> getEngineStub() {
     return engineStub;
   }
-  
+
   private class InputFileMapper implements FileMapper {
     @Override
     public String map(String filePath) throws FileMappingException {
@@ -334,14 +355,16 @@ public class JobHandlerImpl implements JobHandler {
       case FTP:
         logger.info("Map FTP path {} to physical path.", filePath);
         try {
-          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath)
+              .getCanonicalPath();
         } catch (IOException e) {
           throw new FileMappingException(e);
         }
       case LOCAL:
         if (!filePath.startsWith(File.separator)) {
           try {
-            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath).getCanonicalPath();
+            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath)
+                .getCanonicalPath();
           } catch (IOException e) {
             throw new FileMappingException(e);
           }
@@ -356,8 +379,14 @@ public class JobHandlerImpl implements JobHandler {
   private class OutputFileMapper implements FileMapper {
     @Override
     public String map(String filePath) throws FileMappingException {
-      logger.info("Map absolute physical path {} to relative physical path.", filePath);
-      return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
+      BackendStore backendStore = StorageConfig.getBackendStore(configuration);
+      switch (backendStore) {
+      case FTP:
+        logger.info("Map absolute physical path {} to relative physical path.", filePath);
+        return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
+      default:
+        return filePath;
+      }
     }
   }
 

@@ -13,4 +13,5 @@ public interface ProtocolRequirementProvider {
   List<Requirement> getRequirements(Job job) throws BindingException;
   
   List<Requirement> getHints(Job job) throws BindingException;
+
 }

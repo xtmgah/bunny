@@ -38,7 +38,7 @@ public class BackendServiceImpl implements BackendService {
     backend = backendPopulator.populate(backend);
     backendDB.add(backend);
     
-    BackendStub backendStub = backendStubFactory.create(jobService, backend);
+    BackendStub<?, ?, ?> backendStub = backendStubFactory.create(jobService, backend);
     backendDispatcher.addBackendStub(backendStub);
     
     logger.info("Backend {} registered.", backend.getId());

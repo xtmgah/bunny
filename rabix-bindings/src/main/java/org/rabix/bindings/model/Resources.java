@@ -1,28 +1,36 @@
 package org.rabix.bindings.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Resources {
 
-  private final Integer cpu;
-  private final Integer memMB;
-  private final Integer diskSpaceMB;
+  @JsonProperty("cpu")
+  private final Long cpu;
+  @JsonProperty("memMB")
+  private final Long memMB;
+  @JsonProperty("diskSpaceMB")
+  private final Long diskSpaceMB;
+  @JsonProperty("networkAccess")
   private final Boolean networkAccess;
   
-  public Resources(Integer cpu, Integer memMB, Integer diskSpaceMB, Boolean networkAccess) {
+  @JsonCreator
+  public Resources(@JsonProperty("cpu") Long cpu, @JsonProperty("memMB") Long memMB, @JsonProperty("diskSpaceMB") Long diskSpaceMB, @JsonProperty("networkAccess") Boolean networkAccess) {
     this.cpu = cpu;
     this.memMB = memMB;
     this.diskSpaceMB = diskSpaceMB;
     this.networkAccess = networkAccess;
   }
 
-  public Integer getCpu() {
+  public Long getCpu() {
     return cpu;
   }
 
-  public Integer getMemMB() {
+  public Long getMemMB() {
     return memMB;
   }
 
-  public Integer getDiskSpaceMB() {
+  public Long getDiskSpaceMB() {
     return diskSpaceMB;
   }
 

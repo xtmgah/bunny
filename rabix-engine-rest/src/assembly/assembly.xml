@@ -34,8 +34,8 @@
             <directory>${project.basedir}/bin</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
-                <include>rabix-engine.sh</include>
-                <include>rabix-engine-daemon.sh</include>
+                <include>rabix-engine</include>
+                <include>rabix-engine-daemon</include>
             </includes>
         </fileSet>
     </fileSets>

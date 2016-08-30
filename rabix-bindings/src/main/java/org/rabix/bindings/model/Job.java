@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.rabix.common.helper.CloneHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -43,9 +44,15 @@ public class Job {
   private final Map<String, Object> inputs;
   @JsonProperty("outputs")
   private final Map<String, Object> outputs;
+  @JsonProperty("resources")
+  private final Resources resources;
   
   public Job(String app, Map<String, Object> inputs) {
-    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null);
+    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, null, null);
+  }
+  
+  public Job(String app, Map<String, Object> inputs, Context context) {
+    this(null, null, generateId(), null, app, JobStatus.PENDING, inputs, null, context, null);
   }
   
   @JsonCreator
@@ -57,7 +64,8 @@ public class Job {
       @JsonProperty("status") JobStatus status, 
       @JsonProperty("inputs") Map<String, Object> inputs, 
       @JsonProperty("outputs") Map<String, Object> otputs,
-      @JsonProperty("context") Context context) {
+      @JsonProperty("context") Context context,
+      @JsonProperty("resources") Resources resources) {
     this.id = id;
     this.parentId = parentId;
     this.rootId = rootId;
@@ -66,6 +74,7 @@ public class Job {
     this.status = status;
     this.inputs = inputs;
     this.outputs = otputs;
+    this.resources = resources;
     this.context = context;
   }
   
@@ -74,41 +83,49 @@ public class Job {
   }
   
   public static Job cloneWithId(Job job, String id) {
-    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
   }
 
   public static Job cloneWithIds(Job job, String id, String rootId) {
-    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(id, job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithRootId(Job job, String rootId) {
-    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
+    return new Job(job.getId(), job.parentId, rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithContext(Job job, Context context) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, context, job.resources);
   }
   
-  public static Job cloneWithResources(Job job, Resources resources) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context);
-  }
-
   public static Job cloneWithStatus(Job job, JobStatus status) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, status, job.inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithInputs(Job job, Map<String, Object> inputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, inputs, job.outputs, job.context, job.resources);
   }
   
   public static Job cloneWithOutputs(Job job, Map<String, Object> outputs) {
-    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context);
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, outputs, job.context, job.resources);
+  }
+  
+  public static Job cloneWithResources(Job job, Resources resources) {
+    return new Job(job.id, job.parentId, job.rootId, job.name, job.app, job.status, job.inputs, job.outputs, job.context, resources);
   }
   
   public static boolean isFinished(Job job) {
     return job.getStatus().equals(JobStatus.COMPLETED) 
         || job.getStatus().equals(JobStatus.ABORTED)
         || job.getStatus().equals(JobStatus.FAILED);
+  }
+  
+  @JsonIgnore
+  public boolean isRoot() {
+    if (id == null) {
+      return false;
+    }
+    return id.equals(rootId);
   }
   
   public String getId() {
@@ -129,6 +146,10 @@ public class Job {
   
   public String getApp() {
     return app;
+  }
+  
+  public Resources getResources() {
+    return resources;
   }
   
   @SuppressWarnings("unchecked")

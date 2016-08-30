@@ -2,6 +2,9 @@ package org.rabix.bindings.model.dag;
 
 import org.rabix.bindings.model.LinkMerge;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class DAGLinkPort {
 
   public static enum LinkPortType {
@@ -9,14 +12,19 @@ public class DAGLinkPort {
     OUTPUT
   }
   
-  private final String id;
-  private final String dagNodeId;
-  private final LinkPortType type;
+  @JsonProperty("id")
+  private String id;
+  @JsonProperty("dagNodeId")
+  private String dagNodeId;
+  @JsonProperty("type")
+  private LinkPortType type;
+  @JsonProperty("scatter")
   private boolean scatter;
   
   private LinkMerge linkMerge;
     
-  public DAGLinkPort(String id, String dagNodeId, LinkPortType type, LinkMerge linkMerge, boolean scatter) {
+  @JsonCreator
+  public DAGLinkPort(@JsonProperty("id") String id, @JsonProperty("dagNodeId") String dagNodeId, @JsonProperty("type") LinkPortType type, @JsonProperty("linkMerge") LinkMerge linkMerge, @JsonProperty("scatter") boolean scatter) {
     this.id = id;
     this.type = type;
     this.scatter = scatter;
@@ -36,7 +44,7 @@ public class DAGLinkPort {
     this.scatter = scatter;
   }
   
-  public String getNodeId() {
+  public String getDagNodeId() {
     return dagNodeId;
   }
 

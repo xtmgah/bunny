@@ -17,6 +17,7 @@ import org.rabix.engine.event.impl.InputUpdateEvent;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
+import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.scatter.RowMapping;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.model.scatter.ScatterStrategyFactory;
@@ -51,6 +52,7 @@ public class ScatterHandler {
   
   /**
    * Scatters port
+   * @throws BindingException 
    */
   @SuppressWarnings("unchecked")
   public void scatterPort(JobRecord job, String portId, Object value, Integer position, Integer numberOfScatteredFromEvent, boolean isLookAhead, boolean isFromEvent) throws EventHandlerException {
@@ -70,11 +72,19 @@ public class ScatterHandler {
       return;
     }
 
+    if (value == null) {
+      createScatteredJobs(job, portId, value, node, 1, position);
+      return;
+    }
+    
     List<Object> values = null;
     boolean usePositionFromEvent = true;
     if (isFromEvent || !(value instanceof List<?>)) {
       if (job.getInputPortIncoming(portId) == 1) {
         usePositionFromEvent = false;
+        if (!(value instanceof List<?>)) {
+          throw new EventHandlerException("Port " + portId + " for " + job.getId() + " and rootId " + job.getRootId() + " is not a list and therefore cannot be scattered.");
+        }
         values = (List<Object>) value;
       } else {
         values = new ArrayList<>();
@@ -131,6 +141,11 @@ public class ScatterHandler {
         variableN.setNumberGlobals(getNumberOfScattered(job, numberOfScattered));
         variableRecordService.create(variableN);
 
+        PortCounter inputPortCounter = job.getInputCounter(inputPort.getId());
+        if (inputPortCounter == null) {
+          continue;
+        }
+        
         if (jobN.getState().equals(JobState.PENDING)) {
           jobN.incrementPortCounter(inputPort, LinkPortType.INPUT);
         }

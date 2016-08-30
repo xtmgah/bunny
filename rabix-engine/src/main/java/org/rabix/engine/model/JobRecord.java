@@ -9,9 +9,13 @@ import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
 import org.rabix.bindings.model.dag.DAGNode;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.service.JobRecordService.JobState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobRecord {
 
+  private final static Logger logger = LoggerFactory.getLogger(JobRecord.class);
+  
   private final String id;
   private final String externalId;
   private final String rootId;
@@ -220,7 +224,22 @@ public class JobRecord {
 
     for (PortCounter pc : counters) {
       if (pc.port.equals(port.getId())) {
-        pc.counter = pc.counter + 1;
+        if (type.equals(LinkPortType.INPUT)) {
+          pc.counter = pc.counter + 1;
+        } else {
+          if (pc.updatedAsSourceCounter > 0) {
+            pc.updatedAsSourceCounter = pc.updatedAsSourceCounter--;
+            return;
+          } else { 
+            if (type.equals(LinkPortType.OUTPUT)) {
+              if (isScatterWrapper) {
+                pc.counter = pc.counter + 1;
+              } else if (isContainer && pc.incoming > 1) {
+                pc.counter = pc.counter + 1;
+              }
+            }
+          }
+        }
         return;
       }
     }
@@ -228,32 +247,32 @@ public class JobRecord {
     counters.add(portCounter);
   }
   
-  public void incrementPortCounterIfThereIsNo(DAGLinkPort port, LinkPortType type) {
-    List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
-
-    boolean exists = false;
-    for (PortCounter pc : counters) {
-      if (pc.port.equals(port.getId())) {
-        exists = true;
-        if (pc.counter < 1) {
-          pc.counter = pc.counter + 1;
-          return;
-        }
-      }
-    }
-    if (!exists) {
-      PortCounter portCounter = new PortCounter(port.getId(), 1, port.isScatter());
-      counters.add(portCounter);
-    }
-  }
-  
   public void decrementPortCounter(String portId, LinkPortType type) {
+    logger.info("JobRecord {}. Decrementing port {}.", id, portId);
     List<PortCounter> counters = type.equals(LinkPortType.INPUT) ? inputCounters : outputCounters;
     for (PortCounter portCounter : counters) {
       if (portCounter.port.equals(portId)) {
         portCounter.counter = portCounter.counter - 1;
       }
     }
+    printInputPortCounters();
+    printOutputPortCounters();
+  }
+  
+  private void printInputPortCounters() {
+    StringBuilder builder = new StringBuilder("\nJob ").append(id).append(" input counters:\n");
+    for (PortCounter inputPortCounter : inputCounters) {
+      builder.append(" -- Input port ").append(inputPortCounter.getPort()).append(", counter=").append(inputPortCounter.counter).append("\n");
+    }
+    logger.debug(builder.toString());
+  }
+  
+  private void printOutputPortCounters() {
+    StringBuilder builder = new StringBuilder("\nJob ").append(id).append(" output counters:\n");
+    for (PortCounter inputPortCounter : outputCounters) {
+      builder.append(" -- Output port ").append(inputPortCounter.getPort()).append(", counter=").append(inputPortCounter.counter).append("\n");
+    }
+    logger.debug(builder.toString());
   }
   
   public void resetInputPortCounters(int value) {
@@ -283,7 +302,31 @@ public class JobRecord {
     this.numberOfGlobalOutputs = numberOfGlobalOutputs;
   }
   
+  public void resetOutputPortCounter(int value, String port) {
+    logger.info("Reset output port counter {} for {} to {}", port, id, value);
+    for (PortCounter pc : outputCounters) {
+      if (pc.port.equals(port)) {
+        int oldValue = pc.globalCounter;
+        if (pc.globalCounter < value) {
+          pc.globalCounter = value;
+
+          if (pc.counter == 0) {
+            continue;
+          }
+          if (pc.counter != value) {
+            if (oldValue != 0) {
+              pc.counter = pc.globalCounter - (oldValue - pc.counter);
+            } else {
+              pc.counter = pc.globalCounter;
+            }
+          }
+        }
+      }
+    }
+  }
+  
   public void resetOutputPortCounters(int value) {
+    logger.info("Reset output port counters for {} to {}", id, value);
     if (numberOfGlobalOutputs == value) {
       return;
     }
@@ -354,6 +397,9 @@ public class JobRecord {
     private boolean scatter;
     
     private int incoming;
+    
+    private int updatedAsSourceCounter = 0;
+    private int globalCounter = 0;
 
     PortCounter(String port, int counter, boolean scatter) {
       this.port = port;
@@ -366,6 +412,14 @@ public class JobRecord {
       this.incoming++;
     }
     
+    public void updatedAsSource(int value) {
+      this.updatedAsSourceCounter = updatedAsSourceCounter + value;
+    }
+    
+    public void setGlobalCounter(int globalCounter) {
+      this.globalCounter = globalCounter;
+    }
+    
     public String getPort() {
       return port;
     }
@@ -374,6 +428,10 @@ public class JobRecord {
       this.port = port;
     }
 
+    public int getGlobalCounter() {
+      return globalCounter;
+    }
+    
     public int getCounter() {
       return counter;
     }

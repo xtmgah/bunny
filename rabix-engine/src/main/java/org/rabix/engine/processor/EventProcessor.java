@@ -37,6 +37,8 @@ public interface EventProcessor {
     
     void onReady(Job job) throws Exception;
     
+    void onFailed(Job job) throws Exception;
+    
     void onRootCompleted(String string) throws Exception;
     
     void onRootFailed(String string) throws Exception;

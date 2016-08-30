@@ -1,5 +1,6 @@
 package org.rabix.engine.rest.service;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.rabix.bindings.model.Job;
@@ -11,9 +12,12 @@ public interface JobService {
   
   Set<Job> getReady(EventProcessor eventProcessor, String contextId) throws JobServiceException;
 
-  Job create(Job job) throws JobServiceException;
+  Job start(Job job, Map<String, String> config) throws JobServiceException;
+  
+  void stop(String id) throws JobServiceException;
   
   Set<Job> get();
   
   Job get(String id);
+
 }

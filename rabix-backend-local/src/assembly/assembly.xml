@@ -37,7 +37,7 @@
             <directory>${project.basedir}/bin</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
-                <include>rabix.sh</include>
+                <include>rabix</include>
             </includes>
         </fileSet>
     </fileSets>

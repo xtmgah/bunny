@@ -56,7 +56,7 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
     JobRecord sourceJob = jobService.find(event.getJobId(), event.getContextId());
     if (event.isFromScatter()) {
-      sourceJob.resetOutputPortCounters(event.getNumberOfScattered());
+      sourceJob.resetOutputPortCounter(event.getNumberOfScattered(), event.getPortId());
     }
     VariableRecord sourceVariable = variableService.find(event.getJobId(), event.getPortId(), LinkPortType.OUTPUT, event.getContextId());
     sourceJob.decrementPortCounter(event.getPortId(), LinkPortType.OUTPUT);
@@ -82,8 +82,10 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
     if (sourceJob.isScatterWrapper()) {
       ScatterStrategy scatterStrategy = sourceJob.getScatterStrategy();
       
+      boolean isValueFromScatterStrategy = false;
       if (scatterStrategy.isBlocking()) {
         if (sourceJob.isOutputPortReady(event.getPortId())) {
+          isValueFromScatterStrategy = true;
           value = scatterStrategy.values(sourceJob.getId(), event.getPortId(), event.getContextId());
         } else {
           return;
@@ -92,6 +94,9 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
       
       List<LinkRecord> links = linkService.findBySource(sourceVariable.getJobId(), sourceVariable.getPortId(), event.getContextId());
       for (LinkRecord link : links) {
+        if (!isValueFromScatterStrategy) {
+          value = null; // reset
+        }
         List<VariableRecord> destinationVariables = variableService.find(link.getDestinationJobId(), link.getDestinationJobPort(), event.getContextId());
 
         JobRecord destinationJob = null;
@@ -116,21 +121,21 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
             break;
           case OUTPUT:
             destinationJob = jobService.find(destinationVariable.getJobId(), destinationVariable.getContextId());
-            if (!(destinationJob.getOutputPortIncoming(event.getPortId()) > 1)) {
+            if (destinationJob.getOutputPortIncoming(event.getPortId()) > 1) {
+              if (sourceJob.isOutputPortReady(event.getPortId())) {
+                value = value != null? value : sourceVariable.getValue();
+                Event updateInputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
+                eventProcessor.send(updateInputEvent);
+              }
+            } else {
               value = value != null? value : event.getValue();
-              int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
-              if (scatterStrategy.isBlocking()) {
+              if (isValueFromScatterStrategy) {
                 Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, false, 1, 1);
                 eventProcessor.send(updateOutputEvent);
               } else {
+                int numberOfScattered = sourceJob.getNumberOfGlobalOutputs();
                 Event updateOutputEvent = new OutputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, true, numberOfScattered, event.getPosition());
                 eventProcessor.send(updateOutputEvent);
-              }
-            } else {
-              if (sourceJob.isOutputPortReady(event.getPortId())) {
-                value = value != null? value : sourceVariable.getValue();
-                Event updateInputEvent = new InputUpdateEvent(event.getContextId(), destinationVariable.getJobId(), destinationVariable.getPortId(), value, link.getPosition());
-                eventProcessor.send(updateInputEvent);
               }
             }
             break;
