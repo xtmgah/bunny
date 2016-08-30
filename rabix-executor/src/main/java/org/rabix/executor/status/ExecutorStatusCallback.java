@@ -4,6 +4,8 @@ import org.rabix.bindings.model.Job;
 
 public interface ExecutorStatusCallback {
 
+  void onJobReady(Job job) throws ExecutorStatusCallbackException;
+  
   void onJobFailed(Job job) throws ExecutorStatusCallbackException;
   
   void onJobStarted(Job job) throws ExecutorStatusCallbackException;
