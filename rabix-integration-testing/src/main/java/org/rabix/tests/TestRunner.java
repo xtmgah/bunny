@@ -57,6 +57,7 @@ public class TestRunner {
     logger.info("Extracting jar file");
     executeCommand("sudo tar -zxvf " + System.getProperty("user.dir")
         + "/rabix-backend-local/target/rabix-backend-local-0.0.1-SNAPSHOT-id3.tar.gz");
+    
     executeCommand("cp -a " + System.getProperty("user.dir") + "/rabix-integration-testing/testbacklog .");
 
     for (File child : directoryListing) {
@@ -210,8 +211,6 @@ static void executeCommand(String cmdline) throws RabixTestException {
     if (userDir == null) {
       throw new RabixTestException("null value for user.dir property");
     }
-    logger.info("checking user dir path: " + userDir);
-    
     File configDir = new File(userDir + "/rabix-integration-testing/config/test");
     try {
       Iterator<File> iterator = FileUtils.iterateFiles(configDir, new String[] { "properties" }, true);
