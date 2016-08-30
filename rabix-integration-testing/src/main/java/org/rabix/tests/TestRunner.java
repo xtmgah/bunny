@@ -210,6 +210,8 @@ static void executeCommand(String cmdline) throws RabixTestException {
     if (userDir == null) {
       throw new RabixTestException("null value for user.dir property");
     }
+    logger.info("checking user dir path: " + userDir);
+    
     File configDir = new File(userDir + "/rabix-integration-testing/config/test");
     try {
       Iterator<File> iterator = FileUtils.iterateFiles(configDir, new String[] { "properties" }, true);
