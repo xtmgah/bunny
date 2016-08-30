@@ -21,7 +21,7 @@ public interface EventProcessor {
   /**
    * Post iteration callback 
    */
-  public static interface IterationCallback {
+  interface IterationCallback {
 
     /**
      * Call this method to execute something after one iteration 

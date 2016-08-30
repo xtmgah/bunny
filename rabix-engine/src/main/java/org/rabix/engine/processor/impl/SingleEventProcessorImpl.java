@@ -1,5 +1,6 @@
 package org.rabix.engine.processor.impl;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.rabix.engine.event.Event;
@@ -19,6 +21,7 @@ import org.rabix.engine.processor.dispatcher.EventDispatcher;
 import org.rabix.engine.processor.dispatcher.EventDispatcherFactory;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.processor.handler.HandlerFactory;
+import org.rabix.engine.processor.impl.sharded.EventProcessorThreadBuilder;
 import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.status.EngineStatusCallback;
 import org.slf4j.Logger;
@@ -29,15 +32,14 @@ import com.google.inject.Inject;
 /**
  * Event processor implementation
  */
-public class EventProcessorImpl implements EventProcessor {
+public class SingleEventProcessorImpl implements EventProcessor {
 
-  private static final Logger logger = LoggerFactory.getLogger(EventProcessorImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(SingleEventProcessorImpl.class);
   
   public final static long SLEEP = 100;
   
   private final BlockingQueue<Event> events = new LinkedBlockingQueue<>();
-  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
+  
   private final AtomicBoolean stop = new AtomicBoolean(false);
   private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -48,8 +50,10 @@ public class EventProcessorImpl implements EventProcessor {
   
   private final ConcurrentMap<String, Integer> iterations = new ConcurrentHashMap<>();
   
+  private final static ExecutorService executorService = Executors.newCachedThreadPool(buildEventProcessorThreadFactory());
+  
   @Inject
-  public EventProcessorImpl(HandlerFactory handlerFactory, EventDispatcherFactory eventDispatcherFactory, ContextRecordService contextRecordService) {
+  public SingleEventProcessorImpl(HandlerFactory handlerFactory, EventDispatcherFactory eventDispatcherFactory, ContextRecordService contextRecordService) {
     this.handlerFactory = handlerFactory;
     this.contextRecordService = contextRecordService;
     this.eventDispatcher = eventDispatcherFactory.create(EventDispatcher.Type.SYNC);
@@ -86,7 +90,7 @@ public class EventProcessorImpl implements EventProcessor {
             iteration++;
             if (iterationCallbacks != null) {
               for (IterationCallback callback : iterationCallbacks) {
-                callback.call(EventProcessorImpl.this, event.getContextId(), iteration);
+                callback.call(SingleEventProcessorImpl.this, event.getContextId(), iteration);
               }
             }
             iterations.put(event.getContextId(), iteration);
@@ -139,4 +143,20 @@ public class EventProcessorImpl implements EventProcessor {
     this.events.add(event);
   }
 
+  /**
+   * Creates simple Job handler thread factory
+   */
+  private static ThreadFactory buildEventProcessorThreadFactory() {
+    return new EventProcessorThreadBuilder()
+      .setNamePrefix("EventProcessor-Thread")
+      .setDaemon(false)
+      .setPriority(Thread.MAX_PRIORITY)
+      .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+          logger.error(String.format("Thread %s threw exception - %s", t.getName(), e.getMessage()));
+        }
+      }).build();
+  }
+  
 }
