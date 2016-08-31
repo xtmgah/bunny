@@ -41,7 +41,7 @@
           {
             "dockerImageId": "",
             "class": "DockerRequirement",
-            "dockerPull": "ubuntu:latest"
+            "dockerPull": ""
           }
         ],
         "inputs": [
