@@ -37,12 +37,8 @@
           {
             "value": 1024,
             "class": "sbg:MemRequirement"
-          },
-          {
-            "dockerImageId": "",
-            "class": "DockerRequirement",
-            "dockerPull": ""
           }
+
         ],
         "inputs": [
           {
