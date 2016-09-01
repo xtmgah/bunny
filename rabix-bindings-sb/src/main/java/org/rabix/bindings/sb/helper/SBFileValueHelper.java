@@ -64,6 +64,10 @@ public class SBFileValueHelper extends SBBeanHelper {
       setValue(KEY_CHECKSUM, checksum, raw);
     }
   }
+  
+  public static void setChecksum(String checksum, Object raw) {
+    setValue(KEY_CHECKSUM, checksum, raw);
+  }
 
   public static void setContents(Object raw) throws IOException {
     String contents = loadContents(raw);
@@ -178,5 +182,33 @@ public class SBFileValueHelper extends SBBeanHelper {
       }
     }
     return new FileValue(size, path, null, checksum, secondaryFiles, properties);
+  }
+  
+  public static Map<String, Object> createFileRaw(FileValue fileValue) {
+    Map<String, Object> raw = new HashMap<>();
+    
+    setFileType(raw);
+    if (fileValue.getRelocatedPath() != null) {
+      setPath(fileValue.getRelocatedPath(), raw);  
+    } else {
+      setPath(fileValue.getPath(), raw);
+    }
+    setChecksum(fileValue.getChecksum(), raw);
+    setSize(fileValue.getSize(), raw);
+    
+    Map<String, Object> properties = fileValue.getProperties();
+    if (properties != null) {
+      setMetadata(properties.get(SBBindingHelper.KEY_SBG_METADATA), raw);
+    }
+    
+    List<FileValue> secondaryFileValues = fileValue.getSecondaryFiles();
+    if (secondaryFileValues != null) {
+      List<Map<String, Object>> secondaryFilesRaw = new ArrayList<>();
+      for (FileValue secondaryFileValue : secondaryFileValues) {
+        secondaryFilesRaw.add(createFileRaw(secondaryFileValue));
+      }
+      setSecondaryFiles(secondaryFilesRaw, raw);
+    }
+    return raw;
   }
 }

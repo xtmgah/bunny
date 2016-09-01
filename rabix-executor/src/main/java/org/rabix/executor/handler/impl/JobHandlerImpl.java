@@ -174,7 +174,7 @@ public class JobHandlerImpl implements JobHandler {
     if (storageConfiguration.getBackendStore().equals(BackendStore.LOCAL)) {
       return;
     }
-    Set<FileValue> fileValues = bindings.getInputFiles(job);
+    Set<FileValue> fileValues = bindings.getFlattenedInputFiles(job);
     
     Set<String> paths = new HashSet<>();
     for (FileValue fileValue : fileValues) {
