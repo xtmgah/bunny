@@ -17,6 +17,26 @@ public class Draft2PortProcessorHelper {
     this.portProcessor = new Draft2PortProcessor(draft2Job);
   }
 
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws Draft2PortProcessorException {
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(null);
+    try {
+      portProcessor.processInputs(inputs, callback);
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to get input files.", e);
+    }
+    return callback.getFileValues();
+  }
+  
+  public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws Draft2PortProcessorException {
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(visiblePorts);
+    try {
+      portProcessor.processOutputs(outputs, callback);
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to get output files.", e);
+    }
+    return callback.getFileValues();
+  }
+  
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft2PortProcessorException {
     Draft2FilePathFlattenProcessorCallback callback = new Draft2FilePathFlattenProcessorCallback();
     try {

@@ -11,8 +11,12 @@ public interface ProtocolFileValueProcessor {
   
   Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
  
+  Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException;
+
+  Set<FileValue> getFlattenedOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
+  
   Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException;
 
   Job updateOutputFiles(Job job, Set<FileValue> outputFiles) throws BindingException;
-  
+
 }

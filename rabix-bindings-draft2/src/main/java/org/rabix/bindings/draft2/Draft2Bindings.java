@@ -99,6 +99,16 @@ public class Draft2Bindings implements Bindings {
   }
   
   @Override
+  public Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException {
+    return fileValueProcessor.getFlattenedInputFiles(job);
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
+    return fileValueProcessor.getFlattenedOutputFiles(job, onlyVisiblePorts);
+  }
+  
+  @Override
   public Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException {
     return fileValueProcessor.updateInputFiles(job, inputFiles);
   }

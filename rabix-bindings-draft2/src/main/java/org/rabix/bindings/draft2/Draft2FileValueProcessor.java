@@ -17,7 +17,7 @@ public class Draft2FileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
     try {
-      return new Draft2PortProcessorHelper(draft2Job).flattenInputFiles(job.getInputs());
+      return new Draft2PortProcessorHelper(draft2Job).getInputFiles(job.getInputs());
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }
@@ -31,7 +31,7 @@ public class Draft2FileValueProcessor implements ProtocolFileValueProcessor {
       if (onlyVisiblePorts) {
         visiblePorts = job.getVisiblePorts();
       }
-      return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getOutputs(), visiblePorts);
+      return new Draft2PortProcessorHelper(draft2Job).getOutputFiles(job.getOutputs(), visiblePorts);
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }
@@ -56,6 +56,30 @@ public class Draft2FileValueProcessor implements ProtocolFileValueProcessor {
     try {
       outputs = new Draft2PortProcessorHelper(draft2Job).updateOutputFiles(job.getOutputs(), outputFiles);
       return Job.cloneWithOutputs(job, outputs);
+    } catch (Draft2PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    try {
+      return new Draft2PortProcessorHelper(draft2Job).flattenInputFiles(job.getInputs());
+    } catch (Draft2PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    try {
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new Draft2PortProcessorHelper(draft2Job).flattenOutputFiles(job.getOutputs(), visiblePorts);
     } catch (Draft2PortProcessorException e) {
       throw new BindingException(e);
     }

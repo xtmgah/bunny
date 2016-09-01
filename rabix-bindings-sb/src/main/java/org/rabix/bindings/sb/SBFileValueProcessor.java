@@ -17,7 +17,7 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     SBJob sbJob = SBJobHelper.getSBJob(job);
     try {
-      return new SBPortProcessorHelper(sbJob).flattenInputFiles(job.getInputs());
+      return new SBPortProcessorHelper(sbJob).getInputFiles(job.getInputs());
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }
@@ -31,7 +31,7 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
       if (onlyVisiblePorts) {
         visiblePorts = job.getVisiblePorts();
       }
-      return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getOutputs(), visiblePorts);
+      return new SBPortProcessorHelper(sbJob).getOutputFiles(job.getOutputs(), visiblePorts);
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }
@@ -56,6 +56,30 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
     try {
       outputs = new SBPortProcessorHelper(draft2Job).updateOutputFiles(job.getOutputs(), outputFiles);
       return Job.cloneWithOutputs(job, outputs);
+    } catch (SBPortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException {
+    SBJob sbJob = SBJobHelper.getSBJob(job);
+    try {
+      return new SBPortProcessorHelper(sbJob).flattenInputFiles(job.getInputs());
+    } catch (SBPortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
+    SBJob sbJob = SBJobHelper.getSBJob(job);
+    try {
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new SBPortProcessorHelper(sbJob).flattenOutputFiles(job.getOutputs(), visiblePorts);
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }

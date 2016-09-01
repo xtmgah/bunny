@@ -17,6 +17,27 @@ public class SBPortProcessorHelper {
     this.portProcessor = new SBPortProcessor(sbJob);
   }
 
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws SBPortProcessorException {
+    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(null);
+    try {
+      portProcessor.processInputs(inputs, callback);
+    } catch (SBPortProcessorException e) {
+      throw new SBPortProcessorException("Failed to flatten input file paths.", e);
+    }
+    return callback.getFileValues();
+  }
+  
+  public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws SBPortProcessorException {
+    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(visiblePorts);
+    try {
+      portProcessor.processOutputs(outputs, callback);
+    } catch (SBPortProcessorException e) {
+      throw new SBPortProcessorException("Failed to get output files.", e);
+    }
+    return callback.getFileValues();
+  }
+
+  
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws SBPortProcessorException {
     SBFilePathFlattenProcessorCallback callback = new SBFilePathFlattenProcessorCallback();
     try {
