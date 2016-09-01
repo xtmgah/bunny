@@ -27,6 +27,10 @@ public class FileValue {
     return new FileValue(fileValue.size, fileValue.path, relocatedPath, fileValue.checksum, fileValue.secondaryFiles, fileValue.properties);
   }
   
+  public static FileValue cloneWithProperties(FileValue fileValue, Map<String, Object> properties) {
+    return new FileValue(fileValue.size, fileValue.path, fileValue.relocatedPath, fileValue.checksum, fileValue.secondaryFiles, properties);
+  }
+  
   public static FileValue cloneWithSecondaryFiles(FileValue fileValue, List<FileValue> secondaryFiles) {
     return new FileValue(fileValue.size, fileValue.path, fileValue.relocatedPath, fileValue.checksum, secondaryFiles, fileValue.properties);
   }

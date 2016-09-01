@@ -3,7 +3,6 @@ package org.rabix.bindings.sb;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolFileValueProcessor;
 import org.rabix.bindings.model.FileValue;
@@ -26,7 +25,16 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
 
   @Override
   public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
-    throw new NotImplementedException();
+    SBJob sbJob = SBJobHelper.getSBJob(job);
+    try {
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new SBPortProcessorHelper(sbJob).getOutputFiles(job.getOutputs(), visiblePorts);
+    } catch (SBPortProcessorException e) {
+      throw new BindingException(e);
+    }
   }
 
   @Override

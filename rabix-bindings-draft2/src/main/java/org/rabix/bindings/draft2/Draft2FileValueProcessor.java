@@ -3,7 +3,6 @@ package org.rabix.bindings.draft2;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolFileValueProcessor;
 import org.rabix.bindings.draft2.bean.Draft2Job;
@@ -26,7 +25,16 @@ public class Draft2FileValueProcessor implements ProtocolFileValueProcessor {
 
   @Override
   public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
-    throw new NotImplementedException();
+    Draft2Job draft2Job = Draft2JobHelper.getDraft2Job(job);
+    try {
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new Draft2PortProcessorHelper(draft2Job).getOutputFiles(job.getOutputs(), visiblePorts);
+    } catch (Draft2PortProcessorException e) {
+      throw new BindingException(e);
+    }
   }
 
   @Override

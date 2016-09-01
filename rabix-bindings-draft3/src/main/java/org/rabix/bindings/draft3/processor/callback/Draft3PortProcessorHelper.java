@@ -26,6 +26,16 @@ public class Draft3PortProcessorHelper {
     }
     return callback.getFileValues();
   }
+  
+  public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws Draft3PortProcessorException {
+    Draft3FileValueProcessorCallback callback = new Draft3FileValueProcessorCallback(visiblePorts);
+    try {
+      portProcessor.processOutputs(outputs, callback);
+    } catch (Draft3PortProcessorException e) {
+      throw new Draft3PortProcessorException("Failed to get output files.", e);
+    }
+    return callback.getFileValues();
+  }
 
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft3PortProcessorException {
     Draft3FilePathFlattenProcessorCallback callback = new Draft3FilePathFlattenProcessorCallback();
