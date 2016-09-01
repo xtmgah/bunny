@@ -3,6 +3,7 @@ package org.rabix.bindings.draft3;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolFileValueProcessor;
 import org.rabix.bindings.draft3.bean.Draft3Job;
@@ -17,7 +18,7 @@ public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
     try {
-      return new Draft3PortProcessorHelper(draft3Job).flattenInputFiles(job.getInputs());
+      return new Draft3PortProcessorHelper(draft3Job).getInputFiles(job.getInputs());
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);
     }
@@ -25,16 +26,7 @@ public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
 
   @Override
   public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
-    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
-    try {
-      Set<String> visiblePorts = null;
-      if (onlyVisiblePorts) {
-        visiblePorts = job.getVisiblePorts();
-      }
-      return new Draft3PortProcessorHelper(draft3Job).flattenOutputFiles(job.getOutputs(), visiblePorts);
-    } catch (Draft3PortProcessorException e) {
-      throw new BindingException(e);
-    }
+    throw new NotImplementedException();
   }
 
   @Override
@@ -56,6 +48,30 @@ public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
     try {
       outputs = new Draft3PortProcessorHelper(draft2Job).updateOutputFiles(job.getOutputs(), outputFiles);
       return Job.cloneWithOutputs(job, outputs);
+    } catch (Draft3PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException {
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
+    try {
+      return new Draft3PortProcessorHelper(draft3Job).flattenInputFiles(job.getInputs());
+    } catch (Draft3PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+
+  @Override
+  public Set<FileValue> getFlattenedOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
+    try {
+      Set<String> visiblePorts = null;
+      if (onlyVisiblePorts) {
+        visiblePorts = job.getVisiblePorts();
+      }
+      return new Draft3PortProcessorHelper(draft3Job).flattenOutputFiles(job.getOutputs(), visiblePorts);
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);
     }

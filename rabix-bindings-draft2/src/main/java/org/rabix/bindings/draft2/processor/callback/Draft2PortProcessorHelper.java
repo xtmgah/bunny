@@ -17,6 +17,16 @@ public class Draft2PortProcessorHelper {
     this.portProcessor = new Draft2PortProcessor(draft2Job);
   }
 
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws Draft2PortProcessorException {
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(null);
+    try {
+      portProcessor.processInputs(inputs, callback);
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to flatten input file paths.", e);
+    }
+    return callback.getFileValues();
+  }
+  
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft2PortProcessorException {
     Draft2FilePathFlattenProcessorCallback callback = new Draft2FilePathFlattenProcessorCallback();
     try {

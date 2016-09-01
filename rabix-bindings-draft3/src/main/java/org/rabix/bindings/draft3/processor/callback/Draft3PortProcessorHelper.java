@@ -16,6 +16,16 @@ public class Draft3PortProcessorHelper {
   public Draft3PortProcessorHelper(Draft3Job draft3Job) {
     this.portProcessor = new Draft3PortProcessor(draft3Job);
   }
+  
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws Draft3PortProcessorException {
+    Draft3FileValueProcessorCallback callback = new Draft3FileValueProcessorCallback(null);
+    try {
+      portProcessor.processInputs(inputs, callback);
+    } catch (Draft3PortProcessorException e) {
+      throw new Draft3PortProcessorException("Failed to flatten input file paths.", e);
+    }
+    return callback.getFileValues();
+  }
 
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft3PortProcessorException {
     Draft3FilePathFlattenProcessorCallback callback = new Draft3FilePathFlattenProcessorCallback();

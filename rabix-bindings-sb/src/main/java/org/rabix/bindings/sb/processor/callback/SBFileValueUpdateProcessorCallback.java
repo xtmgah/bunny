@@ -1,5 +1,6 @@
 package org.rabix.bindings.sb.processor.callback;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +12,7 @@ import org.rabix.bindings.sb.helper.SBFileValueHelper;
 import org.rabix.bindings.sb.helper.SBSchemaHelper;
 import org.rabix.bindings.sb.processor.SBPortProcessorCallback;
 import org.rabix.bindings.sb.processor.SBPortProcessorResult;
+import org.rabix.common.helper.CloneHelper;
 
 public class SBFileValueUpdateProcessorCallback implements SBPortProcessorCallback {
 
@@ -23,23 +25,22 @@ public class SBFileValueUpdateProcessorCallback implements SBPortProcessorCallba
   @Override
   public SBPortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (SBSchemaHelper.isFileFromValue(value)) {
-      String path = SBFileValueHelper.getPath(value);
-      FileValue fileValue = findFileValueByPath(path);
-      
+      Object clonedValue = CloneHelper.deepCopy(value);
+
+      FileValue fileValue = findFileValueByPath(SBFileValueHelper.getPath(clonedValue));
       if (fileValue != null && !StringUtils.isEmpty(fileValue.getRelocatedPath())) {
-        SBFileValueHelper.setPath(fileValue.getRelocatedPath(), value);
+        clonedValue = SBFileValueHelper.createFileRaw(fileValue);
       }
-      List<Map<String, Object>> secondaryFiles = SBFileValueHelper.getSecondaryFiles(value);
-      if (secondaryFiles != null) {
-        for (Map<String, Object> secondaryValue : secondaryFiles) {
-          String secondaryPath = SBFileValueHelper.getPath(secondaryValue);
-          FileValue secondaryFileValue = findFileValueByPath(secondaryPath);
-          if (secondaryFileValue != null && !StringUtils.isEmpty(secondaryFileValue.getRelocatedPath())) {
-            SBFileValueHelper.setPath(secondaryFileValue.getRelocatedPath(), secondaryValue);
-          }
+      
+      if (fileValue.getSecondaryFiles() != null) {
+        List<Map<String, Object>> secondaryFiles = new ArrayList<>();
+
+        for (FileValue secondaryFileValue : fileValue.getSecondaryFiles()) {
+          secondaryFiles.add(SBFileValueHelper.createFileRaw(secondaryFileValue));
         }
+        SBFileValueHelper.setSecondaryFiles(secondaryFiles, clonedValue);
       }
-      return new SBPortProcessorResult(value, true);
+      return new SBPortProcessorResult(clonedValue, true);
     }
     return new SBPortProcessorResult(value, false);
   }

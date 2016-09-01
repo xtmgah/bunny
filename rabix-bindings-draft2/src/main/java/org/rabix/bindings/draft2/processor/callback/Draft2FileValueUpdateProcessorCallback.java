@@ -1,5 +1,6 @@
 package org.rabix.bindings.draft2.processor.callback;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +12,7 @@ import org.rabix.bindings.draft2.processor.Draft2PortProcessorCallback;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessorResult;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.FileValue;
+import org.rabix.common.helper.CloneHelper;
 
 public class Draft2FileValueUpdateProcessorCallback implements Draft2PortProcessorCallback {
 
@@ -23,23 +25,22 @@ public class Draft2FileValueUpdateProcessorCallback implements Draft2PortProcess
   @Override
   public Draft2PortProcessorResult process(Object value, ApplicationPort port) throws Exception {
     if (Draft2SchemaHelper.isFileFromValue(value)) {
-      String path = Draft2FileValueHelper.getPath(value);
-      FileValue fileValue = findFileValueByPath(path);
-      
+      Object clonedValue = CloneHelper.deepCopy(value);
+
+      FileValue fileValue = findFileValueByPath(Draft2FileValueHelper.getPath(clonedValue));
       if (fileValue != null && !StringUtils.isEmpty(fileValue.getRelocatedPath())) {
-        Draft2FileValueHelper.setPath(fileValue.getRelocatedPath(), value);
+        clonedValue = Draft2FileValueHelper.createFileRaw(fileValue);
       }
-      List<Map<String, Object>> secondaryFiles = Draft2FileValueHelper.getSecondaryFiles(value);
-      if (secondaryFiles != null) {
-        for (Map<String, Object> secondaryValue : secondaryFiles) {
-          String secondaryPath = Draft2FileValueHelper.getPath(secondaryValue);
-          FileValue secondaryFileValue = findFileValueByPath(secondaryPath);
-          if (secondaryFileValue != null && !StringUtils.isEmpty(secondaryFileValue.getRelocatedPath())) {
-            Draft2FileValueHelper.setPath(secondaryFileValue.getRelocatedPath(), secondaryValue);
-          }
+      
+      if (fileValue.getSecondaryFiles() != null) {
+        List<Map<String, Object>> secondaryFiles = new ArrayList<>();
+
+        for (FileValue secondaryFileValue : fileValue.getSecondaryFiles()) {
+          secondaryFiles.add(Draft2FileValueHelper.createFileRaw(secondaryFileValue));
         }
+        Draft2FileValueHelper.setSecondaryFiles(secondaryFiles, clonedValue);
       }
-      return new Draft2PortProcessorResult(value, true);
+      return new Draft2PortProcessorResult(clonedValue, true);
     }
     return new Draft2PortProcessorResult(value, false);
   }
@@ -52,5 +53,5 @@ public class Draft2FileValueUpdateProcessorCallback implements Draft2PortProcess
     }
     return null;
   }
-
+  
 }
