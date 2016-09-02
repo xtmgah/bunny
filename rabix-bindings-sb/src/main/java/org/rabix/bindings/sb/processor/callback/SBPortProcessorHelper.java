@@ -36,7 +36,7 @@ public class SBPortProcessorHelper {
   }
   
   public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws SBPortProcessorException {
-    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(sbJob, visiblePorts, true);
+    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(sbJob, visiblePorts, false);
     try {
       portProcessor.processOutputs(outputs, callback);
     } catch (SBPortProcessorException e) {
