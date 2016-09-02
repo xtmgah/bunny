@@ -11,28 +11,33 @@ public class NoOpExecutorStatusCallback implements ExecutorStatusCallback {
   private final static Logger logger = LoggerFactory.getLogger(NoOpExecutorStatusCallback.class);
 
   @Override
-  public void onJobReady(Job job) throws ExecutorStatusCallbackException {
+  public Job onJobReady(Job job) throws ExecutorStatusCallbackException {
     logger.debug("onJobReady(jobId={})", job.getId());
+    return job;
   }
   
   @Override
-  public void onJobFailed(Job job) throws ExecutorStatusCallbackException {
+  public Job onJobFailed(Job job) throws ExecutorStatusCallbackException {
     logger.debug("onJobFailed(jobId={})", job.getId());
+    return job;
   }
 
   @Override
-  public void onJobStarted(Job job) throws ExecutorStatusCallbackException {
+  public Job onJobStarted(Job job) throws ExecutorStatusCallbackException {
     logger.debug("onJobStarted(jobId={})", job.getId());
+    return job;
   }
   
   @Override
-  public void onJobStopped(Job job) throws ExecutorStatusCallbackException {
+  public Job onJobStopped(Job job) throws ExecutorStatusCallbackException {
     logger.debug("onJobStopped(jobId={})", job.getId());
+    return job;
   }
 
   @Override
-  public void onJobCompleted(Job job) throws ExecutorStatusCallbackException {
+  public Job onJobCompleted(Job job) throws ExecutorStatusCallbackException {
     logger.debug("onJobCompleted(jobId={})", job.getId());
+    return job;
   }
 
   @Override

@@ -4,15 +4,15 @@ import org.rabix.bindings.model.Job;
 
 public interface ExecutorStatusCallback {
 
-  void onJobReady(Job job) throws ExecutorStatusCallbackException;
+  Job onJobReady(Job job) throws ExecutorStatusCallbackException;
   
-  void onJobFailed(Job job) throws ExecutorStatusCallbackException;
+  Job onJobFailed(Job job) throws ExecutorStatusCallbackException;
   
-  void onJobStarted(Job job) throws ExecutorStatusCallbackException;
+  Job onJobStarted(Job job) throws ExecutorStatusCallbackException;
   
-  void onJobStopped(Job job) throws ExecutorStatusCallbackException;
+  Job onJobStopped(Job job) throws ExecutorStatusCallbackException;
   
-  void onJobCompleted(Job job) throws ExecutorStatusCallbackException;
+  Job onJobCompleted(Job job) throws ExecutorStatusCallbackException;
   
   void onContainerImagePullStarted(Job job, String image) throws ExecutorStatusCallbackException;
   

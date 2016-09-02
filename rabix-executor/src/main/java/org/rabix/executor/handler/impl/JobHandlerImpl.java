@@ -125,7 +125,7 @@ public class JobHandlerImpl implements JobHandler {
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
-      statusCallback.onJobStarted(job);
+      job = statusCallback.onJobStarted(job);
       
       Map<String, Object> results = localMemoizationService.tryToFindResults(job);
       if (results != null) {
