@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.rabix.bindings.draft2.helper.Draft2FileValueHelper;
 import org.rabix.bindings.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessorCallback;
@@ -28,7 +27,10 @@ public class Draft2FileValueUpdateProcessorCallback implements Draft2PortProcess
       Object clonedValue = CloneHelper.deepCopy(value);
 
       FileValue fileValue = findFileValueByPath(Draft2FileValueHelper.getPath(clonedValue));
-      if (fileValue != null && !StringUtils.isEmpty(fileValue.getRelocatedPath())) {
+      if (fileValue == null) {
+        return new Draft2PortProcessorResult(value, false);
+      }
+      if (fileValue != null) {
         clonedValue = Draft2FileValueHelper.createFileRaw(fileValue);
       }
       
