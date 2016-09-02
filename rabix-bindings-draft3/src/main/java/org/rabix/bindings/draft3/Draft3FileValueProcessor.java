@@ -9,6 +9,7 @@ import org.rabix.bindings.draft3.bean.Draft3Job;
 import org.rabix.bindings.draft3.helper.Draft3JobHelper;
 import org.rabix.bindings.draft3.processor.Draft3PortProcessorException;
 import org.rabix.bindings.draft3.processor.callback.Draft3PortProcessorHelper;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 
@@ -17,7 +18,17 @@ public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
     try {
-      return new Draft3PortProcessorHelper(draft3Job).getInputFiles(job.getInputs());
+      return new Draft3PortProcessorHelper(draft3Job).getInputFiles(job.getInputs(), null, null);
+    } catch (Draft3PortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+  
+  @Override
+  public Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException {
+    Draft3Job draft3Job = Draft3JobHelper.getDraft3Job(job);
+    try {
+      return new Draft3PortProcessorHelper(draft3Job).getInputFiles(job.getInputs(), fileMapper, job.getConfig());
     } catch (Draft3PortProcessorException e) {
       throw new BindingException(e);
     }
@@ -84,5 +95,6 @@ public class Draft3FileValueProcessor implements ProtocolFileValueProcessor {
       throw new BindingException(e);
     }
   }
+
 
 }

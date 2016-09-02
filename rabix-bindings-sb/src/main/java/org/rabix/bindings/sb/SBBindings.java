@@ -94,6 +94,11 @@ public class SBBindings implements Bindings {
   }
 
   @Override
+  public Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException {
+    return fileValueProcessor.getInputFiles(job, fileMapper);
+  }
+  
+  @Override
   public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {
     return fileValueProcessor.getOutputFiles(job, onlyVisiblePorts);
   }

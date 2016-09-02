@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.ProtocolFileValueProcessor;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.sb.bean.SBJob;
@@ -17,7 +18,17 @@ public class SBFileValueProcessor implements ProtocolFileValueProcessor {
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     SBJob sbJob = SBJobHelper.getSBJob(job);
     try {
-      return new SBPortProcessorHelper(sbJob).getInputFiles(job.getInputs());
+      return new SBPortProcessorHelper(sbJob).getInputFiles(job.getInputs(), null, null);
+    } catch (SBPortProcessorException e) {
+      throw new BindingException(e);
+    }
+  }
+  
+  @Override
+  public Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException {
+    SBJob sbJob = SBJobHelper.getSBJob(job);
+    try {
+      return new SBPortProcessorHelper(sbJob).getInputFiles(job.getInputs(), fileMapper, job.getConfig());
     } catch (SBPortProcessorException e) {
       throw new BindingException(e);
     }

@@ -7,28 +7,36 @@ import java.util.Set;
 import org.rabix.bindings.draft3.bean.Draft3Job;
 import org.rabix.bindings.draft3.processor.Draft3PortProcessor;
 import org.rabix.bindings.draft3.processor.Draft3PortProcessorException;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 
 public class Draft3PortProcessorHelper {
 
+  private final Draft3Job draft3Job;
   private final Draft3PortProcessor portProcessor;
 
   public Draft3PortProcessorHelper(Draft3Job draft3Job) {
+    this.draft3Job = draft3Job;
     this.portProcessor = new Draft3PortProcessor(draft3Job);
   }
   
-  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws Draft3PortProcessorException {
-    Draft3FileValueProcessorCallback callback = new Draft3FileValueProcessorCallback(null);
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs, FileMapper fileMapper, Map<String, Object> config) throws Draft3PortProcessorException {
+    if (fileMapper != null) {
+      Draft3FilePathMapProcessorCallback fileMapperCallback = new Draft3FilePathMapProcessorCallback(fileMapper, config);
+      inputs = portProcessor.processInputs(inputs, fileMapperCallback);
+    }
+    
+    Draft3FileValueProcessorCallback callback = new Draft3FileValueProcessorCallback(draft3Job, null, true);
     try {
       portProcessor.processInputs(inputs, callback);
     } catch (Draft3PortProcessorException e) {
-      throw new Draft3PortProcessorException("Failed to flatten input file paths.", e);
+      throw new Draft3PortProcessorException("Failed to get input files.", e);
     }
     return callback.getFileValues();
   }
   
   public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws Draft3PortProcessorException {
-    Draft3FileValueProcessorCallback callback = new Draft3FileValueProcessorCallback(visiblePorts);
+    Draft3FileValueProcessorCallback callback = new Draft3FileValueProcessorCallback(draft3Job, visiblePorts, false);
     try {
       portProcessor.processOutputs(outputs, callback);
     } catch (Draft3PortProcessorException e) {

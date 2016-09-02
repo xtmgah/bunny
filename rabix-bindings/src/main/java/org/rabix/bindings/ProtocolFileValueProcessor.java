@@ -2,12 +2,15 @@ package org.rabix.bindings;
 
 import java.util.Set;
 
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 
 public interface ProtocolFileValueProcessor {
 
   Set<FileValue> getInputFiles(Job job) throws BindingException;
+  
+  Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException;
   
   Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
  

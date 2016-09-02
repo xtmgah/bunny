@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.sb.bean.SBJob;
 import org.rabix.bindings.sb.processor.SBPortProcessor;
@@ -11,24 +12,31 @@ import org.rabix.bindings.sb.processor.SBPortProcessorException;
 
 public class SBPortProcessorHelper {
 
+  private final SBJob sbJob;
   private final SBPortProcessor portProcessor;
 
   public SBPortProcessorHelper(SBJob sbJob) {
+    this.sbJob = sbJob;
     this.portProcessor = new SBPortProcessor(sbJob);
   }
 
-  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws SBPortProcessorException {
-    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(null);
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs, FileMapper fileMapper, Map<String, Object> config) throws SBPortProcessorException {
+    if (fileMapper != null) {
+      SBFilePathMapProcessorCallback fileMapperCallback = new SBFilePathMapProcessorCallback(fileMapper, config);
+      inputs = portProcessor.processInputs(inputs, fileMapperCallback);
+    }
+    
+    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(sbJob, null, true);
     try {
       portProcessor.processInputs(inputs, callback);
     } catch (SBPortProcessorException e) {
-      throw new SBPortProcessorException("Failed to flatten input file paths.", e);
+      throw new SBPortProcessorException("Failed to get input files.", e);
     }
     return callback.getFileValues();
   }
   
   public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws SBPortProcessorException {
-    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(visiblePorts);
+    SBFileValueProcessorCallback callback = new SBFileValueProcessorCallback(sbJob, visiblePorts, true);
     try {
       portProcessor.processOutputs(outputs, callback);
     } catch (SBPortProcessorException e) {
@@ -36,7 +44,6 @@ public class SBPortProcessorHelper {
     }
     return callback.getFileValues();
   }
-
   
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws SBPortProcessorException {
     SBFilePathFlattenProcessorCallback callback = new SBFilePathFlattenProcessorCallback();

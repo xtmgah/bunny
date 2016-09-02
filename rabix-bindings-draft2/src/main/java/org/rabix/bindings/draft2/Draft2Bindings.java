@@ -92,6 +92,11 @@ public class Draft2Bindings implements Bindings {
   public Set<FileValue> getInputFiles(Job job) throws BindingException {
     return fileValueProcessor.getInputFiles(job);
   }
+  
+  @Override
+  public Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException {
+    return fileValueProcessor.getInputFiles(job, fileMapper);
+  }
 
   @Override
   public Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException {

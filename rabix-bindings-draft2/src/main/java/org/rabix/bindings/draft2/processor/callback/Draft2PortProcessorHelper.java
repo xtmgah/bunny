@@ -7,18 +7,26 @@ import java.util.Set;
 import org.rabix.bindings.draft2.bean.Draft2Job;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessorException;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 
 public class Draft2PortProcessorHelper {
 
+  private final Draft2Job draft2Job;
   private final Draft2PortProcessor portProcessor;
 
   public Draft2PortProcessorHelper(Draft2Job draft2Job) {
+    this.draft2Job = draft2Job;
     this.portProcessor = new Draft2PortProcessor(draft2Job);
   }
 
-  public Set<FileValue> getInputFiles(Map<String, Object> inputs) throws Draft2PortProcessorException {
-    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(null);
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs, FileMapper fileMapper, Map<String, Object> config) throws Draft2PortProcessorException {
+    if (fileMapper != null) {
+      Draft2FilePathMapProcessorCallback fileMapperCallback = new Draft2FilePathMapProcessorCallback(fileMapper, config);
+      inputs = portProcessor.processInputs(inputs, fileMapperCallback);
+    }
+    
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(draft2Job, null, true);
     try {
       portProcessor.processInputs(inputs, callback);
     } catch (Draft2PortProcessorException e) {
@@ -28,7 +36,7 @@ public class Draft2PortProcessorHelper {
   }
   
   public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws Draft2PortProcessorException {
-    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(visiblePorts);
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(draft2Job, visiblePorts, false);
     try {
       portProcessor.processOutputs(outputs, callback);
     } catch (Draft2PortProcessorException e) {

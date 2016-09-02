@@ -32,6 +32,8 @@ public interface Bindings {
 
   Set<FileValue> getInputFiles(Job job) throws BindingException;
   
+  Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException;
+  
   Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
 
   Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException;
