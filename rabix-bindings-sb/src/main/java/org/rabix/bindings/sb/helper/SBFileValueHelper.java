@@ -40,7 +40,7 @@ public class SBFileValueHelper extends SBBeanHelper {
     setValue(KEY_NAME, name, raw);
   }
 
-  public static void setSize(long size, Object raw) {
+  public static void setSize(Long size, Object raw) {
     setValue(KEY_SIZE, size, raw);
   }
 

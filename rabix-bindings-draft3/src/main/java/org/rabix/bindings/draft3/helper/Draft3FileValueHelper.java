@@ -45,7 +45,7 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
     setValue(KEY_NAME, name, raw);
   }
 
-  public static void setSize(long size, Object raw) {
+  public static void setSize(Long size, Object raw) {
     setValue(KEY_SIZE, size, raw);
   }
 
