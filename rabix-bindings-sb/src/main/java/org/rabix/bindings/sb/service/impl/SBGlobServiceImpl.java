@@ -54,7 +54,15 @@ public class SBGlobServiceImpl implements SBGlobService {
     List<String> globs = new ArrayList<>();
     if (glob instanceof List<?>) {
       globs = (List<String>) glob;
-    } else {
+    } 
+    else if (glob instanceof String && ((String) glob).startsWith("{") && ((String) glob).endsWith("}")) {
+      // cover case when glob is in format {fil1,file2}
+      String globRemoveBracket = ((String) glob).substring(1, ((String) glob).length()-1);
+      for(String globItem: globRemoveBracket.split(",")) {
+        globs.add(globItem);
+      }
+    }
+    else {
       globs.add((String) glob);
     }
 
@@ -86,7 +94,8 @@ public class SBGlobServiceImpl implements SBGlobService {
           }
         }
         files.addAll(listDir(splitGlob[splitGlob.length-1], false, globDirs));
-      } else {
+      }
+      else {
         globDirs.add(workingDir);
         files.addAll(listDir(singleGlob, false, globDirs));
       }
