@@ -28,7 +28,7 @@ public class SBFileValueUpdateProcessorCallback implements SBPortProcessorCallba
       Object clonedValue = CloneHelper.deepCopy(value);
 
       FileValue fileValue = findFileValueByPath(SBFileValueHelper.getPath(clonedValue));
-      if (fileValue != null && !StringUtils.isEmpty(fileValue.getRelocatedPath())) {
+      if (fileValue != null) {
         clonedValue = SBFileValueHelper.createFileRaw(fileValue);
       }
       
