@@ -10,6 +10,8 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.status.ExecutorStatusCallback;
+import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +30,11 @@ public abstract class JobHandlerCommand {
   }
 
   protected final JobDataService jobDataService;
-
-  public JobHandlerCommand(JobDataService jobDataService) {
+  protected final ExecutorStatusCallback statusCallback;
+  
+  public JobHandlerCommand(JobDataService jobDataService, ExecutorStatusCallback statusCallback) {
     this.jobDataService = jobDataService;
+    this.statusCallback = statusCallback;
   }
 
   /**
@@ -70,6 +74,13 @@ public abstract class JobHandlerCommand {
     logger.info(message);
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
+    job = Job.cloneWithMessage(job, message);
+    try {
+      job = statusCallback.onJobReady(job);
+      job = statusCallback.onJobStarted(job);
+    } catch (ExecutorStatusCallbackException e) {
+      logger.warn("Failed to execute statusCallback: {}", e);
+    }
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
@@ -82,8 +93,13 @@ public abstract class JobHandlerCommand {
    */
   protected void failed(JobData jobData, String message, EngineStub<?,?,?> engineStub, Throwable e) {
     logger.error(message, e);
-
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.FAILED);
+    job = Job.cloneWithMessage(job, message);
+    try {
+      job = statusCallback.onJobFailed(job);
+    } catch (ExecutorStatusCallbackException e1) {
+      logger.warn("Failed to execute statusCallback: {}", e1);
+    }
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
@@ -96,12 +112,18 @@ public abstract class JobHandlerCommand {
    */
   protected void stopped(JobData jobData, String message, EngineStub<?,?,?> engineStub) {
     logger.info(message);
-
+    
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.ABORTED);
+    job = Job.cloneWithMessage(job, message);
+    try {
+      job = statusCallback.onJobStopped(job);
+    } catch (ExecutorStatusCallbackException e1) {
+      logger.warn("Failed to execute statusCallback: {}", e1);
+    }
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);
-    
+
     VerboseLogger.log(String.format("Job %s has stopped", job.getName()));
   }
 
@@ -115,6 +137,12 @@ public abstract class JobHandlerCommand {
 
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.COMPLETED);
     job = Job.cloneWithOutputs(job, result);
+    job = Job.cloneWithMessage(job, message);
+    try {
+      job = statusCallback.onJobCompleted(job);
+    } catch (ExecutorStatusCallbackException e1) {
+      logger.warn("Failed to execute statusCallback: {}", e1);
+    }
     jobData = JobData.cloneWithJob(jobData, job);
     jobDataService.save(jobData);
     engineStub.send(job);

@@ -96,7 +96,7 @@ public class JobHelper {
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
     
     Set<String> visiblePorts = findVisiblePorts(job, jobRecordService, linkRecordService, variableRecordService);
-    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, null, contextRecord.getConfig(), null, visiblePorts);
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, null, inputs, null, contextRecord.getConfig(), null, visiblePorts);
   }
   
   public static Job createRootJob(JobRecord job, JobStatus status, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, DAGNodeDB dagNodeDB, Map<String, Object> outputs) {
@@ -111,7 +111,7 @@ public class JobHelper {
     
     ContextRecord contextRecord = contextRecordService.find(job.getRootId());
     String encodedApp = URIHelper.createDataURI(node.getApp().serialize());
-    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, inputs, outputs, contextRecord.getConfig(), null, null);
+    return new Job(job.getExternalId(), job.getParentId(), job.getRootId(), job.getId(), encodedApp, status, null, inputs, outputs, contextRecord.getConfig(), null, null);
   }
   
   private static Set<String> findVisiblePorts(JobRecord jobRecord, JobRecordService jobRecordService, LinkRecordService linkRecordService, VariableRecordService variableRecordService) {
