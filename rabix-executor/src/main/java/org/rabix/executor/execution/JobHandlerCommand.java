@@ -76,7 +76,6 @@ public abstract class JobHandlerCommand {
     Job job = Job.cloneWithStatus(jobData.getJob(), JobStatus.RUNNING);
     job = Job.cloneWithMessage(job, message);
     try {
-      job = statusCallback.onJobReady(job);
       job = statusCallback.onJobStarted(job);
     } catch (ExecutorStatusCallbackException e) {
       logger.warn("Failed to execute statusCallback: {}", e);
