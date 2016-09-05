@@ -9,6 +9,7 @@ import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
+import org.rabix.executor.status.ExecutorStatusCallback;
 
 /**
  * Command that starts {@link JobHandler}
@@ -16,8 +17,8 @@ import org.rabix.executor.service.JobDataService;
 public class StartCommand extends JobHandlerCommand {
 
   @Inject
-  public StartCommand(JobDataService jobDataService) {
-    super(jobDataService);
+  public StartCommand(JobDataService jobDataService, ExecutorStatusCallback statusCallback) {
+    super(jobDataService, statusCallback);
   }
 
   @Override

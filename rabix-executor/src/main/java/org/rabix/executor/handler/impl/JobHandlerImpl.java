@@ -125,9 +125,6 @@ public class JobHandlerImpl implements JobHandler {
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
-      job = statusCallback.onJobReady(job);
-      job = statusCallback.onJobStarted(job);
-      
       Map<String, Object> results = localMemoizationService.tryToFindResults(job);
       if (results != null) {
         containerHandler = new CompletedContainerHandler(job);
@@ -248,7 +245,6 @@ public class JobHandlerImpl implements JobHandler {
       Bindings bindings = BindingsFactory.create(job);
       if (!isSuccessful()) {
         uploadOutputFiles(job, bindings);
-        statusCallback.onJobFailed(job);
         return job;
       }
       if (setPermissions) {
@@ -273,7 +269,6 @@ public class JobHandlerImpl implements JobHandler {
       jobDataService.save(jobData);
 
       logger.debug("Command line tool {} returned result {}.", job.getId(), job.getOutputs());
-      statusCallback.onJobCompleted(job);
       return job;
     } catch (ContainerException e) {
       logger.error("Failed to query container.", e);

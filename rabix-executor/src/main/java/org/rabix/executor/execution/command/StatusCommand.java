@@ -11,6 +11,7 @@ import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.JobFitter;
+import org.rabix.executor.status.ExecutorStatusCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +27,8 @@ public class StatusCommand extends JobHandlerCommand {
   private JobFitter jobFitter;
   
   @Inject
-  public StatusCommand(JobDataService jobDataService, JobFitter jobFitter) {
-    super(jobDataService);
+  public StatusCommand(JobDataService jobDataService, ExecutorStatusCallback statusCallback, JobFitter jobFitter) {
+    super(jobDataService, statusCallback);
     this.jobFitter = jobFitter;
   }
 

@@ -10,6 +10,7 @@ import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.executor.service.JobFitter;
+import org.rabix.executor.status.ExecutorStatusCallback;
 
 /**
  * Command that stops {@link JobHandler} 
@@ -19,8 +20,8 @@ public class StopCommand extends JobHandlerCommand {
   private JobFitter jobFitter;
   
   @Inject
-  public StopCommand(JobDataService jobDataService, JobFitter jobFitter) {
-    super(jobDataService);
+  public StopCommand(JobDataService jobDataService, ExecutorStatusCallback statusCallback, JobFitter jobFitter) {
+    super(jobDataService, statusCallback);
     this.jobFitter = jobFitter;
   }
 
@@ -29,7 +30,6 @@ public class StopCommand extends JobHandlerCommand {
     String jobId = jobData.getJob().getId();
     try {
       handler.stop();
-
       String message = String.format("Job %s aborted successfully.", jobId);
       jobData = jobDataService.save(jobData, message, JobDataStatus.ABORTED);
       stopped(jobData, message, handler.getEngineStub());
