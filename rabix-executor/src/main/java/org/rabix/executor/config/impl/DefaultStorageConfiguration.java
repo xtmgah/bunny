@@ -1,6 +1,7 @@
 package org.rabix.executor.config.impl;
 
 import java.io.File;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
@@ -38,7 +39,7 @@ public class DefaultStorageConfiguration implements StorageConfiguration {
   }
   
   @Override
-  public File getRootDir(String rootId) {
+  public File getRootDir(String rootId, Map<String, Object> config) {
     File contextDir = new File(getPhysicalExecutionBaseDir(), rootId);
     if (!contextDir.exists()) {
       contextDir.mkdirs();

@@ -89,8 +89,8 @@ public class ExecutorServiceImpl implements ExecutorService {
   }
 
   @Override
-  public void free(String rootId) {
-    fileService.delete(rootId);
+  public void free(String rootId, Map<String, Object> config) {
+    fileService.delete(rootId, config);
   }
   
   @Override

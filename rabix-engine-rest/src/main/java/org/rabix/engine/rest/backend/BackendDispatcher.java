@@ -136,18 +136,18 @@ public class BackendDispatcher {
     }
   }
   
-  public void freeBackend(String rootId) {
+  public void freeBackend(Job rootJob) {
     Set<BackendStub<?,?,?>> backendStubs = new HashSet<>();
     
     synchronized (jobBackendMapping) {
       for (Entry<Job, String> jobBackendEntry : jobBackendMapping.entrySet()) {
-        if (jobBackendEntry.getKey().getRootId().equals(rootId)) {
+        if (jobBackendEntry.getKey().getRootId().equals(rootJob.getRootId())) {
           backendStubs.add(getBackendStub(jobBackendEntry.getValue()));
         }
       }
       
       for (BackendStub<?, ?, ?> backendStub : backendStubs) {
-        backendStub.send(new EngineControlFreeMessage(rootId));
+        backendStub.send(new EngineControlFreeMessage(rootJob.getConfig(), rootJob.getRootId()));
       }
     }
   }

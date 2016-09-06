@@ -224,10 +224,6 @@ public class JobServiceImpl implements JobService {
     @Override
     public void onJobFailed(final Job failedJob) throws EngineStatusCallbackException {
       if (stopOnFail) {
-        if (deleteFilesUponExecution) {
-          backendDispatcher.freeBackend(failedJob.getRootId()); // TODO change location
-        }
-        
         synchronized (stoppingRootIds) {
           if (stoppingRootIds.contains(failedJob.getRootId())) {
             return;
@@ -281,7 +277,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public void onJobRootCompleted(Job job) throws EngineStatusCallbackException {
       if (deleteFilesUponExecution) {
-        backendDispatcher.freeBackend(job.getRootId());
+        backendDispatcher.freeBackend(job);
         
         if (isLocalBackend) {
           try {
@@ -299,6 +295,16 @@ public class JobServiceImpl implements JobService {
     @Override
     public void onJobRootFailed(Job job) throws EngineStatusCallbackException {
       synchronized (stoppingRootIds) {
+        if (deleteFilesUponExecution) {
+          backendDispatcher.freeBackend(job);
+          
+          if (isLocalBackend) {
+            try {
+              Thread.sleep(FREE_RESOURCES_WAIT_TIME);
+            } catch (InterruptedException e) { }
+          }
+        }
+        
         job = Job.cloneWithStatus(job, JobStatus.FAILED);
         jobDB.update(job);
 

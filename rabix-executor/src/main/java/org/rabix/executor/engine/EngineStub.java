@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlFreeMessage;
 import org.rabix.common.engine.control.EngineControlMessage;
 import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.executor.service.ExecutorService;
@@ -61,7 +62,7 @@ public abstract class EngineStub<Q extends TransportQueue, B extends Backend, T 
           executorService.stop(ids, controlMessage.getRootId());
           break;
         case FREE:
-          executorService.free(controlMessage.getRootId());
+          executorService.free(controlMessage.getRootId(), ((EngineControlFreeMessage)controlMessage).getConfig());
           break;
         default:
           break;

@@ -1,6 +1,7 @@
 package org.rabix.executor.service.impl;
 
 import java.io.File;
+import java.util.Map;
 
 import org.rabix.executor.config.StorageConfiguration;
 import org.rabix.executor.service.FileService;
@@ -21,8 +22,8 @@ public class FileServiceImpl implements FileService {
   }
   
   @Override
-  public void delete(String rootId) {
-    File rootDir = storageConfiguration.getRootDir(rootId);
+  public void delete(String rootId, Map<String, Object> config) {
+    File rootDir = storageConfiguration.getRootDir(rootId, config);
     if (rootDir.exists()) {
       rootDir.delete();
     }
