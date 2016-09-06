@@ -60,6 +60,9 @@ public class JobServiceImpl implements JobService {
   
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+  private boolean isLocalBackend;
+  private boolean deleteFilesUponExecution;
+  
   @Inject
   public JobServiceImpl(EventProcessor eventProcessor, JobRecordService jobRecordService, VariableRecordService variableRecordService, LinkRecordService linkRecordService, ContextRecordService contextRecordService, BackendDispatcher backendDispatcher, Configuration configuration, DAGNodeDB dagNodeDB, JobDB jobDB) {
     this.jobDB = jobDB;
@@ -72,7 +75,9 @@ public class JobServiceImpl implements JobService {
     this.contextRecordService = contextRecordService;
     this.backendDispatcher = backendDispatcher;
 
-    boolean isLocalBackend = configuration.getBoolean("local.backend", false);
+    deleteFilesUponExecution = configuration.getBoolean("rabix.delete_files_upon_execution", false);
+    
+    isLocalBackend = configuration.getBoolean("local.backend", false);
     boolean isConformance = configuration.getString("rabix.conformance") != null;
     this.eventProcessor.start(null, new EngineStatusCallbackImpl(isLocalBackend, isLocalBackend, isConformance));
   }
@@ -184,6 +189,8 @@ public class JobServiceImpl implements JobService {
     private boolean setResources;
     private boolean conformance;
     
+    private static final long FREE_RESOURCES_WAIT_TIME = 3000L;
+    
     private AtomicInteger failCount = new AtomicInteger(0);
     private AtomicInteger successCount = new AtomicInteger(0);
 
@@ -217,6 +224,10 @@ public class JobServiceImpl implements JobService {
     @Override
     public void onJobFailed(final Job failedJob) throws EngineStatusCallbackException {
       if (stopOnFail) {
+        if (deleteFilesUponExecution) {
+          backendDispatcher.freeBackend(failedJob.getRootId()); // TODO change location
+        }
+        
         synchronized (stoppingRootIds) {
           if (stoppingRootIds.contains(failedJob.getRootId())) {
             return;
@@ -269,6 +280,16 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void onJobRootCompleted(Job job) throws EngineStatusCallbackException {
+      if (deleteFilesUponExecution) {
+        backendDispatcher.freeBackend(job.getRootId());
+        
+        if (isLocalBackend) {
+          try {
+            Thread.sleep(FREE_RESOURCES_WAIT_TIME);
+          } catch (InterruptedException e) { }
+        }
+      }
+      
       job = Job.cloneWithStatus(job, JobStatus.COMPLETED);
       job = JobHelper.fillOutputs(job, jobRecordService, variableRecordService);
       jobDB.update(job);

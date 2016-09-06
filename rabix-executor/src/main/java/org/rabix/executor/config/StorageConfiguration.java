@@ -14,9 +14,11 @@ public interface StorageConfiguration {
 
   File getWorkingDir(Job job);
   
+  File getRootDir(String rootId);
+  
   File getWorkingDirWithoutRoot(Job job);
   
-  File getLocalExecutionDirectory();
+  File getPhysicalExecutionBaseDir();
   
   BackendStore getBackendStore();
 

@@ -20,7 +20,7 @@ public class DefaultStorageConfiguration implements StorageConfiguration {
   
   @Override
   public File getWorkingDir(Job job) {
-    File contextDir = new File(getLocalExecutionDirectory(), job.getRootId());
+    File contextDir = new File(getPhysicalExecutionBaseDir(), job.getRootId());
     if (!contextDir.exists()) {
       contextDir.mkdirs();
     }
@@ -38,6 +38,15 @@ public class DefaultStorageConfiguration implements StorageConfiguration {
   }
   
   @Override
+  public File getRootDir(String rootId) {
+    File contextDir = new File(getPhysicalExecutionBaseDir(), rootId);
+    if (!contextDir.exists()) {
+      contextDir.mkdirs();
+    }
+    return contextDir;
+  }
+  
+  @Override
   public File getWorkingDirWithoutRoot(Job job) {
     File workingDir = new File("/");
     String[] idArray = transformLocalIDsToPath(job);
@@ -52,7 +61,7 @@ public class DefaultStorageConfiguration implements StorageConfiguration {
   }
   
   @Override
-  public File getLocalExecutionDirectory() {
+  public File getPhysicalExecutionBaseDir() {
     String backendExecutionDirectory = configuration.getString("backend.execution.directory");
     return new File(backendExecutionDirectory);
   }
@@ -86,5 +95,5 @@ public class DefaultStorageConfiguration implements StorageConfiguration {
     id = id.replace(":", "_");
     return id.replaceAll("_+", "_");
   }
-  
+
 }

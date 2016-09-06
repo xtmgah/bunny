@@ -310,7 +310,7 @@ public class JobHandlerImpl implements JobHandler {
     for (FileValue fileValue : fileValues) {
       files.add(new File(fileValue.getPath()));
     }
-    uploadService.upload(files, storageConfiguration.getLocalExecutionDirectory(), true, true, job.getConfig());
+    uploadService.upload(files, storageConfiguration.getPhysicalExecutionBaseDir(), true, true, job.getConfig());
   }
 
   public void stop() throws ExecutorException {
