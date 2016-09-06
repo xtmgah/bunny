@@ -24,7 +24,7 @@ public class LocalToFTPPathMapper implements FileMapper {
   @Override
   public String map(String path, Map<String, Object> config) throws FileMappingException {
     logger.info("Map absolute physical path {} to relative physical path.", path);
-    return path.substring(storageConfig.getLocalExecutionDirectory().getAbsolutePath().length() + 1);
+    return path.substring(storageConfig.getPhysicalExecutionBaseDir().getAbsolutePath().length() + 1);
   }
 
 }

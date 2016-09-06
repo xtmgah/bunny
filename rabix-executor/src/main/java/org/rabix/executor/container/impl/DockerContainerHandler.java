@@ -137,7 +137,7 @@ public class DockerContainerHandler implements ContainerHandler {
       pull(dockerPull);
 
       Set<String> volumes = new HashSet<>();
-      String physicalPath = storageConfig.getLocalExecutionDirectory().getAbsolutePath();
+      String physicalPath = storageConfig.getPhysicalExecutionBaseDir().getAbsolutePath();
       volumes.add(physicalPath);
 
       ContainerConfig.Builder builder = ContainerConfig.builder();

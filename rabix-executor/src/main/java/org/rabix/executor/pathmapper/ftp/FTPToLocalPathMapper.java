@@ -27,7 +27,7 @@ public class FTPToLocalPathMapper implements FileMapper {
   public String map(String path, Map<String, Object> config) throws FileMappingException {
     logger.info("Map FTP path {} to physical path.", path);
     try {
-      return new File(storageConfig.getLocalExecutionDirectory(), path).getCanonicalPath();
+      return new File(storageConfig.getPhysicalExecutionBaseDir(), path).getCanonicalPath();
     } catch (IOException e) {
       throw new FileMappingException(e);
     }

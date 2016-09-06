@@ -46,7 +46,7 @@ public class FilePermissionServiceImpl implements FilePermissionService {
       dockerClient.pull(IMAGE);
 
       Set<String> volumes = new HashSet<>();
-      String physicalPath = storageConfig.getLocalExecutionDirectory().getAbsolutePath();
+      String physicalPath = storageConfig.getPhysicalExecutionBaseDir().getAbsolutePath();
       volumes.add(physicalPath);
 
       ContainerConfig.Builder builder = ContainerConfig.builder();
