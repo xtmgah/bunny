@@ -19,7 +19,8 @@
     <module>rabix-bindings-draft2</module>
     <module>rabix-bindings-draft3</module>
     <module>rabix-bindings-sb</module>
-  </modules>
+    <module>rabix-bindings-cwl1</module>
+	</modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
