@@ -14,6 +14,7 @@ import org.rabix.executor.engine.EngineStubRabbitMQ;
 import org.rabix.executor.model.JobData;
 import org.rabix.executor.model.JobData.JobDataStatus;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.service.FileService;
 import org.rabix.executor.service.JobDataService;
 import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.impl.BackendActiveMQ;
@@ -33,11 +34,13 @@ public class ExecutorServiceImpl implements ExecutorService {
 
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
-  private EngineStub<?,?,?> engineStub;
+  private FileService fileService;
   private Configuration configuration;
+  private EngineStub<?,?,?> engineStub;
 
   @Inject
-  public ExecutorServiceImpl(JobDataService jobDataService, Configuration configuration) {
+  public ExecutorServiceImpl(JobDataService jobDataService, FileService fileService, Configuration configuration) {
+    this.fileService = fileService;
     this.configuration = configuration;
     this.jobDataService = jobDataService;
   }
@@ -66,7 +69,7 @@ public class ExecutorServiceImpl implements ExecutorService {
   }
 
   @Override
-  public void start(final Job job, String contextId) {
+  public void start(final Job job, String rootId) {
     logger.debug("start(id={}, important={}, uploadOutputs={})", job.getId());
 
     final JobData jobData = new JobData(job, JobDataStatus.PENDING, "Job is queued to start.", false, false);
@@ -85,6 +88,11 @@ public class ExecutorServiceImpl implements ExecutorService {
     }
   }
 
+  @Override
+  public void free(String rootId, Map<String, Object> config) {
+    fileService.delete(rootId, config);
+  }
+  
   @Override
   public JobStatus findStatus(String jobId, String contextId) {
     logger.debug("findStatus(id={})", jobId);

@@ -15,6 +15,8 @@ public interface ExecutorService {
 
   void stop(List<String> ids, String contextId);
 
+  void free(String rootId, Map<String, Object> config);
+  
   void shutdown(Boolean stopEverything);
 
   boolean isRunning(String id, String contextId);

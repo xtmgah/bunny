@@ -40,8 +40,8 @@ public class Draft2Processor implements ProtocolProcessor {
 
   public final static int DEFAULT_SUCCESS_CODE = 0;
   
-  private final static String JOB_FILE = "job.json";
-  private final static String resultFilename = "cwl.output.json";
+  public final static String JOB_FILE = "job.json";
+  public final static String RESULT_FILENAME = "cwl.output.json";
   
   private final static Logger logger = LoggerFactory.getLogger(Draft2Processor.class);
 
@@ -116,7 +116,7 @@ public class Draft2Processor implements ProtocolProcessor {
   }
   
   private Map<String, Object> collectOutputs(Draft2Job job, File workingDir, HashAlgorithm hashAlgorithm) throws Draft2GlobException, Draft2ExpressionException, IOException, BindingException {
-    File resultFile = new File(workingDir, resultFilename);
+    File resultFile = new File(workingDir, RESULT_FILENAME);
     
     if (resultFile.exists()) {
       String resultStr = FileUtils.readFileToString(resultFile);
@@ -136,7 +136,7 @@ public class Draft2Processor implements ProtocolProcessor {
   }
   
   public void writeResult(File workingDir, Map<String, Object> result) {
-    BeanSerializer.serializePartial(new File(workingDir, resultFilename), result);
+    BeanSerializer.serializePartial(new File(workingDir, RESULT_FILENAME), result);
   }
 
   @SuppressWarnings("unchecked")
@@ -165,7 +165,7 @@ public class Draft2Processor implements ProtocolProcessor {
         }
         result = globFiles(job, workingDir, hashAlgorithm, outputPort, binding);
       } else {
-        result = collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
+        return collectOutput(job, workingDir, hashAlgorithm, itemSchema, binding, outputPort);
       }
     } else if (Draft2SchemaHelper.isRecordFromSchema(schema)) {
       Map<String, Object> record = new HashMap<>();

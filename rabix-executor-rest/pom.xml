@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.rabix</groupId>
 		<artifactId>rabix</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.6.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>rabix-executor-rest</artifactId>
 	<name>rabix-executor-rest</name>
@@ -76,24 +76,44 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlet</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squarespace.jersey2-guice</groupId>
+			<artifactId>jersey2-guice</artifactId>
+			<version>0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-executor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-draft2</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-draft3</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-bindings-sb</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-cli</groupId>

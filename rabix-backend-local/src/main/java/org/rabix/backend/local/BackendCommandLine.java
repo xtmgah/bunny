@@ -17,6 +17,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.ProtocolType;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.helper.URIHelper;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
@@ -24,6 +25,10 @@ import org.rabix.bindings.model.Resources;
 import org.rabix.common.config.ConfigModule;
 import org.rabix.common.helper.JSONHelper;
 import org.rabix.common.logging.VerboseLogger;
+import org.rabix.common.service.download.DownloadService;
+import org.rabix.common.service.download.impl.NoOpDownloadServiceImpl;
+import org.rabix.common.service.upload.UploadService;
+import org.rabix.common.service.upload.impl.NoOpUploadServiceImpl;
 import org.rabix.engine.EngineModule;
 import org.rabix.engine.rest.api.BackendHTTPService;
 import org.rabix.engine.rest.api.JobHTTPService;
@@ -38,8 +43,15 @@ import org.rabix.engine.rest.service.JobServiceException;
 import org.rabix.engine.rest.service.impl.BackendServiceImpl;
 import org.rabix.engine.rest.service.impl.JobServiceImpl;
 import org.rabix.executor.ExecutorModule;
-import org.rabix.executor.config.FileConfig;
+import org.rabix.executor.config.FileConfiguration;
+import org.rabix.executor.config.StorageConfiguration;
+import org.rabix.executor.config.impl.DefaultStorageConfiguration;
+import org.rabix.executor.pathmapper.InputFileMapper;
+import org.rabix.executor.pathmapper.OutputFileMapper;
+import org.rabix.executor.pathmapper.local.LocalPathMapper;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.status.ExecutorStatusCallback;
+import org.rabix.executor.status.impl.NoOpExecutorStatusCallback;
 import org.rabix.ftp.SimpleFTPModule;
 import org.rabix.transport.backend.BackendPopulator;
 import org.rabix.transport.backend.impl.BackendLocal;
@@ -128,13 +140,20 @@ public class BackendCommandLine {
             @Override
             protected void configure() {
               bind(JobDB.class).in(Scopes.SINGLETON);
+              bind(StorageConfiguration.class).to(DefaultStorageConfiguration.class).in(Scopes.SINGLETON);
               bind(BackendDB.class).in(Scopes.SINGLETON);
               bind(JobService.class).to(JobServiceImpl.class).in(Scopes.SINGLETON);
               bind(BackendPopulator.class).in(Scopes.SINGLETON);
               bind(BackendService.class).to(BackendServiceImpl.class).in(Scopes.SINGLETON);
               bind(BackendDispatcher.class).in(Scopes.SINGLETON);
               bind(JobHTTPService.class).to(JobHTTPServiceImpl.class);
+              bind(DownloadService.class).to(NoOpDownloadServiceImpl.class).in(Scopes.SINGLETON);
+              bind(UploadService.class).to(NoOpUploadServiceImpl.class).in(Scopes.SINGLETON);
+              bind(ExecutorStatusCallback.class).to(NoOpExecutorStatusCallback.class).in(Scopes.SINGLETON);;
               bind(BackendHTTPService.class).to(BackendHTTPServiceImpl.class).in(Scopes.SINGLETON);
+              
+              bind(FileMapper.class).annotatedWith(InputFileMapper.class).to(LocalPathMapper.class);
+              bind(FileMapper.class).annotatedWith(OutputFileMapper.class).to(LocalPathMapper.class);
             }
           });
 
@@ -143,16 +162,16 @@ public class BackendCommandLine {
       Map<String, Object> inputs = JSONHelper.readMap(JSONHelper.transformToJSON(inputsText));
       
       Configuration configuration = configModule.provideConfig();
-      Boolean conformance = configuration.getString(FileConfig.RABIX_CONFORMANCE) != null;    
+      Boolean conformance = configuration.getString(FileConfiguration.RABIX_CONFORMANCE) != null;    
       
       Resources resources = null;
-      Map<String, String> contextConfig = null;
+      Map<String, Object> contextConfig = null;
       
       if(conformance) {
-        BindingsFactory.setProtocol(configuration.getString(FileConfig.RABIX_CONFORMANCE));
+        BindingsFactory.setProtocol(configuration.getString(FileConfiguration.RABIX_CONFORMANCE));
         resources = extractResources(inputs, BindingsFactory.protocol);
         if(resources != null) {
-          contextConfig = new HashMap<String, String>();
+          contextConfig = new HashMap<String, Object>();
           if(resources.getCpu() != null) {
             contextConfig.put("allocatedResources.cpu", resources.getCpu().toString());
           }

@@ -126,6 +126,9 @@ public class ScatterHandler {
     }
     scatterStrategy.commit(mappings);
     
+    int oldScatteredNumber = job.getNumberOfGlobalOutputs();
+    int newScatteredNumber = job.getNumberOfGlobalOutputs();
+    
     for (RowMapping mapping : mappings) {
       job.setState(JobState.RUNNING);
       jobRecordService.update(job);
@@ -134,7 +137,7 @@ public class ScatterHandler {
 
       String jobNId = InternalSchemaHelper.scatterId(job.getId(), mapping.getIndex());
       JobRecord jobN = createJobRecord(jobNId, job.getExternalId(), node, true, job.getRootId());
-          
+       
       for (DAGLinkPort inputPort : node.getInputPorts()) {
         Object defaultValue = node.getDefaults().get(inputPort.getId());
         VariableRecord variableN = new VariableRecord(job.getRootId(), jobNId, inputPort.getId(), LinkPortType.INPUT, defaultValue, node.getLinkMerge(inputPort.getId(), inputPort.getType()));
@@ -175,14 +178,24 @@ public class ScatterHandler {
       job.setState(JobState.RUNNING);
       job.setScatterWrapper(true);
       
-      job.resetOutputPortCounters(getNumberOfScattered(job, numberOfScattered));
+      newScatteredNumber = getNumberOfScattered(job, numberOfScattered);
+      
+      job.resetOutputPortCounters(newScatteredNumber);
       jobRecordService.update(job);
       
-      jobN.setNumberOfGlobalOutputs(getNumberOfScattered(job, numberOfScattered));
+      jobN.setNumberOfGlobalOutputs(newScatteredNumber);
       jobRecordService.create(jobN);
 
       for (Event subevent : events) {
         eventProcessor.send(subevent);
+      }
+    }
+    
+    if (newScatteredNumber > oldScatteredNumber) {
+      List<JobRecord> jobRecords = jobRecordService.findByParent(job.getExternalId(), job.getRootId());
+      for (JobRecord jobRecord : jobRecords) {
+        jobRecord.setNumberOfGlobalOutputs(newScatteredNumber);
+        jobRecordService.update(jobRecord);
       }
     }
   }

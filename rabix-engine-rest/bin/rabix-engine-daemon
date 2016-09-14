@@ -3,7 +3,7 @@
 # Setup variables
 EXEC=/usr/bin/jsvc
 JAVA_HOME=/usr/lib/jvm/java-7-oracle
-CLASS_PATH="/home/janko/Desktop/engine/lib/rabix-engine-rest-0.0.1-SNAPSHOT.jar"
+CLASS_PATH="/home/janko/Desktop/engine/lib/rabix-engine-rest.jar"
 CLASS=org.rabix.engine.rest.EngineRestEntryDaemon
 USER=janko
 PID=/tmp/bunny.pid

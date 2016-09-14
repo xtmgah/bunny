@@ -11,10 +11,10 @@ public class ContextRecord {
   }
   
   private String id;
-  private Map<String, String> config;
+  private Map<String, Object> config;
   private ContextStatus status;
   
-  public ContextRecord(final String id, Map<String, String> config, ContextStatus status) {
+  public ContextRecord(final String id, Map<String, Object> config, ContextStatus status) {
     this.id = id;
     this.config = config;
     this.status = status;
@@ -28,11 +28,11 @@ public class ContextRecord {
     this.id = id;
   }
 
-  public Map<String, String> getConfig() {
+  public Map<String, Object> getConfig() {
     return config;
   }
 
-  public void setConfig(Map<String, String> config) {
+  public void setConfig(Map<String, Object> config) {
     this.config = config;
   }
 

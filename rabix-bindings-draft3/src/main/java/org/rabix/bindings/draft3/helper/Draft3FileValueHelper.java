@@ -45,7 +45,7 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
     setValue(KEY_NAME, name, raw);
   }
 
-  public static void setSize(long size, Object raw) {
+  public static void setSize(Long size, Object raw) {
     setValue(KEY_SIZE, size, raw);
   }
 
@@ -68,6 +68,10 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
     if (checksum != null) {
       setValue(KEY_CHECKSUM, checksum, raw);
     }
+  }
+  
+  public static void setChecksum(String checksum, Object raw) {
+    setValue(KEY_CHECKSUM, checksum, raw);
   }
 
   public static void setContents(Object raw) throws IOException {
@@ -182,6 +186,34 @@ public class Draft3FileValueHelper extends Draft3BeanHelper {
         secondaryFiles.add(createFileValue(secondaryFileValue));
       }
     }
-    return new FileValue(size, path, checksum, secondaryFiles, properties);
+    return new FileValue(size, path, null, checksum, secondaryFiles, properties);
+  }
+  
+  public static Map<String, Object> createFileRaw(FileValue fileValue) {
+    Map<String, Object> raw = new HashMap<>();
+    
+    setFileType(raw);
+    if (fileValue.getRelocatedPath() != null) {
+      setPath(fileValue.getRelocatedPath(), raw);  
+    } else {
+      setPath(fileValue.getPath(), raw);
+    }
+    setChecksum(fileValue.getChecksum(), raw);
+    setSize(fileValue.getSize(), raw);
+    
+    Map<String, Object> properties = fileValue.getProperties();
+    if (properties != null) {
+      setMetadata(properties.get(Draft3BindingHelper.KEY_SBG_METADATA), raw);
+    }
+    
+    List<FileValue> secondaryFileValues = fileValue.getSecondaryFiles();
+    if (secondaryFileValues != null) {
+      List<Map<String, Object>> secondaryFilesRaw = new ArrayList<>();
+      for (FileValue secondaryFileValue : secondaryFileValues) {
+        secondaryFilesRaw.add(createFileRaw(secondaryFileValue));
+      }
+      setSecondaryFiles(secondaryFilesRaw, raw);
+    }
+    return raw;
   }
 }

@@ -2,12 +2,12 @@ package org.rabix.engine.processor.handler;
 
 import org.rabix.engine.event.Event;
 import org.rabix.engine.event.Event.EventType;
-import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.impl.ContextStatusEventHandler;
 import org.rabix.engine.processor.handler.impl.InitEventHandler;
 import org.rabix.engine.processor.handler.impl.InputEventHandler;
-import org.rabix.engine.processor.handler.impl.OutputEventHandler;
 import org.rabix.engine.processor.handler.impl.JobStatusEventHandler;
+import org.rabix.engine.processor.handler.impl.OutputEventHandler;
+import org.rabix.engine.status.EngineStatusCallback;
 
 import com.google.inject.Inject;
 
@@ -31,9 +31,9 @@ public class HandlerFactory {
   /**
    * Initialize some callbacks 
    */
-  public void initialize(JobStatusCallback jobStatusCallback) {
-    this.statusEventHandler.initialize(jobStatusCallback);
-    this.outputEventHandler.initialize(jobStatusCallback);
+  public void initialize(EngineStatusCallback engineStatusCallback) {
+    this.statusEventHandler.initialize(engineStatusCallback);
+    this.outputEventHandler.initialize(engineStatusCallback);
   }
   
   @SuppressWarnings("unchecked")

@@ -26,7 +26,7 @@ public class ContextStatusEventHandler implements EventHandler<ContextStatusEven
   @Override
   public void handle(ContextStatusEvent event) throws EventHandlerException {
     if (event.getStatus().equals(ContextStatus.FAILED)) {
-      eventProcessor.send(new JobStatusEvent(event.getContextId(), event.getContextId(), JobState.FAILED, null));
+      eventProcessor.send(new JobStatusEvent("root", event.getContextId(), JobState.FAILED, null));
     }
     
     ContextRecord contextRecord = contextRecordService.find(event.getContextId());

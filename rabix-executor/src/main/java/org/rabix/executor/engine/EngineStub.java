@@ -7,9 +7,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.rabix.bindings.model.Job;
+import org.rabix.common.engine.control.EngineControlFreeMessage;
 import org.rabix.common.engine.control.EngineControlMessage;
 import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.executor.service.ExecutorService;
+import org.rabix.executor.service.FileService;
 import org.rabix.transport.backend.Backend;
 import org.rabix.transport.backend.HeartbeatInfo;
 import org.rabix.transport.mechanism.TransportPlugin;
@@ -34,13 +36,14 @@ public abstract class EngineStub<Q extends TransportQueue, B extends Backend, T 
   protected Q receiveFromBackendQueue;
   protected Q receiveFromBackendHeartbeatQueue;
   
+  protected FileService fileService;
   protected ExecutorService executorService;
   
   public void start() {
     transportPlugin.startReceiver(sendToBackendQueue, Job.class, new ReceiveCallback<Job>() {
       @Override
       public void handleReceive(Job job) throws TransportPluginException {
-        executorService.start(job, job.getContext().getId());
+        executorService.start(job, job.getRootId());
       }
     }, new ErrorCallback() {
       @Override
@@ -57,6 +60,9 @@ public abstract class EngineStub<Q extends TransportQueue, B extends Backend, T 
           List<String> ids = new ArrayList<>();
           ids.add(((EngineControlStopMessage)controlMessage).getId());
           executorService.stop(ids, controlMessage.getRootId());
+          break;
+        case FREE:
+          executorService.free(controlMessage.getRootId(), ((EngineControlFreeMessage)controlMessage).getConfig());
           break;
         default:
           break;

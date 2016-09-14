@@ -20,6 +20,7 @@ import org.rabix.bindings.draft2.helper.Draft2BindingHelper;
 import org.rabix.bindings.draft2.helper.Draft2SchemaHelper;
 import org.rabix.bindings.model.ApplicationPort;
 import org.rabix.bindings.model.LinkMerge;
+import org.rabix.common.helper.InternalSchemaHelper;
 import org.rabix.common.json.processor.BeanProcessor;
 import org.rabix.common.json.processor.BeanProcessorException;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class Draft2JobProcessor implements BeanProcessor<Draft2Job> {
   private Draft2Job process(Draft2Job parentJob, Draft2Job job) throws Draft2Exception {
     if (job.getId() == null) {
       String workflowId = parentJob != null ? parentJob.getId() : null;
-      String id = workflowId != null? workflowId + Draft2SchemaHelper.PORT_ID_SEPARATOR + Draft2SchemaHelper.MASTER_JOB_ID : Draft2SchemaHelper.MASTER_JOB_ID;
+      String id = workflowId != null? workflowId + Draft2SchemaHelper.PORT_ID_SEPARATOR + InternalSchemaHelper.ROOT_NAME : InternalSchemaHelper.ROOT_NAME;
       job.setId(id);
     }
     processElements(null, job);

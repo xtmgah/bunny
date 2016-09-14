@@ -7,16 +7,44 @@ import java.util.Set;
 import org.rabix.bindings.draft2.bean.Draft2Job;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessor;
 import org.rabix.bindings.draft2.processor.Draft2PortProcessorException;
+import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.model.FileValue;
 
 public class Draft2PortProcessorHelper {
 
+  private final Draft2Job draft2Job;
   private final Draft2PortProcessor portProcessor;
 
   public Draft2PortProcessorHelper(Draft2Job draft2Job) {
+    this.draft2Job = draft2Job;
     this.portProcessor = new Draft2PortProcessor(draft2Job);
   }
 
+  public Set<FileValue> getInputFiles(Map<String, Object> inputs, FileMapper fileMapper, Map<String, Object> config) throws Draft2PortProcessorException {
+    if (fileMapper != null) {
+      Draft2FilePathMapProcessorCallback fileMapperCallback = new Draft2FilePathMapProcessorCallback(fileMapper, config);
+      inputs = portProcessor.processInputs(inputs, fileMapperCallback);
+    }
+    
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(draft2Job, null, true);
+    try {
+      portProcessor.processInputs(inputs, callback);
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to get input files.", e);
+    }
+    return callback.getFileValues();
+  }
+  
+  public Set<FileValue> getOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws Draft2PortProcessorException {
+    Draft2FileValueProcessorCallback callback = new Draft2FileValueProcessorCallback(draft2Job, visiblePorts, false);
+    try {
+      portProcessor.processOutputs(outputs, callback);
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to get output files.", e);
+    }
+    return callback.getFileValues();
+  }
+  
   public Set<String> flattenInputFilePaths(Map<String, Object> inputs) throws Draft2PortProcessorException {
     Draft2FilePathFlattenProcessorCallback callback = new Draft2FilePathFlattenProcessorCallback();
     try {
@@ -28,7 +56,7 @@ public class Draft2PortProcessorHelper {
   }
 
   public Set<FileValue> flattenInputFiles(Map<String, Object> inputs) throws Draft2PortProcessorException {
-    Draft2FileValueFlattenProcessorCallback callback = new Draft2FileValueFlattenProcessorCallback();
+    Draft2FileValueFlattenProcessorCallback callback = new Draft2FileValueFlattenProcessorCallback(null);
     try {
       portProcessor.processInputs(inputs, callback);
     } catch (Draft2PortProcessorException e) {
@@ -37,12 +65,12 @@ public class Draft2PortProcessorHelper {
     return callback.getFlattenedFileData();
   }
 
-  public Set<FileValue> flattenOutputFiles(Map<String, Object> inputs) throws Draft2PortProcessorException {
-    Draft2FileValueFlattenProcessorCallback callback = new Draft2FileValueFlattenProcessorCallback();
+  public Set<FileValue> flattenOutputFiles(Map<String, Object> outputs, Set<String> visiblePorts) throws Draft2PortProcessorException {
+    Draft2FileValueFlattenProcessorCallback callback = new Draft2FileValueFlattenProcessorCallback(visiblePorts);
     try {
-      portProcessor.processOutputs(inputs, callback);
+      portProcessor.processOutputs(outputs, callback);
     } catch (Draft2PortProcessorException e) {
-      throw new Draft2PortProcessorException("Failed to flatten input file paths.", e);
+      throw new Draft2PortProcessorException("Failed to flatten outputs file paths.", e);
     }
     return callback.getFlattenedFileData();
   }
@@ -77,10 +105,26 @@ public class Draft2PortProcessorHelper {
     }
     return callback.getFlattenedFileData();
   }
-
+  
   public Map<String, Object> setFileSize(Map<String, Object> inputs) throws Draft2PortProcessorException {
     try {
       return portProcessor.processInputs(inputs, new Draft2FileSizeProcessorCallback());
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
+  public Map<String, Object> updateInputFiles(Map<String, Object> inputs, Set<FileValue> fileValues) throws Draft2PortProcessorException {
+    try {
+      return portProcessor.processInputs(inputs, new Draft2FileValueUpdateProcessorCallback(fileValues));
+    } catch (Draft2PortProcessorException e) {
+      throw new Draft2PortProcessorException("Failed to set input file size", e);
+    }
+  }
+  
+  public Map<String, Object> updateOutputFiles(Map<String, Object> outputs, Set<FileValue> fileValues) throws Draft2PortProcessorException {
+    try {
+      return portProcessor.processOutputs(outputs, new Draft2FileValueUpdateProcessorCallback(fileValues));
     } catch (Draft2PortProcessorException e) {
       throw new Draft2PortProcessorException("Failed to set input file size", e);
     }

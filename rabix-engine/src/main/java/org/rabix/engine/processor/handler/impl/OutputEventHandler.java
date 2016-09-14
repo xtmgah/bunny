@@ -1,26 +1,34 @@
 package org.rabix.engine.processor.handler.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.rabix.bindings.model.Job;
+import org.rabix.bindings.model.Job.JobStatus;
 import org.rabix.bindings.model.dag.DAGLinkPort.LinkPortType;
+import org.rabix.common.helper.CloneHelper;
 import org.rabix.common.helper.InternalSchemaHelper;
+import org.rabix.engine.JobHelper;
+import org.rabix.engine.db.DAGNodeDB;
 import org.rabix.engine.event.Event;
-import org.rabix.engine.event.impl.ContextStatusEvent;
 import org.rabix.engine.event.impl.InputUpdateEvent;
+import org.rabix.engine.event.impl.JobStatusEvent;
 import org.rabix.engine.event.impl.OutputUpdateEvent;
-import org.rabix.engine.model.ContextRecord.ContextStatus;
 import org.rabix.engine.model.JobRecord;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.model.scatter.ScatterStrategy;
 import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
+import org.rabix.engine.service.ContextRecordService;
 import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.status.EngineStatusCallback;
+import org.rabix.engine.status.EngineStatusCallbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,23 +42,27 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
   private final static Logger logger = LoggerFactory.getLogger(OutputEventHandler.class);
   
   private JobRecordService jobService;
-  private VariableRecordService variableService;
   private LinkRecordService linkService;
-  
+  private VariableRecordService variableService;
+  private ContextRecordService contextService;
+    
   private final EventProcessor eventProcessor;
   
-  private JobStatusCallback jobStatusCallback;
+  private DAGNodeDB dagNodeDB;
+  private EngineStatusCallback engineStatusCallback;
   
   @Inject
-  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService) {
+  public OutputEventHandler(EventProcessor eventProcessor, JobRecordService jobService, VariableRecordService variableService, LinkRecordService linkService, ContextRecordService contextService, DAGNodeDB dagNodeDB) {
+    this.dagNodeDB = dagNodeDB;
     this.jobService = jobService;
     this.linkService = linkService;
+    this.contextService = contextService;
     this.variableService = variableService;
     this.eventProcessor = eventProcessor;
   }
 
-  public void initialize(JobStatusCallback jobStatusCallback) {
-    this.jobStatusCallback = jobStatusCallback;
+  public void initialize(EngineStatusCallback engineStatusCallback) {
+    this.engineStatusCallback = engineStatusCallback;
   }
   
   public void handle(final OutputUpdateEvent event) throws EventHandlerException {
@@ -67,13 +79,23 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
       sourceJob.setState(JobState.COMPLETED);
       jobService.update(sourceJob);
       if (sourceJob.isRoot()) {
-        eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
-        try {
-          jobStatusCallback.onRootCompleted(sourceJob.getExternalId());
-        } catch (Exception e) {
-          logger.error("Failed to call onRootCompleted callback for Job " + sourceJob.getRootId(), e);
-          throw new EventHandlerException("Failed to call onRootCompleted callback for Job " + sourceJob.getRootId(), e);
+        Map<String, Object> outputs = new HashMap<>();
+        List<VariableRecord> outputVariables = variableService.find(sourceJob.getId(), LinkPortType.OUTPUT, sourceJob.getRootId());
+        for (VariableRecord outputVariable : outputVariables) {
+          Object value = CloneHelper.deepCopy(outputVariable.getValue());
+          outputs.put(outputVariable.getPortId(), value);
         }
+        eventProcessor.send(new JobStatusEvent(sourceJob.getId(), event.getContextId(), JobState.COMPLETED, outputs));
+        return;
+      }
+    }
+    
+    if (sourceJob.isRoot()) {
+      try {
+        engineStatusCallback.onJobRootPartiallyCompleted(createRootJob(sourceJob, JobHelper.transformStatus(sourceJob.getState())));
+      } catch (EngineStatusCallbackException e) {
+        logger.error("Failed to call onReady callback for Job " + sourceJob.getId(), e);
+        throw new EventHandlerException("Failed to call onJobRootPartiallyCompleted callback for Job " + sourceJob.getId(), e);
       }
     }
     
@@ -172,6 +194,16 @@ public class OutputEventHandler implements EventHandler<OutputUpdateEvent> {
         }
       }
     }
+  }
+  
+  private Job createRootJob(JobRecord jobRecord, JobStatus status) {
+    Map<String, Object> outputs = new HashMap<>();
+    List<VariableRecord> outputVariables = variableService.find(jobRecord.getId(), LinkPortType.OUTPUT, jobRecord.getRootId());
+    for (VariableRecord outputVariable : outputVariables) {
+      Object value = CloneHelper.deepCopy(outputVariable.getValue());
+      outputs.put(outputVariable.getPortId(), value);
+    }
+    return JobHelper.createRootJob(jobRecord, status, jobService, variableService, linkService, contextService, dagNodeDB, outputs);
   }
   
 }

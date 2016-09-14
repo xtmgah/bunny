@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.rabix</groupId>
 		<artifactId>rabix</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.6.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>rabix-ftp</artifactId>
 	<name>rabix-ftp</name>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>org.rabix</groupId>
 			<artifactId>rabix-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>

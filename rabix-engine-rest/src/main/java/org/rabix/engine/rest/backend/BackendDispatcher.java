@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.configuration.Configuration;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.Job.JobStatus;
+import org.rabix.common.engine.control.EngineControlFreeMessage;
 import org.rabix.common.engine.control.EngineControlStopMessage;
 import org.rabix.engine.rest.backend.stub.BackendStub;
 import org.rabix.transport.backend.Backend;
@@ -132,6 +133,22 @@ public class BackendDispatcher {
       this.heartbeatInfo.put(backendStub.getBackend().getId(), System.currentTimeMillis());
     } finally {
       dispatcherLock.unlock();
+    }
+  }
+  
+  public void freeBackend(Job rootJob) {
+    Set<BackendStub<?,?,?>> backendStubs = new HashSet<>();
+    
+    synchronized (jobBackendMapping) {
+      for (Entry<Job, String> jobBackendEntry : jobBackendMapping.entrySet()) {
+        if (jobBackendEntry.getKey().getRootId().equals(rootJob.getRootId())) {
+          backendStubs.add(getBackendStub(jobBackendEntry.getValue()));
+        }
+      }
+      
+      for (BackendStub<?, ?, ?> backendStub : backendStubs) {
+        backendStub.send(new EngineControlFreeMessage(rootJob.getConfig(), rootJob.getRootId()));
+      }
     }
   }
 

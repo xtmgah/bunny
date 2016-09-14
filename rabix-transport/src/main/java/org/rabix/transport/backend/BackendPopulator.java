@@ -3,6 +3,7 @@ package org.rabix.transport.backend;
 import java.util.UUID;
 
 import org.apache.commons.configuration.Configuration;
+import org.rabix.common.json.BeanSerializer;
 import org.rabix.transport.backend.impl.BackendRabbitMQ;
 import org.rabix.transport.backend.impl.BackendRabbitMQ.BackendConfiguration;
 import org.rabix.transport.mechanism.impl.rabbitmq.TransportConfigRabbitMQ;
@@ -47,6 +48,11 @@ public class BackendPopulator {
       break;
     }
     return backend;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T extends Backend> T populate(String payload) {
+    return (T) BeanSerializer.deserialize(payload, Backend.class);
   }
   
   private String generateUniqueBackendId() {

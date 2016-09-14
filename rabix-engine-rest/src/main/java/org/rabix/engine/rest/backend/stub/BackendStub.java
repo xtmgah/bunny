@@ -66,7 +66,7 @@ public abstract class BackendStub<Q extends TransportQueue, B extends Backend, T
   }
   
   public void stop() {
-    executorService.shutdown();
+    executorService.shutdownNow();
   }
 
   public void send(Job job) {

@@ -11,13 +11,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ 
-    @Type(value = EngineControlStopMessage.class, name = "STOP")})
+    @Type(value = EngineControlStopMessage.class, name = "STOP"),
+    @Type(value = EngineControlFreeMessage.class, name = "FREE")})
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class EngineControlMessage {
 
   public static enum EngineControlMessageType {
-    STOP
+    STOP, FREE
   }
   
   @JsonProperty("rootId")

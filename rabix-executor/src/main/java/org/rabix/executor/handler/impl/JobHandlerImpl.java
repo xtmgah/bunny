@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -16,6 +18,7 @@ import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
 import org.rabix.bindings.filemapper.FileMapper;
 import org.rabix.bindings.filemapper.FileMappingException;
+import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
 import org.rabix.bindings.model.requirement.FileRequirement;
@@ -26,10 +29,15 @@ import org.rabix.bindings.model.requirement.LocalContainerRequirement;
 import org.rabix.bindings.model.requirement.Requirement;
 import org.rabix.common.helper.ChecksumHelper;
 import org.rabix.common.helper.ChecksumHelper.HashAlgorithm;
+import org.rabix.common.service.download.DownloadService;
+import org.rabix.common.service.download.DownloadServiceException;
+import org.rabix.common.service.upload.UploadService;
+import org.rabix.common.service.upload.UploadServiceException;
 import org.rabix.executor.ExecutorException;
-import org.rabix.executor.config.FileConfig;
-import org.rabix.executor.config.StorageConfig;
-import org.rabix.executor.config.StorageConfig.BackendStore;
+import org.rabix.executor.config.DockerConfigation;
+import org.rabix.executor.config.FileConfiguration;
+import org.rabix.executor.config.StorageConfiguration;
+import org.rabix.executor.config.StorageConfiguration.BackendStore;
 import org.rabix.executor.container.ContainerException;
 import org.rabix.executor.container.ContainerHandler;
 import org.rabix.executor.container.ContainerHandlerFactory;
@@ -38,10 +46,13 @@ import org.rabix.executor.container.impl.DockerContainerHandler.DockerClientLock
 import org.rabix.executor.engine.EngineStub;
 import org.rabix.executor.handler.JobHandler;
 import org.rabix.executor.model.JobData;
-import org.rabix.executor.service.DownloadFileService;
+import org.rabix.executor.pathmapper.InputFileMapper;
+import org.rabix.executor.pathmapper.OutputFileMapper;
+import org.rabix.executor.service.BasicMemoizationService;
+import org.rabix.executor.service.FilePermissionService;
 import org.rabix.executor.service.JobDataService;
-import org.rabix.executor.service.impl.LocalMemoizationService;
-import org.rabix.ftp.SimpleFTPClient;
+import org.rabix.executor.status.ExecutorStatusCallback;
+import org.rabix.executor.status.ExecutorStatusCallbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,50 +60,73 @@ import com.google.inject.assistedinject.Assisted;
 
 public class JobHandlerImpl implements JobHandler {
 
-  private static final String ERROR_LOG = "job.err.log";
   private final String KEY_CHECKSUM = "checksum";
 
   private static final Logger logger = LoggerFactory.getLogger(JobHandlerImpl.class);
 
   private final File workingDir;
 
-  private final DownloadFileService downloadFileService;
   private final JobDataService jobDataService;
 
-  private final SimpleFTPClient ftpClient;
   private final boolean enableHash;
   private final HashAlgorithm hashAlgorithm;
+  
+  private final UploadService uploadService;
+  private final DownloadService downloadService;
+  
+  private final FileMapper inputFileMapper;
+  private final FileMapper outputFileMapper;
 
   private Job job;
   private EngineStub<?, ?, ?> engineStub;
 
-  private Configuration configuration;
+  private DockerConfigation dockerConfig;
+  private StorageConfiguration storageConfiguration;
   private ContainerHandler containerHandler;
   private DockerClientLockDecorator dockerClient;
 
-  private LocalMemoizationService localMemoizationService;
+  private final ExecutorStatusCallback statusCallback;
+  
+  private final FilePermissionService filePermissionService;
+  private final BasicMemoizationService localMemoizationService;
+
+  private boolean setPermissions;
 
   @Inject
-  public JobHandlerImpl(@Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, JobDataService jobDataService,
-      DownloadFileService downloadFileService, Configuration configuration, DockerClientLockDecorator dockerClient,
-      LocalMemoizationService localMemoizationService, SimpleFTPClient ftpClient) {
+  public JobHandlerImpl(
+      @Assisted Job job, @Assisted EngineStub<?, ?, ?> engineStub, 
+      JobDataService jobDataService, Configuration configuration, StorageConfiguration storageConfig, 
+      DockerConfigation dockerConfig, FileConfiguration fileConfiguration, 
+      DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
+      BasicMemoizationService localMemoizationService, FilePermissionService filePermissionService, 
+      UploadService uploadService, DownloadService downloadService,
+      @InputFileMapper FileMapper inputFileMapper, @OutputFileMapper FileMapper outputFileMapper) {
     this.job = job;
     this.engineStub = engineStub;
-    this.configuration = configuration;
-    this.downloadFileService = downloadFileService;
+    this.storageConfiguration = storageConfig;
+    this.dockerConfig = dockerConfig;
     this.jobDataService = jobDataService;
     this.dockerClient = dockerClient;
+    this.statusCallback = statusCallback;
+    this.filePermissionService = filePermissionService;
     this.localMemoizationService = localMemoizationService;
-    this.workingDir = StorageConfig.getWorkingDir(job, configuration);
-    this.ftpClient = ftpClient;
-    this.enableHash = FileConfig.calculateFileChecksum(configuration);
-    this.hashAlgorithm = FileConfig.checksumAlgorithm(configuration);
+    this.workingDir = storageConfig.getWorkingDir(job);
+    this.uploadService = uploadService;
+    this.downloadService = downloadService;
+    this.inputFileMapper = inputFileMapper;
+    this.outputFileMapper = outputFileMapper;
+    this.enableHash = fileConfiguration.calculateFileChecksum();
+    this.hashAlgorithm = fileConfiguration.checksumAlgorithm();
+
+    this.setPermissions = configuration.getBoolean("executor.set_permissions", false);
   }
 
   @Override
   public void start() throws ExecutorException {
     logger.info("Start command line tool for id={}", job.getId());
     try {
+      job = statusCallback.onJobReady(job);
+      
       Map<String, Object> results = localMemoizationService.tryToFindResults(job);
       if (results != null) {
         containerHandler = new CompletedContainerHandler(job);
@@ -101,25 +135,33 @@ public class JobHandlerImpl implements JobHandler {
       }
 
       Bindings bindings = BindingsFactory.create(job);
-      downloadFileService.download(job, bindings.getInputFiles(job));
-
+      
+      statusCallback.onInputFilesDownloadStarted(job);
+      try {
+        downloadInputFiles(job, bindings);
+      } catch (Exception e) {
+        statusCallback.onInputFilesDownloadFailed(job);
+        throw e;
+      }
+      statusCallback.onInputFilesDownloadCompleted(job);
+      
       List<Requirement> combinedRequirements = new ArrayList<>();
       combinedRequirements.addAll(bindings.getHints(job));
       combinedRequirements.addAll(bindings.getRequirements(job));
 
       createFileRequirements(combinedRequirements);
 
-      job = bindings.mapInputFilePaths(job, new InputFileMapper());
+      job = bindings.mapInputFilePaths(job, inputFileMapper);
       job = bindings.preprocess(job, workingDir);
 
       if (bindings.canExecute(job)) {
         containerHandler = new CompletedContainerHandler(job);
       } else {
         Requirement containerRequirement = getRequirement(combinedRequirements, DockerContainerRequirement.class);
-        if (containerRequirement == null || !StorageConfig.isDockerSupported(configuration)) {
+        if (containerRequirement == null || !dockerConfig.isDockerSupported()) {
           containerRequirement = new LocalContainerRequirement();
         }
-        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, configuration);
+        containerHandler = ContainerHandlerFactory.create(job, containerRequirement, dockerClient, statusCallback, storageConfiguration, dockerConfig);
       }
       containerHandler.start();
     } catch (Exception e) {
@@ -128,6 +170,19 @@ public class JobHandlerImpl implements JobHandler {
     }
   }
 
+  private void downloadInputFiles(final Job job, final Bindings bindings) throws BindingException, DownloadServiceException {
+    if (storageConfiguration.getBackendStore().equals(BackendStore.LOCAL)) {
+      return;
+    }
+    Set<FileValue> fileValues = bindings.getFlattenedInputFiles(job);
+    
+    Set<String> paths = new HashSet<>();
+    for (FileValue fileValue : fileValues) {
+      paths.add(fileValue.getPath());
+    }
+    downloadService.download(workingDir, paths, job.getConfig());
+  }
+  
   private void createFileRequirements(List<Requirement> requirements) throws ExecutorException, FileMappingException {
     try {
       FileRequirement fileRequirementResource = getRequirement(requirements, FileRequirement.class);
@@ -149,7 +204,7 @@ public class JobHandlerImpl implements JobHandler {
         }
         if (fileRequirement instanceof SingleInputFileRequirement) {
           String path = ((SingleInputFileRequirement) fileRequirement).getContent().getPath();
-          String mappedPath = new InputFileMapper().map(path);
+          String mappedPath = inputFileMapper.map(path, job.getConfig());
           File file = new File(mappedPath);
           if (!file.exists()) {
             continue;
@@ -189,12 +244,14 @@ public class JobHandlerImpl implements JobHandler {
       }
       containerHandler.dumpContainerLogs(new File(workingDir, ERROR_LOG));
 
+      Bindings bindings = BindingsFactory.create(job);
       if (!isSuccessful()) {
-        upload(workingDir);
+        uploadOutputFiles(job, bindings);
         return job;
       }
-
-      Bindings bindings = BindingsFactory.create(job);
+      if (setPermissions) {
+        filePermissionService.execute(job);
+      }
       job = bindings.postprocess(job, workingDir);
 
       if (enableHash) {
@@ -203,9 +260,12 @@ public class JobHandlerImpl implements JobHandler {
         job = Job.cloneWithOutputs(job, outputsWithCheckSum);
       }
 
-      job = bindings.mapOutputFilePaths(job, new OutputFileMapper());
-      upload(workingDir);
+      statusCallback.onOutputFilesUploadStarted(job);
+      uploadOutputFiles(job, bindings);
+      statusCallback.onOutputFilesUploadCompleted(job);
 
+      job = bindings.mapOutputFilePaths(job, outputFileMapper);
+      
       JobData jobData = jobDataService.find(job.getId(), job.getRootId());
       jobData = JobData.cloneWithResult(jobData, job.getOutputs());
       jobDataService.save(jobData);
@@ -218,21 +278,39 @@ public class JobHandlerImpl implements JobHandler {
     } catch (BindingException e) {
       logger.error("Could not collect outputs.", e);
       throw new ExecutorException("Could not collect outputs.", e);
-    } catch (IOException e) {
+    } catch (UploadServiceException e) {
       logger.error("Could not upload outputs.", e);
       throw new ExecutorException("Could not upload outputs.", e);
+    } catch (ExecutorStatusCallbackException e) {
+      logger.error("Could not call executor callback.", e);
+      throw new ExecutorException("Could not call executor callback.", e);
     }
   }
 
-  private void upload(File workingDir) throws IOException {
-    if (!StorageConfig.getBackendStore(configuration).equals(BackendStore.FTP)) {
+  private void uploadOutputFiles(final Job job, final Bindings bindings) throws BindingException, UploadServiceException {
+    if (storageConfiguration.getBackendStore().equals(BackendStore.LOCAL)) {
       return;
     }
-    for (File file : workingDir.listFiles()) {
-      String remotePath = file.getAbsolutePath()
-          .substring(StorageConfig.getLocalExecutionDirectory(configuration).length());
-      ftpClient.upload(file, remotePath);
+    Set<FileValue> fileValues = bindings.getFlattenedOutputFiles(job, false);
+    fileValues.addAll(bindings.getProtocolFiles(workingDir));
+    
+    File cmdFile = new File(workingDir, COMMAND_LOG);
+    if (cmdFile.exists()) {
+      String cmdFilePath = cmdFile.getAbsolutePath();
+      fileValues.add(new FileValue(null, cmdFilePath, null, null, null, null));
     }
+    
+    File jobErrFile = new File(workingDir, ERROR_LOG);
+    if (jobErrFile.exists()) {
+      String jobErrFilePath = jobErrFile.getAbsolutePath();
+      fileValues.add(new FileValue(null, jobErrFilePath, null, null, null, null));
+    }
+    
+    Set<File> files = new HashSet<>();
+    for (FileValue fileValue : fileValues) {
+      files.add(new File(fileValue.getPath()));
+    }
+    uploadService.upload(files, storageConfiguration.getPhysicalExecutionBaseDir(), true, true, job.getConfig());
   }
 
   public void stop() throws ExecutorException {
@@ -345,49 +423,6 @@ public class JobHandlerImpl implements JobHandler {
 
   public EngineStub<?, ?, ?> getEngineStub() {
     return engineStub;
-  }
-
-  private class InputFileMapper implements FileMapper {
-    @Override
-    public String map(String filePath) throws FileMappingException {
-      BackendStore backendStore = StorageConfig.getBackendStore(configuration);
-      switch (backendStore) {
-      case FTP:
-        logger.info("Map FTP path {} to physical path.", filePath);
-        try {
-          return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath)
-              .getCanonicalPath();
-        } catch (IOException e) {
-          throw new FileMappingException(e);
-        }
-      case LOCAL:
-        if (!filePath.startsWith(File.separator)) {
-          try {
-            return new File(new File(StorageConfig.getLocalExecutionDirectory(configuration)), filePath)
-                .getCanonicalPath();
-          } catch (IOException e) {
-            throw new FileMappingException(e);
-          }
-        }
-        return filePath;
-      default:
-        throw new FileMappingException("BackendStore " + backendStore + " is not supported.");
-      }
-    }
-  }
-
-  private class OutputFileMapper implements FileMapper {
-    @Override
-    public String map(String filePath) throws FileMappingException {
-      BackendStore backendStore = StorageConfig.getBackendStore(configuration);
-      switch (backendStore) {
-      case FTP:
-        logger.info("Map absolute physical path {} to relative physical path.", filePath);
-        return filePath.substring(StorageConfig.getLocalExecutionDirectory(configuration).length() + 1);
-      default:
-        return filePath;
-      }
-    }
   }
 
 }

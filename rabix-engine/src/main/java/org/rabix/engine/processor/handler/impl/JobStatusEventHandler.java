@@ -27,7 +27,6 @@ import org.rabix.engine.model.JobRecord.PortCounter;
 import org.rabix.engine.model.LinkRecord;
 import org.rabix.engine.model.VariableRecord;
 import org.rabix.engine.processor.EventProcessor;
-import org.rabix.engine.processor.EventProcessor.JobStatusCallback;
 import org.rabix.engine.processor.handler.EventHandler;
 import org.rabix.engine.processor.handler.EventHandlerException;
 import org.rabix.engine.service.ContextRecordService;
@@ -35,6 +34,7 @@ import org.rabix.engine.service.JobRecordService;
 import org.rabix.engine.service.JobRecordService.JobState;
 import org.rabix.engine.service.LinkRecordService;
 import org.rabix.engine.service.VariableRecordService;
+import org.rabix.engine.status.EngineStatusCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
   private final VariableRecordService variableRecordService;
   private final ContextRecordService contextRecordService;
   
-  private JobStatusCallback jobStatusCallback;
+  private EngineStatusCallback engineStatusCallback;
 
   @Inject
   public JobStatusEventHandler(final DAGNodeDB dagNodeDB, final JobRecordService jobRecordService, final LinkRecordService linkRecordService, final VariableRecordService variableRecordService, final ContextRecordService contextRecordService, final EventProcessor eventProcessor, final ScatterHandler scatterHelper) {
@@ -67,8 +67,8 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
     this.variableRecordService = variableRecordService;
   }
 
-  public void initialize(JobStatusCallback jobStatusCallback) {
-    this.jobStatusCallback = jobStatusCallback;
+  public void initialize(EngineStatusCallback engineStatusCallback) {
+    this.engineStatusCallback = engineStatusCallback;
   }
 
   @Override
@@ -81,10 +81,10 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       jobRecordService.update(jobRecord);
       ready(jobRecord, event.getContextId());
       
-      if (!jobRecord.isContainer()) {
-        Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
+      if (!jobRecord.isContainer() && !jobRecord.isScatterWrapper()) {
+        Job job = JobHelper.createJob(jobRecord, JobStatus.READY, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB);
         try {
-          jobStatusCallback.onReady(job);
+          engineStatusCallback.onJobReady(job);
         } catch (Exception e) {
           logger.error("Failed to call onReady callback for Job " + job.getId(), e);
           throw new EventHandlerException("Failed to call onReady callback for Job " + job.getId(), e);
@@ -96,34 +96,38 @@ public class JobStatusEventHandler implements EventHandler<JobStatusEvent> {
       jobRecordService.update(jobRecord);
       break;
     case COMPLETED:
-      for (PortCounter portCounter : jobRecord.getOutputCounters()) {
-        Object output = event.getResult().get(portCounter.getPort());
-        eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
-      }
-      
       if (jobRecord.isRoot()) {
         try {
-          jobStatusCallback.onRootCompleted(jobRecord.getRootId());
+          eventProcessor.send(new ContextStatusEvent(event.getContextId(), ContextStatus.COMPLETED));
+          
+          Job rootJob = JobHelper.createRootJob(jobRecord, JobStatus.COMPLETED, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB, event.getResult());
+          engineStatusCallback.onJobRootCompleted(rootJob);
         } catch (Exception e) {
           logger.error("Failed to call onRootCompleted callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootCompleted callback for Job " + jobRecord.getRootId(), e);
+        }
+      } else {
+        for (PortCounter portCounter : jobRecord.getOutputCounters()) {
+          Object output = event.getResult().get(portCounter.getPort());
+          eventProcessor.addToQueue(new OutputUpdateEvent(jobRecord.getRootId(), jobRecord.getId(), portCounter.getPort(), output, 1));
         }
       }
       break;
     case FAILED:
       eventProcessor.addToQueue(new ContextStatusEvent(event.getContextId(), ContextStatus.FAILED));
       
-      if (event.getJobId().equals(event.getContextId())) {
+      if (jobRecord.isRoot()) {
         try {
-          jobStatusCallback.onRootFailed(event.getJobId());
+          Job rootJob = JobHelper.createRootJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB, null);
+          engineStatusCallback.onJobRootFailed(rootJob);
         } catch (Exception e) {
           logger.error("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
           throw new EventHandlerException("Failed to call onRootFailed callback for Job " + jobRecord.getRootId(), e);
         }
       } else {
         try {
-          Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, contextRecordService, dagNodeDB);
-          jobStatusCallback.onFailed(failedJob);
+          Job failedJob = JobHelper.createJob(jobRecord, JobStatus.FAILED, jobRecordService, variableRecordService, linkRecordService, contextRecordService, dagNodeDB);
+          engineStatusCallback.onJobFailed(failedJob);
         } catch (Exception e) {
           logger.error("Failed to call onFailed callback for Job " + jobRecord.getId(), e);
           throw new EventHandlerException("Failed to call onFailed callback for Job " + jobRecord.getId(), e);

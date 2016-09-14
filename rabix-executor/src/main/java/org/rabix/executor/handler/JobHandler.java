@@ -8,6 +8,9 @@ public interface JobHandler {
 
   public final static int DEFAULT_ERROR_CODE = -1;
   public final static int DEFAULT_SUCCESS_CODE = 0;
+  
+  public static final String ERROR_LOG = "job.err.log";
+  public static final String COMMAND_LOG = "cmd.log";
 
   /**
    * Start execution

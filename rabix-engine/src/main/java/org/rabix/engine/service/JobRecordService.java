@@ -58,6 +58,17 @@ public class JobRecordService {
     return result;
   }
   
+  public synchronized List<JobRecord> findByParent(String parentId, String contextId) {
+    List<JobRecord> result = new ArrayList<>();
+
+    for (JobRecord jr : getJobRecords(contextId)) {
+      if (jr.getParentId() != null && jr.getParentId().equals(parentId)) {
+        result.add(jr);
+      }
+    }
+    return result;
+  }
+  
   public synchronized JobRecord find(String id, String contextId) {
     for (JobRecord jr : getJobRecords(contextId)) {
       if (jr.getId().equals(id) && jr.getRootId().equals(contextId)) {

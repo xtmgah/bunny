@@ -77,7 +77,11 @@ public class SBMetadataCallback implements SBPortProcessorCallback {
         Map<String, Object> metadata = SBFileValueHelper.getMetadata(clonedValue);
         Map<String, Object> newMetadata = pathToMetadata.get(path);
         if (metadata != null) {
-          newMetadata.putAll(metadata);
+          if (newMetadata == null) {
+            newMetadata = metadata;
+          } else {
+            newMetadata.putAll(metadata);
+          }
         }
         SBFileValueHelper.setMetadata(newMetadata, clonedValue);
         logger.debug("Combined metadata for file {} is {}.", path, newMetadata);
@@ -95,7 +99,11 @@ public class SBMetadataCallback implements SBPortProcessorCallback {
             Map<String, Object> metadata = SBFileValueHelper.getMetadata(secondaryFileValue);
             Map<String, Object> newMetadata = pathToMetadata.get(path);
             if (metadata != null) {
-              newMetadata.putAll(metadata);
+              if (newMetadata == null) {
+                newMetadata = metadata;
+              } else {
+                newMetadata.putAll(metadata);
+              }
             }
             SBFileValueHelper.setMetadata(newMetadata, secondaryFileValue);
             logger.debug("Combined metadata for file {} is {}.", subpath, newMetadata);

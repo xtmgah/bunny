@@ -31,8 +31,20 @@ public interface Bindings {
   List<String> buildCommandLineParts(Job job) throws BindingException;
 
   Set<FileValue> getInputFiles(Job job) throws BindingException;
+  
+  Set<FileValue> getInputFiles(Job job, FileMapper fileMapper) throws BindingException;
+  
+  Set<FileValue> getOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
 
-  Set<FileValue> getOutputFiles(Job job) throws BindingException;
+  Set<FileValue> getFlattenedInputFiles(Job job) throws BindingException;
+  
+  Set<FileValue> getFlattenedOutputFiles(Job job, boolean onlyVisiblePorts) throws BindingException;
+  
+  Job updateInputFiles(Job job, Set<FileValue> inputFiles) throws BindingException;
+  
+  Job updateOutputFiles(Job job, Set<FileValue> outputFiles) throws BindingException;
+  
+  Set<FileValue> getProtocolFiles(File workingDir) throws BindingException;
   
   Job mapInputFilePaths(Job job, FileMapper fileMapper) throws BindingException;
 
@@ -50,4 +62,5 @@ public interface Bindings {
   
   ProtocolType getProtocolType();
 
+  
 }
