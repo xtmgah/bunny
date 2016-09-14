@@ -16,8 +16,8 @@ import org.apache.commons.io.FileUtils;
 import org.rabix.bindings.BindingException;
 import org.rabix.bindings.Bindings;
 import org.rabix.bindings.BindingsFactory;
-import org.rabix.bindings.filemapper.FileMapper;
-import org.rabix.bindings.filemapper.FileMappingException;
+import org.rabix.bindings.mapper.FileMappingException;
+import org.rabix.bindings.mapper.FilePathMapper;
 import org.rabix.bindings.model.FileValue;
 import org.rabix.bindings.model.Job;
 import org.rabix.bindings.model.requirement.DockerContainerRequirement;
@@ -74,8 +74,8 @@ public class JobHandlerImpl implements JobHandler {
   private final UploadService uploadService;
   private final DownloadService downloadService;
   
-  private final FileMapper inputFileMapper;
-  private final FileMapper outputFileMapper;
+  private final FilePathMapper inputFileMapper;
+  private final FilePathMapper outputFileMapper;
 
   private Job job;
   private EngineStub<?, ?, ?> engineStub;
@@ -100,7 +100,7 @@ public class JobHandlerImpl implements JobHandler {
       DockerClientLockDecorator dockerClient, ExecutorStatusCallback statusCallback,
       BasicMemoizationService localMemoizationService, FilePermissionService filePermissionService, 
       UploadService uploadService, DownloadService downloadService,
-      @InputFileMapper FileMapper inputFileMapper, @OutputFileMapper FileMapper outputFileMapper) {
+      @InputFileMapper FilePathMapper inputFileMapper, @OutputFileMapper FilePathMapper outputFileMapper) {
     this.job = job;
     this.engineStub = engineStub;
     this.storageConfiguration = storageConfig;
